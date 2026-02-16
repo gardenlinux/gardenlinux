@@ -26,6 +26,7 @@ set +f
 
 mkdir -p "$tmpdir/dist/tests"
 cp -r -t "$tmpdir/dist/tests" conftest.py handlers integration plugins
+rm -rf "$tmpdir/dist/tests/plugins/tests"
 
 # We need the OPENSSL_MODULES=/usr/lib/$(arch)-linux-gnu/ossl-modules/ to allow the python-build-standalone
 # to detect the fips.so module. See https://github.com/gardenlinux/gardenlinux/pull/3752
