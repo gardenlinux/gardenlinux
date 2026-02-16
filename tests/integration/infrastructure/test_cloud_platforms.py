@@ -12,21 +12,17 @@ from plugins.systemd import Systemd
 @pytest.mark.feature("azure")
 def test_azure_networkd_unmanaged_devices_exists(file: File):
     """Test that Azure networkd unmanaged devices config exists"""
-    assert file.exists("/etc/systemd/network/99-unmanaged.network")
+    assert file.exists("/etc/systemd/99-azure-unmanaged-devices.network")
 
 
 @pytest.mark.setting_ids(["GL-SET-azure-config-network-unmanaged-devices"])
 @pytest.mark.feature("azure")
 def test_azure_networkd_unmanaged_devices_content(parse_file: ParseFile):
     """Test that Azure networkd unmanaged devices config content exists"""
-    lines = parse_file.lines("/etc/systemd/network/99-unmanaged.network")
+    lines = parse_file.parse("/etc/systemd/99-azure-unmanaged-devices.network", format="ini")
 
-    assert lines == [
-        "[Match]",
-        "Driver = mlx4_en mlx5_en mlx4_core mlx5_core",
-        "[Link]",
-        "Unmanaged = yes",
-    ]
+    assert lines["Match"]["Driver"] == "mlx4_en mlx5_en mlx4_core mlx5_core"
+    assert lines["Link"]["Unmanaged"] == "yes"
 
 
 @pytest.mark.setting_ids(

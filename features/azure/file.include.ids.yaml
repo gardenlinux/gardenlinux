@@ -19,7 +19,7 @@
   "etc/systemd/system-preset/00-chrony-disable.preset":
   - "GL-SET-azure-service-chrony-preset-disable"
   "etc/systemd/system/chronyd.service.d/10-after_dev-ptp_hyperv.device.conf":
-  - "GL-SET-azure-service-chrony-device"
+  - "GL-SET-azure-service-chrony-after-ptp-device"
   "etc/udev/rules.d/60-hyperv-ptp.rules":
   - "GL-SET-azure-config-udev-rules-hyperv-ptp"
   "etc/udev/rules.d/66-azure-storage.rules":

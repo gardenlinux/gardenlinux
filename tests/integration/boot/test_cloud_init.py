@@ -243,9 +243,21 @@ def test_aws_cloud_init_local_service_inactive(systemd: Systemd):
 
 @pytest.mark.setting_ids(["GL-SET-azure-config-cloud-network-config-disable"])
 @pytest.mark.feature("azure")
-def test_azure_cloud_init_network_config_disabled(file: File):
+def test_azure_cloud_init_network_config_disabled_exists(file: File):
     """Test that Azure cloud-init network config is disabled"""
-    assert file.exists("/etc/cloud/cloud.cfg.d/99-disable-network-config.cfg")
+    assert file.exists("/etc/cloud/cloud.cfg.d/00_azure.cfg")
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-azure-config-cloud-network-config-disable",
+    ]
+)
+@pytest.mark.feature("azure")
+def test_azure_cloud_init_network_config_disabled_content(parse_file: ParseFile):
+    file = "/etc/cloud/cloud.cfg.d/00_azure.cfg"
+    config = parse_file.parse(file, format="yaml")
+    assert config["network"]["config"] == "disabled"
 
 
 @pytest.mark.setting_ids(

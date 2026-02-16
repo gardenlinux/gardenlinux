@@ -83,7 +83,6 @@ def test_cismodprobe_modules_not_loaded(kernel_module: KernelModule):
         "GL-SET-cloud-config-modprobe-firewire-disable",
         "GL-SET-cloud-config-modprobe-fs-disable",
         "GL-SET-cloud-config-modprobe-net-disable",
-        "GL-SET-cloud-config-modprobe-udf-disable",
         "GL-SET-cloud-config-modprobe-usb-disable",
     ]
 )
@@ -94,7 +93,6 @@ def test_cloud_modprobe_disable_configs_exist(file: File):
         "/etc/modprobe.d/disabled_firewire.conf",
         "/etc/modprobe.d/disabled_fs.conf",
         "/etc/modprobe.d/disabled_net.conf",
-        "/etc/modprobe.d/disabled_udf.conf",
         "/etc/modprobe.d/disabled_usb.conf",
     ]
     missing = [path for path in paths if not file.exists(path)]
@@ -106,7 +104,7 @@ def test_cloud_modprobe_disable_configs_exist(file: File):
         "GL-SET-cloud-config-modprobe-udf-disable",
     ]
 )
-@pytest.mark.feature("cloud and not azure")
+@pytest.mark.feature("cloud and not azure", reason="azure has a different modprobe disable configuration")
 def test_cloud_modprobe_disable_udf_config_exists(file: File):
     """Test that cloud modprobe disable configurations exist, but not on Azure"""
     paths = [
@@ -173,6 +171,7 @@ def test_azure_no_modprobe_udf_disable_exists(file: File):
 
 
 @pytest.mark.setting_ids(["GL-SET-azure-config-modprobe-no-udf-disable"])
+@pytest.mark.root(reason="loading modules requires root access")
 @pytest.mark.feature("azure")
 def test_azure_modprobe_udf_module_loaded(kernel_module: KernelModule):
     """Test that UDF module is loaded on Azure"""
