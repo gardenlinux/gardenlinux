@@ -480,5 +480,5 @@ def test_firewall_nft_default_config_exists(file: File):
 def test_kvm_udev_rules_onmetal_exists(file: File):
     """Test that KVM udev rules for OnMetal exist"""
     assert file.exists(
-        "/etc/udev/rules.d/99-onmetal.rules"
+        "/etc/udev/rules.d/60-onmetal.rules"
     ), "KVM OnMetal udev rules should exist"

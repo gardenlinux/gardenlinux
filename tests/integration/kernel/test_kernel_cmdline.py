@@ -384,9 +384,14 @@ def test_console_configuration_in_cmdline_kvm_earlycon_aarch64(
 @pytest.mark.booted(reason="kernel cmdline needs a booted system")
 def test_ignition_configuration_in_cmdline_kvm(kernel_cmdline: List[str]):
     """Verify ignition parameters are present in the running kernel command line for KVM."""
+    settings = [
+        "ignition.firstboot=1",
+        "ignition.platform.id=qemu",
+    ]
+    missing = [setting for setting in settings if setting not in kernel_cmdline]
     assert (
-        "ignition.firstboot=1 ignition.platform.id=qemu" in kernel_cmdline
-    ), "Ignition (ignition.firstboot=1 ignition.platform.id=qemu) not found in kernel cmdline"
+        not missing
+    ), f"The following kernel cmdline parameters were not found: {', '.join(missing)}"
 
 
 # =============================================================================
