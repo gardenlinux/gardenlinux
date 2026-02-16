@@ -103,22 +103,22 @@ Exactly one metadata document is produced per build, referred to as the *singles
 
 The metadata document contains the following information:
 
-| Metadata Key        | Source                                           |
-| ------------------- | ------------------------------------------------ |
-| `platform`          | `GARDENLINUX_PLATFORM`                           |
-| `platform_variant`  | `GARDENLINUX_PLATFORM_VARIANT` (if present)      |
-| `architecture`      | `arch` from requirements file                    |
-| `version`           | `GARDENLINUX_VERSION`                            |
-| `gardenlinux_epoch` | Major version component of `GARDENLINUX_VERSION` |
-| `build_committish`  | `GARDENLINUX_COMMIT_ID_LONG`                     |
-| `build_timestamp`   | Filesystem timestamp of the release file         |
-| `modifiers`         | Parsed list from `GARDENLINUX_FEATURES`          |
-| `require_uefi`      | `uefi` from requirements file                    |
-| `secureboot`        | `secureboot` from requirements file              |
-| `tpm2`              | `tpm2` from requirements file                    |
-| `paths`             | List of uploaded artifact descriptors            |
-| `s3_bucket`         | Target S3 bucket                                 |
-| `s3_key`            | S3 path of the metadata document                 |
+| Metadata Key        | Type            | Source                                           |
+| ------------------- | --------------- | ------------------------------------------------ |
+| `platform`          | string          | `GARDENLINUX_PLATFORM`                           |
+| `platform_variant`  | string          | `GARDENLINUX_PLATFORM_VARIANT` (if present)      |
+| `architecture`      | string          | `arch` from requirements file                    |
+| `version`           | string          | `GARDENLINUX_VERSION`                            |
+| `gardenlinux_epoch` | int             | Major version component of `GARDENLINUX_VERSION` |
+| `build_committish`  | string          | `GARDENLINUX_COMMIT_ID_LONG`                     |
+| `build_timestamp`   | timestamp[^1]   | Filesystem timestamp of the release file         |
+| `modifiers`         | List of strings | Parsed list from `GARDENLINUX_FEATURES`          |
+| `require_uefi`      | bool            | `uefi` from requirements file                    |
+| `secureboot`        | bool            | `secureboot` from requirements file              |
+| `tpm2`              | bool            | `tpm2` from requirements file                    |
+| `paths`             | *(see below)*   | List of uploaded artifact descriptors            |
+| `s3_bucket`         | string          | Target S3 bucket                                 |
+| `s3_key`            | string          | S3 path of the metadata document                 |
 
 The artifact descriptors in `paths` are of the form:
 
@@ -170,3 +170,5 @@ No additional interpretation or normalization of these values is performed beyon
 - Builder semantics are preserved without reinterpretation.
 - Future refactors of publishing logic can be validated against this ADR.
 - Ambiguity and hidden assumptions in metadata generation are eliminated.
+
+[^1]: https://yaml.org/type/timestamp.html
