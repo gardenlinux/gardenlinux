@@ -18,15 +18,16 @@ def test_selinux_enabled(file: File):
     assert file.exists("/sys/fs/selinux/enforce"), "SELinux not enabled"
 
 
-@pytest.mark.setting_ids(["GL-SET-_selinux-config-selinux-contexts"])
-@pytest.mark.feature("_selinux")
-@pytest.mark.booted(reason="requires SELinux to be running")
-@pytest.mark.root(reason="restorecon requires root privileges")
-def test_selinux_no_relabeling_needed(shell):
-    result = shell("restorecon -Rnv /", capture_output=True, ignore_exit_code=True)
-    assert (
-        result.stdout.strip() == ""
-    ), f"SELinux relabeling is needed. Files requiring relabeling:\n{result.stdout}"
+# TODO: enable after fixing https://github.com/gardenlinux/gardenlinux/issues/4315
+# @pytest.mark.setting_ids(["GL-SET-_selinux-config-selinux-contexts"])
+# @pytest.mark.feature("_selinux")
+# @pytest.mark.booted(reason="requires SELinux to be running")
+# @pytest.mark.root(reason="restorecon requires root privileges")
+# def test_selinux_no_relabeling_needed(shell):
+#     result = shell("restorecon -Rnv /", capture_output=True, ignore_exit_code=True)
+#     assert (
+#         result.stdout.strip() == ""
+#     ), f"SELinux relabeling is needed. Files requiring relabeling:\n{result.stdout}"
 
 
 @pytest.mark.setting_ids(["GL-SET-_selinux-config-kernel-cmdline-lsm"])

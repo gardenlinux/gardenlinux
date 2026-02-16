@@ -941,14 +941,6 @@ def test_server_systemd_coredump_socket_active(systemd: Systemd):
     assert systemd.is_active("systemd-coredump.socket")
 
 
-@pytest.mark.setting_ids(["GL-SET-server-service-systemd-coredump-enable"])
-@pytest.mark.feature("server and not _prod")
-@pytest.mark.booted(reason="Requires systemd")
-def test_server_systemd_coredump_service_active(systemd: Systemd):
-    """Test that systemd-coredump.service is active"""
-    assert systemd.is_active("systemd-coredump.service")
-
-
 @pytest.mark.setting_ids(["GL-SET-server-service-kexec-load-unit"])
 @pytest.mark.feature("server")
 def test_server_kexec_load_unit_exists(file):

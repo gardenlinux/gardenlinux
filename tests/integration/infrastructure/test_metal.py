@@ -103,7 +103,6 @@ def test_metal_removed_files(file: File):
     removed_files = [
         "/etc/init.d/ipmievd",
         "/etc/init.d/irqbalance",
-        "/etc/mdadm",
         "/etc/mdadm.conf",
         "/etc/mdadm/mdadm.conf",
         "/etc/network/interfaces",

@@ -265,6 +265,7 @@ def test_ssh_sshguard_nftables_configured(parse_file: ParseFile):
     ]
 )
 @pytest.mark.feature("ssh and server", reason="iptables package is installed on server")
+@pytest.mark.feature("not firewall", reason="iptables package is installed on server")
 def test_ssh_sshguard_iptables_configured(parse_file: ParseFile):
     """Test that sshguard iptables is configured"""
 
@@ -289,6 +290,7 @@ def test_ssh_sshguard_iptables_configured(parse_file: ParseFile):
     ]
 )
 @pytest.mark.feature("ssh and server", reason="iptables package is installed on server")
+@pytest.mark.feature("not firewall", reason="iptables package is installed on server")
 def test_ssh_sshguard_iptables_backend_configured(parse_file: ParseFile):
     """Test that sshguard iptables backend is configured"""
 

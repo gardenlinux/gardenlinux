@@ -454,7 +454,7 @@ def test_console_configuration_in_cmdline_lima_bautrates(kernel_cmdline: List[st
 @pytest.mark.feature("metal")
 def test_metal_kernel_cmdline_default_exists(file: File):
     """Test that Metal default kernel cmdline configuration exists"""
-    assert file.is_regular_file("/etc/kernel/cmdline.d/00-cmdline.cfg")
+    assert file.is_regular_file("/etc/kernel/cmdline.d/00-default.cfg")
 
 
 @pytest.mark.setting_ids(["GL-SET-metal-config-kernel-cmdline-default"])
