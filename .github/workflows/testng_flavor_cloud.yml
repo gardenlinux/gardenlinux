@@ -215,16 +215,16 @@ jobs:
       - name: Copy test results to build directory
         if: always()
         run: |
-          cp tests-ng/log/cloud.test-ng.log .build/${CNAME}.cloud.test.log || true
-          cp tests-ng/log/cloud.test-ng.xml .build/${CNAME}.cloud.test.xml || true
+          cp tests-ng/log/cloud.test-ng.log .build/${CNAME}.cloud.testng.log || true
+          cp tests-ng/log/cloud.test-ng.xml .build/${CNAME}.cloud.testng.xml || true
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         if: always()
         with:
           if-no-files-found: ignore
-          name: cloud-test-${{ env.CNAME }}
+          name: cloud-testng-${{ env.CNAME }}
           path: |
-            .build/${{ env.CNAME }}.cloud.test.log
-            .build/${{ env.CNAME }}.cloud.test.xml
+            .build/${{ env.CNAME }}.cloud.testng.log
+            .build/${{ env.CNAME }}.cloud.testng.xml
       - name: Cleanup cloud test for ${{ inputs.flavor }} (${{ inputs.arch }})
         if: always()
         run: |
