@@ -53,12 +53,6 @@ jobs:
       prefix: ${{ inputs.prefix }}
     permissions:
       actions: write # TODO: 3215 elevated permissions for included workflow
-  test_distribution_build:
-    needs: requirements
-    name: Build and Cache Test Distribution
-    uses: ./.github/workflows/build_test_dist.yml
-    with:
-      prefix: ${{ inputs.prefix }}
   flavors_matrix:
     name: Generate flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
@@ -113,6 +107,14 @@ jobs:
     secrets: inherit
     permissions:
       actions: write
+  test_build:
+    needs: requirements
+    name: Build and cache Test Distribution
+    uses: ./.github/workflows/build_test_dist.yml
+    with:
+      commit_id: ${{ needs.requirements.outputs.commit_id }}
+      version: ${{ needs.requirements.outputs.version }}
+      prefix: ${{ inputs.prefix }}
   upload_flavor_version_data:
     needs: [requirements, flavors]
     name: Store flavor version data

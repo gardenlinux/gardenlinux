@@ -2,6 +2,12 @@ name: test_flavor
 on:
   workflow_call:
     inputs:
+      commit_id:
+        type: string
+        required: true
+      version:
+        type: string
+        required: true
       prefix:
         type: string
         default: ''
@@ -34,3 +40,42 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
+
+  test_container:
+    name: Build test containers
+    needs: test
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: true
+      - name: Download test distribution artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: ${{ inputs.prefix }}test-distribution
+          path: .build
+      - name: Set distribution version reference
+        run: |
+          echo "${{ inputs.commit_id }}" | tee COMMIT
+          echo "${{ inputs.version }}" | tee VERSION
+      - name: Build tests container (${{ matrix.arch }})
+        run: |
+          set -euo pipefail
+          arch="${{ matrix.arch }}"
+          echo "Building tests for arch=$arch"
+          repo="ghcr.io/${{ github.repository_owner }}/test"
+          version="$(cat VERSION)"
+
+          podman build --arch ${arch} --build-context dist_ctx=.build -t ${repo}:${arch}-${version} tests/util/container
+          podman save --format oci-archive ${repo}:${arch}-${version} > tests_container_${arch}.oci
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: tests-container-${{ matrix.arch }}
+          path: tests_container_${{ matrix.arch }}.oci
+          if-no-files-found: error
