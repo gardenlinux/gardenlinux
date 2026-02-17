@@ -13,7 +13,7 @@ from plugins.systemd import Systemd
         "GL-SET-_ignite-config-initrd-ignition",
     ]
 )
-@pytest.mark.feature("_ignite")
+@pytest.mark.feature("_ignite and not _usi")
 @pytest.mark.root(reason="Reading the initrd contents requires root access")
 @pytest.mark.booted(reason="Chroot environments have no initrd")
 def test_ignite_initrd_ignition_modules(initrd: Initrd):
@@ -89,7 +89,7 @@ def test__usi_initrd_ignition_modules(initrd: Initrd):
     ]
     assert (
         missing
-    ), f"The following dracut modules were found in initrd: {', '.join(missing)}"
+    ), f"The following dracut modules should not be found in initrd, but these were missing: {', '.join(missing)}"
 
 
 @pytest.mark.setting_ids(["GL-SET-_usi-config-no-kernel-cmdline-ignition"])
