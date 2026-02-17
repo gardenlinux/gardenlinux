@@ -87,14 +87,18 @@ def test_base_dpkg_configs_exist(file: File):
 
 
 @pytest.mark.setting_ids(["GL-SET-base-config-hosts"])
-@pytest.mark.feature("base and not container", reason="Container does not have default hosts file")
+@pytest.mark.feature(
+    "base and not container", reason="Container does not have default hosts file"
+)
 def test_base_hosts_file_exists(file: File):
     """Test that /etc/hosts exists"""
     assert file.is_regular_file("/etc/hosts")
 
 
 @pytest.mark.setting_ids(["GL-SET-base-config-hosts"])
-@pytest.mark.feature("base and not container", reason="Container does not have default hosts file")
+@pytest.mark.feature(
+    "base and not container", reason="Container does not have default hosts file"
+)
 def test_base_hosts_file_contains_localhost_and_garden(parse_file: ParseFile):
     """Test that /etc/hosts contains localhost and garden"""
     lines = parse_file.lines("/etc/hosts")

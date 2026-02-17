@@ -14,13 +14,13 @@ Tests static coverage analysis functionality including:
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, mock_open, patch
+from unittest.mock import Mock, mock_open, patch
 
 import pytest
 
 # Import the module under test - must import from parent directory
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from util import coverage as cov_module
+from util import coverage as cov_module  # noqa: E402
 
 # Alias for easier reference in tests
 coverage = cov_module

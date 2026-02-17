@@ -1,9 +1,8 @@
-from os import linesep, path
 from typing import List
 
 import pytest
 from plugins.file import File
-from plugins.linux_etc_files import Shadow, shadow_entries
+from plugins.linux_etc_files import Shadow
 from plugins.pam import PamConfig
 from plugins.parse_file import ParseFile
 

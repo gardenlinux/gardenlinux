@@ -60,7 +60,7 @@ def test_log_audit_rule_base_config_content(parse_file: ParseFile):
         "-b 8192",
         "--backlog_wait_time 60000",
         "-f 1",
-    ], f"Audit rules base configuration should contain the correct content"
+    ], "Audit rules base configuration should contain the correct content"
 
 
 @pytest.mark.setting_ids(
@@ -74,7 +74,7 @@ def test_log_audit_rule_cont_fail_content(parse_file: ParseFile):
     lines = parse_file.lines("/etc/audit/rules.d/12-cont-fail.rules")
     assert lines == [
         "-c",
-    ], f"Audit rules cont fail configuration should contain the correct content"
+    ], "Audit rules cont fail configuration should contain the correct content"
 
 
 @pytest.mark.setting_ids(
@@ -88,7 +88,7 @@ def test_log_audit_rule_ignore_error_content(parse_file: ParseFile):
     lines = parse_file.lines("/etc/audit/rules.d/12-ignore-error.rules")
     assert lines == [
         "-i",
-    ], f"Audit rules ignore error configuration should contain the correct content"
+    ], "Audit rules ignore error configuration should contain the correct content"
 
 
 # =============================================================================
@@ -123,7 +123,7 @@ def test_log_journald_minimum_config_content(parse_file: ParseFile):
         "Seal=yes",
         "ReadKMsg=yes",
         "Audit=yes",
-    ], f"Journald minimum configuration should contain the correct content"
+    ], "Journald minimum configuration should contain the correct content"
 
 
 @pytest.mark.setting_ids(
@@ -152,7 +152,7 @@ def test_log_journald_rsyslog_config_content(parse_file: ParseFile):
         "[Journal]",
         "ForwardToSyslog=yes",
         "MaxLevelSyslog=info",
-    ], f"Journald rsyslog integration configuration should contain the correct content"
+    ], "Journald rsyslog integration configuration should contain the correct content"
 
 
 # =============================================================================
@@ -190,7 +190,7 @@ def test_log_rsyslog_main_config_content(parse_file: ParseFile):
         "$Umask 0022",
         "$WorkDirectory /var/spool/rsyslog",
         "$IncludeConfig /etc/rsyslog.d/*.conf",
-    ], f"Main rsyslog configuration should contain the correct content"
+    ], "Main rsyslog configuration should contain the correct content"
 
 
 @pytest.mark.setting_ids(
@@ -219,4 +219,4 @@ def test_log_rsyslog_input_config_content(parse_file: ParseFile):
     lines = parse_file.lines("/etc/rsyslog.d/20-input.conf")
     assert (
         'module(load="imuxsock")' in lines
-    ), f"Rsyslog input configuration should contain the correct content"
+    ), "Rsyslog input configuration should contain the correct content"

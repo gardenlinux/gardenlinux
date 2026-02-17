@@ -25,4 +25,4 @@ def test_no_denylisted_packages(denied_package: str, dpkg: Dpkg):
 def test_package_irqbalance_not_installed_on_gcp(dpkg: Dpkg):
     assert not dpkg.package_is_installed(
         "irqbalance"
-    ), f"Denylisted package irqbalance is installed on gcp"
+    ), "Denylisted package irqbalance is installed on gcp"

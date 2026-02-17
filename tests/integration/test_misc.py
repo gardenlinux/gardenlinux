@@ -284,7 +284,7 @@ def test_clamav_cron_content(parse_file: ParseFile):
     lines = parse_file.lines("/var/spool/cron/crontabs/root")
     assert lines == [
         "0 30 * * * root /usr/bin/clamscan -ri / >> /var/log/clamav/clamd.log",
-    ], f"Clamav cron job should contain the correct content"
+    ], "Clamav cron job should contain the correct content"
 
 
 # =============================================================================

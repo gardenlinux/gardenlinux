@@ -32,8 +32,8 @@ from pathlib import Path
 # Add tests to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plugins.shell import ShellRunner
-from plugins.sysdiff import Sysdiff
+from plugins.shell import ShellRunner  # noqa: E402
+from plugins.sysdiff import Sysdiff  # noqa: E402
 
 
 def list_snapshots(sysdiff: Sysdiff, verbose: bool = False):
@@ -203,7 +203,7 @@ Examples:
             )
 
             print(f"✓ Snapshot created successfully: {snapshot.name}")
-            print(f"  Location: {sysdiff.manager.state_dir / snapshot.name}.json.gz")
+            print(f"  Location: {sysdiff.manager.state_dir}/{snapshot.name}.json.gz")
             print(f"  Packages: {len(snapshot.packages)}")
             print(f"  Files: {len(snapshot.files)}")
             print(f"  Sysctl params: {len(snapshot.sysctl_params)}")
@@ -211,7 +211,7 @@ Examples:
             print(f"  Systemd units: {len(snapshot.systemd_units)}")
 
             if args.verbose:
-                print(f"\nDetailed information:")
+                print("\nDetailed information:")
                 print(f"  Created at: {snapshot.metadata.created_at}")
                 print(f"  Paths scanned: {snapshot.metadata.paths}")
                 print(f"  Ignore file used: {snapshot.metadata.ignore_file}")

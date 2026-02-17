@@ -11,6 +11,7 @@ Provides snapshot and comparison capabilities for:
 
 import difflib
 import gzip
+import hashlib
 import json
 import os
 import re

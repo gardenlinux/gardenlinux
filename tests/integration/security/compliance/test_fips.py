@@ -3,7 +3,6 @@ import hmac
 import os
 from ctypes import CDLL, c_int, c_void_p
 from ctypes.util import find_library
-from hashlib import _hashlib  # type: ignore
 from hashlib import sha256 as SHA256
 from platform import machine as arch
 from typing import List
@@ -40,7 +39,7 @@ def test_gnutls_fips_file_is_empty(file: File):
     """
     The /etc/system-fips should be without any content.
     """
-    assert file.get_size("/etc/system-fips") == 0, f"The /etc/system-fips is not empty."
+    assert file.get_size("/etc/system-fips") == 0, "The /etc/system-fips is not empty."
 
 
 @pytest.mark.setting_ids(
@@ -185,7 +184,7 @@ def test_libgcrypt_fips_file_is_empty(file: File):
     """
     assert (
         file.get_size("/etc/gcrypt/fips_enabled") == 0
-    ), f"The /etc/gcrypt/fips_enabled is not empty."
+    ), "The /etc/gcrypt/fips_enabled is not empty."
 
 
 @pytest.mark.feature("_fips")
@@ -299,7 +298,7 @@ def test_kernel_was_boot_with_fips_mode(kernel_cmdline: List[str]):
     """
     Validate that the kernel was booted with the FIPS mode enabled.
     """
-    assert "fips=1" in kernel_cmdline, f"Kernel was not booted in FIPS mode!"
+    assert "fips=1" in kernel_cmdline, "Kernel was not booted in FIPS mode!"
 
 
 @pytest.mark.feature("_fips")
@@ -310,4 +309,4 @@ def test_kernel_has_fips_entry_in_procfs(parse_file: ParseFile):
     has been booted into FIPS mode.
     """
     lines = parse_file.lines("/proc/sys/crypto/fips_enabled")
-    assert "1" in lines, f"Kernel was not booted in FIPS mode!"
+    assert "1" in lines, "Kernel was not booted in FIPS mode!"
