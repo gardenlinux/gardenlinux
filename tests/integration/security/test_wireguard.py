@@ -1,4 +1,3 @@
-from nt import read
 import pytest
 from plugins.kernel_module import KernelModule
 

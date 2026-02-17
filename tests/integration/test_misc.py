@@ -324,6 +324,7 @@ def test_prod_security_limits_no_core_dumps(file: File):
         "GL-SET-_prod-config-security-limits-disable-core-dumps",
     ]
 )
+@pytest.mark.booted(reason="ulimit needs a booted system")
 @pytest.mark.feature("_prod")
 def test_prod_security_limits_no_core_dumps_check(shell: ShellRunner):
     """Test that production has security limits disabling core dumps"""
