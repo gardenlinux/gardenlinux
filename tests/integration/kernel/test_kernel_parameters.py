@@ -151,8 +151,8 @@ def test_chost_sysctl_config_content(sysctl: Sysctl):
     assert (
         sysctl["net.ipv6.conf.all.forwarding"] == 1
     ), "IP forwarding should be enabled"
-    assert sysctl["net.netfilter.nf_call_iptables"] == 1, "iptables should be called"
-    assert sysctl["net.netfilter.nf_call_ip6tables"] == 1, "ip6tables should be called"
+    assert sysctl["net.netfilter.nf-call-iptables"] == 1, "iptables should be called"
+    assert sysctl["net.netfilter.nf-call-ip6tables"] == 1, "ip6tables should be called"
 
 
 # =============================================================================
