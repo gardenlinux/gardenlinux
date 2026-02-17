@@ -109,8 +109,8 @@ jobs:
       actions: write
   test_build:
     needs: requirements
-    name: Build and cache Test Distribution
-    uses: ./.github/workflows/build_test_dist.yml
+    name: Build and cache test distribution
+    uses: ./.github/workflows/build_tests.yml
     with:
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
