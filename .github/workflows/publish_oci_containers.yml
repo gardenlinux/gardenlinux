@@ -85,7 +85,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
-      - name: Set flavor version reference
+      - name: Set container version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
@@ -351,47 +351,8 @@ jobs:
             --index-tag ${{ inputs.version }} \
             --manifest_folder manifests
 
-  build_tests_container:
-    name: Build tests container (${{ matrix.arch }})
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
-    defaults:
-      run:
-        shell: bash
-    strategy:
-      matrix:
-        arch: [amd64, arm64]
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          submodules: true
-      - name: Download test distribution artifact
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
-        with:
-          name: test-distribution
-          github-token: ${{ github.token }}
-          run-id: ${{ inputs.run_id }}
-          path: .build
-      - name: Determine version
-        run: |
-          version=$(bin/garden-version "${{ inputs.version }}")
-          echo "VERSION=${version}" | tee -a "$GITHUB_ENV"
-      - name: Build tests container (${{ matrix.arch }})
-        run: |
-          set -euo pipefail
-          arch=${{ matrix.arch }}
-          echo "Building tests for arch=$arch"
-          repo="ghcr.io/${{ github.repository_owner }}/test"
-          podman build --arch ${arch} --build-context dist_ctx=.build -t ${repo}:${arch}-${VERSION} tests/util/container
-          podman save --format oci-archive ${repo}:${arch}-${VERSION} > tests_container_${arch}.oci
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
-        with:
-          name: tests-container-${{ matrix.arch }}
-          path: tests_container_${{ matrix.arch }}.oci
-          if-no-files-found: error
-
   publish_tests:
     name: Publish tests container
-    needs: build_tests_container
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -402,18 +363,23 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
-      - name: Download built tests archives
+      - id: tests_containers
+        name: Download built tests archives
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
           pattern: tests-container-*
           merge-multiple: true
-      - name: Load OCI archives
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - if: ${{ steps.tests_containers.outputs.cache-hit == 'true' }}
+        name: Load OCI archives
         run: |
           for oci in *.oci; do
             podman load -i "${oci}"
             rm -f "${oci}"
           done
-      - name: Publish tests images and manifest
+      - if: ${{ steps.tests_containers.outputs.cache-hit == 'true' }}
+        name: Publish tests images and manifest
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
