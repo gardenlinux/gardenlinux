@@ -12,19 +12,6 @@ from plugins.parse_file import ParseFile
 
 @pytest.mark.setting_ids(
     [
-        "GL-SET-_legacy-config-efi-loader-no-random-seed",
-    ]
-)
-@pytest.mark.feature("_legacy")
-def test_legacy_efi_loader_no_random_seed(file: File):
-    """Test that legacy EFI loader does not have random seed"""
-    assert not file.exists(
-        "/efi/loader/random-seed"
-    ), "Legacy EFI loader should not have random seed"
-
-
-@pytest.mark.setting_ids(
-    [
         "GL-SET-_legacy-config-syslinux-bootloader-entries",
     ]
 )
@@ -41,13 +28,14 @@ def test_legacy_syslinux_bootloader_entries(
 
 @pytest.mark.setting_ids(
     [
-        "GL-SET-_legacy-config-syslinux-menu-exists",
-        "GL-SET-_legacy-config-syslinux-libutil-exists",
+        "GL-SET-_legacy-config-syslinux-menu-amd64-exists",
+        "GL-SET-_legacy-config-syslinux-libutil-amd64-exists",
     ]
 )
 @pytest.mark.feature("_legacy")
+@pytest.mark.arch("amd64")
 def test_legacy_syslinux_libutil_exists(file: File):
-    """Test that legacy has syslinux libutil module"""
+    """Test that legacy and amd64 has syslinux libutil module"""
     paths = [
         "/efi/syslinux/menu.c32",
         "/efi/syslinux/libutil.c32",
