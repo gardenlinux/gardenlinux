@@ -33,10 +33,12 @@ class Initrd:
         Returns:
             Tuple of (contents_list, dracut_modules_list)
         """
-        logger.info(f"Executing lsinitrd {initrd_path} (will be cached via lru_cache)")
+        logger.info(
+            f"Executing lsinitrd -v {initrd_path} (will be cached via lru_cache)"
+        )
 
         result = subprocess.run(
-            ["lsinitrd", initrd_path],
+            ["lsinitrd", "-v", initrd_path],
             capture_output=True,
             text=True,
             check=False,
@@ -49,6 +51,10 @@ class Initrd:
             raise RuntimeError(
                 f"lsinitrd failed for {initrd_path} with exit code {result.returncode}"
             )
+
+        # Log raw output at DEBUG level for troubleshooting
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Raw lsinitrd output:\n{result.stdout}")
 
         # Parse the output to extract both file contents and dracut modules
         lines = result.stdout.split("\n")
