@@ -428,6 +428,7 @@ def test_server_mount_tmp_exists(file: File):
     ]
 )
 @pytest.mark.feature("server")
+@pytest.mark.booted(reason="Requires systemd")
 def test_server_mount_tmp_enabled(systemd: Systemd):
     """Test that server tmp mount is enabled"""
     assert systemd.is_enabled("tmp.mount")

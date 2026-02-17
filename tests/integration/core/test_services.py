@@ -936,6 +936,7 @@ def test_server_systemd_coredump_override_exists(file: File):
 
 @pytest.mark.setting_ids(["GL-SET-server-service-systemd-coredump-enable"])
 @pytest.mark.feature("server and not _prod")
+@pytest.mark.booted(reason="Requires systemd")
 def test_server_systemd_coredump_socket_active(systemd: Systemd):
     """Test that systemd-coredump.socket is enabled"""
     assert systemd.is_active("systemd-coredump.socket")
