@@ -1,11 +1,8 @@
 from os import linesep, path
-from sys import path_importer_cache
 from typing import List
 
 import pytest
 from plugins.file import File
-from plugins.find import Find
-from plugins.kernel_cmdline import kernel_cmdline
 from plugins.linux_etc_files import Shadow, shadow_entries
 from plugins.pam import PamConfig
 from plugins.parse_file import ParseFile

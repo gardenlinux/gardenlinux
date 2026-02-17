@@ -1,7 +1,5 @@
 import datetime
-import os
 import socket
-import threading
 
 import pytest
 from plugins.file import File

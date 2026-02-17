@@ -164,7 +164,7 @@ def test_users_have_only_root_authorized_keys_cloud(
 def test_ssh_service_running(systemd: Systemd, service_ssh):
     assert systemd.is_active(
         "ssh"
-    ), f"Required systemd unit for ssh.service is not running"
+    ), "Required systemd unit for ssh.service is not running"
 
 
 # =============================================================================

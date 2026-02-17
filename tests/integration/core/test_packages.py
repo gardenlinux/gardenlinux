@@ -1,6 +1,5 @@
 import pytest
 from plugins.dpkg import Dpkg
-from plugins.shell import ShellRunner
 
 denylist = [
     "rlogin",

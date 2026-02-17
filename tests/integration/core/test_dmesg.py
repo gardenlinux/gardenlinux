@@ -1,7 +1,5 @@
 import pytest
 from plugins.file import File
-from plugins.parse_file import ParseFile
-from plugins.sysctl import Sysctl
 
 # server adds /etc/sysctl.d/40-restrict-dmesg.conf, gardener excludes it
 #    and adds /etc/sysctl.d/40-allow-nonroot-dmesg.conf instead

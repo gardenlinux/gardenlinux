@@ -1,5 +1,3 @@
-from re import A
-
 import pytest
 from plugins.file import File
 from plugins.find import Find

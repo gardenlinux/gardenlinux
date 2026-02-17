@@ -11,7 +11,7 @@ def test_duplicate_uids(passwd_entries: List[Passwd]):
     duplicates = check_for_duplicates(entries=passwd_entries)
     assert (
         len(duplicates) == 0
-    ), f"uids {duplicates} are used multiple times in /etc/passwd"
+    ), "uids {} are used multiple times in /etc/passwd".format(duplicates)
 
 
 def test_duplicate_uids_detection(passwd_entries: List[Passwd]):
@@ -22,5 +22,5 @@ def test_duplicate_uids_detection(passwd_entries: List[Passwd]):
     passwd_entries.append(expected_duplicate)
 
     duplicates = check_for_duplicates(entries=passwd_entries)
-    assert len(duplicates) == 1, f"duplicate entry is not found successfully"
+    assert len(duplicates) == 1, "duplicate entry is not found successfully"
     assert expected_duplicate == duplicates[0]

@@ -1,11 +1,9 @@
-import json
 from dataclasses import dataclass, field
 from typing import Dict, List
 
 import pytest
 from debian import deb822
 
-from .shell import ShellRunner
 
 
 class InstalledPackages:

@@ -12,10 +12,7 @@ Tests static coverage analysis functionality including:
 - Test file searching
 """
 
-import json
-import re
 import sys
-from collections import Counter
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, mock_open, patch
 

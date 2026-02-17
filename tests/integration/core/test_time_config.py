@@ -106,7 +106,7 @@ def test_chrony_azure(
     """
     expected_config = f"refclock PHC {ptp_hyperv_dev} poll 3 dpoll -2 offset 0"
     lines = parse_file.lines(chrony_config_file)
-    assert expected_config in lines, f"chrony config for ptp expected but not found"
+    assert expected_config in lines, "chrony config for ptp expected but not found"
 
 
 @pytest.mark.setting_ids(["GL-SET-azure-service-chrony-preset-disable"])
@@ -273,7 +273,7 @@ def test_ntp(timedatectl: TimeDateCtl):
 def test_systemd_timesyncd_disabled_on_azure(systemd: Systemd):
     assert (
         systemd.is_active("systemd-timesyncd") == False
-    ), f"Chrony instead of systemd-timesyncd should be active on Azure."
+    ), "Chrony instead of systemd-timesyncd should be active on Azure."
 
 
 # ================================
@@ -292,7 +292,7 @@ def test_chrony_on_azure(systemd: Systemd):
     Test for chrony as active time sync service on Azure.
     See: https://learn.microsoft.com/en-us/azure/virtual-machines/linux/time-sync#chrony
     """
-    assert systemd.is_active("chrony"), f"Chrony should be active on Azure."
+    assert systemd.is_active("chrony"), "Chrony should be active on Azure."
 
 
 @pytest.mark.setting_ids(["GL-SET-azure-service-chrony-enable"])

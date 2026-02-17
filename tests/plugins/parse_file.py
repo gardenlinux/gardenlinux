@@ -155,7 +155,7 @@ class ParseFile:
         parser = self._get_parser(
             path,
             ignore_missing,
-            error_context=f"Cannot parse file.",
+            error_context="Cannot parse file.",
         )
         if parser is None:
             return None
@@ -229,7 +229,7 @@ class ParseFile:
         parser = self._get_parser(
             path,
             ignore_missing,
-            error_context=f"Cannot get lines container.",
+            error_context="Cannot get lines container.",
         )
         if parser is None:
             return None

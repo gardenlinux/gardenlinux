@@ -1,9 +1,6 @@
-from configparser import MissingSectionHeaderError
-
 import pytest
 from plugins.file import File
 from plugins.kernel_versions import KernelVersions
-from plugins.parse_file import ParseFile
 
 # =============================================================================
 # _legacy Feature - Legacy Bootloader Support

@@ -26,7 +26,6 @@ podman run -it --rm \
 """
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
@@ -69,7 +68,7 @@ def diff_snapshots(
 ):
     """Compare two snapshots and show differences"""
     try:
-        print(f"Comparing snapshots:")
+        print("Comparing snapshots:")
         print(f"  snapshot_a: {snapshot1_name}")
         print(f"  snapshot_b: {snapshot2_name}")
         print()

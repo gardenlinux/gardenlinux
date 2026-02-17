@@ -1,5 +1,4 @@
 import re
-from pathlib import Path
 
 import pytest
 from plugins.parse_file import ParseFile

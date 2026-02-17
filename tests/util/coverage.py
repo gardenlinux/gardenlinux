@@ -752,7 +752,7 @@ def generate_cli_report(
     stats = calculate_coverage_stats(setting_ids_by_feature, found_setting_ids)
 
     # Display summary
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"  Total setting IDs defined: {stats['total_setting_ids']}")
     print(f"  Setting IDs found in test files: {stats['covered_count']}")
     print(f"  Setting IDs not found (untested): {stats['untested_count']}")
@@ -771,7 +771,7 @@ def generate_cli_report(
         print("\n⚠ No setting IDs defined in any features.")
     else:
         # Show coverage by feature
-        print(f"\nCoverage by feature:")
+        print("\nCoverage by feature:")
         print("-" * 80)
         for feature in sorted(setting_ids_by_feature.keys()):
             feature_setting_ids = setting_ids_by_feature[feature]
@@ -798,7 +798,7 @@ def generate_cli_report(
 
         # Show untested setting IDs by feature
         if stats["untested_by_feature"]:
-            print(f"\nUntested setting IDs by feature:")
+            print("\nUntested setting IDs by feature:")
             print("-" * 80)
             for feature in sorted(stats["untested_by_feature"].keys()):
                 untested = stats["untested_by_feature"][feature]
@@ -808,19 +808,19 @@ def generate_cli_report(
                     f"  Covered: {len(setting_ids_by_feature[feature]) - len(untested)}"
                 )
                 print(f"  Untested: {len(untested)}")
-                print(f"  Untested setting IDs:")
+                print("  Untested setting IDs:")
                 for tid in untested:
                     print(f"    - {tid}")
 
     # Show orphaned setting IDs (in tests but not in features)
     if stats["orphaned_ids"]:
-        print(f"\n⚠ WARNING: Orphaned Setting IDs (in tests but not in features):")
+        print("\n⚠ WARNING: Orphaned Setting IDs (in tests but not in features):")
         print("-" * 80)
         print(
-            f"These setting IDs are referenced in test files but not defined in any feature."
+            "These setting IDs are referenced in test files but not defined in any feature."
         )
         print(
-            f"This may indicate typos, missing feature definitions, or outdated tests.\n"
+            "This may indicate typos, missing feature definitions, or outdated tests.\n"
         )
         for tid in sorted(stats["orphaned_ids"]):
             print(f"    - {tid}")
@@ -891,7 +891,7 @@ def generate_junit_xml_report(
             failure = ET.SubElement(testcase, "failure")
             failure.set("message", f"{len(untested)} untested setting ID(s)")
             failure.set("type", "UntestedSettingIDs")
-            failure.text = f"Untested IDs:\n" + "\n".join(
+            failure.text = "Untested IDs:\n" + "\n".join(
                 f"  - {sid}" for sid in untested
             )
 
@@ -1047,7 +1047,7 @@ def main():
     # Load excluded features
     excluded_features = load_feature_excludes(repo_root)
     if excluded_features:
-        print(f"Loading feature excludes...")
+        print("Loading feature excludes...")
         print(
             f"✓ Excluding {len(excluded_features)} features: {', '.join(sorted(excluded_features))}\n"
         )

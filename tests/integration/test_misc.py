@@ -1,6 +1,5 @@
 import pytest
 from plugins.file import File
-from plugins.kernel_module import KernelModule
 from plugins.parse_file import ParseFile
 from plugins.shell import ShellRunner
 from plugins.sysctl import Sysctl

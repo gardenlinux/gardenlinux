@@ -1,5 +1,3 @@
-from math import e
-from mimetypes import init
 from typing import List
 
 import pytest

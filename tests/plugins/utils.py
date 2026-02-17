@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 from typing import Dict, List, Optional, TypeVar
 
 # Various utility functions to make tests more readable

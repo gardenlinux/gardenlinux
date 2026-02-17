@@ -1,11 +1,9 @@
 """Test kernel command line console configuration."""
 
-from errno import EALREADY
 from typing import List
 
 import pytest
 from plugins.file import File
-from plugins.kernel_cmdline import kernel_cmdline
 
 # =============================================================================
 # _trustedboot Feature Kernel Command Line

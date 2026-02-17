@@ -46,7 +46,6 @@ def pytest_addoption(parser: pytest.Parser):
 
 
 def pytest_configure(config: pytest.Config):
-    global users
     arg = config.getoption("--expected-users")
     if arg:
         users.update(u.strip() for u in arg.split(",") if u.strip())

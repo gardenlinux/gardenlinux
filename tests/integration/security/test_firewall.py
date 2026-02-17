@@ -19,4 +19,4 @@ def test_nft_config(nft: Nft):
         and chain.prio == 0
         and chain.policy == "drop"
     ]
-    assert len(matching_policies) == 1, f"input has policy drop not as default"
+    assert len(matching_policies) == 1, "input has policy drop not as default"

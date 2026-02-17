@@ -10,8 +10,8 @@ class UIDRange:
     uid_max: int = 0
 
     def __post_init__(self):
-        assert self.uid_min is not 0, "UID_MIN not found"
-        assert self.uid_max is not 0, "UID_MAX not found"
+        assert self.uid_min != 0, "UID_MIN not found"
+        assert self.uid_max != 0, "UID_MAX not found"
         assert self.uid_max > self.uid_min, "UID_MAX must be greater than UID_MIN"
 
     def __contains__(self, uid: int) -> bool:

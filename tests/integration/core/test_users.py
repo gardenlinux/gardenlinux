@@ -19,7 +19,7 @@ def test_service_accounts_have_nologin_shell(regular_user_uid_range):
 
 
 def test_root_home_permissions(file: File):
-    assert file.has_mode("/root", "0700"), f"/root has incorrect permissions"
+    assert file.has_mode("/root", "0700"), "/root has incorrect permissions"
 
 
 @pytest.mark.feature("not _dev")

@@ -1,5 +1,3 @@
-import os
-
 import pytest
 from plugins.file import File
 from plugins.kernel_configs import KernelConfigs
