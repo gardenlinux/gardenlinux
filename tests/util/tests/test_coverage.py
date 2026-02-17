@@ -512,7 +512,8 @@ class TestReportGeneration:
                     found_setting_ids,
                     all_features,
                     excluded_features,
-                    Path("/output/report.json"),
+                    test_counts=None,
+                    output_file=Path("/output/report.json"),
                 )
 
         assert report["version"] == "1.0"
@@ -540,7 +541,8 @@ class TestReportGeneration:
                     found_setting_ids,
                     all_features,
                     excluded_features,
-                    Path("/output/report.json"),
+                    test_counts=None,
+                    output_file=Path("/output/report.json"),
                 )
 
         assert report is not None
@@ -738,9 +740,14 @@ class TestConsoleReporting:
         }
         found_setting_ids = {"GL-SET-001", "GL-SET-999"}  # 999 is orphaned
         all_features = {"feature1"}
+        test_counts = {
+            "total_tests": 0,
+            "tests_with_setting_ids": 0,
+            "tests_without_setting_ids": 0,
+        }
 
         untested, orphaned = coverage.generate_cli_report(
-            setting_ids_by_feature, found_setting_ids, all_features
+            setting_ids_by_feature, found_setting_ids, all_features, test_counts
         )
 
         assert untested == 1  # GL-SET-002 is untested
@@ -752,9 +759,14 @@ class TestConsoleReporting:
         setting_ids_by_feature = {"feature1": ["GL-SET-001"]}
         found_setting_ids = {"GL-SET-001"}
         all_features = {"feature1"}
+        test_counts = {
+            "total_tests": 0,
+            "tests_with_setting_ids": 0,
+            "tests_without_setting_ids": 0,
+        }
 
         untested, orphaned = coverage.generate_cli_report(
-            setting_ids_by_feature, found_setting_ids, all_features
+            setting_ids_by_feature, found_setting_ids, all_features, test_counts
         )
 
         assert untested == 0
