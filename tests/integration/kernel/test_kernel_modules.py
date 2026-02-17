@@ -53,6 +53,7 @@ def test_cismodprobe_blacklist_exists(file: File):
     ]
 )
 @pytest.mark.feature("cisModprobe")
+@pytest.mark.booted(reason="Modules can only be loaded on booted system")
 def test_cismodprobe_modules_not_loaded(kernel_module: KernelModule):
     """Test that modules are not loaded"""
     modules = [
@@ -125,6 +126,7 @@ def test_cloud_modprobe_disable_udf_config_exists(file: File):
     ]
 )
 @pytest.mark.feature("cloud")
+@pytest.mark.booted(reason="Modules can only be loaded on booted system")
 def test_cloud_modprobe_disable_modules_not_loaded(kernel_module: KernelModule):
     """Test that disabled modules are not loaded"""
     modules = [
@@ -154,6 +156,7 @@ def test_cloud_modprobe_disable_modules_not_loaded(kernel_module: KernelModule):
     ]
 )
 @pytest.mark.feature("cloud and not azure")
+@pytest.mark.booted(reason="Modules can only be loaded on booted system")
 def test_cloud_modprobe_udf_module_not_loaded(kernel_module: KernelModule):
     """Test that disabled modules are not loaded, but not on Azure"""
     modules = [
@@ -174,6 +177,7 @@ def test_azure_no_modprobe_udf_disable_exists(file: File):
 
 @pytest.mark.setting_ids(["GL-SET-azure-config-modprobe-no-udf-disable"])
 @pytest.mark.root(reason="loading modules requires root access")
+@pytest.mark.booted(reason="Modules can only be loaded on booted system")
 @pytest.mark.feature("azure")
 def test_azure_modprobe_udf_module_loaded(kernel_module: KernelModule):
     """Test that UDF module is loaded on Azure"""
@@ -249,6 +253,7 @@ def test_chost_modprobe_configs_exist(file: File):
     ]
 )
 @pytest.mark.feature("chost")
+@pytest.mark.booted(reason="Modules can only be loaded on booted system")
 def test_chost_modprobe_required_modules_loaded(kernel_module: KernelModule):
     """Test that required modules are loaded on chost"""
     modules = [
@@ -277,6 +282,7 @@ def test_khost_modprobe_br_nf_exists(file: File):
 
 @pytest.mark.setting_ids(["GL-SET-khost-config-modules-load-br-nf"])
 @pytest.mark.feature("khost")
+@pytest.mark.booted(reason="Modules can only be loaded on booted system")
 def test_khost_modprobe_br_nf_loaded(kernel_module: KernelModule):
     """Test that khost br-nf module is loaded"""
     assert kernel_module.is_module_loaded(
@@ -298,6 +304,7 @@ def test_gardener_modprobe_ipvs_exists(file: File):
 
 @pytest.mark.setting_ids(["GL-SET-gardener-config-modules-load-ipvs"])
 @pytest.mark.feature("gardener")
+@pytest.mark.booted(reason="Modules can only be loaded on booted system")
 def test_gardener_modprobe_ipvs_loaded(kernel_module: KernelModule):
     """Test that gardener ipvs modules are loaded"""
     modules = [
@@ -329,6 +336,7 @@ def test_openstackbaremetal_modprobe_nouveau_disable_exists(file: File):
 
 @pytest.mark.setting_ids(["GL-SET-openstackbaremetal-config-modprobe-disallow-nouveau"])
 @pytest.mark.feature("openstackbaremetal")
+@pytest.mark.booted(reason="Modules can only be loaded on booted system")
 def test_openstackbaremetal_modprobe_nouveau_no_loaded(kernel_module: KernelModule):
     """Test that OpenStack Baremetal nouveau module is not loaded"""
     assert not kernel_module.is_module_loaded(

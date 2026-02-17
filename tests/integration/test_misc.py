@@ -98,6 +98,7 @@ def test_cissysctl_sysctl_files_exists(file: File):
 
 @pytest.mark.setting_ids(["GL-SET-cisSysctl-config-sysctl-cis"])
 @pytest.mark.feature("cisSysctl")
+@pytest.mark.booted(reason="sysctl needs a booted system")
 def test_cissysctl_sysctl_parameters_set(sysctl: Sysctl):
     """Test that CIS sysctl parameters are set"""
     parameters = [
@@ -351,6 +352,7 @@ def test_prod_sysctl_coredump_disable(file: File):
     ]
 )
 @pytest.mark.feature("_prod")
+@pytest.mark.booted(reason="sysctl needs a booted system")
 def test_prod_sysctl_coredump_disable_check(sysctl: Sysctl):
     """Test that production has sysctl disabling core dumps"""
     assert (

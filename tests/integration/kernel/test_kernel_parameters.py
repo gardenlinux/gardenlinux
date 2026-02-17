@@ -83,6 +83,7 @@ def test_cloud_sysctl_network_configs_exist(file: File):
     ]
 )
 @pytest.mark.feature("cloud")
+@pytest.mark.booted(reason="sysctl needs a booted system")
 def test_cloud_sysctl_network_config_ipv4(sysctl):
     """Test that cloud sysctl network config ipv4 is set correctly"""
     assert sysctl["net.ipv4.tcp_syncookies"] == 1
@@ -110,6 +111,7 @@ def test_cloud_sysctl_network_config_ipv4(sysctl):
     ]
 )
 @pytest.mark.feature("cloud")
+@pytest.mark.booted(reason="sysctl needs a booted system")
 def test_cloud_sysctl_network_config_ipv6(sysctl):
     """Test that cloud sysctl network config ipv6 is set correctly"""
     assert sysctl["net.ipv6.conf.all.forwarding"] == 1
@@ -145,6 +147,7 @@ def test_chost_sysctl_configs_exist(file: File):
     ]
 )
 @pytest.mark.feature("chost")
+@pytest.mark.booted(reason="sysctl needs a booted system")
 def test_chost_sysctl_config_content(sysctl: Sysctl):
     """Test that container networking sysctl config contains the correct content"""
     assert sysctl["net.ipv4.ip_forward"] == 1, "IP forwarding should be enabled"
@@ -187,6 +190,7 @@ def test_khost_sysctl_configs_exist(file: File):
     ]
 )
 @pytest.mark.feature("khost")
+@pytest.mark.booted(reason="sysctl needs a booted system")
 def test_khost_sysctl_configs_content(sysctl: Sysctl):
     """Test that Kubernetes host sysctl configs contain the correct content"""
     assert (
@@ -231,6 +235,7 @@ def test_server_sysctl_allow_ping_nonroot(file: File):
     ]
 )
 @pytest.mark.feature("server")
+@pytest.mark.booted(reason="sysctl needs a booted system")
 def test_server_sysctl_allow_ping_nonroot_check(sysctl: Sysctl):
     """Test that server sysctl allows ping for non-root users"""
     assert (
@@ -257,6 +262,7 @@ def test_server_sysctl_unprivileged_namespaces(file: File):
     ]
 )
 @pytest.mark.feature("server")
+@pytest.mark.booted(reason="sysctl needs a booted system")
 def test_server_sysctl_unprivileged_namespaces_check(sysctl: Sysctl):
     """Test that server sysctl allows ping for non-root users"""
     assert (

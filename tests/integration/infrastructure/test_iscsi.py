@@ -19,6 +19,7 @@ from plugins.shell import ShellRunner
     ]
 )
 @pytest.mark.feature("iscsi")
+@pytest.mark.booted(reason="iSCSI initiatorname.iscsi is created at boot time")
 def test_iscsi_no_static_initiatorname(file: File):
     """Test that iSCSI does have an dynamically generated initiator name"""
     assert file.exists(

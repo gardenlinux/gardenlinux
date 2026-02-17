@@ -111,6 +111,7 @@ def test_base_hosts_file_contains_localhost_and_garden(parse_file: ParseFile):
 
 @pytest.mark.setting_ids(["GL-SET-base-config-resolv-conf"])
 @pytest.mark.feature("base")
+@pytest.mark.booted(reason="Resolv.conf does not exist in chroot")
 def test_base_resolv_conf_file_exists(file: File):
     """Test that /etc/resolv.conf exists"""
     assert file.exists("/etc/resolv.conf")

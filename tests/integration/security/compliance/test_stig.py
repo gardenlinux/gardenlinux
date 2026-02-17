@@ -147,6 +147,7 @@ def test_stig_usb_disabled(file: File):
 
 @pytest.mark.setting_ids(["GL-SET-stig-config-modprobe-usb-disable"])
 @pytest.mark.feature("stig")
+@pytest.mark.booted(reason="Modules can only be loaded on booted system")
 def test_stig_modprobe_disable_modules_not_loaded(kernel_module: KernelModule):
     """Test that disabled modules are not loaded"""
     modules = [

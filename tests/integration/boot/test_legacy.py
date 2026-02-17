@@ -16,6 +16,7 @@ from plugins.parse_file import ParseFile
     ]
 )
 @pytest.mark.feature("_legacy")
+@pytest.mark.booted(reason="Bootloader entries do not exist in chroot")
 def test_legacy_syslinux_bootloader_entries(
     file: File, kernel_versions: KernelVersions
 ):
@@ -33,6 +34,7 @@ def test_legacy_syslinux_bootloader_entries(
     ]
 )
 @pytest.mark.feature("_legacy")
+@pytest.mark.booted(reason="Bootloeader settings to not exist in chroot")
 @pytest.mark.arch("amd64")
 def test_legacy_syslinux_libutil_exists(file: File):
     """Test that legacy and amd64 has syslinux libutil module"""

@@ -188,6 +188,7 @@ def test_server_systemd_networkd_foreign_routing_disabled(parse_file: ParseFile)
     ]
 )
 @pytest.mark.feature("server")
+@pytest.mark.booted(reason="Resolv.conf does not exist in chroot")
 def test_server_resolv_conf_stub_link(file: File):
     """Test that resolv.conf is a symlink to stub-resolv.conf"""
     assert file.is_symlink(
@@ -438,6 +439,7 @@ def test_server_mount_tmp_enabled(systemd: Systemd):
     ]
 )
 @pytest.mark.feature("server")
+@pytest.mark.booted(reason="No mounts available in chroot")
 def test_server_mount_tmp_active(systemd: Systemd):
     """Test that server tmp mount is active"""
     assert systemd.is_active("tmp.mount")
@@ -511,6 +513,7 @@ def test_server_locale_conf_permissions(file: File):
     ]
 )
 @pytest.mark.feature("server")
+@pytest.mark.booted(reason="set in exec.config, which is not run in chroot")
 def test_server_locale_link(file: File):
     """Test that server locale configuration is properly linked"""
     assert file.is_symlink(
