@@ -1,6 +1,6 @@
 import pytest
-
 from plugins.shell import ShellRunner
+
 
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
