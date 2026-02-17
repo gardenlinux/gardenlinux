@@ -560,9 +560,11 @@ def test_enable_swap_cgroup_accounting_configuration_in_cmdline_openstackbaremet
     kernel_cmdline: List[str],
 ):
     """Verify enable swap cgroup accounting parameters are present in the running kernel command line for OpenStack Bare Metal."""
+    required_params = ["cgroup_enable=memory", "swapaccount=1"]
+    missing = [param for param in required_params if param not in kernel_cmdline]
     assert (
-        "cgroup_enable=memory swapaccount=1" in kernel_cmdline
-    ), "Enable swap cgroup accounting (cgroup_enable=memory swapaccount=1) not found in kernel cmdline"
+        not missing
+    ), f"The following kernel cmdline parameters were not found: {', '.join(missing)}"
 
 
 # =============================================================================
