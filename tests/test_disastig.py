@@ -2,7 +2,7 @@ import pytest
 
 from plugins.shell import ShellRunner
 
-
+@pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_audit_reduction_capability(shell: ShellRunner):
