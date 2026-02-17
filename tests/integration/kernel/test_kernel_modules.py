@@ -104,7 +104,9 @@ def test_cloud_modprobe_disable_configs_exist(file: File):
         "GL-SET-cloud-config-modprobe-udf-disable",
     ]
 )
-@pytest.mark.feature("cloud and not azure", reason="azure has a different modprobe disable configuration")
+@pytest.mark.feature(
+    "cloud and not azure", reason="azure has a different modprobe disable configuration"
+)
 def test_cloud_modprobe_disable_udf_config_exists(file: File):
     """Test that cloud modprobe disable configurations exist, but not on Azure"""
     paths = [

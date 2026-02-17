@@ -63,14 +63,19 @@ def test_correct_ntp_on_aws(timedatectl: TimeDateCtl):
 @pytest.mark.feature("azure")
 def test_azure_chrony_service_after_ptp_exists(file: File):
     """Test that Azure chrony device service configuration exists"""
-    assert file.exists("/etc/systemd/system/chronyd.service.d/10-after_dev-ptp_hyperv.device.conf")
+    assert file.exists(
+        "/etc/systemd/system/chronyd.service.d/10-after_dev-ptp_hyperv.device.conf"
+    )
 
 
 @pytest.mark.setting_ids(["GL-SET-azure-service-chrony-after-ptp-device"])
 @pytest.mark.feature("azure")
 def test_azure_chrony_service_after_ptp_content(parse_file: ParseFile):
     """Test that Azure chrony device service configuration content is correct"""
-    config = parse_file.parse("/etc/systemd/system/chronyd.service.d/10-after_dev-ptp_hyperv.device.conf", format="ini")
+    config = parse_file.parse(
+        "/etc/systemd/system/chronyd.service.d/10-after_dev-ptp_hyperv.device.conf",
+        format="ini",
+    )
     assert config["Unit"]["BindsTo"] == "dev-ptp_hyperv.device"
     assert config["Unit"]["After"] == "dev-ptp_hyperv.device"
 
