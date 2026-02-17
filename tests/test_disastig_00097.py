@@ -1,12 +1,16 @@
+import os
 import stat
 
 import pytest
-from plugins.parse_file import ParseFile
+
+
+def _is_container() -> bool:
+    return os.path.exists("/.dockerenv") or os.path.exists("/run/.containerenv")
 
 
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
-def test_auditctl_owned_by_root(parse_file: ParseFile):
+def test_auditctl_owned_by_root():
     """
     As per DISA STIG requirement, we have to ensure that only the root user is allowed
     to access the audit tools like auditctl, last (wtmpdb) and journalctl. This should
@@ -14,7 +18,7 @@ def test_auditctl_owned_by_root(parse_file: ParseFile):
     Ref: SRG-OS-000256-GPOS-00097
     """
 
-    if parse_file.exists("/.dockerenv") or parse_file.exists("/run/.containerenv"):
+    if _is_container():
         pytest.skip(
             "stigcompliance: skipping containers for audit control requirements"
         )
@@ -27,14 +31,14 @@ def test_auditctl_owned_by_root(parse_file: ParseFile):
     ]
 
     for path in paths:
-        if parse_file.exists(path):
-            info = parse_file.stat(path)
+        if os.path.exists(path):
+            info = os.stat(path)
             assert info.st_uid == 0, f"stigcompliance: {path} not owned by root"
 
 
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
-def test_auditctl_not_world_writable(parse_file: ParseFile):
+def test_auditctl_not_world_writable():
     """
     As per DISA STIG requirement, we have to ensure that only the root user is allowed
     to access the audit tools like auditctl, last (wtmpdb) and journalctl. This should
@@ -42,7 +46,7 @@ def test_auditctl_not_world_writable(parse_file: ParseFile):
     Ref: SRG-OS-000256-GPOS-00097
     """
 
-    if parse_file.exists("/.dockerenv") or parse_file.exists("/run/.containerenv"):
+    if _is_container():
         pytest.skip(
             "stigcompliance: skipping containers for audit control requirements"
         )
@@ -55,16 +59,16 @@ def test_auditctl_not_world_writable(parse_file: ParseFile):
     ]
 
     for path in paths:
-        if parse_file.exists(path):
-            info = parse_file.stat(path)
+        if os.path.exists(path):
+            info = os.stat(path)
             assert not (
-                info.mode & stat.S_IWOTH
+                info.st_mode & stat.S_IWOTH
             ), f"stigcompliance: {path} is world-writable"
 
 
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
-def test_auditctl_not_group_writable(parse_file: ParseFile):
+def test_auditctl_not_group_writable():
     """
     As per DISA STIG requirement, we have to ensure that only the root user is allowed
     to access the audit tools like auditctl, last (wtmpdb) and journalctl. This should
@@ -72,7 +76,7 @@ def test_auditctl_not_group_writable(parse_file: ParseFile):
     Ref: SRG-OS-000256-GPOS-00097
     """
 
-    if parse_file.exists("/.dockerenv") or parse_file.exists("/run/.containerenv"):
+    if _is_container():
         pytest.skip(
             "stigcompliance: skipping containers for audit control requirements"
         )
@@ -85,16 +89,16 @@ def test_auditctl_not_group_writable(parse_file: ParseFile):
     ]
 
     for path in paths:
-        if parse_file.exists(path):
-            info = parse_file.stat(path)
+        if os.path.exists(path):
+            info = os.stat(path)
             assert not (
-                info.mode & stat.S_IWGRP
+                info.st_mode & stat.S_IWGRP
             ), f"stigcompliance: {path} is group-writable"
 
 
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
-def test_audit_log_owned_by_root(parse_file: ParseFile):
+def test_audit_log_owned_by_root():
     """
     As per DISA STIG requirement, we have to ensure that only the root user is allowed
     to access the audit tools like auditctl, last (wtmpdb) and journalctl. This should
@@ -102,21 +106,21 @@ def test_audit_log_owned_by_root(parse_file: ParseFile):
     Ref: SRG-OS-000256-GPOS-00097
     """
 
-    if parse_file.exists("/.dockerenv") or parse_file.exists("/run/.containerenv"):
+    if _is_container():
         pytest.skip(
             "stigcompliance: skipping containers for audit control requirements"
         )
 
     log_file = "/var/log/audit/audit.log"
 
-    if parse_file.exists(log_file):
-        info = parse_file.stat(log_file)
+    if os.path.exists(log_file):
+        info = os.stat(log_file)
         assert info.st_uid == 0, f"stigcompliance: {log_file} not owned by root"
 
 
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
-def test_audit_log_not_world_writable(parse_file: ParseFile):
+def test_audit_log_not_world_writable():
     """
     As per DISA STIG requirement, we have to ensure that only the root user is allowed
     to access the audit tools like auditctl, last (wtmpdb) and journalctl. This should
@@ -124,15 +128,15 @@ def test_audit_log_not_world_writable(parse_file: ParseFile):
     Ref: SRG-OS-000256-GPOS-00097
     """
 
-    if parse_file.exists("/.dockerenv") or parse_file.exists("/run/.containerenv"):
+    if _is_container():
         pytest.skip(
             "stigcompliance: skipping containers for audit control requirements"
         )
 
     log_file = "/var/log/audit/audit.log"
 
-    if parse_file.exists(log_file):
-        info = parse_file.stat(log_file)
+    if os.path.exists(log_file):
+        info = os.stat(log_file)
         assert not (
-            info.mode & stat.S_IWOTH
+            info.st_mode & stat.S_IWOTH
         ), f"stigcompliance: {log_file} is world-writable"
