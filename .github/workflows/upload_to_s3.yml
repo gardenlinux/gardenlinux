@@ -35,7 +35,7 @@ jobs:
         shell: bash
     env:
       CNAME: ""
-      GL_ALLOW_FRANKENSTEIN: "1"
+      GL_ALLOW_MULTIPLE_PLATFORMS: "1"
     permissions:
       id-token: write
     environment: oidc_aws_s3_upload
@@ -47,7 +47,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2d52501ef10ba3b10d04fff5c24ffcd882f3ea07 # pin@0.10.13
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@e68236134acc7416606052599f4cfab7b9ea3b7c # pin@0.10.14
       - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
