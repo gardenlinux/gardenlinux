@@ -8,6 +8,7 @@ from plugins.parse_file import ParseFile
 # khost Feature - Kubernetes Host Extended
 # =============================================================================
 
+
 @pytest.mark.setting_ids(
     [
         "GL-SET-khost-config-security-no-apparmor-init",
