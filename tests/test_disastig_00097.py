@@ -3,11 +3,18 @@ import stat
 
 import pytest
 
+# Global paths for audit tools
+AUDIT_TOOL_PATHS = [
+    "/sbin/auditctl",
+    "/usr/sbin/auditctl",
+    "/usr/bin/last",
+    "/usr/bin/journalctl",
+]
 
-def _is_container() -> bool:
-    return os.path.exists("/.dockerenv") or os.path.exists("/run/.containerenv")
+AUDIT_LOG_FILE = "/var/log/audit/audit.log"
 
 
+@pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_auditctl_owned_by_root():
@@ -18,24 +25,13 @@ def test_auditctl_owned_by_root():
     Ref: SRG-OS-000256-GPOS-00097
     """
 
-    if _is_container():
-        pytest.skip(
-            "stigcompliance: skipping containers for audit control requirements"
-        )
-
-    paths = [
-        "/sbin/auditctl",
-        "/usr/sbin/auditctl",
-        "/usr/bin/last",
-        "/usr/bin/journalctl",
-    ]
-
-    for path in paths:
+    for path in AUDIT_TOOL_PATHS:
         if os.path.exists(path):
             info = os.stat(path)
             assert info.st_uid == 0, f"stigcompliance: {path} not owned by root"
 
 
+@pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_auditctl_not_world_writable():
@@ -46,19 +42,7 @@ def test_auditctl_not_world_writable():
     Ref: SRG-OS-000256-GPOS-00097
     """
 
-    if _is_container():
-        pytest.skip(
-            "stigcompliance: skipping containers for audit control requirements"
-        )
-
-    paths = [
-        "/sbin/auditctl",
-        "/usr/sbin/auditctl",
-        "/usr/bin/last",
-        "/usr/bin/journalctl",
-    ]
-
-    for path in paths:
+    for path in AUDIT_TOOL_PATHS:
         if os.path.exists(path):
             info = os.stat(path)
             assert not (
@@ -66,6 +50,7 @@ def test_auditctl_not_world_writable():
             ), f"stigcompliance: {path} is world-writable"
 
 
+@pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_auditctl_not_group_writable():
@@ -76,26 +61,14 @@ def test_auditctl_not_group_writable():
     Ref: SRG-OS-000256-GPOS-00097
     """
 
-    if _is_container():
-        pytest.skip(
-            "stigcompliance: skipping containers for audit control requirements"
-        )
-
-    paths = [
-        "/sbin/auditctl",
-        "/usr/sbin/auditctl",
-        "/usr/bin/last",
-        "/usr/bin/journalctl",
-    ]
-
-    for path in paths:
+    for path in AUDIT_TOOL_PATHS:
         if os.path.exists(path):
             info = os.stat(path)
             assert not (
                 info.st_mode & stat.S_IWGRP
             ), f"stigcompliance: {path} is group-writable"
 
-
+@pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_audit_log_owned_by_root():
@@ -106,18 +79,11 @@ def test_audit_log_owned_by_root():
     Ref: SRG-OS-000256-GPOS-00097
     """
 
-    if _is_container():
-        pytest.skip(
-            "stigcompliance: skipping containers for audit control requirements"
-        )
+    if os.path.exists(AUDIT_LOG_FILE):
+        info = os.stat(AUDIT_LOG_FILE)
+        assert info.st_uid == 0, f"stigcompliance: {AUDIT_LOG_FILE} not owned by root"
 
-    log_file = "/var/log/audit/audit.log"
-
-    if os.path.exists(log_file):
-        info = os.stat(log_file)
-        assert info.st_uid == 0, f"stigcompliance: {log_file} not owned by root"
-
-
+@pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_audit_log_not_world_writable():
@@ -128,15 +94,8 @@ def test_audit_log_not_world_writable():
     Ref: SRG-OS-000256-GPOS-00097
     """
 
-    if _is_container():
-        pytest.skip(
-            "stigcompliance: skipping containers for audit control requirements"
-        )
-
-    log_file = "/var/log/audit/audit.log"
-
-    if os.path.exists(log_file):
-        info = os.stat(log_file)
+    if os.path.exists(AUDIT_LOG_FILE):
+        info = os.stat(AUDIT_LOG_FILE)
         assert not (
             info.st_mode & stat.S_IWOTH
-        ), f"stigcompliance: {log_file} is world-writable"
+        ), f"stigcompliance: {AUDIT_LOG_FILE} is world-writable"
