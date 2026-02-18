@@ -1,0 +1,3 @@
+markers:
+  "etc/systemd/system/nvme-hostid.service":
+  - "GL-TESTCOV-nvme-service-nvme-hostid-unit"

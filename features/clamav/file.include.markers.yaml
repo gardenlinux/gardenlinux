@@ -1,0 +1,3 @@
+markers:
+  "var/spool/cron/crontabs/root":
+  - "GL-TESTCOV-clamav-config-cron-root"

@@ -1,0 +1,7 @@
+markers:
+  "etc/kernel/cmdline.d/90-crashkernel.cfg":
+  - "GL-TESTCOV-_kdump-config-kernel-cmdline-crashkernel"
+  "etc/systemd/system/kdump-tools.service.d/override.conf":
+  - "GL-TESTCOV-_kdump-config-service-kdump-tools-override"
+  "usr/local/sbin/prepare-initrd-kdump":
+  - "GL-TESTCOV-_kdump-script-prepare-initrd-kdump"

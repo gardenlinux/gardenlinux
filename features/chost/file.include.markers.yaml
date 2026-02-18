@@ -1,0 +1,19 @@
+markers:
+  "etc/containerd/config.toml":
+  - "GL-TESTCOV-chost-config-containerd-config"
+  "etc/crictl.yaml":
+  - "GL-TESTCOV-chost-config-crictl-yaml"
+  "etc/modprobe.d/overlayfs.conf":
+  - "GL-TESTCOV-chost-config-modprobe-overlayfs"
+  "etc/modules-load.d/br_netfilter.conf":
+  - "GL-TESTCOV-chost-config-modprobe-br-netfilter-config"
+  "etc/modules-load.d/ip_tables.conf":
+  - "GL-TESTCOV-chost-config-modprobe-ip-tables-config"
+  "etc/modules-load.d/overlay.conf":
+  - "GL-TESTCOV-chost-config-modprobe-overlayfs-config"
+  "etc/sysctl.d/ip-forward.conf":
+  - "GL-TESTCOV-chost-config-sysctl-ip-forward"
+  "etc/sysctl.d/nf-call-iptables.conf":
+  - "GL-TESTCOV-chost-config-sysctl-nf-call-iptables"
+  "etc/systemd/system/containerd.service.d/override.conf":
+  - "GL-TESTCOV-chost-service-containerd-override"

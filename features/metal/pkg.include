@@ -8,8 +8,10 @@ ipmitool
 pciutils
 usbutils
 numactl
+# GL-TESTCOV-metal-service-mdadm-enable
 mdadm
 hdparm
+# GL-TESTCOV-metal-service-smartmontools-enable
 smartmontools
 frr
 linux-image-$arch

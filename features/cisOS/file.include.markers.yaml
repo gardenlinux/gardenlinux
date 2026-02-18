@@ -1,0 +1,31 @@
+markers:
+  "etc/kernel/cmdline.d/10-audit-proc.cfg":
+  - "GL-TESTCOV-cisOS-config-kernel-cmdline-audit-proc"
+  "etc/kernel/cmdline.d/20-audit-backlog.cfg":
+  - "GL-TESTCOV-cisOS-config-kernel-cmdline-audit-backlog"
+  "etc/kernel/postinst.d/zz-kernel-cmdline":
+  - "GL-TESTCOV-cisOS-config-kernel-postinst-kernel-cmdline"
+  "etc/kernel/postinst.d/zz-kernel-install":
+  - "GL-TESTCOV-cisOS-config-kernel-postinst-kernel-install"
+  "etc/kernel/postinst.d/zz-update-syslinux":
+  - "GL-TESTCOV-cisOS-config-kernel-postinst-update-syslinux"
+  "etc/kernel/postrm.d/zz-kernel-remove":
+  - "GL-TESTCOV-cisOS-config-kernel-postrm-kernel-remove"
+  "etc/kernel/postrm.d/zz-update-syslinux":
+  - "GL-TESTCOV-cisOS-config-kernel-postrm-update-syslinux"
+  "etc/logrotate.d/btmp":
+  - "GL-TESTCOV-cisOS-config-logrotate-btmp"
+  "etc/logrotate.d/wtmp":
+  - "GL-TESTCOV-cisOS-config-logrotate-wtmp"
+  "etc/pam.d/common-account":
+  - "GL-TESTCOV-cisOS-config-pam-common-account"
+  "etc/pam.d/common-auth":
+  - "GL-TESTCOV-cisOS-config-pam-common-auth"
+  "etc/security/limits.conf":
+  - "GL-TESTCOV-cisOS-config-security-limits-conf"
+  "etc/selinux/config":
+  - "GL-TESTCOV-cisOS-config-selinux-config"
+  "etc/sysstat/sysstat":
+  - "GL-TESTCOV-cisOS-config-sysstat-sysstat"
+  "usr/lib/tmpfiles.d/var.conf":
+  - "GL-TESTCOV-cisOS-config-tmpfiles-var"

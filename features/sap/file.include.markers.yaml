@@ -1,0 +1,19 @@
+markers:
+  "etc/audit/rules.d/70-privilege-escalation.rules":
+  - "GL-TESTCOV-sap-config-audit-rules-privilege-escalaction"
+  "etc/audit/rules.d/70-privileged-special.rules":
+  - "GL-TESTCOV-sap-config-audit-rules-privilege-escalaction-special-amd64"
+  "etc/audit/rules.d/70-privileged-special.rules.arm64":
+  - "GL-TESTCOV-sap-config-audit-rules-privilege-escalaction-special-arm64"
+  "etc/audit/rules.d/70-system-integrity.rules":
+  - "GL-TESTCOV-sap-config-audit-rules-privilege-system-integrity"
+  "etc/issue":
+  - "GL-TESTCOV-sap-config-issue"
+  "etc/issue.net":
+  - "GL-TESTCOV-sap-config-issue-net"
+  "etc/motd":
+  - "GL-TESTCOV-sap-config-motd"
+  "etc/tmpfiles.d/legacy.conf":
+  - "GL-TESTCOV-sap-config-tmpfiles-legacy"
+  "usr/local/share/ca-certificates/SAP_Global_Root_CA.crt":
+  - "GL-TESTCOV-sap-config-security-sap-global-root-ca"

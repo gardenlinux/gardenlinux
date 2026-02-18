@@ -1,0 +1,5 @@
+markers:
+  "etc/iscsi/initiatorname.iscsi.template":
+  - "GL-TESTCOV-iscsi-config-iscsi-initiatorname-template"
+  "etc/systemd/system/iscsi-initiatorname.service":
+  - "GL-TESTCOV-iscsi-service-iscsi-initiatorname-unit"

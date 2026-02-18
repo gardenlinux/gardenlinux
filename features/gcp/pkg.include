@@ -1,4 +1,5 @@
 google-compute-engine-oslogin
 google-compute-engine
+# GL-TESTCOV-gcp-service-google-guest-agent-enable
 google-guest-agent
 nvme-cli

@@ -1,0 +1,17 @@
+markers:
+  "etc/firewall/ipv4_flush.sh":
+  - "GL-TESTCOV-cisSshd-config-firewall-ipv4-flush"
+  "etc/firewall/ipv4_gl_default.conf":
+  - "GL-TESTCOV-cisSshd-config-firewall-ipv4-gl-default"
+  "etc/firewall/ipv6_flush.sh":
+  - "GL-TESTCOV-cisSshd-config-firewall-ipv6-flush"
+  "etc/firewall/ipv6_gl_default.conf":
+  - "GL-TESTCOV-cisSshd-config-firewall-ipv6-gl-default"
+  "etc/ssh/sshd-banner":
+  - "GL-TESTCOV-cisSshd-config-ssh-sshd-banner"
+  "etc/ssh/sshd_config":
+  - "GL-TESTCOV-cisSshd-config-ssh-sshd-config-001"
+  "etc/systemd/system/gardenlinux-fw-ipv4.service":
+  - "GL-TESTCOV-cisSshd-service-gardenlinux-fw-ipv4-unit"
+  "etc/systemd/system/gardenlinux-fw-ipv6.service":
+  - "GL-TESTCOV-cisSshd-service-gardenlinux-fw-ipv6-unit"

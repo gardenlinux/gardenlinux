@@ -1,0 +1,7 @@
+markers:
+  "etc/systemd/system/emergency.service":
+  - "GL-TESTCOV-_trustedboot-service-initrd-emergency-unit"
+  "etc/systemd/system/local-fs.target.requires/check-secureboot.service":
+  - "GL-TESTCOV-_trustedboot-service-initrd-local-fs-target-requires-check-secureboot-unit"
+  "usr/bin/check-secureboot":
+  - "GL-TESTCOV-_trustedboot-script-initrd-check-secureboot"

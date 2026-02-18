@@ -2,5 +2,7 @@
 #google-guest-agent
 python3-cffi-backend
 nvme-cli
+# GL-TESTCOV-gcp-service-chrony-enable
 chrony
+# GL-TESTCOV-gcp-service-cloud-init-local-enable
 cloud-init

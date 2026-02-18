@@ -4,7 +4,7 @@ ConditionPathExists=|!/etc/ssh/moduli
 
 [Service]
 ExecStart=ssh-keygen -M generate -O bits=2048 /etc/ssh/candidates
-ExecStart=ssh-keygen -M screen -f /etc/ssh/candidates /etc/ssh/moduli 
+ExecStart=ssh-keygen -M screen -f /etc/ssh/candidates /etc/ssh/moduli
 ExecStart=rm /etc/ssh/candidates
 Type=oneshot
 RemainAfterExit=yes

@@ -1,0 +1,23 @@
+markers:
+  "etc/apt/apt.conf.d/01-vendor-Ubuntu":
+  - "GL-TESTCOV-stig-config-apt-vendor-ubuntu"
+  "etc/audit/auditd.conf":
+  - "GL-TESTCOV-stig-config-audit-auditd-conf"
+  "etc/audit/rules.d/stig.rules":
+  - "GL-TESTCOV-stig-config-audit-rules-d-stig-rules"
+  "etc/kernel/cmdline.d/90-audit.cfg":
+  - "GL-TESTCOV-stig-config-kernel-cmdline-audit"
+  "etc/modprobe.d/disabled_usb.conf":
+  - "GL-TESTCOV-stig-config-modprobe-usb-disable"
+  "etc/rsyslog.d/50-default.conf":
+  - "GL-TESTCOV-stig-config-rsyslog-default"
+  "etc/security/faillock.conf":
+  - "GL-TESTCOV-stig-config-security-faillock"
+  "etc/security/limits.conf":
+  - "GL-TESTCOV-stig-config-security-limits"
+  "etc/security/pwquality.conf":
+  - "GL-TESTCOV-stig-config-security-pwquality"
+  "etc/sysctl.d/99-stig.conf":
+  - "GL-TESTCOV-stig-config-sysctl-stig"
+  "usr/share/pam-configs/garden-stig":
+  - "GL-TESTCOV-stig-config-pam-garden-stig"
