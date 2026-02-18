@@ -37,8 +37,8 @@ sed 's/efi\///' -i /efi/loader/entries/*.conf
 
 SYSTEMD_ESP_PATH=/efi bootctl --no-variables install
 
-# GL-SET-_legacy-config-syslinux-menu-exists
-# GL-SET-_legacy-config-syslinux-libutil-exists
+# GL-SET-_legacy-config-syslinux-menu-amd64-exists
+# GL-SET-_legacy-config-syslinux-libutil-amd64-exists
 # syslinux
 if [ -f "/usr/bin/syslinux" ]; then
 	mkdir -p /efi/syslinux
