@@ -604,22 +604,25 @@ def test_console_configuration_in_cmdline_vmware_bautrates(kernel_cmdline: List[
     ), "Serial console (ttyS0,115200) not found in kernel cmdline"
 
 
-@pytest.mark.setting_ids(["GL-SET-vmware-config-kernel-cmdline-no-ignition"])
-@pytest.mark.feature("vmware")
-def test_vmware_kernel_cmdline_ignition_exists(file: File):
-    """Test that VMware does not have ignition kernel cmdline for ARM64. It is deleted by ignition-disable.service."""
-    assert not file.exists("/etc/kernel/cmdline.d/50-ignition.cfg")
+# Cannot not be tested as 50-ignition.cfg is deleted by ignition-disable.service.
+# @pytest.mark.setting_ids(["GL-SET-vmware-config-kernel-cmdline-no-ignition"])
+# @pytest.mark.feature("vmware")
+# @pytest.mark.arch("amd64")
+# def test_vmware_kernel_cmdline_ignition_exists(file: File):
+#     """Test that VMware does have ignition kernel cmdline. It never exists on arm64."""
+#     assert file.exists("/etc/kernel/cmdline.d/50-ignition.cfg")
 
 
-@pytest.mark.setting_ids(["GL-SET-vmware-config-kernel-cmdline-ignition"])
-@pytest.mark.feature("vmware")
-@pytest.mark.arch("amd64")
-@pytest.mark.booted(reason="kernel cmdline needs a booted system")
-def test_ignition_configuration_in_cmdline_vmware_amd64(kernel_cmdline: List[str]):
-    """Verify ignition parameters are present in the running kernel command line for VMware."""
-    assert (
-        "ignition.firstboot=1 ignition.platform.id=vmware" in kernel_cmdline
-    ), "Ignition (ignition.firstboot=1 ignition.platform.id=vmware) not found in kernel cmdline"
+# Cannot not be tested as 50-ignition.cfg is deleted by ignition-disable.service.
+# @pytest.mark.setting_ids(["GL-SET-vmware-config-kernel-cmdline-ignition"])
+# @pytest.mark.feature("vmware")
+# @pytest.mark.arch("amd64")
+# @pytest.mark.booted(reason="kernel cmdline needs a booted system")
+# def test_ignition_configuration_in_cmdline_vmware_amd64(kernel_cmdline: List[str]):
+#     """Verify ignition parameters are present in the running kernel command line for VMware."""
+#     assert (
+#         "ignition.firstboot=1 ignition.platform.id=vmware" in kernel_cmdline
+#     ), "Ignition (ignition.firstboot=1 ignition.platform.id=vmware) not found in kernel cmdline"
 
 
 @pytest.mark.setting_ids(
@@ -636,12 +639,13 @@ def test_vmware_kernel_cmdline_no_ignition_arm64(file: File):
     ), "ARM64 ignition config should not exist"
 
 
-@pytest.mark.setting_ids(["GL-SET-vmware-config-kernel-cmdline-ignition"])
-@pytest.mark.feature("vmware")
-@pytest.mark.arch("arm64")
-@pytest.mark.booted(reason="kernel cmdline needs a booted system")
-def test_no_ignition_configuration_in_cmdline_vmware_arm64(kernel_cmdline: List[str]):
-    """Verify no ignition parameters are present in the running kernel command line for VMware."""
-    assert (
-        "ignition.firstboot=1 ignition.platform.id=vmware" not in kernel_cmdline
-    ), "Ignition (ignition.firstboot=1 ignition.platform.id=vmware) found in kernel cmdline"
+# Cannot not be tested as 50-ignition.cfg is deleted by ignition-disable.service.
+# @pytest.mark.setting_ids(["GL-SET-vmware-config-kernel-cmdline-ignition"])
+# @pytest.mark.feature("vmware")
+# @pytest.mark.arch("arm64")
+# @pytest.mark.booted(reason="kernel cmdline needs a booted system")
+# def test_no_ignition_configuration_in_cmdline_vmware_arm64(kernel_cmdline: List[str]):
+#     """Verify no ignition parameters are present in the running kernel command line for VMware."""
+#     assert (
+#         "ignition.firstboot=1 ignition.platform.id=vmware" not in kernel_cmdline
+#     ), "Ignition (ignition.firstboot=1 ignition.platform.id=vmware) found in kernel cmdline"
