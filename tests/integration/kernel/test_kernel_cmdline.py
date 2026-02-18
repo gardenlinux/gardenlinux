@@ -605,7 +605,7 @@ def test_console_configuration_in_cmdline_vmware_bautrates(kernel_cmdline: List[
 
 
 # Cannot not be tested as 50-ignition.cfg is deleted by ignition-disable.service.
-# @pytest.mark.setting_ids(["GL-SET-vmware-config-kernel-cmdline-no-ignition"])
+# @pytest.mark.setting_ids(["GL-SET-vmware-config-kernel-cmdline-ignition"])
 # @pytest.mark.feature("vmware")
 # @pytest.mark.arch("amd64")
 # def test_vmware_kernel_cmdline_ignition_exists(file: File):
