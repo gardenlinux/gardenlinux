@@ -12,7 +12,7 @@ As we continue to develop and maintain Garden Linux, we need to ensure comprehen
 
 The [tests-ng framework](./0006-new-test-framework-in-place-self-contained-test-execution.md) is designed to run on several test environments but also actual production systems (VMs, containers, bare metal) where the `features/` directory is **not shipped** in the test distribution, as established in [ADR 0006](./0006-new-test-framework-in-place-self-contained-test-execution.md). Tests must be self-contained and portable, with the test distribution only including test files, plugins, and runtime dependencies.
 
-Garden Linux features define configuration settings through a variety of formats and representations:
+Garden Linux features define configuration settings in features through a variety of formats and representations:
 
 - **Builder-evaluated config**: e.g., packages to install in `pkg.include`
 - **Builder-evaluated scripts**: plain shell scripts using `sed`, `awk`, etc. in `exec.config`
@@ -28,42 +28,40 @@ Traditional runtime coverage tools (like `pytest-cov`) have fundamental limitati
 
 ## Decision
 
-We will use **static coverage analysis** to track test coverage by defining setting identifier markers in features and matching them with references in test files, without requiring test execution or the features directory at runtime.
+We will use **static coverage analysis** to track test coverage by defining test coverage markers in features and matching them with references in test files, without requiring test execution or the features directory at runtime.
 
-### Setting Identifier Markers
+### Test Coverage Markers
 
-We define setting identifier markers in features using the format `GL-SET-<feature>-<category>-<setting-description>`. Identifiers must be descriptive and self-documenting to clearly indicate which feature and which specific setting is being tested.
+We define test coverage markers in features using the format `GL-TESTCOV-<feature>-<category>-<setting-description>`. Identifiers must be descriptive and self-documenting to clearly indicate which feature and which specific setting is being tested.
 
 **Identifier Structure:**
 
-- **Prefix**: `GL-SET-` (Garden Linux Setting identifier)
+- **Prefix**: `GL-TESTCOV-` (Garden Linux Setting identifier)
 - **Feature name**: The feature directory name (e.g., `aws`, `ssh`, `cis`)
 - **Category**: The type of setting (e.g., `service`, `config`, `file`)
 - **Setting description**: A descriptive, hyphenated description of what the setting does (e.g., `aws-clocksource-enable`, `ssh-config-permit-root-login`)
 
 **Where identifiers are defined:**
 
-- In `exec.config`, `pkg.include`, `file.exclude`: add comments with identifiers like `# GL-SET-aws-service-aws-clocksource-enable`
-- For `file.include/`: define identifiers in `file.include.ids.yaml` (markers shall not end up in the final image)
-- For `initrd.include/`: define identifiers in `initrd.include.ids.yaml` (markers shall not end up in the final image)
+- In `exec.config`, `pkg.include`, `file.exclude`: add comments with identifiers like `# GL-TESTCOV-aws-service-aws-clocksource-enable`
+- For `file.include/` and `initrd.include/`: define identifiers in `file.include.markers.yaml` and `initrd.include.markers.yaml` (markers shall not end up in the final image)
 
 This naming convention makes it immediately clear from the identifier itself which feature is being tested and what specific setting it covers, facilitating both manual review and automated coverage analysis.
 
-These identifiers are then referenced in test files (`tests-ng/test_*.py`) to establish a clear mapping between features and tests.
+These identifiers are then referenced in test files (`tests/**/test_*.py`) to establish a clear mapping between features and tests.
 
 ### Coverage Analysis Approach
 
 The coverage reporting system (`tests-ng/util/coverage.py`) performs static analysis in three steps:
 
-1. **Extract setting IDs from features**: Scans the `features/` directory (available during development/CI) and extracts all setting IDs from:
+1. **Extract test coverage markers from features**: Scans the `features/` directory (available during development/CI) and extracts all markers from:
 
-   - Inline comments in `exec.config`, `pkg.include`, `file.exclude`, ... files (searching for `GL-SET-*` pattern)
-   - `file.include/` files (via `file.include.ids.yaml` mappings)
-   - `initrd.include/` files (via `initrd.include.ids.yaml` mappings)
+   - Inline comments in `exec.config`, `pkg.include`, `file.exclude`, ... files (searching for `GL-TESTCOV-*` pattern)
+   - `file.include/` and `initrd.include/` files (via `file.include.markers.yaml` and `initrd.include.markers.yaml` mappings)
 
-2. **Find setting IDs in test files**: Searches all `tests-ng/test_*.py` files for `GL-SET-*` string patterns using regex matching.
+2. **Find test coverage markers in test files**: Searches all `tests/**/test_*.py` files for `GL-TESTCOV-*` string patterns using regex matching.
 
-3. **Generate coverage report**: Compares the two sets (defined vs. referenced) and generates human-readable and machine-readable reports showing coverage percentages, per-feature breakdown, and lists of untested setting IDs.
+3. **Generate coverage report**: Compares the two sets (defined vs. referenced) and generates human-readable and machine-readable reports showing coverage percentages, per-feature breakdown, and lists of untested markers.
 
 This approach works entirely through static file analysis - generating reports **offline** (not while running pytest), avoiding the need for test execution, runtime dependencies on the features directory, or additional coverage tracking infrastructure.
 
@@ -77,19 +75,19 @@ This approach works entirely through static file analysis - generating reports *
 
 - **No test execution required**: Coverage reports can be generated without running any tests, enabling coverage tracking even when test infrastructure is unavailable.
 
-- **Actionable**: Clearly shows which setting IDs need tests, organized by feature, making it easy to identify and address coverage gaps.
+- **Actionable**: Clearly shows which test coverage markers tests, organized by feature, making it easy to identify and address coverage gaps.
 
 - **Simple and reliable**: Uses only standard library modules (plus optional `yaml` for parsing), with no complex test execution or coverage tracking overhead.
 
 ### Trade-offs and risks
 
-- **Static analysis only**: Can only detect setting IDs that are present as string literals in features and test files.
+- **Static analysis only**: Can only detect test coverage markers that are present as string literals in features and test files.
 
 - **Pattern matching limitations**: Relies on regex pattern matching, which may have edge cases with unusual ID formats or comments.
 
-- **No execution verification**: Static analysis cannot verify that tests actually exercise the settings correctly - it only verifies that setting IDs are referenced in test code.
+- **No execution verification**: Static analysis cannot verify that tests actually exercise the settings correctly - it only verifies that test coverage markers are referenced in test code.
 
-- **Manual maintenance**: The `file.include.ids.yaml`, `initrd.include.ids.yaml` files and inline comments must be maintained manually to keep coverage tracking accurate. This should be reflected in the documentation on how to write features and tests.
+- **Manual maintenance**: The `file.include.markers.yaml` and `initrd.include.markers.yaml` files and inline comments must be maintained manually to keep coverage tracking accurate. This should be reflected in the documentation on how to write features and tests.
 
 ## Alternatives Considered
 
