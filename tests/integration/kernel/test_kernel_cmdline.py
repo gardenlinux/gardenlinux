@@ -604,11 +604,11 @@ def test_console_configuration_in_cmdline_vmware_bautrates(kernel_cmdline: List[
     ), "Serial console (ttyS0,115200) not found in kernel cmdline"
 
 
-@pytest.mark.setting_ids(["GL-SET-vmware-config-kernel-cmdline-ignition"])
+@pytest.mark.setting_ids(["GL-SET-vmware-config-kernel-cmdline-no-ignition"])
 @pytest.mark.feature("vmware")
 def test_vmware_kernel_cmdline_ignition_exists(file: File):
-    """Test that VMware kernel cmdline ignition configuration exists"""
-    assert file.is_regular_file("/etc/kernel/cmdline.d/50-ignition.cfg")
+    """Test that VMware does not have ignition kernel cmdline for ARM64. It is deleted by ignition-disable.service."""
+    assert not file.exists("/etc/kernel/cmdline.d/50-ignition.cfg")
 
 
 @pytest.mark.setting_ids(["GL-SET-vmware-config-kernel-cmdline-ignition"])

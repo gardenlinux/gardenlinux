@@ -13,7 +13,7 @@
   "etc/kernel/cmdline.d/10-console.cfg":
   - "GL-SET-vmware-config-kernel-cmdline-console"
   "etc/kernel/cmdline.d/50-ignition.cfg":
-  - "GL-SET-vmware-config-kernel-cmdline-ignition"
+  - "GL-SET-vmware-config-kernel-cmdline-no-ignition" # deleted by ignition-disable.service
   "etc/systemd/system/ignition-disable.service":
   - "GL-SET-vmware-service-ignition-disable-unit"
   "usr/bin/dscheck_VMwareGuestInfo":
