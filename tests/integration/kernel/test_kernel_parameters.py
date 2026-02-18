@@ -86,24 +86,26 @@ def test_cloud_sysctl_network_configs_exist(file: File):
 @pytest.mark.booted(reason="sysctl needs a booted system")
 def test_cloud_sysctl_network_config_ipv4(sysctl):
     """Test that cloud sysctl network config ipv4 is set correctly"""
-    assert sysctl["net.ipv4.tcp_syncookies"] == 1
-    assert (
-        sysctl["net.ipv4.conf.all.accept_source_route"] == 0
-    ), "Cloud sysctl network config ipv4 should have accept source route set to 0"
-    # assert sysctl["net.ipv4.conf.all.accept_redirects"] == 0 TODO: Disabled until https://github.com/gardenlinux/gardenlinux/issues/4336 is fixed.
-    assert sysctl["net.ipv4.conf.all.secure_redirects"] == 1
-    assert sysctl["net.ipv4.conf.default.secure_redirects"] == 1
-    assert sysctl["net.ipv4.icmp_echo_ignore_broadcasts"] == 1
-    assert sysctl["net.ipv4.icmp_ignore_bogus_error_responses"] == 1
-    assert sysctl["net.ipv4.conf.default.accept_source_route"] == 1
-    assert sysctl["net.ipv4.conf.default.accept_redirects"] == 1
-    assert sysctl["net.ipv4.conf.all.log_martians"] == 0
-    assert sysctl["net.ipv4.conf.all.forwarding"] == 1
-    assert sysctl["net.ipv4.conf.default.forwarding"] == 1
-    assert sysctl["net.ipv4.conf.default.send_redirects"] == 1
-    assert sysctl["net.ipv4.conf.all.send_redirects"] == 1
-    assert sysctl["net.ipv4.conf.all.promote_secondaries"] == 1
 
+    settings = {
+        "net.ipv4.tcp_syncookies": 1,
+        "net.ipv4.conf.all.accept_source_route": 0,
+        "net.ipv4.conf.all.accept_redirects": 0, # TODO: Disabled until https://github.com/gardenlinux/gardenlinux/issues/4336 is fixed.
+        "net.ipv4.conf.all.secure_redirects": 1,
+        "net.ipv4.conf.default.secure_redirects": 1,
+        "net.ipv4.icmp_echo_ignore_broadcasts": 1,
+        "net.ipv4.icmp_ignore_bogus_error_responses": 1,
+        "net.ipv4.conf.default.accept_source_route": 1,
+        "net.ipv4.conf.default.accept_redirects": 1,
+        "net.ipv4.conf.all.log_martians": 0,
+        "net.ipv4.conf.all.forwarding": 1,
+        "net.ipv4.conf.default.forwarding": 1,
+        "net.ipv4.conf.default.send_redirects": 1,
+        "net.ipv4.conf.all.send_redirects": 1,
+        "net.ipv4.conf.all.promote_secondaries": 1,
+    }
+    missing = [key for key, value in settings.items() if sysctl[key] != value]
+    assert not missing, f"Missing or incorrect cloud sysctl network config ipv4 settings: {', '.join(missing)}"
 
 @pytest.mark.setting_ids(
     [
@@ -114,9 +116,12 @@ def test_cloud_sysctl_network_config_ipv4(sysctl):
 @pytest.mark.booted(reason="sysctl needs a booted system")
 def test_cloud_sysctl_network_config_ipv6(sysctl):
     """Test that cloud sysctl network config ipv6 is set correctly"""
-    assert sysctl["net.ipv6.conf.all.forwarding"] == 1
-    assert sysctl["net.ipv6.conf.default.forwarding"] == 1
-
+    settings = {
+        "net.ipv6.conf.all.forwarding": 1,
+        "net.ipv6.conf.default.forwarding": 1,
+    }
+    missing = [key for key, value in settings.items() if sysctl[key] != value]
+    assert not missing, f"Missing or incorrect cloud sysctl network config ipv6 settings: {', '.join(missing)}"
 
 # =============================================================================
 # chost Feature - Container Networking Sysctl Configuration
@@ -150,16 +155,14 @@ def test_chost_sysctl_configs_exist(file: File):
 @pytest.mark.booted(reason="sysctl needs a booted system")
 def test_chost_sysctl_config_content(sysctl: Sysctl):
     """Test that container networking sysctl config contains the correct content"""
-    assert sysctl["net.ipv4.ip_forward"] == 1, "IP forwarding should be enabled"
-    assert (
-        sysctl["net.ipv6.conf.all.forwarding"] == 1
-    ), "IP forwarding should be enabled"
-    assert (
-        sysctl["net.bridge.bridge-nf-call-iptables"] == 1
-    ), "iptables should be called"
-    assert (
-        sysctl["net.bridge.bridge-nf-call-ip6tables"] == 1
-    ), "ip6tables should be called"
+    settings = {
+        "net.ipv4.ip_forward": 1,
+        "net.ipv6.conf.all.forwarding": 1,
+        "net.bridge.bridge-nf-call-iptables": 1,
+        "net.bridge.bridge-nf-call-ip6tables": 1,
+    }
+    missing = [key for key, value in settings.items() if sysctl[key] != value]
+    assert not missing, f"Missing or incorrect chost sysctl settings: {', '.join(missing)}"
 
 
 # =============================================================================
@@ -197,22 +200,16 @@ def test_khost_sysctl_configs_exist(file: File):
 @pytest.mark.booted(reason="sysctl needs a booted system")
 def test_khost_sysctl_configs_content(sysctl: Sysctl):
     """Test that Kubernetes host sysctl configs contain the correct content"""
-    assert (
-        sysctl["net.bridge.bridge-nf-call-iptables"] == 1
-    ), "iptables should be called"
-    assert (
-        sysctl["net.bridge.bridge-nf-call-ip6tables"] == 1
-    ), "ip6tables should be called"
-    assert (
-        sysctl["fs.inotify.max_user_instances"] == 8192
-    ), "inotify max user watches should be 1048576"
-    assert (
-        sysctl["fs.inotify.max_user_watches"] == 65536
-    ), "inotify max user watches should be 1048576"
-    assert sysctl["net.ipv4.ip_forward"] == 1, "IP forwarding should be enabled"
-    assert (
-        sysctl["net.ipv6.conf.all.forwarding"] == 1
-    ), "IP forwarding should be enabled"
+    settings = {
+        "net.bridge.bridge-nf-call-iptables": 1,
+        "net.bridge.bridge-nf-call-ip6tables": 1,
+        "fs.inotify.max_user_instances": 8192,
+        "fs.inotify.max_user_watches": 65536,
+        "net.ipv4.ip_forward": 1,
+        "net.ipv6.conf.all.forwarding": 1,
+    }
+    missing = [key for key, value in settings.items() if sysctl[key] != value]
+    assert not missing, f"Missing or incorrect khost sysctl settings: {', '.join(missing)}"
 
 
 # =============================================================================
@@ -242,9 +239,11 @@ def test_server_sysctl_allow_ping_nonroot(file: File):
 @pytest.mark.booted(reason="sysctl needs a booted system")
 def test_server_sysctl_allow_ping_nonroot_check(sysctl: Sysctl):
     """Test that server sysctl allows ping for non-root users"""
-    assert (
-        sysctl["net.ipv4.ping_group_range"] == "0 2147483647"
-    ), "Ping group range should be '0 2147483647'"
+    settings = {
+        "net.ipv4.ping_group_range": "0 2147483647",
+    }
+    missing = [key for key, value in settings.items() if sysctl[key] != value]
+    assert not missing, f"Missing or incorrect server sysctl settings: {', '.join(missing)}"
 
 
 @pytest.mark.setting_ids(
@@ -269,6 +268,8 @@ def test_server_sysctl_unprivileged_namespaces(file: File):
 @pytest.mark.booted(reason="sysctl needs a booted system")
 def test_server_sysctl_unprivileged_namespaces_check(sysctl: Sysctl):
     """Test that server sysctl allows ping for non-root users"""
-    assert (
-        sysctl["kernel.unprivileged_userns_clone"] == 1
-    ), "Unprivileged namespaces should be enabled"
+    settings = {
+        "kernel.unprivileged_userns_clone": 1,
+    }
+    missing = [key for key, value in settings.items() if sysctl[key] != value]
+    assert not missing, f"Missing or incorrect server sysctl settings: {', '.join(missing)}"
