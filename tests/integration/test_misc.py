@@ -396,6 +396,7 @@ def test_prod_no_systemd_coredump_service_override(file: File):
     ]
 )
 @pytest.mark.feature("_unsigned or _trustedboot")
+@pytest.mark.booted(reason="Chroot environments have no populted '/efi' directory")
 @pytest.mark.arch("amd64")
 def test_amd64_efi_binary_exists(file: File):
     """Test that unsigned has EFI binary"""
@@ -411,6 +412,7 @@ def test_amd64_efi_binary_exists(file: File):
     ]
 )
 @pytest.mark.feature("_unsigned or _trustedboot")
+@pytest.mark.booted(reason="Chroot environments have no populted '/efi' directory")
 @pytest.mark.arch("arm64")
 def test_arm64_efi_binary_exists(file: File):
     """Test that unsigned has EFI binary"""
