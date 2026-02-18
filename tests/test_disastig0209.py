@@ -1,6 +1,6 @@
 import pytest
 from plugins.file import File
-from plugins.parse_file import ParseFile
+from plugins.parse_file import Parse, ParseFile
 from plugins.shell import ShellRunner
 
 PRIV_ESC_RULE_FILE = "/etc/audit/rules.d/70-privilege-escalation.rules"
@@ -20,7 +20,7 @@ def test_setreuid_rule_file_exists(file: File):
     Ref: SRG-OS-000465-GPOS-00209
     """
 
-    #assert file.exists(path), f"stigcompliance: '{path}' audit rule file does not exist"
+    # assert file.exists(path), f"stigcompliance: '{path}' audit rule file does not exist"
     assert file.exists(PRIV_ESC_RULE_FILE), f"'{PRIV_ESC_RULE_FILE}' does not exist"
 
 
@@ -45,7 +45,7 @@ def test_setreuid_rule_contains_syscall(parse_file: ParseFile):
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
-def test_setreuid_rule_loaded(shell: ShellRunner,  parse: type[Parse]):
+def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
     """
     As per DISA STIG requirement, the operating system must generate audit
     records when successful or unsuccessful attempts to modify categories
@@ -67,7 +67,6 @@ def test_setreuid_rule_loaded(shell: ShellRunner,  parse: type[Parse]):
     assert (
         "setreuid" in lines
     ), "stigcompliance: setreuid audit rule not loaded in kernel"
-
 
 
 @pytest.mark.feature("not container")
