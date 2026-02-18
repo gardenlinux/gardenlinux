@@ -1,0 +1,23 @@
+terraform {
+  encryption {
+
+    # in production this is provided via base64 encoded environment secret in github
+
+    # key_provider "pbkdf2" "passphrase" {
+    #   passphrase = "notsecure"
+    # }
+
+    method "aes_gcm" "method" {
+      keys = key_provider.pbkdf2.passphrase
+    }
+    state {
+      method = method.aes_gcm.method
+      enforced = true
+    }
+    plan {
+      method = method.aes_gcm.method
+      enforced = true
+    }
+  }
+}
+

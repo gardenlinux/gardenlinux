@@ -1,0 +1,247 @@
+name: tests-ng
+on:
+  # triggered by other workflows
+  workflow_call:
+    inputs:
+      flavors_matrix:
+        description: "Generated GitHub workflow flavors matrix"
+        type: string
+        required: true
+      test_types:
+        description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,oci,bare)"
+        type: string
+        default: "chroot,qemu,oci"
+      bare_flavors_matrix:
+        description: "Generated GitHub workflow flavors matrix for bare flavors"
+        type: string
+        default: '{"include":[]}'
+    secrets:
+      gcp_identity_provider:
+        required: false
+      gcp_service_account:
+        required: false
+      gcp_project_id:
+        required: false
+      gcp_region:
+        required: false
+      gcp_zone:
+        required: false
+      aws_role:
+        required: false
+      aws_session:
+        required: false
+      aws_region:
+        required: false
+      aws_s3_bucket:
+        required: false
+      az_client_id:
+        required: false
+      az_tenant_id:
+        required: false
+      az_subscription_id:
+        required: false
+      alibaba_cloud_role_arn:
+        required: false
+      alibaba_cloud_oidc_provider_arn:
+        required: false
+      alibaba_cloud_region:
+        required: false
+      tf_encryption:
+        required: false
+jobs:
+  chroot_test_flavors_supported_matrix:
+    name: Generate flavors matrix for chroot test
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: "--no-arch --json-by-arch --test"
+  oci_test_flavors_supported_matrix:
+    name: Generate flavors matrix for oci test
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: "--no-arch --json-by-arch --test --include-only 'container-*'"
+  qemu_test_flavors_supported_matrix:
+    name: Generate flavors matrix for qemu test
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: "--no-arch --json-by-arch --test --exclude vmware-*"
+  cloud_test_flavors_supported_matrix:
+    name: Generate flavors matrix for cloud test
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: "--no-arch --json-by-arch --test-platform"
+  bare_flavors_supported_matrix:
+    name: Generate flavors matrix for bare flavors test
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: '--include-only "bare-*" --no-arch --json-by-arch --test'
+  determine_test_settings:
+    needs:
+      [
+        chroot_test_flavors_supported_matrix,
+        oci_test_flavors_supported_matrix,
+        qemu_test_flavors_supported_matrix,
+        cloud_test_flavors_supported_matrix,
+        bare_flavors_supported_matrix,
+      ]
+    name: Determine test settings
+    runs-on: "ubuntu-24.04"
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      bare_flavors_matrix: ${{ steps.test_environments.outputs.bare_flavors_matrix }}
+      bare_flavors_tests: ${{ steps.test_environments.outputs.bare_flavors_tests }}
+      chroot_test_flavors_matrix: ${{ steps.test_environments.outputs.chroot_test_flavors_matrix }}
+      chroot_tests: ${{ steps.test_environments.outputs.chroot_tests }}
+      oci_flavors_matrix: ${{ steps.test_environments.outputs.oci_flavors_matrix }}
+      oci_flavors_tests: ${{ steps.test_environments.outputs.oci_flavors_tests }}
+      cloud_test_flavors_matrix: ${{ steps.test_environments.outputs.cloud_test_flavors_matrix }}
+      cloud_tests: ${{ steps.test_environments.outputs.cloud_tests }}
+      qemu_test_flavors_matrix: ${{ steps.test_environments.outputs.qemu_test_flavors_matrix }}
+      qemu_tests: ${{ steps.test_environments.outputs.qemu_tests }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: true
+      - id: test_environments
+        name: Determine test environments
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
+
+            const testsEnvsEnabled = gitHubLib.getTestEnvironmentsEnabled("${{ inputs.test_types }}");
+
+            const testDefinitions = [
+              {
+                key: "chroot",
+                outTests: "chroot_tests",
+                outMatrix: "chroot_test_flavors_matrix",
+                inputMatrix: ${{ inputs.flavors_matrix }},
+                supported: ${{ needs.chroot_test_flavors_supported_matrix.outputs.matrix }}
+              },
+              {
+                key: "qemu",
+                outTests: "qemu_tests",
+                outMatrix: "qemu_test_flavors_matrix",
+                inputMatrix: ${{ inputs.flavors_matrix }},
+                supported: ${{ needs.qemu_test_flavors_supported_matrix.outputs.matrix }}
+              },
+              {
+                key: "cloud",
+                outTests: "cloud_tests",
+                outMatrix: "cloud_test_flavors_matrix",
+                inputMatrix: ${{ inputs.flavors_matrix }},
+                supported: ${{ needs.cloud_test_flavors_supported_matrix.outputs.matrix }}
+              },
+              {
+                key: "oci",
+                outTests: "oci_flavors_tests",
+                outMatrix: "oci_flavors_matrix",
+                inputMatrix: ${{ inputs.flavors_matrix }},
+                supported: ${{ needs.oci_test_flavors_supported_matrix.outputs.matrix }}
+              },
+              {
+                key: "bare",
+                outTests: "bare_flavors_tests",
+                outMatrix: "bare_flavors_matrix",
+                inputMatrix: ${{ inputs.bare_flavors_matrix }},
+                supported: ${{ needs.bare_flavors_supported_matrix.outputs.matrix }}
+              }
+            ];
+            // `matrix:` and it's fromJson() evaluation cannot be skipped by setting the matrix to an empty string or array
+            // hence we set a minimal skip flavor matrix and evaluate it in each test_flavor_* workflow.
+            const skipFlavorMatrix = '{"include":[{"arch":"amd64","flavor":"skip"}]}';
+
+            // Process all test types, but only enable requested ones
+            for (const t of testDefinitions) {
+              if (!testsEnvsEnabled.includes(t.key)) {
+                core.setOutput(t.outTests, false);
+                core.setOutput(t.outMatrix, skipFlavorMatrix);
+                console.debug(`${t.key}: disabled`);
+                continue;
+              }
+
+              const matrix = gitHubLib.intersectFlavorsMatrix(t.inputMatrix, t.supported);
+              const isEnabled = !gitHubLib.isMatrixEmpty(matrix);
+              core.setOutput(t.outTests, isEnabled);
+              console.log(`${t.key}: ${isEnabled ? 'enabled' : 'disabled'} (${isEnabled ? matrix.length : 0} flavors)`);
+
+              if (isEnabled) {
+                core.setOutput(t.outMatrix, matrix);
+              } else {
+                core.setOutput(t.outMatrix, SKIP_MATRIX);
+              }
+            }
+  test_flavors_chroot:
+    needs: determine_test_settings
+    name: Test chroot flavors
+    uses: ./.github/workflows/testng_flavor_chroot.yml
+    if: ${{ needs.determine_test_settings.outputs.chroot_tests == 'true' }}
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJson(needs.determine_test_settings.outputs.chroot_test_flavors_matrix) }}
+    with:
+      arch: ${{ matrix.arch }}
+      flavor: ${{ matrix.flavor }}
+    permissions:
+      actions: write
+  test_flavors_qemu:
+    needs: determine_test_settings
+    name: Test QEMU flavors
+    uses: ./.github/workflows/testng_flavor_qemu.yml
+    if: ${{ needs.determine_test_settings.outputs.qemu_tests == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.determine_test_settings.outputs.qemu_test_flavors_matrix) }}
+    with:
+      arch: ${{ matrix.arch }}
+      flavor: ${{ matrix.flavor }}
+    permissions:
+      actions: write
+  test_flavors_cloud:
+    needs: [determine_test_settings, test_flavors_qemu]
+    name: Test cloud flavors
+    uses: ./.github/workflows/testng_flavor_cloud.yml
+    if: |
+      ${{
+        needs.determine_test_settings.outputs.cloud_tests == 'true'
+        && (always() && (needs.test_flavors_qemu.result == 'success' || needs.determine_test_settings.outputs.qemu_tests != 'true'))
+      }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.determine_test_settings.outputs.cloud_test_flavors_matrix) }}
+    with:
+      arch: ${{ matrix.arch }}
+      flavor: ${{ matrix.flavor }}
+    secrets: inherit
+    permissions:
+      id-token: write
+      actions: write
+  test_flavors_oci:
+    needs: determine_test_settings
+    name: Test OCI flavors
+    uses: ./.github/workflows/testng_flavor_oci.yml
+    if: ${{ needs.determine_test_settings.outputs.oci_flavors_tests == 'true' }}
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJson(needs.determine_test_settings.outputs.oci_flavors_matrix) }}
+    with:
+      arch: ${{ matrix.arch }}
+      flavor: ${{ matrix.flavor }}
+    permissions:
+      actions: write
+  test_report:
+    needs:
+      - test_flavors_chroot
+      - test_flavors_oci
+      - test_flavors_qemu
+      - test_flavors_cloud
+    name: Generate Test Report
+    if: always()
+    uses: ./.github/workflows/testng_report.yml
+    permissions:
+      actions: write
+      checks: write
+    with:
+      test_jobs: "test_flavors_chroot,test_flavors_oci,test_flavors_qemu,test_flavors_cloud"

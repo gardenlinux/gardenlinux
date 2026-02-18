@@ -1,0 +1,115 @@
+name: testng_flavor
+on:
+  workflow_call:
+    inputs:
+      arch:
+        type: string
+        default: "amd64"
+      flavor:
+        type: string
+        required: true
+jobs:
+  test:
+    name: Test flavor ${{ inputs.flavor }} (${{ inputs.arch }}) in QEMU
+    # runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    runs-on: "ubuntu-24.04"
+    if: ${{ inputs.flavor != 'skip' }}
+    # timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME: ""
+    permissions:
+      actions: write
+    steps:
+      - name: install qemu
+        run: |
+          sudo apt-get update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-utils qemu-system-x86 qemu-system-arm swtpm socat libxml2-utils
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: true
+      - uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
+        with:
+          path: |
+            COMMIT
+            VERSION
+          key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
+          fail-on-cache-miss: true
+      - name: Download test distribution artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+        with:
+          name: test-distribution
+          path: tests-ng/.build
+      - name: Load certs artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+        with:
+          name: certs
+          path: cert/
+      - name: Determine CNAME
+        id: cname
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
+        with:
+          flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
+      - name: Set CNAME
+        run: |
+          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
+      - name: Load flavor build artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+        with:
+          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
+      - name: unpack build artifacts
+        run: |
+          mkdir ".build"
+          tar -C .build -xzf $CNAME.tar.gz
+          rm "$CNAME.tar.gz"
+          tree .build
+        # TODO: handle skipping better
+      - name: Execute tests
+        run: |
+          if [ ! -e ".build/$CNAME.raw" ]; then
+            if [ -e ".build/$CNAME.ova" ]; then
+              echo "extracting ova"
+              tar xvf ".build/$CNAME.ova" -C .build
+              ls -la .build
+            fi
+            if [ -e ".build/$CNAME.vhd" ]; then
+              echo "converting vhd to raw"
+              qemu-img convert -f vpc -O raw ".build/$CNAME.vhd" ".build/$CNAME.raw"
+            elif [ -e ".build/$CNAME.qcow2" ]; then
+              echo "converting qcow2 to raw"
+              qemu-img convert -f qcow2 -O raw ".build/$CNAME.qcow2" ".build/$CNAME.raw"
+            elif [ -e ".build/$CNAME.vmdk" ]; then
+              echo "converting vmdk to raw"
+              qemu-img convert -f vmdk -O raw ".build/$CNAME.vmdk" ".build/$CNAME.raw"
+            elif [ -e ".build/$CNAME.gcpimage.tar.gz" ]; then
+              echo "converting gcpimage to raw"
+              tar -C .build -xzf ".build/$CNAME.gcpimage.tar.gz"
+              mv ".build/disk.raw" ".build/$CNAME.raw"
+            fi
+          fi
+          if [ -e ".build/$CNAME.raw" ]; then
+            ./test-ng ".build/$CNAME.raw"
+          elif [ -e ".build/$CNAME.pxe.tar.gz" ]; then
+            ./test-ng ".build/$CNAME.pxe.tar.gz"
+          elif [ -e ".build/$CNAME.oci" ]; then
+            echo "skipping oci test"
+            exit 0
+          else
+            echo "no raw or pxe file, QEMU test failed"
+            exit 1
+          fi
+      - name: Copy test results to build directory
+        if: always()
+        run: |
+          cp tests-ng/log/qemu.test-ng.log .build/${CNAME}.qemu.testng.log || true
+          cp tests-ng/log/qemu.test-ng.xml .build/${CNAME}.qemu.testng.xml || true
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
+        if: always()
+        with:
+          if-no-files-found: ignore
+          name: qemu-testng-${{ env.CNAME }}
+          path: |
+            .build/${{ env.CNAME }}.qemu.testng.log
+            .build/${{ env.CNAME }}.qemu.testng.xml

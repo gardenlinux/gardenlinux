@@ -56,6 +56,12 @@ jobs:
       target: ${{ inputs.target }}
     permissions:
       actions: write
+  test_distribution_build: # backport from 1877
+    needs: requirements
+    name: Build and Cache Test Distribution
+    uses: ./.github/workflows/build_test_dist.yml
+    with:
+      prefix: ${{ inputs.prefix }}      
   bootstrap:
     needs: requirements
     name: Bootstrap build

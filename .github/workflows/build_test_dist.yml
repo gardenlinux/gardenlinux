@@ -1,0 +1,36 @@
+name: testng_flavor
+on:
+  workflow_call:
+    inputs:
+      prefix:
+        type: string
+        default: ''
+jobs:
+  test:
+    name: Build and cache testng distribution
+    runs-on: "ubuntu-24.04"
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: true
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends make curl jq unzip qemu-utils
+      - name: Build test distribution
+        run: |
+          cd tests-ng
+          make -f util/build.makefile
+          touch .build/.gh_artifact
+      - name: Upload test distribution artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
+        with:
+          name: ${{ inputs.prefix }}test-distribution
+          path: tests-ng/.build
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7

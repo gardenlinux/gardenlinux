@@ -170,3 +170,15 @@ jobs:
       flavor: ${{ matrix.flavor }}
     permissions:
       id-token: write
+  tests_ng:
+    name: Tests-NG
+    uses: ./.github/workflows/tests_ng.yml
+    secrets: inherit
+    permissions:
+      id-token: write
+      actions: write
+      checks: write
+    with:
+      flavors_matrix: ${{ inputs.flavors_matrix }}
+      bare_flavors_matrix: ${{ inputs.bare_flavors_matrix }}
+      test_types: "chroot,qemu,cloud,oci,bare"

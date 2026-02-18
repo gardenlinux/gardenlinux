@@ -44,4 +44,5 @@ jobs:
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
     permissions:
       id-token: write
-      actions: write 
+      actions: write
+      checks: write # for testng
