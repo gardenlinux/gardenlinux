@@ -1,4 +1,5 @@
 import pytest
+from plugins.file import File
 from plugins.parse_file import ParseFile
 from plugins.shell import ShellRunner
 
@@ -8,7 +9,7 @@ PRIV_ESC_RULE_FILE = "/etc/audit/rules.d/70-privilege-escalation.rules"
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
-def test_setreuid_rule_file_exists(parse_file: ParseFile):
+def test_setreuid_rule_file_exists(file: File):
     """
     As per DISA STIG requirement, the operating system must generate audit
     records when successful or unsuccessful attempts to modify categories
@@ -18,11 +19,9 @@ def test_setreuid_rule_file_exists(parse_file: ParseFile):
     escalation.
     Ref: SRG-OS-000465-GPOS-00209
     """
-    lines = parse_file.lines(PRIV_ESC_RULE_FILE, ignore_missing=True)
 
-    assert (
-        lines is not None
-    ), "stigcompliance: privilege escalation audit rule file missing"
+    #assert file.exists(path), f"stigcompliance: '{path}' audit rule file does not exist"
+    assert file.exists(PRIV_ESC_RULE_FILE), f"'{PRIV_ESC_RULE_FILE}' does not exist"
 
 
 @pytest.mark.feature("not container")
@@ -46,7 +45,7 @@ def test_setreuid_rule_contains_syscall(parse_file: ParseFile):
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
-def test_setreuid_rule_loaded(shell: ShellRunner):
+def test_setreuid_rule_loaded(shell: ShellRunner,  parse: type[Parse]):
     """
     As per DISA STIG requirement, the operating system must generate audit
     records when successful or unsuccessful attempts to modify categories
@@ -62,9 +61,13 @@ def test_setreuid_rule_loaded(shell: ShellRunner):
         output.returncode == 0
     ), f"stigcompliance: unable to list audit rules: {output.stderr}"
 
+    parser = parse.from_str(output.stdout, label="auditctl -l output")
+    lines = parser.lines()
+
     assert (
-        "setreuid" in output.stdout
+        "setreuid" in lines
     ), "stigcompliance: setreuid audit rule not loaded in kernel"
+
 
 
 @pytest.mark.feature("not container")
