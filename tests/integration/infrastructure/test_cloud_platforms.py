@@ -103,7 +103,7 @@ def test_gcp_or_gdch_timezone_utc(file: File):
 def test_gcp_udev_gce_disk_removal_rules(file: File):
     """Test that GCP has GCE disk removal udev rules"""
     assert file.exists(
-        "/etc/udev/rules.d/64-gce-disk-removal.rules"
+        "/usr/lib/udev/rules.d/64-gce-disk-removal.rules"
     ), "GCP GCE disk removal udev rules should exist"
 
 
