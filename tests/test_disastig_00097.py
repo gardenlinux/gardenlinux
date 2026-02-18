@@ -1,6 +1,3 @@
-import os
-import stat
-
 import pytest
 
 # Global paths for audit tools
@@ -17,7 +14,7 @@ AUDIT_LOG_FILE = "/var/log/audit/audit.log"
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
-def test_auditctl_owned_by_root():
+def test_audit_tools_owned_by_root(file):
     """
     As per DISA STIG requirement, we have to ensure that only the root user is allowed
     to access the audit tools like auditctl, last (wtmpdb) and journalctl. This should
@@ -26,15 +23,16 @@ def test_auditctl_owned_by_root():
     """
 
     for path in AUDIT_TOOL_PATHS:
-        if os.path.exists(path):
-            info = os.stat(path)
-            assert info.st_uid == 0, f"stigcompliance: {path} not owned by root"
+        if file.exists(path):
+            assert file.is_owned_by_user(
+                path, "root"
+            ), f"stigcompliance: {path} not owned by root"
 
 
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
-def test_auditctl_not_world_writable():
+def test_audit_tools_not_world_writable(file):
     """
     As per DISA STIG requirement, we have to ensure that only the root user is allowed
     to access the audit tools like auditctl, last (wtmpdb) and journalctl. This should
@@ -43,17 +41,20 @@ def test_auditctl_not_world_writable():
     """
 
     for path in AUDIT_TOOL_PATHS:
-        if os.path.exists(path):
-            info = os.stat(path)
-            assert not (
-                info.st_mode & stat.S_IWOTH
-            ), f"stigcompliance: {path} is world-writable"
+        if file.exists(path):
+            mode = file.get_mode(path)
+            assert mode[-1] not in {
+                "2",
+                "3",
+                "6",
+                "7",
+            }, f"stigcompliance: {path} is world-writable (mode {mode})"
 
 
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
-def test_auditctl_not_group_writable():
+def test_audit_tools_not_group_writable(file):
     """
     As per DISA STIG requirement, we have to ensure that only the root user is allowed
     to access the audit tools like auditctl, last (wtmpdb) and journalctl. This should
@@ -62,16 +63,20 @@ def test_auditctl_not_group_writable():
     """
 
     for path in AUDIT_TOOL_PATHS:
-        if os.path.exists(path):
-            info = os.stat(path)
-            assert not (
-                info.st_mode & stat.S_IWGRP
-            ), f"stigcompliance: {path} is group-writable"
+        if file.exists(path):
+            mode = file.get_mode(path)
+            assert mode[-2] not in {
+                "2",
+                "3",
+                "6",
+                "7",
+            }, f"stigcompliance: {path} is group-writable (mode {mode})"
+
 
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
-def test_audit_log_owned_by_root():
+def test_audit_log_owned_by_root(file):
     """
     As per DISA STIG requirement, we have to ensure that only the root user is allowed
     to access the audit tools like auditctl, last (wtmpdb) and journalctl. This should
@@ -79,14 +84,16 @@ def test_audit_log_owned_by_root():
     Ref: SRG-OS-000256-GPOS-00097
     """
 
-    if os.path.exists(AUDIT_LOG_FILE):
-        info = os.stat(AUDIT_LOG_FILE)
-        assert info.st_uid == 0, f"stigcompliance: {AUDIT_LOG_FILE} not owned by root"
+    if file.exists(AUDIT_LOG_FILE):
+        assert file.is_owned_by_user(
+            AUDIT_LOG_FILE, "root"
+        ), f"stigcompliance: {AUDIT_LOG_FILE} not owned by root"
+
 
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
-def test_audit_log_not_world_writable():
+def test_audit_log_not_world_writable(file):
     """
     As per DISA STIG requirement, we have to ensure that only the root user is allowed
     to access the audit tools like auditctl, last (wtmpdb) and journalctl. This should
@@ -94,8 +101,11 @@ def test_audit_log_not_world_writable():
     Ref: SRG-OS-000256-GPOS-00097
     """
 
-    if os.path.exists(AUDIT_LOG_FILE):
-        info = os.stat(AUDIT_LOG_FILE)
-        assert not (
-            info.st_mode & stat.S_IWOTH
-        ), f"stigcompliance: {AUDIT_LOG_FILE} is world-writable"
+    if file.exists(AUDIT_LOG_FILE):
+        mode = file.get_mode(AUDIT_LOG_FILE)
+        assert mode[-1] not in {
+            "2",
+            "3",
+            "6",
+            "7",
+        }, f"stigcompliance: {AUDIT_LOG_FILE} is world-writable (mode {mode})"
