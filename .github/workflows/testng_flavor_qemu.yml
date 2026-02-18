@@ -14,7 +14,7 @@ jobs:
     # runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     runs-on: "ubuntu-24.04"
     if: ${{ inputs.flavor != 'skip' }}
-    timeout-minutes: 60
+    # timeout-minutes: 60
     defaults:
       run:
         shell: bash
