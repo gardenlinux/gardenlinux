@@ -16,7 +16,12 @@ debug=0
 ssh=0
 skip_cleanup=0
 skip_tests=0
+dev=0
 test_args=()
+util_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+log_dir="$util_dir/../log"
+log_file_log="qemu.test.log"
+log_file_junit="qemu.test.xml"
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -27,6 +32,12 @@ while [ $# -gt 0 ]; do
 	--ssh)
 		ssh=1
 		shift
+		;;
+	--dev)
+		dev=1
+		shift
+		# shellcheck disable=SC1091
+		. "$(dirname -- "${BASH_SOURCE[0]}")/dev.sh"
 		;;
 	--skip-cleanup)
 		skip_cleanup=1
@@ -231,6 +242,11 @@ if [ "$arch" = "$native_arch" ]; then
 	fi
 fi
 
+if ((dev)); then
+	dev_setup "$tmpdir/fw_cfg-script.sh"
+	skip_cleanup=""
+fi
+
 if ! ((skip_tests)); then
 	test_args+=(
 		"--system-booted"
@@ -243,9 +259,13 @@ if ! ((skip_tests)); then
 		test_args+=("--expected-users" "$ssh_user")
 	fi
 
-	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
+	if ((dev)); then
+		dev_configure_runner "$tmpdir/fw_cfg-script.sh" "${test_args[*]@Q}"
+	else
+		cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
 ./run_tests ${test_args[*]@Q} 2>&1
 EOF
+	fi
 fi
 
 qemu_opts=(
@@ -409,12 +429,20 @@ if ((skip_cleanup)); then
 	sleep 5
 	tail -f "$tmpdir/serial.log"
 else
-	"qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g'
+	if ((dev)); then
+		add_qemu_notify_port_forwarding
+
+		"qemu-system-$arch" "${qemu_opts[@]}"
+	else
+		"qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g'
+	fi
 	cat "$tmpdir/serial.log"
 fi
 
-num_errors=$(xmllint --xpath 'string(/testsuites/testsuite/@errors)' "$tmpdir/junit.xml")
-num_failures=$(xmllint --xpath 'string(/testsuites/testsuite/@failures)' "$tmpdir/junit.xml")
-if [ "${num_errors}" -gt 0 ] || [ "${num_failures}" -gt 0 ]; then
-	exit 1
+if ! ((dev)); then
+	num_errors=$(xmllint --xpath 'string(/testsuites/testsuite/@errors)' "$tmpdir/junit.xml")
+	num_failures=$(xmllint --xpath 'string(/testsuites/testsuite/@failures)' "$tmpdir/junit.xml")
+	if [ "${num_errors}" -gt 0 ] || [ "${num_failures}" -gt 0 ]; then
+		exit 1
+	fi
 fi
