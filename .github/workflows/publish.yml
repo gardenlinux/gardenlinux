@@ -6,9 +6,15 @@ on:
         description: Workflow run ID
         type: number
         required: true
+      compatibility_flags:
+        description: "Flags to activate compatibility modes"
+        type: string
+        default: ""
   workflow_run:
     workflows: [ 'Build and publish a release', 'nightly' ]
     types: [ 'completed' ]
+env:
+  GL_COMPATIBILITY_FLAGS: ${{ inputs.compatibility_flags }}
 jobs:
   workflow_data:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.conclusion == 'success' }}
@@ -51,6 +57,7 @@ jobs:
       flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
       bare_flavors_matrix: ${{ needs.workflow_data.outputs.bare_flavors_matrix }}
       original_workflow_name: ${{ needs.workflow_data.outputs.original_workflow_name }}
+      compatibility_flags: ${{ inputs.compatibility_flags }}
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
@@ -67,6 +74,7 @@ jobs:
     with:
       run_id: ${{ needs.workflow_data.outputs.run_id }}
       version: ${{ needs.workflow_data.outputs.version }}
+      compatibility_flags: ${{ inputs.compatibility_flags }}
     permissions:
       packages: write
   publish_retry:

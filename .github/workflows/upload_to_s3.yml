@@ -17,6 +17,10 @@ on:
       with_certs:
         type: boolean
         default: false
+      compatibility_flags:
+        description: "Flags to activate compatibility modes"
+        type: string
+        default: ""
     secrets:
       aws_role:
         required: true
@@ -26,6 +30,8 @@ on:
         required: true
       aws_s3_bucket:
         required: true
+env:
+  GL_COMPATIBILITY_FLAGS: ${{ inputs.compatibility_flags }}
 jobs:
   upload_to_s3:
     name: upload to S3
@@ -43,8 +49,10 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - if: ${{ contains(inputs.compatibility_flags, "full_checkout") }}
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          ref: ${{ inputs.commit_id }}
           submodules: true
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@e68236134acc7416606052599f4cfab7b9ea3b7c # pin@0.10.14
@@ -54,18 +62,14 @@ jobs:
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
           role-duration-seconds: 14400 # 4 hours
-      - name: Set flavor version reference
-        run: |
-          echo "${{ inputs.commit_id }}" | tee COMMIT
-          echo "${{ inputs.version }}" | tee VERSION
-      - name: Set CNAME
-        run: |
-          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
+      - name: Set CNAME
+        run: |
+          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} --release-file "${{ matrix.flavor }}-${{ matrix.arch }}-*.release" cname)" | tee -a "$GITHUB_ENV"
       - name: Load test artifacts
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:

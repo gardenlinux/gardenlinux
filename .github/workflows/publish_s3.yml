@@ -6,9 +6,15 @@ on:
         description: Workflow run ID
         type: number
         required: true
+      compatibility_flags:
+        description: "Flags to activate compatibility modes"
+        type: string
+        default: ""
   workflow_run:
     workflows: ["Build and publish a release", "nightly"]
     types: ["completed"]
+env:
+  GL_COMPATIBILITY_FLAGS: ${{ inputs.compatibility_flags }}
 jobs:
   workflow_data:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.conclusion == 'success' }}
@@ -52,7 +58,9 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          submodules: true
+          sparse-checkout: |
+            .github/**
+          sparse-checkout-cone-mode: false
       - id: matrix
         name: Calculate matrix
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
@@ -79,7 +87,9 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          submodules: true
+          sparse-checkout: |
+            .github/**
+          sparse-checkout-cone-mode: false
       - id: matrix
         name: Calculate matrix
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
@@ -106,6 +116,7 @@ jobs:
       flavors_matrix: ${{ needs.trustedboot_flavors_matrix.outputs.flavors_matrix }}
       run_id: ${{ needs.workflow_data.outputs.run_id }}
       with_certs: true
+      compatibility_flags: ${{ inputs.compatibility_flags }}
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_role: ${{ secrets.AWS_IAM_ROLE }}
@@ -123,6 +134,7 @@ jobs:
       flavors_matrix: ${{ needs.trustedboot_flavors_matrix.outputs.flavors_matrix }}
       run_id: ${{ needs.workflow_data.outputs.run_id }}
       with_certs: true
+      compatibility_flags: ${{ inputs.compatibility_flags }}
     secrets:
       aws_region: ${{ secrets.AWS_CN_REGION }}
       aws_role: ${{ secrets.AWS_CN_IAM_ROLE }}
@@ -139,6 +151,7 @@ jobs:
       version: ${{ needs.workflow_data.outputs.version }}
       flavors_matrix: ${{ needs.non_trustedboot_flavors_matrix.outputs.flavors_matrix }}
       run_id: ${{ needs.workflow_data.outputs.run_id }}
+      compatibility_flags: ${{ inputs.compatibility_flags }}
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_role: ${{ secrets.AWS_IAM_ROLE }}
@@ -155,6 +168,7 @@ jobs:
       version: ${{ needs.workflow_data.outputs.version }}
       flavors_matrix: ${{ needs.non_trustedboot_flavors_matrix.outputs.flavors_matrix }}
       run_id: ${{ needs.workflow_data.outputs.run_id }}
+      compatibility_flags: ${{ inputs.compatibility_flags }}
     secrets:
       aws_region: ${{ secrets.AWS_CN_REGION }}
       aws_role: ${{ secrets.AWS_CN_IAM_ROLE }}
