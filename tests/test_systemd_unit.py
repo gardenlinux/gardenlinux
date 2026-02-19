@@ -19,7 +19,14 @@ FEATURE_SERVICE_MAPPING = [
     {"feature": "server", "service": ["systemd-networkd", "auditd"]},
 ]
 
+# TODO: needs different test as these services are enabled and started at boot time:
+# - nftables
+# - libvirtd
+# - systemd-networkd
+# - auditd
 
+
+@pytest.mark.testcov(["GL-TESTCOV-gardener-service-containerd-disable"])
 @pytest.mark.parametrize(
     "feature,service_name",
     [

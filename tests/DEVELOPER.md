@@ -83,6 +83,10 @@ The following principles guide all test development in Garden Linux:
 - Examples of state to restore: service status, kernel modules, installed packages, filesystem changes, network configuration
 - For examples, see [Handlers for Setup/Teardown](#handlers-for-setupteardown)
 
+#### 9. Use Test Coverage Markers
+
+- [Test Coverage Markers](./DEVELOPER-TESTCOV.md) need to be added to features and tests to assure a high test coverage.
+
 ## Framework Structure
 
 ### How Tests, Plugins, and Handlers Connect
@@ -535,6 +539,10 @@ def test_weird_cases(input_val, expected):
 ```
 
 **Guideline:** Prefer clarity and intent over DRY-ness in tests. Parametrize when it makes tests simpler, not just shorter.
+
+### Test Coverage Markers
+
+Please have a look at the [Test Coverage Documentation](./DEVELOPER-TESTCOV.md)
 
 ### Missing Markers (TODO)
 

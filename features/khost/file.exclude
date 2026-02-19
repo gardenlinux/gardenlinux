@@ -1,1 +1,2 @@
+# GL-TESTCOV-khost-config-security-no-apparmor-init
 /etc/init.d/apparmor

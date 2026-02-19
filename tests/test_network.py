@@ -72,6 +72,7 @@ def test_local_udp_stack(ip_version, loopback, udp_echo_server):
         assert reply_data == b"pong"
 
 
+@pytest.mark.testcov(["GL-TESTCOV-base-config-resolv-conf"])
 @pytest.mark.booted
 def test_resolv_conf_exists(file: File):
     """Test if local DNS config is available."""

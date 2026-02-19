@@ -1,0 +1,11 @@
+markers:
+  "etc/ssh/ssh_config":
+  - "GL-TESTCOV-ssh-config-ssh-ssh-config"
+  "etc/ssh/sshd_config":
+  - "GL-TESTCOV-ssh-config-ssh-sshd-config"
+  "etc/systemd/system-preset/00-sshsocket-disable.preset":
+  - "GL-TESTCOV-ssh-service-ssh-socket-preset-disable"
+  "etc/systemd/system/ssh-keygen.service":
+  - "GL-TESTCOV-ssh-service-ssh-keygen-unit"
+  "etc/systemd/system/ssh-moduli.service":
+  - "GL-TESTCOV-ssh-service-ssh-moduli-unit"

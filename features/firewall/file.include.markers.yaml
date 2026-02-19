@@ -1,0 +1,3 @@
+markers:
+  "etc/nft.d/default.conf":
+  - "GL-TESTCOV-firewall-config-nft-default"

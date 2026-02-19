@@ -1,11 +1,22 @@
+# GL-TESTCOV-base-config-no-backup-group
 /etc/group-
+# GL-TESTCOV-base-config-no-backup-gshadow
 /etc/gshadow-
+# GL-TESTCOV-base-config-no-backup-passwd
 /etc/passwd-
+# GL-TESTCOV-base-config-no-backup-shadow
 /etc/shadow-
+# GL-TESTCOV-base-config-no-backup-subgid
 /etc/subgid-
+# GL-TESTCOV-base-config-no-backup-subuid
 /etc/subuid-
+# GL-TESTCOV-base-config-no-pkgcache.bin
 /var/cache/apt/pkgcache.bin
+# GL-TESTCOV-base-config-no-srcpkgcache.bin
 /var/cache/apt/srcpkgcache.bin
-/var/cache/apt/archives/*.deb 
+# GL-TESTCOV-base-config-no-archives-deb
+/var/cache/apt/archives/*.deb
+# GL-TESTCOV-base-config-no-archives-partial-deb
 /var/cache/apt/archives/partial/*.deb
+# GL-TESTCOV-base-config-no-external-installation-planner-logs
 /var/log/apt/eipp.log.xz

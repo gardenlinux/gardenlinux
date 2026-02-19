@@ -1,0 +1,15 @@
+markers:
+  "etc/cloud/cloud.cfg.d/01_debian-cloud.cfg":
+  - "GL-TESTCOV-ali-config-cloud-apt-sources"
+  - "GL-TESTCOV-ali-config-cloud-user-name"
+  - "GL-TESTCOV-ali-config-cloud-user-shell"
+  - "GL-TESTCOV-ali-config-cloud-user-lock-passwd"
+  - "GL-TESTCOV-ali-config-cloud-user-sudo"
+  "etc/cloud/cloud.cfg.d/99_disable-network-config.cfg":
+  - "GL-TESTCOV-ali-config-cloud-network-config-disable"
+  "etc/kernel/cmdline.d/10-console.cfg":
+  - "GL-TESTCOV-ali-config-kernel-cmdline-console"
+  "etc/systemd/resolved.conf.d/00-gardenlinux-ali.conf":
+  - "GL-TESTCOV-ali-config-resolved"
+  "etc/systemd/timesyncd.conf.d/00-gardenlinux-ali.conf":
+  - "GL-TESTCOV-ali-config-timesyncd"

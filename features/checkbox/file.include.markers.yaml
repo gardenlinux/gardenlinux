@@ -1,0 +1,27 @@
+markers:
+  "etc/kernel/cmdline.iso":
+  - "GL-TESTCOV-checkbox-config-kernel-cmdline-iso"
+  "etc/systemd/journald.conf.d/10-logs.conf":
+  - "GL-TESTCOV-checkbox-config-journald-10-logs"
+  "etc/systemd/system.conf.d/10-dmesg.conf":
+  - "GL-TESTCOV-checkbox-config-systemd-system-conf-dmesg"
+  "etc/systemd/system/generate-report.service":
+  - "GL-TESTCOV-checkbox-service-generate-report-unit"
+  "usr/lib/checkbox-provider-base/bin/dmesg_colored.sh":
+  - "GL-TESTCOV-checkbox-script-dmesg_colored"
+  "usr/lib/checkbox-provider-base/bin/hw_encrypt_check.sh":
+  - "GL-TESTCOV-checkbox-script-hw_encrypt_check"
+  "usr/lib/checkbox-provider-base/bin/tpm_check.sh":
+  - "GL-TESTCOV-checkbox-script-tpm_check"
+  "usr/lib/checkbox-provider-base/bin/virtualization_disabled.sh":
+  - "GL-TESTCOV-checkbox-script-virtualization_disabled"
+  "usr/local/bin/generate-report.sh":
+  - "GL-TESTCOV-checkbox-script-generate-report"
+  "usr/share/checkbox-provider-base/units/gardenlinux/category.pxu":
+  - "GL-TESTCOV-checkbox-config-checkbox-units-category"
+  "usr/share/checkbox-provider-base/units/gardenlinux/jobs.pxu":
+  - "GL-TESTCOV-checkbox-config-checkbox-units-jobs"
+  "usr/share/checkbox-provider-base/units/gardenlinux/manifest.pxu":
+  - "GL-TESTCOV-checkbox-config-checkbox-units-manifest"
+  "usr/share/checkbox-provider-base/units/gardenlinux/test-plan.pxu":
+  - "GL-TESTCOV-checkbox-config-checkbox-test-plan"

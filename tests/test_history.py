@@ -6,6 +6,11 @@ from plugins.parse_file import ParseFile
 CONFIG_FILE = "/etc/profile.d/50-nohistory.sh"
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-server-script-profile-nohistory",
+    ]
+)
 @pytest.mark.feature("server")
 def test_history_profile_d_contains_required_configuration(parse_file: ParseFile):
     sorted_lines = parse_file.lines(CONFIG_FILE, ordered=True)

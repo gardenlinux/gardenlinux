@@ -1,4 +1,8 @@
+# GL-TESTCOV-kvm-config-no-initrd-img-old
 /initrd.img.old
+# GL-TESTCOV-kvm-config-no-initrd-img
 /initrd.img
+# GL-TESTCOV-kvm-config-no-vmlinuz-old
 /vmlinuz.old
+# GL-TESTCOV-kvm-config-no-vmlinuz
 /vmlinuz

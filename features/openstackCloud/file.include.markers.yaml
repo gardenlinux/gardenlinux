@@ -1,0 +1,5 @@
+markers:
+  "etc/cloud/cloud.cfg.d/99_disable-network-config.cfg":
+  - "GL-TESTCOV-openstackCloud-config-cloud-disable-network-config"
+  "etc/kernel/cmdline.d/10-console.cfg":
+  - "GL-TESTCOV-openstackCloud-config-sysctl-console"

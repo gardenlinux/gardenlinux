@@ -1,0 +1,11 @@
+markers:
+  "etc/dracut.conf.d/30-ignition.conf":
+  - "GL-TESTCOV-_ignite-config-initrd-ignition"
+  "usr/lib/dracut/modules.d/30ignition-extra/after-net-online.conf":
+  - "GL-TESTCOV-_ignite-config-initrd-module-ignition-after-net-online"
+  "usr/lib/dracut/modules.d/30ignition-extra/ignition-env-generator.sh":
+  - "GL-TESTCOV-_ignite-config-initrd-module-ignition-env-generator"
+  "usr/lib/dracut/modules.d/30ignition-extra/ignition-files.env":
+  - "GL-TESTCOV-_ignite-config-initrd-module-ignition-files"
+  "usr/lib/dracut/modules.d/30ignition-extra/module-setup.sh":
+  - "GL-TESTCOV-_ignite-config-initrd-module-ignition-module-setup"

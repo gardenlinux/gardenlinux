@@ -1,2 +1,4 @@
+# GL-TESTCOV-azure-service-no-systemd-timesyncd-override
 /etc/systemd/system/systemd-timesyncd.service.d/override.conf
+# GL-TESTCOV-azure-config-modprobe-udf-disable
 /etc/modprobe.d/disabled_udf.conf

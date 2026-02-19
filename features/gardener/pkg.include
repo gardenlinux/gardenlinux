@@ -1,9 +1,12 @@
+# GL-TESTCOV-gardener-service-apparmor-enable
 apparmor
+# GL-TESTCOV-gardener-service-containerd-enable
 containerd
 ethtool
 ipvsadm
 socat
 curl
+# GL-TESTCOV-gardener-service-logrotate-enable
 logrotate
 xfsprogs
 btrfs-progs

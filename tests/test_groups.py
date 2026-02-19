@@ -43,6 +43,11 @@ def test_group_root_has_no_users(group_entries: List[Group]):
     ), f"user group root is not empty as expected. Was: {group.user_list}"
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-server-config-group-wheel",
+    ]
+)
 @pytest.mark.feature("not _dev and not pythonDev and not container")
 def test_group_wheel_has_no_unexpected_users(
     group_entries: List[Group], expected_users: Set[str]
