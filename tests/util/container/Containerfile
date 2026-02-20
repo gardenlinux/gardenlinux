@@ -1,0 +1,19 @@
+FROM debian:stable AS compile
+RUN apt-get update && apt-get install --no-install-recommends -y build-essential
+WORKDIR /work
+COPY enter_host_ns.c ./
+RUN gcc -Wall -Wextra -Werror -std=c23 -O2 -static -o enter_host_ns enter_host_ns.c
+
+FROM debian:stable AS extract
+ARG DIST_FILE=dist.tar.gz
+WORKDIR /work
+COPY --from=dist_ctx $DIST_FILE ./
+RUN mkdir tests && tar -xz -C tests < "$DIST_FILE"
+
+FROM scratch
+COPY --from=compile /work/enter_host_ns /enter_host_ns
+COPY --from=extract /work/tests /tests
+WORKDIR /tests
+ENV TEST_NG_EXIT_0=1
+ENTRYPOINT [ "/enter_host_ns" ]
+CMD [ "./run_tests", "--junit-xml", "output/test.xml", "--system-booted" ]

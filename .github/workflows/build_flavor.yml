@@ -44,11 +44,11 @@ jobs:
       USE_KMS: ${{ inputs.signing_env == '' && 'false' || 'true' }}
     environment: ${{ inputs.signing_env }}
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@a77625665fabaab0316a1de469beaa9da1fdf811 # pin@0.10.15
       - name: Set build reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -72,14 +72,11 @@ jobs:
         run: echo "${{ secrets.secureboot_db_kms_arn }}" > cert/secureboot.db.arn
       - name: Build
         run: make ${{ inputs.flavor }}-${{ inputs.arch }}-build
-      - name: Determine CNAME
-        id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
-        with:
-          flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@a77625665fabaab0316a1de469beaa9da1fdf811 # pin@0.10.15
       - name: Set CNAME
         run: |
-          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
+          echo "CNAME=$(gl-features-parse --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname)" | tee -a "$GITHUB_ENV"
       - name: Pack build artifacts for upload
         run: tar -cSzvf "$CNAME.tar.gz" -C .build -T ".build/$CNAME.artifacts"
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
@@ -87,7 +84,7 @@ jobs:
           name: ${{ inputs.prefix }}build-${{ inputs.flavor }}-${{ inputs.arch }}
           path: ${{ env.CNAME }}.tar.gz
           if-no-files-found: error
-      - uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb # pin@v5.0.1
+      - uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
         with:
           path: |
             COMMIT

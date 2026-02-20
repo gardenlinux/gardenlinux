@@ -40,7 +40,11 @@ on:
         required: false
       az_subscription_id:
         required: false
-      ccc_credentials:
+      alibaba_cloud_role_arn:
+        required: false
+      alibaba_cloud_oidc_provider_arn:
+        required: false
+      alibaba_cloud_region:
         required: false
       tf_encryption:
         required: false
@@ -96,7 +100,7 @@ jobs:
       qemu_test_flavors_matrix: ${{ steps.test_environments.outputs.qemu_test_flavors_matrix }}
       qemu_tests: ${{ steps.test_environments.outputs.qemu_tests }}
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - id: test_environments
@@ -171,8 +175,8 @@ jobs:
             }
   test_flavors_chroot:
     needs: determine_test_settings
-    name: Test-NG chroot flavors
-    uses: ./.github/workflows/test_flavor_chroot_ng.yml
+    name: Test chroot flavors
+    uses: ./.github/workflows/test_flavor_chroot.yml
     if: ${{ needs.determine_test_settings.outputs.chroot_tests == 'true' }}
     strategy:
       fail-fast: true
@@ -184,7 +188,7 @@ jobs:
       actions: write
   test_flavors_qemu:
     needs: determine_test_settings
-    name: Test-NG QEMU flavors
+    name: Test QEMU flavors
     uses: ./.github/workflows/test_flavor_qemu.yml
     if: ${{ needs.determine_test_settings.outputs.qemu_tests == 'true' }}
     strategy:
@@ -197,8 +201,8 @@ jobs:
       actions: write
   test_flavors_cloud:
     needs: [determine_test_settings, test_flavors_qemu]
-    name: Test-NG cloud flavors
-    uses: ./.github/workflows/test_flavor_cloud_ng.yml
+    name: Test cloud flavors
+    uses: ./.github/workflows/test_flavor_cloud.yml
     if: |
       ${{
         needs.determine_test_settings.outputs.cloud_tests == 'true'
@@ -216,7 +220,7 @@ jobs:
       actions: write
   test_flavors_oci:
     needs: determine_test_settings
-    name: Test-NG OCI flavors
+    name: Test OCI flavors
     uses: ./.github/workflows/test_flavor_oci.yml
     if: ${{ needs.determine_test_settings.outputs.oci_flavors_tests == 'true' }}
     strategy:

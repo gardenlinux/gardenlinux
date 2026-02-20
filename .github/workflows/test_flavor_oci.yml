@@ -10,7 +10,7 @@ on:
         required: true
 jobs:
   test:
-    name: Test-NG flavor in OCI ${{ inputs.flavor }} (${{ inputs.arch }})
+    name: Test OCI flavor ${{ inputs.flavor }} (${{ inputs.arch }})
     runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     if: ${{ inputs.flavor != 'skip' }}
     timeout-minutes: 30
@@ -26,10 +26,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends libxml2-utils retry
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
-      - uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # pin@v5.0.1
+      - uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
         with:
           path: |
             COMMIT
@@ -40,15 +40,12 @@ jobs:
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
           name: test-distribution
-          path: tests-ng/.build
-      - name: Determine CNAME
-        id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
-        with:
-          flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
+          path: tests/.build
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@a77625665fabaab0316a1de469beaa9da1fdf811 # pin@0.10.15
       - name: Set CNAME
         run: |
-          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
+          echo "CNAME=$(gl-features-parse --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname)" | tee -a "$GITHUB_ENV"
       - name: Load flavor build artifact
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
@@ -60,23 +57,23 @@ jobs:
           rm "$CNAME.tar.gz"
           tree .build
         # TODO: handle skipping better
-      - name: New Test Framework
+      - name: Execute tests
         run: |
           if [ -e ".build/$CNAME.oci" ]; then
-            ./test-ng ".build/$CNAME.oci"
+            ./test ".build/$CNAME.oci"
           else
             echo "skipping non oci file"
           fi
       - name: Copy test results to build directory
         if: always()
         run: |
-          cp tests-ng/log/oci.test-ng.log .build/${CNAME}.oci.test-ng.log || true
-          cp tests-ng/log/oci.test-ng.xml .build/${CNAME}.oci.test-ng.xml || true
+          cp tests/log/oci.test.log .build/${CNAME}.oci.test.log || true
+          cp tests/log/oci.test.xml .build/${CNAME}.oci.test.xml || true
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         if: always()
         with:
           if-no-files-found: ignore
-          name: oci-test-ng-${{ env.CNAME }}
+          name: oci-test-${{ env.CNAME }}
           path: |
-            .build/${{ env.CNAME }}.oci.test-ng.log
-            .build/${{ env.CNAME }}.oci.test-ng.xml
+            .build/${{ env.CNAME }}.oci.test.log
+            .build/${{ env.CNAME }}.oci.test.xml

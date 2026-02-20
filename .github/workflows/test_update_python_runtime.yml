@@ -15,18 +15,18 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y jq python3-pip
-          pip install -r tests-ng/util/requirements-gh.txt
+          pip install -r tests/util/requirements-gh.txt
 
       - name: Run update script
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: tests-ng/util/update_runtime.py
+        run: tests/util/update_runtime.py
 
       - name: Check for changes
         id: changes
@@ -46,7 +46,7 @@ jobs:
               echo "EOF"
             } >> $GITHUB_OUTPUT
 
-            release_date=$(grep '^export RELEASE_DATE=' tests-ng/util/python.env.sh | sed -n 's/^export RELEASE_DATE="\(.*\)"/\1/p')
+            release_date=$(grep '^export RELEASE_DATE=' tests/util/python.env.sh | sed -n 's/^export RELEASE_DATE="\(.*\)"/\1/p')
             echo "release_date=$release_date" >> $GITHUB_OUTPUT
           fi
 
@@ -62,8 +62,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SUMMARY: ${{ steps.changes.outputs.summary }}
         run: |
-          BRANCH="update-tests-ng-python-runtime-${{ steps.changes.outputs.release_date }}"
-          TITLE="chore: update Tests-NG Python runtime version"
+          BRANCH="update-tests-python-runtime-${{ steps.changes.outputs.release_date }}"
+          TITLE="chore: Update tests Python runtime version"
 
           # Check if a PR already exists for this branch
           existing_pr=$(gh pr list --base main --head "${BRANCH}" --json number --jq '.[0].number' || echo "")
@@ -89,7 +89,7 @@ jobs:
           } > /tmp/commit_message.txt
 
           git checkout -b ${BRANCH}
-          git add tests-ng/util/python.env.sh
+          git add tests/util/python.env.sh
 
           git commit -F /tmp/commit_message.txt
           git push origin ${BRANCH} -f
@@ -102,7 +102,7 @@ jobs:
             --body-file /tmp/body.txt \
             --label "automated" \
             --label "dependencies" \
-            --label "test-ng" \
+            --label "test" \
             --label "python"
 
             # is somewhat broken, see https://github.com/orgs/community/discussions/113519
@@ -114,7 +114,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TITLE="chore: update Tests-NG Python runtime version"
+          TITLE="chore: update Tests Python runtime version"
 
           # Get PRs sorted by date (newest first)
           prs=$(gh pr list --search "$TITLE" --json number,createdAt --jq 'sort_by(.createdAt) | reverse | .[].number')

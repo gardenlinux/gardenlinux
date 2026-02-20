@@ -41,7 +41,7 @@ jobs:
       environment: ${{ steps.set_values.outputs.environment }}
       repository: ${{ steps.set_values.outputs.repository }}
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Set environment and repository
@@ -82,27 +82,19 @@ jobs:
           - flavor: "container-pythonDev"
             subpath: "/container-python-dev"
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
-      - name: Set flavor version reference
+      - name: Set container version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
-      - name: Determine CNAME (amd64)
-        id: cname_amd64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
-        with:
-          flags: --cname ${{ matrix.flavor }}-amd64 cname
-      - name: Determine CNAME (arm64)
-        id: cname_arm64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
-        with:
-          flags: --cname ${{ matrix.flavor }}-arm64 cname
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@a77625665fabaab0316a1de469beaa9da1fdf811 # pin@0.10.15
       - name: Set CNAMEs
         run: |
-          echo "CNAME_AMD64=${{ steps.cname_amd64.outputs.result }}" | tee -a "$GITHUB_ENV"
-          echo "CNAME_ARM64=${{ steps.cname_arm64.outputs.result }}" | tee -a "$GITHUB_ENV"
+          echo "CNAME_AMD64=$(gl-features-parse --cname ${{ matrix.flavor }}-amd64 cname)" | tee -a "$GITHUB_ENV"
+          echo "CNAME_ARM64=$(gl-features-parse --cname ${{ matrix.flavor }}-arm64 cname)" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
           name: build-${{ matrix.flavor }}-amd64
@@ -178,7 +170,7 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
@@ -246,6 +238,7 @@ jobs:
         shell: bash
     env:
       CNAME: ""
+      GL_ALLOW_MULTIPLE_PLATFORMS: "1"
     permissions:
       id-token: write
       packages: write
@@ -255,7 +248,7 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 8
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
@@ -264,7 +257,7 @@ jobs:
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@a77625665fabaab0316a1de469beaa9da1fdf811 # pin@0.10.15
       - name: Install cosign
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
         with:
@@ -306,7 +299,7 @@ jobs:
       - name: Verify signature
         run: |
           cosign verify --insecure-ignore-tlog=true --key "awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }}" "${{ needs.determine_environment.outputs.repository }}@$(cat digest.txt)"
-      - uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb # pin@v5.0.1
+      - uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
@@ -319,6 +312,7 @@ jobs:
         shell: bash
     env:
       CNAME: ""
+      GL_ALLOW_MULTIPLE_PLATFORMS: "1"
     permissions:
       id-token: write
       packages: write
@@ -328,11 +322,11 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 1
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@a77625665fabaab0316a1de469beaa9da1fdf811 # pin@0.10.15
       - name: Set flavor version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -340,7 +334,7 @@ jobs:
       - name: Set CNAME
         run: |
           echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
-      - uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # pin@v5.0.1
+      - uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
@@ -352,52 +346,13 @@ jobs:
           mkdir manifests
           mv oci_manifest_entry_${CNAME}.json manifests/
 
-          gl-oci update-index \
-            --container ${{ needs.determine_environment.outputs.repository }} \
-            --version ${{ inputs.version }} \
+          gl-oci push-index-from-directory \
+            --index ${{ needs.determine_environment.outputs.repository }} \
+            --index-tag ${{ inputs.version }} \
             --manifest_folder manifests
 
-  build_tests_ng_container:
-    name: Build tests-ng container (${{ matrix.arch }})
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
-    defaults:
-      run:
-        shell: bash
-    strategy:
-      matrix:
-        arch: [amd64, arm64]
-    steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-        with:
-          submodules: true
-      - name: Download test distribution artifact
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
-        with:
-          name: test-distribution
-          github-token: ${{ github.token }}
-          run-id: ${{ inputs.run_id }}
-          path: .build
-      - name: Determine version
-        run: |
-          version=$(bin/garden-version "${{ inputs.version }}")
-          echo "VERSION=${version}" | tee -a "$GITHUB_ENV"
-      - name: Build tests-ng container (${{ matrix.arch }})
-        run: |
-          set -euo pipefail
-          arch=${{ matrix.arch }}
-          echo "Building tests-ng for arch=$arch"
-          repo="ghcr.io/${{ github.repository_owner }}/test-ng"
-          podman build --arch ${arch} --build-context dist_ctx=.build -t ${repo}:${arch}-${VERSION} tests-ng/util/container
-          podman save --format oci-archive ${repo}:${arch}-${VERSION} > tests-ng-container_${arch}.oci
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
-        with:
-          name: tests-ng-container-${{ matrix.arch }}
-          path: tests-ng-container_${{ matrix.arch }}.oci
-          if-no-files-found: error
-
-  publish_tests_ng:
-    name: Publish tests-ng container
-    needs: build_tests_ng_container
+  publish_tests:
+    name: Publish tests container
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -405,21 +360,26 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
-      - name: Download built tests-ng archives
+      - id: tests_containers
+        name: Download built tests archives
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
-          pattern: tests-ng-container-*
+          pattern: tests-container-*
           merge-multiple: true
-      - name: Load OCI archives
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - if: ${{ steps.tests_containers.outputs.cache-hit == 'true' }}
+        name: Load OCI archives
         run: |
           for oci in *.oci; do
             podman load -i "${oci}"
             rm -f "${oci}"
           done
-      - name: Publish tests-ng images and manifest
+      - if: ${{ steps.tests_containers.outputs.cache-hit == 'true' }}
+        name: Publish tests images and manifest
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
@@ -434,25 +394,25 @@ jobs:
           podman login -u token -p ${GITHUB_TOKEN} ghcr.io
 
           # Push amd64 and arm64 images
-          podman push ghcr.io/${{ github.repository_owner }}/test-ng:amd64-${version}
-          podman push ghcr.io/${{ github.repository_owner }}/test-ng:arm64-${version}
+          podman push ghcr.io/${{ github.repository_owner }}/test:amd64-${version}
+          podman push ghcr.io/${{ github.repository_owner }}/test:arm64-${version}
 
           if [ "$is_nightly" = true ]; then
-            podman tag ghcr.io/${{ github.repository_owner }}/test-ng:amd64-${version} ghcr.io/${{ github.repository_owner }}/test-ng:amd64-nightly
-            podman tag ghcr.io/${{ github.repository_owner }}/test-ng:arm64-${version} ghcr.io/${{ github.repository_owner }}/test-ng:arm64-nightly
-            podman push ghcr.io/${{ github.repository_owner }}/test-ng:amd64-nightly
-            podman push ghcr.io/${{ github.repository_owner }}/test-ng:arm64-nightly
+            podman tag ghcr.io/${{ github.repository_owner }}/test:amd64-${version} ghcr.io/${{ github.repository_owner }}/test:amd64-nightly
+            podman tag ghcr.io/${{ github.repository_owner }}/test:arm64-${version} ghcr.io/${{ github.repository_owner }}/test:arm64-nightly
+            podman push ghcr.io/${{ github.repository_owner }}/test:amd64-nightly
+            podman push ghcr.io/${{ github.repository_owner }}/test:arm64-nightly
           fi
 
           # Create and push manifests
           if [ "$is_nightly" = true ]; then
-            podman manifest create ghcr.io/${{ github.repository_owner }}/test-ng:nightly
-            podman manifest add ghcr.io/${{ github.repository_owner }}/test-ng:nightly ghcr.io/${{ github.repository_owner }}/test-ng:amd64-nightly
-            podman manifest add ghcr.io/${{ github.repository_owner }}/test-ng:nightly ghcr.io/${{ github.repository_owner }}/test-ng:arm64-nightly
-            podman manifest push ghcr.io/${{ github.repository_owner }}/test-ng:nightly
+            podman manifest create ghcr.io/${{ github.repository_owner }}/test:nightly
+            podman manifest add ghcr.io/${{ github.repository_owner }}/test:nightly ghcr.io/${{ github.repository_owner }}/test:amd64-nightly
+            podman manifest add ghcr.io/${{ github.repository_owner }}/test:nightly ghcr.io/${{ github.repository_owner }}/test:arm64-nightly
+            podman manifest push ghcr.io/${{ github.repository_owner }}/test:nightly
           fi
 
-          podman manifest create ghcr.io/${{ github.repository_owner }}/test-ng:${version}
-          podman manifest add ghcr.io/${{ github.repository_owner }}/test-ng:${version} ghcr.io/${{ github.repository_owner }}/test-ng:amd64-${version}
-          podman manifest add ghcr.io/${{ github.repository_owner }}/test-ng:${version} ghcr.io/${{ github.repository_owner }}/test-ng:arm64-${version}
-          podman manifest push ghcr.io/${{ github.repository_owner }}/test-ng:${version}
+          podman manifest create ghcr.io/${{ github.repository_owner }}/test:${version}
+          podman manifest add ghcr.io/${{ github.repository_owner }}/test:${version} ghcr.io/${{ github.repository_owner }}/test:amd64-${version}
+          podman manifest add ghcr.io/${{ github.repository_owner }}/test:${version} ghcr.io/${{ github.repository_owner }}/test:arm64-${version}
+          podman manifest push ghcr.io/${{ github.repository_owner }}/test:${version}

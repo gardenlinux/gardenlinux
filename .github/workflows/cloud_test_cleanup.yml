@@ -13,7 +13,6 @@ jobs:
     environment: oidc_platform_tests
     outputs:
       matrix_test: ${{ steps.set-matrix.outputs.matrix_test }}
-      matrix_test_ng: ${{ steps.set-matrix.outputs.matrix_test_ng }}
     steps:
       - id: "auth_aws"
         name: "Authenticate to AWS"
@@ -33,16 +32,12 @@ jobs:
             --output json | jq -r '.[]' | grep "^env:/" | \
             sed -E 's|env:/([^/]+)/terraform.tfstate|\1|' | grep -v ^tfstate | sort -u)
 
-          # Split workspaces into test- and test-ng- prefixed ones
-          TEST_WORKSPACES=$(echo "$ALL_WORKSPACES" | grep "^test-" | grep -v "^test-ng-" | jq -R -s -c 'split("\n")[:-1]')
-          TEST_NG_WORKSPACES=$(echo "$ALL_WORKSPACES" | grep "^test-ng-" | jq -R -s -c 'split("\n")[:-1]')
-
+          TEST_WORKSPACES=$(echo "$ALL_WORKSPACES" | grep "^test-" | jq -R -s -c 'split("\n")[:-1]')
           echo "matrix_test=${TEST_WORKSPACES}" >> $GITHUB_OUTPUT
-          echo "matrix_test_ng=${TEST_NG_WORKSPACES}" >> $GITHUB_OUTPUT
 
   cleanup:
     needs: collect_workspaces
-    if: ${{ needs.collect_workspaces.outputs.matrix_test_ng != '[]' && needs.collect_workspaces.outputs.matrix_test_ng != '' }}
+    if: ${{ needs.collect_workspaces.outputs.matrix_test != '[]' && needs.collect_workspaces.outputs.matrix_test != '' }}
     name: Cleanup Test Workspaces
     runs-on: ubuntu-24.04
     permissions:
@@ -52,11 +47,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        workspace: ${{ fromJson(needs.collect_workspaces.outputs.matrix_test_ng) }}
+        workspace: ${{ fromJson(needs.collect_workspaces.outputs.matrix_test) }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Install dependencies
@@ -123,20 +118,21 @@ jobs:
             core.exportVariable("ARM_SUBSCRIPTION_ID", "${{ secrets.AZURE_SUBSCRIPTION_ID }}");
             core.setSecret("${{ secrets.AZURE_TENANT_ID }}");
             core.exportVariable("ARM_TENANT_ID", "${{ secrets.AZURE_TENANT_ID }}");
-      - name: "Create ali cloud credential file"
-        if: ${{ contains(matrix.workspace, '-ali-') }}
+      - id: "auth_alicloud"
+        if: ${{ startsWith(inputs.flavor, 'ali-') }}
+        name: "Authenticate to Alicloud"
+        uses: aliyun/configure-aliyun-credentials-action@b347e60e64028a4d567a8f31ca42e1b0706c3c99 # v1.0.7
+        with:
+          role-to-assume: ${{ secrets.alibaba_cloud_role_arn }}
+          oidc-provider-arn: ${{ secrets.alibaba_cloud_oidc_provider_arn }}
+          role-session-expiration: 21600
+      - name: "Set Alicloud platform-test environment"
+        if: ${{ startsWith(inputs.flavor, 'ali-') }}
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
-            // tf provider auth
-            const credentials = JSON.parse(atob("${{ secrets.CCC_CREDENTIALS }}"));
-            const aliCredentials = credentials.alicloud["gardenlinux-platform-test"];
-            core.setSecret(aliCredentials.access_key_id);
-            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_ID", aliCredentials.access_key_id);
-            core.setSecret(aliCredentials.access_key_secret);
-            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_SECRET", aliCredentials.access_key_secret);
             // tf provider vars
-            core.exportVariable("ALIBABA_CLOUD_REGION", aliCredentials.region);
+            core.exportVariable("ALIBABA_CLOUD_REGION", "${{ secrets.alibaba_cloud_region }}");
       - name: Set additional OpenTofu variables
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
@@ -148,10 +144,10 @@ jobs:
             core.exportVariable("WORKSPACE", "${{ matrix.workspace }}");
             const workspace = "${{ matrix.workspace }}";
 
-            // Extract the image name by removing test-ng- prefix and run info
-            // Workspace format: test-ng-[run_id]-[run_number]-[cloud]-[flavor]...
-            // Remove test-ng- and run ID/number to get: [cloud]-[flavor]-[version]-...-[seed]
-            let imageName = workspace.replace(/^test-ng-\d+-\d+-/, "");
+            // Extract the image name by removing test prefix and run info
+            // Workspace format: test-[run_id]-[run_number]-[cloud]-[flavor]...
+            // Remove test- and run ID/number to get: [cloud]-[flavor]-[version]-...-[seed]
+            let imageName = workspace.replace(/^test-\d+-\d+-/, "");
             core.exportVariable("IMAGE_NAME", imageName);
 
             // Extract cloud provider from image name (first component)
@@ -162,7 +158,7 @@ jobs:
           echo "Processing workspace: ${WORKSPACE}"
           echo "Processing cloud: ${CLOUD}"
 
-          cd tests-ng/util/tf
+          cd tests/util/tf
           export TOFUENV_GITHUB_TOKEN="${GITHUB_TOKEN:-}"
           source ../install_tofu.sh
           install_tofu "$PWD"
@@ -214,7 +210,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Retry failed cleanup
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
