@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 from typing import Dict, List, Optional, TypeVar
 
@@ -19,6 +20,18 @@ def get_normalized_sets(*sets: set) -> tuple[set, ...]:
 
 def is_set(obj) -> bool:
     return isinstance(obj, set)
+
+
+def tree(path: str) -> set[str]:
+    """Returns all subpaths of `path`, like the find command"""
+    tree = {path}
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            tree.add(f"{root}/{file}")
+        for dir in dirs:
+            tree.add(f"{root}/{dir}")
+
+    return tree
 
 
 T = TypeVar("T")
