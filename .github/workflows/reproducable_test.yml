@@ -34,7 +34,6 @@ jobs:
     with:
       version: now
       target: nightly
-      platform_test_tag: latest
       fail_fast: true
       prefix: a-
     secrets:
@@ -63,7 +62,6 @@ jobs:
     with:
       version: now
       target: nightly
-      platform_test_tag: latest
       fail_fast: true
       prefix: b-
     secrets:
