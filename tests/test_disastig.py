@@ -1,7 +1,7 @@
 import pytest
 from plugins.shell import ShellRunner
 
-
+@pytest.mark.security_id(1447)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
