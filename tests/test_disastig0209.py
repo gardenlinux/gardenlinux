@@ -1,9 +1,12 @@
+import time
+
 import pytest
 from plugins.file import File
 from plugins.parse_file import Parse, ParseFile
 from plugins.shell import ShellRunner
 
 PRIV_ESC_RULE_FILE = "/etc/audit/rules.d/70-privilege-escalation.rules"
+TEST_USER = "dev"
 
 
 @pytest.mark.feature("not container")
@@ -71,8 +74,8 @@ def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
 
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
-@pytest.mark.root(reason="required to query audit logs")
-def test_setreuid_audit_search(shell: ShellRunner):
+@pytest.mark.root(reason="required to trigger and query audit logs")
+def test_privilege_escalation_functional(shell: ShellRunner):
     """
     As per DISA STIG requirement, the operating system must generate audit
     records when successful or unsuccessful attempts to modify categories
@@ -82,11 +85,16 @@ def test_setreuid_audit_search(shell: ShellRunner):
     escalation.
     Ref: SRG-OS-000465-GPOS-00209
     """
-    output = shell(
-        cmd="ausearch -k privilege_escalation -sc setreuid",
+
+    shell(cmd=f"runuser -u {TEST_USER} -- /usr/bin/chfn --help || true")
+
+    time.sleep(2)
+
+    search = shell(
+        cmd="ausearch -k privilege_escalation --start recent -i || true",
         capture_output=True,
     )
 
     assert (
-        output.returncode == 0
-    ), f"stigcompliance: unable to search audit records for setreuid: {output.stderr}"
+        "execve" in search.stdout and "euid=0" in search.stdout
+    ), "stigcompliance: privilege escalation audit event not detected"
