@@ -1,5 +1,7 @@
 import pytest
+
 from plugins.shell import ShellRunner
+
 
 @pytest.mark.security_id(1447)
 @pytest.mark.feature("not container")
