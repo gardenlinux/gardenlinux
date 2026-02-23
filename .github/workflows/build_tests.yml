@@ -76,6 +76,6 @@ jobs:
           podman save --format oci-archive ${repo}:${arch}-${version} > tests_container_${arch}.oci
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
-          name: tests-container-${{ matrix.arch }}
+          name: ${{ inputs.prefix }}tests-container-${{ matrix.arch }}
           path: tests_container_${{ matrix.arch }}.oci
           if-no-files-found: error
