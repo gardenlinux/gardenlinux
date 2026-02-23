@@ -1,6 +1,7 @@
+import stat
+
 import pytest
 
-# Global paths for audit tools
 AUDIT_TOOL_PATHS = [
     "/sbin/auditctl",
     "/usr/sbin/auditctl",
@@ -22,17 +23,21 @@ def test_audit_tools_owned_by_root(file):
     Ref: SRG-OS-000256-GPOS-00097
     """
 
-    for path in AUDIT_TOOL_PATHS:
-        if file.exists(path):
-            assert file.is_owned_by_user(
-                path, "root"
-            ), f"stigcompliance: {path} not owned by root"
+    not_root_owned = [
+        path
+        for path in AUDIT_TOOL_PATHS
+        if file.exists(path) and not file.is_owned_by_user(path, "root")
+    ]
+
+    assert not not_root_owned, (
+        "stigcompliance: tools not owned by root: " f"{', '.join(not_root_owned)}"
+    )
 
 
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
-def test_audit_tools_not_world_writable(file):
+def test_audit_tools_not_group_or_world_writable(file):
     """
     As per DISA STIG requirement, we have to ensure that only the root user is allowed
     to access the audit tools like auditctl, last (wtmpdb) and journalctl. This should
@@ -40,37 +45,17 @@ def test_audit_tools_not_world_writable(file):
     Ref: SRG-OS-000256-GPOS-00097
     """
 
-    for path in AUDIT_TOOL_PATHS:
-        if file.exists(path):
-            mode = file.get_mode(path)
-            assert mode[-1] not in {
-                "2",
-                "3",
-                "6",
-                "7",
-            }, f"stigcompliance: {path} is world-writable (mode {mode})"
-
-
-@pytest.mark.feature("not container")
-@pytest.mark.booted(reason="audit tools check requires booted system")
-@pytest.mark.root(reason="required to execute privileged tools")
-def test_audit_tools_not_group_writable(file):
-    """
-    As per DISA STIG requirement, we have to ensure that only the root user is allowed
-    to access the audit tools like auditctl, last (wtmpdb) and journalctl. This should
-    be applied for the operating system only, but not for containers.
-    Ref: SRG-OS-000256-GPOS-00097
-    """
+    writable_tools = []
 
     for path in AUDIT_TOOL_PATHS:
         if file.exists(path):
-            mode = file.get_mode(path)
-            assert mode[-2] not in {
-                "2",
-                "3",
-                "6",
-                "7",
-            }, f"stigcompliance: {path} is group-writable (mode {mode})"
+            mode = int(file.get_mode(path), 8)
+            if mode & stat.S_IWGRP or mode & stat.S_IWOTH:
+                writable_tools.append(f"{path} ({file.get_mode(path)})")
+
+    assert not writable_tools, (
+        "stigcompliance: tools writable by group/world: " f"{', '.join(writable_tools)}"
+    )
 
 
 @pytest.mark.feature("not container")
@@ -87,13 +72,13 @@ def test_audit_log_owned_by_root(file):
     if file.exists(AUDIT_LOG_FILE):
         assert file.is_owned_by_user(
             AUDIT_LOG_FILE, "root"
-        ), f"stigcompliance: {AUDIT_LOG_FILE} not owned by root"
+        ), f"stigcompliance: {AUDIT_LOG_FILE} must be owned by root"
 
 
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
-def test_audit_log_not_world_writable(file):
+def test_audit_log_not_group_or_world_writable(file):
     """
     As per DISA STIG requirement, we have to ensure that only the root user is allowed
     to access the audit tools like auditctl, last (wtmpdb) and journalctl. This should
@@ -102,10 +87,9 @@ def test_audit_log_not_world_writable(file):
     """
 
     if file.exists(AUDIT_LOG_FILE):
-        mode = file.get_mode(AUDIT_LOG_FILE)
-        assert mode[-1] not in {
-            "2",
-            "3",
-            "6",
-            "7",
-        }, f"stigcompliance: {AUDIT_LOG_FILE} is world-writable (mode {mode})"
+        mode = int(file.get_mode(AUDIT_LOG_FILE), 8)
+
+        assert not (mode & stat.S_IWGRP or mode & stat.S_IWOTH), (
+            f"stigcompliance: {AUDIT_LOG_FILE} writable by group/world "
+            f"(mode {file.get_mode(AUDIT_LOG_FILE)})"
+        )
