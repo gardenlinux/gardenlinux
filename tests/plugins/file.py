@@ -183,7 +183,7 @@ class File:
         expected_mode = self._normalize_permissions(permissions)
 
         return actual_mode == expected_mode
-    
+
     def _normalize_permissions(self, permissions: str | int) -> int:
         """Normalize permission input to integer mode."""
 

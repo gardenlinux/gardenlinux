@@ -1,6 +1,4 @@
-import stat
-from plugins.file import File
-from plugins.parse_file import Parse, ParseFile
+
 import pytest
 
 AUDIT_TOOL_PATHS = [
@@ -35,7 +33,7 @@ def test_int(file):
         f"stigcompliance: incorrect numeric permissions on /etc/passwd "
         f"(expected 0o646, got {actual})"
     )
-    
+
 
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
@@ -46,10 +44,7 @@ def test_audit_tools_permissions(file):
         if not file.exists(path):
             continue
 
-        if not (
-            file.has_permissions(path, "766")
-            or file.has_permissions(path, "754")
-        ):
+        if not (file.has_permissions(path, "766") or file.has_permissions(path, "754")):
             invalid.append(path)
 
     assert not invalid, (
