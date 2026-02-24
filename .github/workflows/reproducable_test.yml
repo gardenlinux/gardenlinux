@@ -155,7 +155,7 @@ jobs:
 
         # Only create file on success or controlled failure (exit code 64)
         if [[ "$code" == 0 || "$code" == 64 ]]; then 
-          echo "$out" > ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
+          echo -n "$out" > ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
         fi
 
         exit "$code"
@@ -224,7 +224,7 @@ jobs:
         
         # Only create file on success or controlled failure (exit code 64)
         if [[ "$code" == 0 || "$code" == 64 ]]; then 
-          echo "$out" > ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
+          echo -n "$out" > ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
         fi
 
         exit "$code"
