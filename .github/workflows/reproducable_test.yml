@@ -104,7 +104,7 @@ jobs:
       fail-fast: false
     steps:
     - name: Install python-gardenlinux-lib
-      uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup
+      uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@main
       with:
         version: "feat/port-difference-formatter"
     - name: Load flavor A build artifact
@@ -168,7 +168,7 @@ jobs:
       fail-fast: false
     steps:
     - name: Install python-gardenlinux-lib
-      uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup
+      uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@main
       with:
         version: "feat/port-difference-formatter"
     - name: Load flavor A build artifact
@@ -224,7 +224,7 @@ jobs:
       with:
         submodules: true
     - name: Install python-gardenlinux-lib
-      uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup
+      uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@main
       with:
         version: "feat/port-difference-formatter"
     - name: download result data
