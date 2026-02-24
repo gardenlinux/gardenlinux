@@ -148,9 +148,7 @@ jobs:
 
         diff=$(which gl-diff)
 
-        whoami
-        echo $diff
-
+        set +e
         out=$(sudo "$diff" generate ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} A/$cname_a.tar B/$cname_b.tar)
 
         # Only create file on success or controlled failure (exit code 64)
@@ -213,7 +211,10 @@ jobs:
       run: |
         filename=$(echo "${{ matrix.flavor }}-${{ matrix.arch }}.oci" | sed -E "s/bare-//")
 
-        out=$(sudo gl-diff generate ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} "A/$filename" "B/$filename")
+        diff=$(which gl-diff)
+
+        set +e
+        out=$(sudo "$diff" generate ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} "A/$filename" "B/$filename")
         
         # Only create file on success or controlled failure (exit code 64)
         if [[ "$?" == 0 || "$?" == 64 ]]; then 
