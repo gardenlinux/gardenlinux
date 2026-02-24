@@ -146,7 +146,12 @@ jobs:
         tar -C B -xzf B/$cname_b.tar.gz
         rm "B/$cname_b.tar.gz"
 
-        out=$(sudo gl-diff generate ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} A/$cname_a.tar B/$cname_b.tar)
+        diff=$(which gl-diff)
+
+        whoami
+        echo $diff
+
+        out=$(sudo "$diff" generate ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} A/$cname_a.tar B/$cname_b.tar)
 
         # Only create file on success or controlled failure (exit code 64)
         if [[ "$?" == 0 || "$?" == 64 ]]; then 
