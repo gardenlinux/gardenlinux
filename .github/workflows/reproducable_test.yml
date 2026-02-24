@@ -146,7 +146,12 @@ jobs:
         tar -C B -xzf B/$cname_b.tar.gz
         rm "B/$cname_b.tar.gz"
 
-        gl-diff generate ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} A/$cname_a.tar B/$cname_b.tar > ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
+        out=$(sudo gl-diff generate ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} A/$cname_a.tar B/$cname_b.tar)
+
+        # Only create file on success or controlled failure (exit code 64)
+        if [[ "$?" == 0 || "$?" == 64 ]]; then 
+          echo "$out" > ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
+        fi
     - name: Upload diff data
       if: always()
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
@@ -203,8 +208,12 @@ jobs:
       run: |
         filename=$(echo "${{ matrix.flavor }}-${{ matrix.arch }}.oci" | sed -E "s/bare-//")
 
-        gl-diff generate ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} "A/$filename" "B/$filename" > ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
+        out=$(sudo gl-diff generate ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} "A/$filename" "B/$filename")
         
+        # Only create file on success or controlled failure (exit code 64)
+        if [[ "$?" == 0 || "$?" == 64 ]]; then 
+          echo "$out" > ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
+        fi
     - name: Upload diff data
       if: always()
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
