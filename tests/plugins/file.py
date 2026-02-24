@@ -159,6 +159,66 @@ class File:
             )
         return self.get_mode(path) == mode
 
+    def has_permissions(self, path: str | Path, permissions: str | int) -> bool:
+        """Check if a file has the specified permissions.
+
+        Supports:
+            - Octal string: "0750" or "750"
+            - Integer: 0o750
+            - Symbolic string: "rwxr-x---"
+
+        Args:
+            path: File path.
+            permissions: Expected permissions.
+
+        Returns:
+            bool: True if permissions match exactly, False otherwise.
+
+        Raises:
+            ValueError: If permission format is invalid.
+            FileNotFoundError: If the path does not exist.
+        """
+        actual_mode = stat.S_IMODE(Path(path).stat().st_mode)
+
+        expected_mode = self._normalize_permissions(permissions)
+
+        return actual_mode == expected_mode
+    
+    def _normalize_permissions(self, permissions: str | int) -> int:
+        """Normalize permission input to integer mode."""
+
+        if isinstance(permissions, int):
+            return permissions
+
+        if not isinstance(permissions, str):
+            raise ValueError(
+                "Permissions must be int or string (e.g., '750' or 'rwxr-x---')"
+            )
+
+        permissions = permissions.strip()
+
+        if permissions.isdigit():
+            return int(permissions, 8)
+
+        if len(permissions) != 9:
+            raise ValueError(
+                "Symbolic permissions must be 9 characters like 'rwxr-x---'"
+            )
+
+        perm_map = {"r": 4, "w": 2, "x": 1, "-": 0}
+
+        mode = 0
+        for i in range(3):  # user, group, other
+            chunk = permissions[i * 3 : (i + 1) * 3]
+            value = 0
+            for char in chunk:
+                if char not in perm_map:
+                    raise ValueError(f"Invalid permission character: {char}")
+                value += perm_map[char]
+            mode = (mode << 3) | value
+
+        return mode
+
     def is_executable(self, path: str | Path) -> bool:
         """Check if a file is executable.
 
