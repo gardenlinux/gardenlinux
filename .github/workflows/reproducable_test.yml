@@ -150,11 +150,15 @@ jobs:
 
         set +e
         out=$(sudo "$diff" generate ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} A/$cname_a.tar B/$cname_b.tar)
+        code=$?
+        set -e
 
         # Only create file on success or controlled failure (exit code 64)
-        if [[ "$?" == 0 || "$?" == 64 ]]; then 
+        if [[ "$code" == 0 || "$code" == 64 ]]; then 
           echo "$out" > ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
         fi
+
+        exit "$code"
     - name: Upload diff data
       if: always()
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
@@ -215,11 +219,15 @@ jobs:
 
         set +e
         out=$(sudo "$diff" generate ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} "A/$filename" "B/$filename")
+        code=$?
+        set -e
         
         # Only create file on success or controlled failure (exit code 64)
-        if [[ "$?" == 0 || "$?" == 64 ]]; then 
+        if [[ "$code" == 0 || "$code" == 64 ]]; then 
           echo "$out" > ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
         fi
+
+        exit "$code"
     - name: Upload diff data
       if: always()
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
