@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -eufo pipefail
+
+fwcfg_path="/sys/firmware/qemu_fw_cfg/by_name/opt/gardenlinux/config_script/raw"
+tmp_script="/run/gardenlinux/qemu-fw_cfg-script"
+
+if ! grep -qi qemu /sys/class/dmi/id/sys_vendor; then
+	echo "Not running under QEMU, skipping." >&2
+	exit 0
+fi
+
+if [ ! -e "$fwcfg_path" ]; then
+	echo "No fw_cfg script provided, nothing to do." >&2
+	exit 0
+fi
+
+if [ "$(head -c 2 "$fwcfg_path" 2> /dev/null)" != "#!" ]; then
+	echo "fw_cfg script does not start with shebang (#!), refusing to execute" >&2
+	exit 1
+fi
+
+cleanup() {
+	rm -f "$tmp_script"
+}
+trap cleanup EXIT
+
+mkdir -p "$(dirname "$tmp_script")"
+cp "$fwcfg_path" "$tmp_script"
+chmod +x "$tmp_script"
+
+exec "$tmp_script"
