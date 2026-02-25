@@ -145,9 +145,9 @@ jobs:
             const workspace = "${{ matrix.workspace }}";
 
             // Extract the image name by removing test prefix and run info
-            // Workspace format: test-ng-[run_id]-[run_number]-[cloud]-[flavor]...
-            // Remove test-ng- and run ID/number to get: [cloud]-[flavor]-[version]-...-[seed]
-            let imageName = workspace.replace(/^test-ng-\d+-\d+-/, "");
+            // Workspace format: test-[run_id]-[run_number]-[cloud]-[flavor]...
+            // Remove test- and run ID/number to get: [cloud]-[flavor]-[version]-...-[seed]
+            let imageName = workspace.replace(/^test-\d+-\d+-/, "");
             core.exportVariable("IMAGE_NAME", imageName);
 
             // Extract cloud provider from image name (first component)
@@ -158,7 +158,7 @@ jobs:
           echo "Processing workspace: ${WORKSPACE}"
           echo "Processing cloud: ${CLOUD}"
 
-          cd tests-ng/util/tf
+          cd tests/util/tf
           export TOFUENV_GITHUB_TOKEN="${GITHUB_TOKEN:-}"
           source ../install_tofu.sh
           install_tofu "$PWD"

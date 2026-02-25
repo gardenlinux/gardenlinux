@@ -25,7 +25,7 @@ jobs:
   # Create new version in GLVD so it has the package list of the new release
   # This is needed for the automatic changelog generation
   glvd:
-    if: ${{ inputs.type }} == 'minor'
+    if: ${{ inputs.type == 'minor' }}
     name: Update GLVD distro list
     runs-on: ubuntu-latest
     env:
@@ -37,7 +37,7 @@ jobs:
     steps:
       - name: Authenticate to cluster
         id: kube_auth
-        uses: gardener/cc-utils/.github/actions/kubernetes-auth@1858c473454af3a7db7c2030c3aba2d163674f48 # 1.2741.0
+        uses: gardener/cc-utils/.github/actions/kubernetes-auth@2fb007e9aa40854bcdfe8bd8fe5bb9da7ab7730a # 1.2742.0
         with:
           server: https://api.live.gl-live.shoot.live.k8s-hana.ondemand.com
           server-ca-discovery-url: https://discovery.ingress.garden.live.k8s.ondemand.com/projects/gl-live/shoots/3f2715e7-dc7c-4bf1-a594-dc0d90cd0f1c/cluster-ca
@@ -62,27 +62,11 @@ jobs:
           sleep 180
   flavors_matrix:
     needs: glvd
-    runs-on: ubuntu-24.04
-    defaults:
-      run:
-        shell: bash
-    outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-    steps:
-      - name: Checkout flavors of the release commit
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          ref: ${{ inputs.commit }}
-          sparse-checkout: |
-            flavors.yaml
-          sparse-checkout-cone-mode: false
-      - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
-      - id: matrix
-        name: Generate flavors matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
-        with:
-          flags: "--no-arch --json-by-arch --publish"
+    name: Generate flavors matrix of the release commit
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: "--no-arch --json-by-arch --publish"
+      ref: ${{ inputs.commit }}
   github_release:
     needs: glvd
     runs-on: ubuntu-24.04
@@ -103,9 +87,7 @@ jobs:
       - name: install dependencies for generate_release_note.py script
         run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
-        with:
-          version: 0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
@@ -117,9 +99,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ "${{ inputs.is_latest }}" == "true" ]]; then
-            gl-gh create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")" --latest
+            gl-gh-release create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")" --latest
           else
-            gl-gh create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
+            gl-gh-release create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
           fi
       - uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
         with:
@@ -141,11 +123,10 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          ref: '${{ inputs.commit }}'
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
-        with:
-          version: 0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
       - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
@@ -159,12 +140,13 @@ jobs:
       - name: Download from S3 bucket ${{ secrets.aws_s3_bucket }} for ${{ matrix.flavor }} (${{ matrix.arch }})
         run: |
           commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
-          CNAME="${{ matrix.flavor }}-${{ matrix.arch }}-${{ inputs.version }}-$commit"
+          resolved_cname="$(./build --resolve-cname '${{ matrix.flavor }}-${{ matrix.arch }}-${{ inputs.version }}')"
+          CNAME="${resolved_cname%-*}-$commit"
 
           echo "CNAME=$CNAME" | tee -a "$GITHUB_ENV"
 
           mkdir "$CNAME"
-          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" download-artifacts-from-bucket
+          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$CNAME" download-artifacts-from-bucket --cname "$CNAME"
           tar -cJf "$CNAME.tar.xz" -C "$CNAME" .
       - name: Upload to release
         env:
@@ -180,12 +162,12 @@ jobs:
           for suffix in $log_suffixes; do
             log="$CNAME/$CNAME.$suffix"
             if [ -f "$log" ]; then
-              gl-gh upload --release_id "$release" --file_path "$log"
+              gl-gh-release upload --release_id "$release" --file_path "$log"
             fi
           done
 
   tag_container_as_latest:
-    if: ${{ inputs.type }} == 'minor'
+    if: ${{ inputs.type == 'minor' }}
     uses: ./.github/workflows/tag_latest_container.yml
     with:
       version: ${{ inputs.version }}
