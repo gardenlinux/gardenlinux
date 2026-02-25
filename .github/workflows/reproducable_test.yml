@@ -23,7 +23,20 @@ on:
         type: string
 
 jobs:
+  flavors_matrix:
+    name: Generate flavors matrix to build
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
+
+  bare_flavors_matrix:
+    name: Generate bare flavors matrix to build
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
+
   build_a:
+    needs: [ flavors_matrix ]
     name: Build A
     if: ${{ inputs.nightly != 'Two nightly builds' }}
     uses: ./.github/workflows/build.yml
@@ -34,6 +47,7 @@ jobs:
     with:
       version: now
       target: nightly
+      flavors_matrix: ${{ needs.flavors_matrix.outputs.matrix }}
       fail_fast: true
       prefix: a-
     secrets:
@@ -52,6 +66,7 @@ jobs:
       run_number: ${{ inputs.run_number1 }}
   
   build_b:
+    needs: [ flavors_matrix ]
     name: Build B
     if: ${{ inputs.nightly == 'Two new builds' }}
     uses: ./.github/workflows/build.yml
@@ -62,6 +77,7 @@ jobs:
     with:
       version: now
       target: nightly
+      flavors_matrix: ${{ needs.flavors_matrix.outputs.matrix }}
       fail_fast: true
       prefix: b-
     secrets:
@@ -78,18 +94,6 @@ jobs:
     with:
       workflow_name: "nightly"
       run_number: ${{ inputs.nightly == 'Two nightly builds' && inputs.run_number2 || 'latest' }}
-
-  flavors_matrix:
-    name: Generate flavors matrix to build
-    uses: ./.github/workflows/build_flavors_matrix.yml
-    with:
-      flags: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
-
-  bare_flavors_matrix:
-    name: Generate bare flavors matrix to build
-    uses: ./.github/workflows/build_flavors_matrix.yml
-    with:
-      flags: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
 
   difference_check:
     needs: [ flavors_matrix, build_a, build_b, run_number_a, run_number_b ]
