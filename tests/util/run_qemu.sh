@@ -108,14 +108,8 @@ cleanup() {
 	if [ -n "${metadata_server_pid:-}" ]; then
 		kill "$metadata_server_pid" 2>/dev/null || true
 	fi
-	get_logs
 	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
 	tmpdir=
-}
-
-get_logs() {
-	cp "$tmpdir/serial.log" "$log_dir/$log_file_log" || true
-	cp "$tmpdir/junit.xml" "$log_dir/$log_file_junit" || true
 }
 
 trap cleanup EXIT
@@ -164,12 +158,19 @@ else
 	qemu-img create -q -f qcow2 -F raw -b "$(realpath -- "$image")" "$tmpdir/disk.qcow" 4G
 fi
 
+console_device="/dev/ttyS0"
+if [ "$arch" = aarch64 ]; then
+	console_device="/dev/ttyAMA0"
+fi
+
 cat >"$tmpdir/fw_cfg-script.sh" <<EOF
 #!/usr/bin/env bash
 
 set -eufo pipefail
 
-exec 1>/dev/virtio-ports/test_output
+# Send all output to console so it appears on
+# the QEMU serial output (and thus in logs).
+exec >$console_device
 exec 2>&1
 EOF
 
@@ -258,10 +259,8 @@ qemu_opts=(
 	-drive "if=virtio,format=qcow2,file=$tmpdir/disk.qcow"
 	-drive "if=virtio,format=raw,readonly=on,file=$test_dist_dir/dist.ext2.raw"
 	-fw_cfg "name=opt/gardenlinux/config_script,file=$tmpdir/fw_cfg-script.sh"
-	-chardev "file,id=test_output,path=$tmpdir/serial.log"
-	-chardev "file,id=test_junit,path=$tmpdir/junit.xml"
+	-chardev "file,id=test_junit,path=$log_dir/$log_file_junit"
 	-device virtio-serial
-	-device "virtserialport,chardev=test_output,name=test_output"
 	-device "virtserialport,chardev=test_junit,name=test_junit"
 	-device "virtio-net-pci,netdev=net0"
 )
@@ -387,22 +386,19 @@ fi
 
 echo "🚀  starting test VM"
 
-if ((skip_cleanup)); then
-	# The following command starts the QEMU VM and pipes its output through sed to clean up the console output:
-	# - s/\x1b\][0-9]*\x07//g      : Removes OSC (Operating System Command) escape sequences (e.g., title changes).
-	# - s/\x1b[\[0-9;!?=]*[a-zA-Z]//g : Removes CSI (Control Sequence Introducer) ANSI escape codes (e.g., colors, cursor moves).
-	# - s/\t/    /g                : Replaces tabs with four spaces for better readability.
-	# - s/[^[:print:]]//g          : Removes any remaining non-printable characters.
-	"qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g' &
-	sleep 5
-	tail -f "$tmpdir/serial.log"
-else
-	"qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g'
-	cat "$tmpdir/serial.log"
-fi
+# Start QEMU and stream its serial output:
+# - Raw output (with colors) goes to the console for better readability
+# - Cleaned output (without problematic escape sequences) goes to the log file
+# The sed cleaning removes:
+# - OSC escape sequences (e.g., title changes that can clutter logs) - s/\x1b\][0-9]*\x07//g
+# - CSI escape codes (colors, cursor moves, screen clears, etc.) - s/\x1b[\[0-9;!?=]*[a-zA-Z]//g
+# - Tabs are replaced with spaces for better log readability - s/\t/    /g
+# - Non-printable characters that might cause issues in log files - s/[^[:print:]]//g
+# Colors are preserved in console output but removed from log file
+"qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 tee >(sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g' >"$log_dir/$log_file_log")
 
-num_errors=$(xmllint --xpath 'string(/testsuites/testsuite/@errors)' "$tmpdir/junit.xml")
-num_failures=$(xmllint --xpath 'string(/testsuites/testsuite/@failures)' "$tmpdir/junit.xml")
+num_errors=$(xmllint --xpath 'string(/testsuites/testsuite/@errors)' "$log_dir/$log_file_junit")
+num_failures=$(xmllint --xpath 'string(/testsuites/testsuite/@failures)' "$log_dir/$log_file_junit")
 if [ "${num_errors}" -gt 0 ] || [ "${num_failures}" -gt 0 ]; then
 	exit 1
 fi

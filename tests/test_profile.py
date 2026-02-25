@@ -1,6 +1,7 @@
 import re
 
 import pytest
+from plugins.file import File
 from plugins.parse_file import ParseFile
 
 
@@ -55,13 +56,13 @@ TMOUT_FILE_STIG = "/etc/profile.d/99-terminal_tmout.sh"
 
 
 @pytest.mark.feature("stig")
-def test_shell_tmout_file_exists_stig(parse_file: ParseFile):
+def test_shell_tmout_file_exists_stig(file: File):
     """
     As per DISA STIG requirement, this test validates that the shell inactivity
     timeout configuration file exists.
     Ref: SRG-OS-000755-GPOS-00220
     """
-    assert parse_file.exists(
+    assert file.exists(
         TMOUT_FILE_STIG
     ), "stigcompliance: shell inactivity timeout configuration file is missing"
 
@@ -104,13 +105,13 @@ TMOUT_FILE_CLOUD = "/etc/profile.d/50-autologout.sh"
 
 
 @pytest.mark.feature("cloud and openstackbaremetal")
-def test_shell_tmout_file_exists_cloud(parse_file: ParseFile):
+def test_shell_tmout_file_exists_cloud(file: File):
     """
     As per DISA STIG requirement, this test validates that the shell inactivity
     timeout configuration file exists.
     Ref: SRG-OS-000755-GPOS-00220
     """
-    assert parse_file.exists(
+    assert file.exists(
         TMOUT_FILE_CLOUD
     ), "stigcompliance: shell inactivity timeout configuration file is missing"
 
