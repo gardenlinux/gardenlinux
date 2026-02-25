@@ -36,19 +36,19 @@ We define test coverage markers in features using the format `GL-TESTCOV-<featur
 
 **Identifier Structure:**
 
-- **Prefix**: `GL-TESTCOV-` (Garden Linux Setting identifier)
+- **Prefix**: `GL-TESTCOV-` (Garden Linux Test Coverage)
 - **Feature name**: The feature directory name (e.g., `aws`, `ssh`, `cis`)
 - **Category**: The type of setting (e.g., `service`, `config`, `file`)
 - **Setting description**: A descriptive, hyphenated description of what the setting does (e.g., `aws-clocksource-enable`, `ssh-config-permit-root-login`)
 
-**Where identifiers are defined:**
+**Where markers are defined:**
 
-- In `exec.config`, `pkg.include`, `file.exclude`: add comments with identifiers like `# GL-TESTCOV-aws-service-aws-clocksource-enable`
-- For `file.include/` and `initrd.include/`: define identifiers in `file.include.markers.yaml` and `initrd.include.markers.yaml` (markers shall not end up in the final image)
+- In `exec.config`, `pkg.include`, `file.exclude`: add comments with markers like `# GL-TESTCOV-aws-service-aws-clocksource-enable`
+- For `file.include/` and `initrd.include/`: define markers in `file.include.markers.yaml` and `initrd.include.markers.yaml` (markers shall not end up in the final image)
 
-This naming convention makes it immediately clear from the identifier itself which feature is being tested and what specific setting it covers, facilitating both manual review and automated coverage analysis.
+This naming convention makes it immediately clear from the markers itself which feature is being tested and what specific setting it covers, facilitating both manual review and automated coverage analysis.
 
-These identifiers are then referenced in test files (`tests/**/test_*.py`) to establish a clear mapping between features and tests.
+These markers are then referenced in test files (`tests/**/test_*.py`) to establish a clear mapping between features and tests.
 
 ### Coverage Analysis Approach
 
