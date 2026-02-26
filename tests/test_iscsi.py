@@ -2,7 +2,6 @@ import re
 import time
 
 import pytest
-from handlers.iscsi import iscsi_device
 from plugins.block_devices import BlockDevices
 from plugins.shell import ShellRunner
 
