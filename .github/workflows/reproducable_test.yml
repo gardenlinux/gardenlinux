@@ -108,9 +108,7 @@ jobs:
       fail-fast: false
     steps:
     - name: Install python-gardenlinux-lib
-      uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@main
-      with:
-        version: "feat/experimental-comparator"
+      uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d4170113b2512e7f5b6deee604ada54c54666ef5
     - name: Load flavor A build artifact
       if: always() && needs.build_a.result == 'success'
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
@@ -141,16 +139,25 @@ jobs:
         github-token: ${{ github.token }}
     - name: Compare builds
       run: |
+        cname_a=$(ls A | sed -E "s/.tar.gz$//")
+        cname_b=$(ls B | sed -E "s/.tar.gz$//")
+
+        tar -C A -xzf A/$cname_a.tar.gz
+        rm "A/$cname_a.tar.gz"
+
+        tar -C B -xzf B/$cname_b.tar.gz
+        rm "B/$cname_b.tar.gz"
+
         diff=$(which gl-feature-fs-diff)
 
-        sudo "$diff" generate ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} --out ${{ matrix.flavor }}-${{ matrix.arch }}-diff.json A/$(ls A) B/$(ls B)
+        sudo "$diff" generate ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} --out ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt A/$cname_a.tar B/$cname_b.tar
     - name: Upload diff data
       if: always()
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
       with:
         if-no-files-found: error
-        name: ${{ matrix.flavor }}-${{ matrix.arch }}-diff.json
-        path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff.json
+        name: ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
+        path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
 
   bare_difference_check:
     needs: [ bare_flavors_matrix, build_a, build_b, run_number_a, run_number_b ]
@@ -165,9 +172,7 @@ jobs:
       fail-fast: false
     steps:
     - name: Install python-gardenlinux-lib
-      uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@main
-      with:
-        version: "feat/experimental-comparator"
+      uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d4170113b2512e7f5b6deee604ada54c54666ef5
     - name: Load flavor A build artifact
       if: always() && needs.build_a.result == 'success'
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
@@ -198,16 +203,18 @@ jobs:
         github-token: ${{ github.token }}
     - name: Compare builds
       run: |
+        filename=$(echo "${{ matrix.flavor }}-${{ matrix.arch }}.oci" | sed -E "s/bare-//")
+
         diff=$(which gl-feature-fs-diff)
 
-        sudo "$diff" generate ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} --out ${{ matrix.flavor }}-${{ matrix.arch }}-diff.json A B
+        sudo "$diff" generate ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} --out ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt "A/$filename" "B/$filename"
     - name: Upload diff data
       if: always()
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
       with:
         if-no-files-found: error
-        name: ${{ matrix.flavor }}-${{ matrix.arch }}-diff.json
-        path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff.json
+        name: ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
+        path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
   
   format_result:
     needs: [ difference_check, bare_difference_check, run_number_a, run_number_b, flavors_matrix, bare_flavors_matrix ]
@@ -220,13 +227,11 @@ jobs:
       with:
         submodules: true
     - name: Install python-gardenlinux-lib
-      uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@main
-      with:
-        version: "feat/experimental-comparator"
+      uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d4170113b2512e7f5b6deee604ada54c54666ef5
     - name: download result data
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
       with:
-        pattern: "*-diff.json"
+        pattern: "*-diff.txt"
         path: diffs/
         merge-multiple: true
     - name: Compare commit hashes if two nightly builds were used
