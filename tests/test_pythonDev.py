@@ -2,7 +2,6 @@ import os
 import shutil
 
 import pytest
-from handlers.pip import pip_requests
 from plugins.dpkg import Dpkg
 from plugins.shell import ShellRunner
 from plugins.utils import tree
