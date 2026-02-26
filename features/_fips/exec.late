@@ -1,0 +1,7 @@
+# Updating the Message of the Day to include a FIPS banner.
+echo "Removing 05-logo"
+rm /etc/update-motd.d/05-logo
+echo "Update motd with FIPS logo"
+mv /etc/update-motd.d/06-logo /etc/update-motd.d/05-logo
+sed -i "s/@VERSION@/$BUILDER_VERSION/" /etc/update-motd.d/05-logo
+chmod u+x /etc/update-motd.d/05-logo

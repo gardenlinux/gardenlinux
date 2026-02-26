@@ -5,8 +5,6 @@ Lima makes use of existing vm solutions such as QEMU or Apple Virtualization, an
 
 Garden Linux provides pre-built images suitable for use with Lima, but you can also build your own images.
 
-Garden Linux images for Lima are published at https://images.gardenlinux.io
-
 ## How to use the pre-built image
 
 You need to have `podman` and `lima` installed.

@@ -13,7 +13,55 @@ from typing import List
 import pytest
 from plugins.file import File
 from plugins.kernel_cmdline import kernel_cmdline
+from plugins.kernel_configs import KernelConfigs
+from plugins.kernel_module import KernelModule
 from plugins.parse_file import ParseFile
+
+
+@pytest.mark.feature("_fips")
+def test_dracut_fips_file_was_created(file: File):
+    """
+    The dracut file that will enable the FIPS module.
+    """
+    assert file.is_regular_file("/etc/dracut.conf.d/10-fips.conf")
+
+
+@pytest.mark.feature("_fips")
+def test_dracut_modules_was_extended_for_fips_module(parse_file: ParseFile):
+    """
+    Ensure that the dracutmodules was extend with the fips module
+    add_dracutmodules+=" fips "
+    """
+
+    lines = parse_file.lines("/etc/dracut.conf.d/10-fips.conf")
+    assert 'add_dracutmodules+=" fips "' in lines
+
+
+@pytest.mark.feature("_fips")
+def test_kernel_configs_crypto_benchmark(
+    parse_file: ParseFile, kernel_configs: KernelConfigs
+):
+    """
+    The tcrypot module is hidden in the CONFIG_CRYPTO_BENCHMARK configuration. This needs
+    to be present on our current kernel.
+    """
+    for config in kernel_configs.get_installed():
+        parsed_config = parse_file.parse(config.path, format="keyval")
+        assert (
+            parsed_config["CONFIG_CRYPTO_BENCHMARK"] == "m"
+        ), f"CONFIG_CRYPTO_BENCHMARK not set to 'm' in {config.path}"
+
+
+@pytest.mark.feature("_fips")
+def test_kernel_configs_fips(parse_file: ParseFile, kernel_configs: KernelConfigs):
+    """
+    Ensuer that we have the fips module is configured.
+    """
+    for config in kernel_configs.get_installed():
+        parsed_config = parse_file.parse(config.path, format="keyval")
+        assert (
+            parsed_config["CONFIG_CRYPTO_FIPS"] == "y"
+        ), f"CONFIG_CRYPTO_FIPS not set to 'y' in {config.path}"
 
 
 @pytest.mark.feature("_fips")
@@ -229,3 +277,17 @@ def test_kernel_has_fips_entry_in_procfs(parse_file: ParseFile):
     """
     lines = parse_file.lines("/proc/sys/crypto/fips_enabled")
     assert "1" in lines, f"Kernel was not booted in FIPS mode!"
+
+
+@pytest.mark.feature("_fips")
+@pytest.mark.booted(reason="Requires running system")
+def test_kernel_module_tcrypt_available_for_dracut(kernel_module: KernelModule):
+    """
+    Test that the tcrypt kernel module is available as loadable module. This will be invoke by
+    the dracut FIPS module. Since there where a bug in the kernel, we missed the configuraiton
+    """
+    kernel_modules = ["tcrypt"]
+    for module in kernel_modules:
+        assert kernel_module.is_module_available(
+            module
+        ), f"{module} kernel module is not available."
