@@ -1,7 +1,6 @@
 import logging
 import os
-from pathlib import Path
-from typing import Dict, List, Optional, TypeVar
+from typing import List, Optional, TypeVar
 
 # Various utility functions to make tests more readable
 # This should not contain test-assertions, but only abstract details that make tests harder to read
