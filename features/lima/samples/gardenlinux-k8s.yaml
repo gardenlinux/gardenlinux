@@ -98,7 +98,7 @@ provision:
     set -eux -o pipefail
     test -e /etc/kubernetes/admin.conf && exit 0
     export KUBECONFIG=/etc/kubernetes/admin.conf
-    {{if not ( and .Param.url .Param.token )}}
+    {{if not .Param.isWorkerNode }}
     systemctl stop kubelet
     kubeadm config images list
     kubeadm config images pull --cri-socket=unix:///run/containerd/containerd.sock
@@ -123,18 +123,9 @@ provision:
     cgroupDriver: systemd
     EOF
     kubeadm init --config kubeadm-config.yaml
-    {{else}}
-    cat <<EOF >kubeadm-config.yaml
-    kind: JoinConfiguration
-    apiVersion: kubeadm.k8s.io/v1beta4
-    nodeRegistration:
-      criSocket: unix:///run/containerd/containerd.sock
-    EOF
-    kubeadm join --config kubeadm-config.yaml {{.Param.url}} --token {{.Param.token}} \
-        --discovery-token-ca-cert-hash {{.Param.discoveryTokenCaCertHash}}
     {{end}}
 
-    {{if not ( and .Param.url .Param.token )}}
+    {{if not .Param.isWorkerNode }}
     # Installing a Pod network add-on
     kubectl apply -f https://github.com/flannel-io/flannel/releases/download/v0.28.1/kube-flannel.yml
     # Control plane node isolation
@@ -169,7 +160,7 @@ probes:
   script: |
     #!/bin/bash
     set -eux -o pipefail
-    {{if not ( and .Param.url .Param.token )}}
+    {{if not .Param.isWorkerNode }}
     if ! timeout 30s bash -c "images=\"$(kubeadm config images list)\"; until for image in \$images; do sudo ctr -n k8s.io image inspect \$image >/dev/null; done; do sleep 3; done"; then
       echo >&2 "k8s images are not pulled yet"
       exit 1
@@ -179,7 +170,7 @@ probes:
   script: |
     #!/bin/bash
     set -eux -o pipefail
-    {{if not ( and .Param.url .Param.token )}}
+    {{if not .Param.isWorkerNode }}
     if ! timeout 300s bash -c "until test -f /etc/kubernetes/admin.conf; do sleep 3; done"; then
       echo >&2 "k8s is not running yet"
       exit 1
@@ -194,7 +185,7 @@ probes:
   script: |
     #!/bin/bash
     set -eux -o pipefail
-    {{if not ( and .Param.url .Param.token )}}
+    {{if not .Param.isWorkerNode }}
     if ! timeout 300s bash -c "until kubectl version >/dev/null 2>&1; do sleep 3; done"; then
       echo >&2 "kubernetes cluster is not up and running yet"
       exit 1
@@ -204,7 +195,7 @@ probes:
   script: |
     #!/bin/bash
     set -eux -o pipefail
-    {{if not ( and .Param.url .Param.token )}}
+    {{if not .Param.isWorkerNode }}
     kubectl wait -n kube-system --timeout=180s --for=condition=available deploy coredns
     {{end}}
 copyToHost:
@@ -212,7 +203,7 @@ copyToHost:
   host: "{{.Dir}}/copied-from-guest/kubeconfig.yaml"
   deleteOnStop: true
 message: |
-  {{- if not ( and .Param.url .Param.token )}}
+  {{- if not .Param.isWorkerNode }}
   To run `kubectl` on the host (assumes kubectl is installed), run the following commands:
   ------
   export KUBECONFIG="{{.Dir}}/copied-from-guest/kubeconfig.yaml"
@@ -220,6 +211,4 @@ message: |
   ------
   {{end -}}
 param:
-  url: ""
-  token: ""
-  discoveryTokenCaCertHash: ""
+  isWorkerNode: ""
