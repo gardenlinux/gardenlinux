@@ -109,6 +109,8 @@ jobs:
     steps:
     - name: Install python-gardenlinux-lib
       uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d4170113b2512e7f5b6deee604ada54c54666ef5
+      with:
+        version: "d4170113b2512e7f5b6deee604ada54c54666ef5"
     - name: Load flavor A build artifact
       if: always() && needs.build_a.result == 'success'
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
@@ -173,6 +175,8 @@ jobs:
     steps:
     - name: Install python-gardenlinux-lib
       uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d4170113b2512e7f5b6deee604ada54c54666ef5
+      with:
+        version: "d4170113b2512e7f5b6deee604ada54c54666ef5"
     - name: Load flavor A build artifact
       if: always() && needs.build_a.result == 'success'
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
@@ -228,6 +232,8 @@ jobs:
         submodules: true
     - name: Install python-gardenlinux-lib
       uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d4170113b2512e7f5b6deee604ada54c54666ef5
+      with:
+        version: "d4170113b2512e7f5b6deee604ada54c54666ef5"
     - name: download result data
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
       with:
