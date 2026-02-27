@@ -1,4 +1,3 @@
-
 import pytest
 
 AUDIT_TOOL_PATHS = [
@@ -8,30 +7,28 @@ AUDIT_TOOL_PATHS = [
     "/usr/bin/journalctl",
 ]
 
-AUDIT_LOG_FILE = "/var/log/audit/audit.log"
-
 
 def test_shadow_permissions(file):
     actual = file.get_mode("/etc/shadow")
-    assert file.has_permissions("/etc/shadow", "644"), (
+    assert file.has_permissions("/etc/shadow", "0640"), (
         f"stigcompliance: incorrect permissions on /etc/shadow "
-        f"(expected 644, got {actual})"
+        f"(expected 640, got {actual})"
     )
 
 
-def test_symbolic(file):
+def test_passwd_permissions_numeric(file):
     actual = file.get_mode("/etc/passwd")
-    assert file.has_permissions("/etc/passwd", "rw-r--rwx"), (
+    assert file.has_permissions("/etc/passwd", "0644"), (
+        f"stigcompliance: incorrect permissions on /etc/passwd "
+        f"(expected 0644, got {actual})"
+    )
+
+
+def test_passwd_permissions_symbolic(file):
+    actual = file.get_mode("/etc/passwd")
+    assert file.has_permissions("/etc/passwd", "rw-r--r--"), (
         f"stigcompliance: incorrect symbolic permissions on /etc/passwd "
-        f"(expected rw-r--rwx, got {actual})"
-    )
-
-
-def test_int(file):
-    actual = file.get_mode("/etc/passwd")
-    assert file.has_permissions("/etc/passwd", 0o646), (
-        f"stigcompliance: incorrect numeric permissions on /etc/passwd "
-        f"(expected 0o646, got {actual})"
+        f"(expected rw-r--r--, got {actual})"
     )
 
 
@@ -44,10 +41,20 @@ def test_audit_tools_permissions(file):
         if not file.exists(path):
             continue
 
-        if not (file.has_permissions(path, "766") or file.has_permissions(path, "754")):
-            invalid.append(path)
+        if not file.has_permissions(path, "755"):
+            invalid.append(f"{path} ({file.get_mode(path)})")
 
     assert not invalid, (
-        "stigcompliance: audit tools must have 755 or stricter (700): "
+        "stigcompliance: audit tools must have 755: "
         f"{', '.join(invalid)}"
     )
+
+
+def test_sticky_bit_support(file, tmp_path):
+    """Validate sticky bit handling using temporary directory."""
+    test_dir = tmp_path / "sticky_test"
+    test_dir.mkdir()
+    test_dir.chmod(0o1777)
+
+    assert file.has_permissions(test_dir, "1777")
+    assert file.has_permissions(test_dir, "rwxrwxrwt")
