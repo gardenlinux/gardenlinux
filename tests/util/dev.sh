@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 # shellcheck disable=SC2154,SC2164
-BUILD_DIR="$(realpath "${util_dir}/../.build")"
-TESTS_DIR="$(realpath "${util_dir}/../../tests")"
+BUILD_DIR="$(cd "${util_dir}/../.build" && pwd)"
+TESTS_DIR="$(cd "${util_dir}/../../tests" && pwd)"
 
 WEBSITINO_BIN_FILE="${BUILD_DIR}/websitino"
 WEBSITINO_PID_FILE="${BUILD_DIR}/.websitino.pid"
