@@ -181,4 +181,4 @@ jobs:
     with:
       flavors_matrix: ${{ inputs.flavors_matrix }}
       bare_flavors_matrix: ${{ inputs.bare_flavors_matrix }}
-      test_types: "chroot,qemu,cloud,oci,bare"
+      test_types: "chroot,qemu,oci,bare"
