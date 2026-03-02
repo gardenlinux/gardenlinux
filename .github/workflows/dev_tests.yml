@@ -5,14 +5,12 @@ concurrency:
 on:
   push:
     branches:
-      - main
-    paths:
-      - "tests/**"
-      - ".github/workflows/dev_tests.yml"
+    - main
+    - rel-*
   pull_request:
-    paths:
-      - "tests/**"
-      - ".github/workflows/dev_tests.yml"
+    branches:
+    - main
+    - rel-*
 jobs:
   black:
     name: Black (formatting)

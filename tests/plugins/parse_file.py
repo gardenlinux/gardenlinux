@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Union, overload
+from typing import Any, List, Literal, Optional, Union, overload
 
 import pytest
 

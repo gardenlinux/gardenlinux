@@ -290,7 +290,6 @@ class FileCollector:
         Returns:
             Dictionary mapping file paths to their SHA256 hashes
         """
-        import hashlib
 
         if ignore_patterns is None:
             ignore_patterns = []
