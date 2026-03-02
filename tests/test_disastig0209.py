@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from plugins.file import File
 from plugins.parse_file import Parse, ParseFile
@@ -67,3 +69,35 @@ def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
     assert (
         "setreuid" in lines
     ), "stigcompliance: setreuid audit rule not loaded in kernel"
+
+
+@pytest.mark.feature("not container")
+@pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
+@pytest.mark.root(reason="required to query audit logs")
+def test_setreuid_event_logged(shell: ShellRunner, parse_file: ParseFile):
+    """
+    As per DISA STIG requirement, the operating system must generate audit
+    records when successful or unsuccessful attempts to modify categories
+    of information occur (e.g., privilege changes such as setreuid).
+    This test verifies that the audit subsystem is capable of searching
+    for events associated with the configured audit key for privilege
+    escalation.
+    Ref: SRG-OS-000465-GPOS-00209
+    """
+
+    test_user = "audit_test_user"
+
+    passwd_lines = parse_file.lines("/etc/passwd")
+    user_pattern = re.compile(rf"^{test_user}:")
+
+    if user_pattern not in passwd_lines:
+        shell(cmd=f"useradd {test_user}")
+
+    shell(cmd=f"su - {test_user} -c 'id'")
+
+    result = shell(
+        cmd="ausearch -sc setreuid -ts recent",
+        capture_output=True,
+    )
+
+    assert result.stdout.strip(), "stigcompliance: setreuid audit event not detected"
