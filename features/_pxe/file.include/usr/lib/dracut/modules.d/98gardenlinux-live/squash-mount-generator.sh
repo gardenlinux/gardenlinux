@@ -7,7 +7,7 @@ set -e
 # should be gl.squashfs=url=http://...
 # or gl.squashfs=dev=/dev/vdx
 
-url=$(getarg gl.url=)
+url=$(getarg gl.url= || echo "")
 if [ -z "${url#gl.url=}" ] && [ ! -f /root.squashfs ]; then
 	exit 0
 fi
@@ -48,7 +48,7 @@ if [ -f /root.squashfs ]; then
 	ExecStart=/bin/bash -c "mv /root.squashfs /run/root.squashfs"
 	EOF
         mkdir -p "$GENERATOR_DIR"/basic.target.wants
-        ln -s ../symlink-squashfs.service "$GENERATOR_DIR"/basic.target.wants/symlink-squashfs.service
+        ln -s ../move-squashfs.service "$GENERATOR_DIR"/basic.target.wants/move-squashfs.service
 	exit 0
 fi
 

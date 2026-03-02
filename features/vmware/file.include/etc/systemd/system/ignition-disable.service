@@ -17,7 +17,7 @@ OnFailureJobMode=isolate
 [Service]
 Type=oneshot
 EnvironmentFile=/run/ignition.env
-ExecStart=/bin/bash -c "rm -f /etc/kernel/cmdline.d/50-ignition.cfg && /usr/local/sbin/update-bootloaders"
+ExecStart=/bin/bash -c "set -e; source /etc/kernel/cmdline.d/50-ignition.cfg; for c in /efi/loader/entries/*.conf; do cp $c ${c}.old; sed \"s|$CMDLINE_LINUX||\" -i ${c}.old; mv ${c}.old $c; done; /usr/local/sbin/update-syslinux; rm -f /etc/kernel/cmdline.d/50-ignition.cfg"
 RemainAfterExit=yes
 
 [Install]

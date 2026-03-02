@@ -1,0 +1,1 @@
+console=tty0 rd.live.squashimg=squashfs.img root=live:CDLABEL=GardenlinuxISO rd.live.overlay.overlayfs rd.live.dir=live rd.live.ram quiet

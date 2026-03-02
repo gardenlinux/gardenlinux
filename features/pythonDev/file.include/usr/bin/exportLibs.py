@@ -1,70 +1,166 @@
-#!/bin/python3
+#!/root/venv/bin/python3
 
-import site
 import os
-import subprocess
-import sys
 import re
 import shutil
+import subprocess
+from argparse import ArgumentParser
+from os import PathLike
+from pathlib import Path
+
+from elftools.common.exceptions import ELFError
+from elftools.elf.elffile import ELFFile
 
 # Parses dependencies from ld output
 parse_output = re.compile("(?:.*=>)?\\s*(/\\S*).*\n")
+# Remove leading /
+remove_root = re.compile("^/")
+
+
+def parse_args():
+    """
+    Parses arguments used for main()
+    :return: (object) Parsed argparse.ArgumentParser namespace
+    """
+
+    parser = ArgumentParser(
+        description="Export shared libraries required by installed pip packages to a portable directory"
+    )
+
+    parser.add_argument(
+        "--output-dir",
+        default="/required_libs",
+        help="Directory containing the shared libraries.",
+    )
+    parser.add_argument(
+        "--package-dir",
+        default=_get_default_package_dir(),
+        help="Path of the generated output",
+    )
+
+    return parser.parse_args()
 
 
 # Check for ELF header
-def isElf(path: str) -> bool:
+def _isElf(path: str | PathLike[str]) -> bool:
+    """
+    Checks if a file is an ELF by looking for the ELF header.
+
+    :param path:    Path to file
+
+    :return: (bool) If the file found at path is an ELF
+    """
+
     with open(path, "rb") as f:
-        return f.read(4) == b"\x7f\x45\x4c\x46"
-    
+        try:
+            ELFFile(f)
+            return True
+        except ELFError:
+            return False
 
-def getInterpreter(path: str) -> str:
+
+def _getInterpreter(path: str | PathLike[str]) -> Path:
+    """
+    Returns the interpreter of an ELF. Supported architectures: x86_64, aarch64, i686.
+
+    :param path:    Path to file
+
+    :return: (str) Path of the interpreter
+    """
+
     with open(path, "rb") as f:
-        head = f.read(19)
+        elf = ELFFile(f)
+        interp = elf.get_section_by_name(".interp")
 
-        if head[5] == 1:
-            arch = head[17:]
-        elif head[5] == 2:
-            arch = head[17:][::-1]
+        if interp:
+            return Path(interp.data().split(b"\x00")[0].decode())
         else:
-            print(f"Error: Unknown endianess value for {path}: expected 1 or 2, but was {head[5]}", file=sys.stderr)
-            exit(1)
-
-        if arch == b"\x00\xb7":   # 00b7: aarch64
-            return "/lib/ld-linux-aarch64.so.1"
-        elif arch == b"\x00\x3e": # 003e: x86_64
-            return "/lib64/ld-linux-x86-64.so.2"
-        elif arch == b"\x00\x03": # 0003: i686
-            return "/lib/ld-linux.so.2"
-        else:
-            print(f"Error: Unsupported architecture for {path}: only support x86_64 (003e), aarch64 (00b7) and i686 (0003), but was {arch}", file=sys.stderr)
-            exit(1)
-
-
-package_dir = site.getsitepackages()[0]
-
-# Collect ld dependencies for installed pip packages
-dependencies = set()
-for root, dirs, files in os.walk(package_dir):
-    for file in files:
-        path = f"{root}/{file}"
-        if not os.path.islink(path) and isElf(path):
-            out = subprocess.run([getInterpreter(path),"--inhibit-cache", "--list", path], stdout=subprocess.PIPE)
-            for dependency in parse_output.findall(out.stdout.decode()):
-                dependencies.add(os.path.realpath(dependency))
+            match elf.header["e_machine"]:
+                case "EM_AARCH64":
+                    return Path("/lib/ld-linux-aarch64.so.1")
+                case "EM_386":
+                    return Path("/lib/ld-linux.so.2")
+                case "EM_X86_64":
+                    return Path("/lib64/ld-linux-x86-64.so.2")
+                case arch:
+                    raise RuntimeError(
+                        f"Error: Unsupported architecture for {path}: only support x86_64 (003e), aarch64 (00b7) and i686 (0003), but was {arch}"
+                    )
 
 
-# Copy dependencies into required_libs folder
-if not os.path.isdir("/required_libs"):
-    os.mkdir("/required_libs")
+def _get_default_package_dir() -> Path:
+    """
+    Finds the default site-packages or dist-packages directory of the default python3 environment
 
-for dependency in dependencies:
-    os.makedirs(f"/required_libs{os.path.dirname(dependency)}", exist_ok=True)
-    shutil.copy2(dependency, f"/required_libs{dependency}")
+    :return: (str) Path to directory
+    """
 
-# Reset timestamps of the parent directories
-if len(dependencies) > 0:
-    mtime = int(os.stat(dependencies.pop()).st_mtime)
-    os.utime("/required_libs", (mtime, mtime))
-    for root, dirs, files in os.walk("/required_libs"):
-        for dir in dirs:
-            os.utime(f"{root}/{dir}", (mtime, mtime))
+    # Needs to escape the virtual environment python-gardenlinx-lib is running in
+    interpreter = shutil.which("python3")
+
+    if not interpreter:
+        raise RuntimeError(
+            f"Error: Couldn't identify a default python package directory. Please specifiy one using the --package-dir option. Use -h for more information."
+        )
+
+    out = subprocess.run(
+        [interpreter, "-c", "import site; print(site.getsitepackages()[0])"],
+        stdout=subprocess.PIPE,
+    )
+    return Path(out.stdout.decode().strip())
+
+
+def export(
+    output_dir: str | PathLike[str] = "/required_libs",
+    package_dir: str | PathLike[str] | None = None,
+) -> None:
+    """
+    Identifies shared library dependencies of `package_dir` and copies them to `output_dir`.
+
+    :param output_dir:  Path to output_dir
+    :param package_dir: Path to package_dir
+    """
+
+    if not package_dir:
+        package_dir = _get_default_package_dir()
+    else:
+        package_dir = Path(package_dir)
+    output_dir = Path(output_dir)
+
+    # Collect ld dependencies for installed pip packages
+    dependencies = set()
+    for root, dirs, files in package_dir.walk():
+        for file in files:
+            path = root.joinpath(file)
+            if not path.is_symlink() and _isElf(path):
+                out = subprocess.run(
+                    [_getInterpreter(path), "--inhibit-cache", "--list", path],
+                    stdout=subprocess.PIPE,
+                )
+                for dependency in parse_output.findall(out.stdout.decode()):
+                    dependencies.add(os.path.realpath(dependency))
+
+    # Copy dependencies into output_dir folder
+    if not output_dir.is_dir():
+        output_dir.mkdir()
+
+    for dependency in dependencies:
+        path = output_dir.joinpath(remove_root.sub("", dependency))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(dependency, path)
+
+    # Reset timestamps of the parent directories
+    if len(dependencies) > 0:
+        mtime = int(os.stat(dependencies.pop()).st_mtime)
+        os.utime(output_dir, (mtime, mtime))
+        for root, dirs, _ in output_dir.walk():
+            for dir in dirs:
+                os.utime(root.joinpath(dir), (mtime, mtime))
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    export(
+        output_dir=Path(args.output_dir),
+        package_dir=Path(args.package_dir),
+    )

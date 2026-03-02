@@ -1,4 +1,3 @@
----
 targets:
   - name: ali
     category: public-cloud
@@ -444,7 +443,7 @@ targets:
         test: true
         test-platform: false
         publish: true
-  - name: metal
+  - name: baremetal
     category: baremetal
     flavors:
       - features:
@@ -464,14 +463,14 @@ targets:
         test-platform: false
         publish: true
       - features:
-          - capi 
+          - capi
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: true
       - features:
-          - capi 
+          - capi
         arch: arm64
         build: true
         test: true
@@ -652,10 +651,8 @@ targets:
         test: true
         test-platform: false
         publish: true
-  - name: openstackbaremetal
-    category: baremetal
-    flavors:
       - features:
+          - metal
           - gardener
           - _prod
         arch: amd64
@@ -664,8 +661,29 @@ targets:
         test-platform: false
         publish: true
       - features:
+          - metal
           - gardener
           - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - metal
+          - gardener
+          - _prod
+          - _usi
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - metal
+          - gardener
+          - _prod
+          - _usi
         arch: arm64
         build: true
         test: true

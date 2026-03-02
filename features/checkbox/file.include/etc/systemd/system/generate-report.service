@@ -1,0 +1,12 @@
+[Unit]
+Description=Update /etc/issue with checkbox report URL
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/generate-report.sh
+
+[Install]
+WantedBy=multi-user.target
+

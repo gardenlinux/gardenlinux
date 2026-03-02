@@ -1,0 +1,71 @@
+id: gardenlinux-test
+unit: test plan
+_name: 1877 Garden Linux HW Test
+_description: Custom tests for testing Garden Linux
+include:
+nested_part:
+    dmesg_output
+    dmesg_output_attachment
+    hw_encrypt_enabled_check
+    hw_encrypt_enabled_check_output
+    virtualization_disabled_output
+    virtualization_disabled_output_attachment
+    tpm_enabled_check
+    tpm_enabled_check_attachment
+
+id: dmesg_output
+unit: test plan
+_name: dmesg output
+_description: dmesg output sorted by severity
+include:
+    ccloud/dmesg_output       		certification-status=non-blocker
+
+id: dmesg_output_attachment
+unit: test plan
+_name: dmesg attachment
+_description: attachment for dmesg
+include:
+    ccloud/dmesg_output_attachment	certification-status=non-blocker
+
+id: hw_encrypt_enabled_check
+unit: test plan
+_name: hw_encrypt_enabled_check
+_description: encrypt enabled check
+include:
+    ccloud/hw_encrypt_enabled_check	certification-status=non-blocker
+
+
+id: hw_encrypt_enabled_check_output
+unit: test plan
+_name: hw_encrypt_enabled_check_output
+_description: encrypt enabled check attachment
+include:
+    ccloud/hw_encrypt_enabled_check_output	certification-status=non-blocker
+
+id: virtualization_disabled_output
+unit: test plan
+_name: virtualization_disabled_output
+_description: check for virtualization disabled
+include:
+    ccloud/virtualization_disabled_output       		certification-status=non-blocker
+
+id: virtualization_disabled_output_attachment
+unit: test plan
+_name: virtualization_disabled_output_attachment
+_description: attachment for virtualization disabled check
+include:
+    ccloud/virtualization_disabled_output_attachment    		certification-status=non-blocker
+
+id: tpm_enabled_check
+unit: test plan
+_name: tpm_enabled_check
+_description: check for tpm 
+include:
+    ccloud/tpm_enabled_check      		certification-status=non-blocker
+
+id: tpm_enabled_check_attachment
+unit: test plan
+_name: tpm_enabled_check_attachment
+_description: attachment for tpm check
+include:
+    ccloud/tpm_enabled_check_attachment    		certification-status=non-blocker

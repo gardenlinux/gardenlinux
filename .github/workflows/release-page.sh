@@ -39,7 +39,7 @@ case "$action" in
 		tag="$1"; shift
 		commit="$1"; shift
 		name="$1"; shift
-		body="$(gl-gh create --tag "$name" --commit "$commit")"
+		body="$(gl-gh-release create --tag "$name" --commit "$commit")"
 		# If release does not exist, this get request will return a 404
 		release="$(get "releases/tags/$tag" | jq -r '.id' || true)"
 		[ ! "$release" ] || delete "releases/$release"
