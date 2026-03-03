@@ -390,6 +390,7 @@ class File:
 
         return special | mode
 
+
 @pytest.fixture
 def file() -> File:
     """Fixture providing the ``File`` helper for file metadata operations."""
