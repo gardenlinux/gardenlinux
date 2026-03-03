@@ -1,4 +1,4 @@
-name: testng_report
+name: test_report
 on:
   workflow_call:
     inputs:
@@ -13,7 +13,7 @@ jobs:
     with:
       run_id: ${{ github.run_id }}
   test_report:
-    name: Generate TestNG Report
+    name: Generate Test Report
     runs-on: ubuntu-24.04
     needs: [flavor_version_data]
     if: always()
@@ -28,7 +28,7 @@ jobs:
       - name: Download all test artifacts
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
-          pattern: "*-testng-*"
+          pattern: "*-test-*"
           path: test-artifacts
           merge-multiple: true
         continue-on-error: true
@@ -36,8 +36,8 @@ jobs:
       - name: List downloaded artifacts
         run: |
           echo "Downloaded test artifacts:"
-          find test-artifacts -name "*.testng.xml" -type f
-          echo "Total XML files found: $(find test-artifacts -name "*.testng.xml" -type f | wc -l)"
+          find test-artifacts -name "*.test.xml" -type f
+          echo "Total XML files found: $(find test-artifacts -name "*.test.xml" -type f | wc -l)"
 
       - name: Set variables
         id: vars
@@ -56,18 +56,16 @@ jobs:
             core.setOutput('commit_url', commitUrl);
             core.setOutput('title', title);
 
-      - name: Generate TestNG Report
+      - name: Generate Test Report
         uses: gardenlinux/pytest-multi-results-action@8fc9cd734e3bfac0057ca43d70cd561b5f4d52bb
         if: always()
         with:
           files: |
-            test-artifacts/**/*.testng.xml
+            test-artifacts/**/*.test.xml
           title: ${{ steps.vars.outputs.title }}
           summary: true
           result-types: "skipped,passed,failed,error"
           fail-on-empty: false
-          metadata-fields: "Artifact,Type,Namespace"
-          metadata-field-mapping: '{"Namespace": "Namespace", "Type": "Type", "Artifact": "Artifact"}'
 
       - name: Upload report artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
@@ -75,5 +73,5 @@ jobs:
         with:
           name: test-report
           path: |
-            test-artifacts/*.testng.xml
+            test-artifacts/*.test.xml
           retention-days: 30
