@@ -173,7 +173,7 @@ jobs:
                 core.setOutput(t.outMatrix, SKIP_MATRIX);
               }
             }
-  test_flavors_chroot:
+  testng_flavors_chroot:
     needs: determine_test_settings
     name: Test chroot flavors
     uses: ./.github/workflows/testng_flavor_chroot.yml
@@ -186,7 +186,7 @@ jobs:
       flavor: ${{ matrix.flavor }}
     permissions:
       actions: write
-  test_flavors_qemu:
+  testng_flavors_qemu:
     needs: determine_test_settings
     name: Test QEMU flavors
     uses: ./.github/workflows/testng_flavor_qemu.yml
@@ -199,8 +199,8 @@ jobs:
       flavor: ${{ matrix.flavor }}
     permissions:
       actions: write
-  test_flavors_cloud:
-    needs: [determine_test_settings, test_flavors_qemu]
+  testng_flavors_cloud:
+    needs: [determine_test_settings, testng_flavors_qemu]
     name: Test cloud flavors
     uses: ./.github/workflows/testng_flavor_cloud.yml
     if: |
@@ -218,7 +218,7 @@ jobs:
     permissions:
       id-token: write
       actions: write
-  test_flavors_oci:
+  testng_flavors_oci:
     needs: determine_test_settings
     name: Test OCI flavors
     uses: ./.github/workflows/testng_flavor_oci.yml
@@ -231,12 +231,12 @@ jobs:
       flavor: ${{ matrix.flavor }}
     permissions:
       actions: write
-  test_report:
+  testng_report:
     needs:
-      - test_flavors_chroot
-      - test_flavors_oci
-      - test_flavors_qemu
-      - test_flavors_cloud
+      - testng_flavors_chroot
+      - testng_flavors_oci
+      - testng_flavors_qemu
+      - testng_flavors_cloud
     name: Generate Test Report
     if: always()
     uses: ./.github/workflows/testng_report.yml
@@ -244,4 +244,4 @@ jobs:
       actions: write
       checks: write
     with:
-      test_jobs: "test_flavors_chroot,test_flavors_oci,test_flavors_qemu,test_flavors_cloud"
+      test_jobs: "testng_flavors_chroot,testng_flavors_oci,testng_flavors_qemu,testng_flavors_cloud"
