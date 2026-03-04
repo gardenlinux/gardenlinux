@@ -79,7 +79,7 @@ jobs:
           echo "CNAME=$(gl-features-parse --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname)" | tee -a "$GITHUB_ENV"
       - name: Pack build artifacts for upload
         run: tar -cSzvf "$CNAME.tar.gz" -C .build -T ".build/$CNAME.artifacts"
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
         with:
           name: ${{ inputs.prefix }}build-${{ inputs.flavor }}-${{ inputs.arch }}
           path: ${{ env.CNAME }}.tar.gz
