@@ -99,12 +99,12 @@ jobs:
         run: |
           echo "CNAME_AMD64=$(gl-features-parse --cname ${{ matrix.flavor }}-amd64 cname)" | tee -a "$GITHUB_ENV"
           echo "CNAME_ARM64=$(gl-features-parse --cname ${{ matrix.flavor }}-arm64 cname)" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # pin@v8.0.0
         with:
           name: build-${{ matrix.flavor }}-amd64
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # pin@v8.0.0
         with:
           name: build-${{ matrix.flavor }}-arm64
           github-token: ${{ github.token }}
@@ -177,7 +177,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # pin@v8.0.0
         with:
           pattern: build-bare-${{ matrix.config }}-*
           merge-multiple: true
@@ -274,7 +274,7 @@ jobs:
       - name: Set CNAME
         run: |
           echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # pin@v8.0.0
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           github-token: ${{ github.token }}
@@ -370,7 +370,7 @@ jobs:
           submodules: true
       - id: tests_containers
         name: Download built tests archives
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3
         with:
           pattern: tests-container-*
           merge-multiple: true
