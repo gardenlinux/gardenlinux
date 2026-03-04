@@ -330,7 +330,7 @@ class File:
         return self.get_user(path) == user and self.get_group(path) == group
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def file() -> File:
     """Fixture providing the ``File`` helper for file metadata operations."""
     return File()

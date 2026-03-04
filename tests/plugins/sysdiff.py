@@ -11,6 +11,7 @@ Provides snapshot and comparison capabilities for:
 
 import difflib
 import gzip
+import hashlib
 import json
 import os
 import re
@@ -241,7 +242,6 @@ class FileCollector:
         self, filepath: str, verbose: bool = False
     ) -> Optional[str]:
         """Calculate SHA256 hash for a single file"""
-        import hashlib
 
         # Check if file exists before trying to read it
         try:
