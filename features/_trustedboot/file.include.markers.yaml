@@ -1,0 +1,3 @@
+markers:
+  "etc/kernel/cmdline.d/99-no-rd-shell.cfg":
+  - "GL-TESTCOV-_trustedboot-config-kernel-cmdline-no-rd-shell"

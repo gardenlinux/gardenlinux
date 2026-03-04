@@ -1,6 +1,6 @@
 import pytest
 
-# server adds /etc/sysctl.d/40-restric-dmesg.conf, gardener excludes it
+# server adds /etc/sysctl.d/40-restrict-dmesg.conf, gardener excludes it
 #    and adds /etc/sysctl.d/40-allow-nonroot-dmesg.conf instead
 
 
@@ -13,7 +13,7 @@ def test_dmesg_gardener_sysctl_no_restrictions_on_accessing_dmesg(parse_file):
 
 @pytest.mark.feature("server and not gardener")
 def test_dmesg_server_sysctl_restrictions_on_accessing_dmesg(parse_file):
-    file_path = "/etc/sysctl.d/40-restric-dmesg.conf"
+    file_path = "/etc/sysctl.d/40-restrict-dmesg.conf"
     config = parse_file.parse(file_path, format="keyval")
     assert config["kernel.dmesg_restrict"] == "1"
 
