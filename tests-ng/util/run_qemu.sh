@@ -352,7 +352,7 @@ if ((is_pxe_archive)); then
 #!ipxe
 dhcp
 set base-url http://10.0.2.2:8080
-kernel \${base-url}/vmlinuz $(cat "$pxe_extract_dir/cmdline") gl.url=http://10.0.2.2:8080/root.squashfs
+kernel \${base-url}/vmlinuz $(cat "$pxe_extract_dir/cmdline") gl.url=http://10.0.2.2:8080/root.squashfs ip=dhcp
 initrd \${base-url}/initrd
 boot
 EOF
@@ -376,15 +376,15 @@ EOF
 	fi
 
 elif ((ssh)); then
-	if ((is_openstack)); then
+	# if ((is_openstack)); then
 		qemu_opts+=(
 			-netdev "user,id=net0,net=169.254.169.0/24,dhcpstart=169.254.169.9,hostfwd=tcp::2222-:22,guestfwd=tcp:169.254.169.254:80-cmd:socat - TCP:127.0.0.1:8181"
 		)
-	else
-		qemu_opts+=(
-			-netdev "user,id=net0,hostfwd=tcp::2222-:22"
-		)
-	fi
+	# else
+		# qemu_opts+=(
+		# 	-netdev "user,id=net0,hostfwd=tcp::2222-:22"
+		# )
+	# fi
 else
 	if ((is_openstack)); then
 		qemu_opts+=(
