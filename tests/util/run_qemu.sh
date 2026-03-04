@@ -257,13 +257,18 @@ qemu_opts=(
 	-display none
 	-serial stdio
 	-drive "if=virtio,format=qcow2,file=$tmpdir/disk.qcow"
-	-drive "if=virtio,format=raw,readonly=on,file=$test_dist_dir/dist.ext2.raw"
 	-fw_cfg "name=opt/gardenlinux/config_script,file=$tmpdir/fw_cfg-script.sh"
 	-chardev "file,id=test_junit,path=$log_dir/$log_file_junit"
 	-device virtio-serial
 	-device "virtserialport,chardev=test_junit,name=test_junit"
 	-device "virtio-net-pci,netdev=net0"
 )
+
+if ! ((skip_tests)); then
+	qemu_opts+=(
+		-drive "if=virtio,format=raw,readonly=on,file=$test_dist_dir/dist.ext2.raw"
+	)
+fi
 
 if ((debug)); then
 	qemu_opts+=(
