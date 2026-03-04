@@ -1,10 +1,10 @@
-# ADR 0031: Static Feature/Test Coverage Analysis for Test Framework
+# ADR 0032: Static Feature/Test Coverage Analysis for Test Framework
 
 **Date:** 2026-02-02
 
 ## Status
 
-Draft
+Accepted
 
 ## Context
 
