@@ -200,12 +200,14 @@ trap "poweroff -f > /dev/null 2>&1" EXIT
 EOF
 fi
 
-cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
+if ! ((skip_tests)); then
+	cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
 mkdir /run/gardenlinux-tests
 mount -o ro /dev/disk/by-label/GL_TESTS /run/gardenlinux-tests
 
 cd /run/gardenlinux-tests
 EOF
+fi
 
 if [ "$arch" = x86_64 ]; then
 	qemu_machine=q35
@@ -257,13 +259,18 @@ qemu_opts=(
 	-display none
 	-serial stdio
 	-drive "if=virtio,format=qcow2,file=$tmpdir/disk.qcow"
-	-drive "if=virtio,format=raw,readonly=on,file=$test_dist_dir/dist.ext2.raw"
 	-fw_cfg "name=opt/gardenlinux/config_script,file=$tmpdir/fw_cfg-script.sh"
 	-chardev "file,id=test_junit,path=$log_dir/$log_file_junit"
 	-device virtio-serial
 	-device "virtserialport,chardev=test_junit,name=test_junit"
 	-device "virtio-net-pci,netdev=net0"
 )
+
+if ! ((skip_tests)); then
+	qemu_opts+=(
+		-drive "if=virtio,format=raw,readonly=on,file=$test_dist_dir/dist.ext2.raw"
+	)
+fi
 
 if ((debug)); then
 	qemu_opts+=(
