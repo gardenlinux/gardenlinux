@@ -14,6 +14,11 @@ from plugins.kernel_module import KernelModule
 from plugins.parse_file import ParseFile
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-_fips-config-system-fips",
+    ]
+)
 @pytest.mark.feature("_fips")
 def test_dracut_fips_file_was_created(file: File):
     """
@@ -72,6 +77,11 @@ def test_gnutls_fips_file_was_created(file: File):
     assert file.is_regular_file("/etc/system-fips")
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-_fips-config-system-fips",
+    ]
+)
 @pytest.mark.feature("_fips")
 def test_gnutls_fips_file_is_empty(file: File):
     """
@@ -144,6 +154,7 @@ def test_gnutls_fips_dot_hmac_file_is_vaild():
     ), "Compute HMAC is incorrect!"
 
 
+@pytest.mark.testcov(["GL-TESTCOV-_fips-config-gcrypt-fips"])
 @pytest.mark.feature("_fips")
 def test_libgcrypt_fips_file_was_created(file: File):
     """
@@ -155,6 +166,7 @@ def test_libgcrypt_fips_file_was_created(file: File):
     assert file.is_regular_file("/etc/gcrypt/fips_enabled")
 
 
+@pytest.mark.testcov(["GL-TESTCOV-_fips-config-gcrypt-fips"])
 @pytest.mark.feature("_fips")
 def test_libgcrypt_fips_file_is_empty(file: File):
     """
@@ -236,6 +248,11 @@ def test_libgcrypt_is_in_fips_mode():
     ), "Error libgcrypt can't be started in FIPS mode."
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-_fips-config-kernel-cmdline-fips",
+    ]
+)
 @pytest.mark.feature("_fips")
 def test_kernel_cmdline_fips_file_was_created(file: File):
     """
@@ -246,6 +263,11 @@ def test_kernel_cmdline_fips_file_was_created(file: File):
     assert file.is_regular_file("/etc/kernel/cmdline.d/30-fips.cfg")
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-_fips-config-kernel-cmdline-fips",
+    ]
+)
 @pytest.mark.feature("_fips")
 def test_kernel_cmdline_fips_file_content(parse_file: ParseFile):
     """
@@ -255,6 +277,11 @@ def test_kernel_cmdline_fips_file_content(parse_file: ParseFile):
     assert 'CMDLINE_LINUX="$CMDLINE_LINUX fips=1"' in lines
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-_fips-config-kernel-cmdline-fips",
+    ]
+)
 @pytest.mark.feature("_fips")
 @pytest.mark.booted(reason="Kernel test makes sense only on booted system")
 def test_kernel_was_boot_with_fips_mode(kernel_cmdline: List[str]):
