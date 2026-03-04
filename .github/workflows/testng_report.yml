@@ -73,7 +73,7 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         if: always()
         with:
-          name: test-report
+          name: testng-report
           path: |
             test-artifacts/*.testng.xml
           retention-days: 30
