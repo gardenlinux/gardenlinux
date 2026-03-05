@@ -86,7 +86,7 @@ def audit_rule():
                 if rule.startswith("-w ")
                 if Path(fs_watch_path).is_relative_to(rule.split()[1])
                 if _access_types_included(rule, access_types)
-            ]
+            ]  # pyright: ignore
             if file_path_rules:
                 print(f"Matched file path rules: {file_path_rules}")
                 return True
@@ -100,7 +100,7 @@ def audit_rule():
                 for path in _extract_paths(rule)
                 if Path(fs_watch_path).is_relative_to(path)
                 if _access_types_included(rule, access_types)
-            ]
+            ]  # pyright: ignore
             if matching_file_syscall_rules:
                 print(f"Matched file syscall rules: {matching_file_syscall_rules}")
                 return True
