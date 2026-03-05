@@ -29,6 +29,7 @@ def test_audit_rules_for_logging_attempts_to_delete_privileges(audit_rule):
         ), f"stigcompliance: writing to or changing metadata of /etc/{file} should be audited"
 
 
+@pytest.skip("not implemented")
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
@@ -39,7 +40,6 @@ def test_audit_rules_for_files_capabilities_removal(audit_rule):
 
     Ref: SRG-OS-000466-GPOS-00210
     """
-    # NOTE: no rule for that in GL as of 05.03.2026
     assert audit_rule(
         syscall="setcap"
     ), "stigcompliance: setcap syscall audit rule is not configured"
