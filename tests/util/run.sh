@@ -15,13 +15,13 @@ DESCRIPTION
 COMMON OPTIONS
   --help                           Show this help message and exit
 
-  --skip-cleanup                  Skip cleanup of cloud resources after testing
+  --skip-cleanup                   Skip cleanup of cloud resources after testing
                                    QEMU VM: After running/skipping tests, stop/cleanup with ctrl+c
                                    Cloud: To cleanup resources after passing this flag, re-run without it
 
-  --skip-tests                    Skip running the actual test suite
+  --skip-tests                     Skip running the actual test suite (and do not build dist disk)
 
-  --test-args <args>              Pass any commandline argument to pytest
+  --test-args <args>               Pass any commandline argument to pytest
                                    Put multiple arguments inside quotes
 
 CLOUD SPECIFIC OPTIONS
@@ -93,6 +93,7 @@ EOF
 cloud=
 
 cloud_image=0
+skip_tests=0
 chroot_args=()
 cloud_args=()
 qemu_args=()
@@ -116,6 +117,7 @@ while [ $# -gt 0 ]; do
 		shift
 		;;
 	--skip-tests)
+		skip_tests=1
 		cloud_args+=("$1")
 		qemu_args+=("$1")
 		oci_args+=("$1")
@@ -212,11 +214,14 @@ if [ -z "$cloud" ] && ! ((cloud_image)); then
 	[ -n "$type" ]
 fi
 
-if [ ! -f ".build/.gh_artifact" ]; then
+if [ -f ".build/.gh_artifact" ]; then
+	echo "Using cached test distribution from github artifact"
+elif ((skip_tests)); then
+	echo "Skipping test disk build; building dist and firmware only..."
+	./util/build.makefile dist edk2
+else
 	echo "Building test distribution..."
 	./util/build.makefile
-else
-	echo "Using cached test distribution from github artifact"
 fi
 
 if [ -n "$cloud" ]; then
