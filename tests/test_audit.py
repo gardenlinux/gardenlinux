@@ -1,15 +1,33 @@
 import pytest
 
 
-@pytest.mark.root(reason="Need root permissions to call auditctl")
-def test_audit_attempts_to_delete_privileges(audit_rule):
-    assert audit_rule(fs_watch_path="/etc/passwd", access_types="wa")
-    assert audit_rule(fs_watch_path="/etc/shadow", access_types="wa")
-    assert audit_rule(fs_watch_path="/etc/group", access_types="wa")
-    assert audit_rule(fs_watch_path="/etc/sudoers", access_types="wa")
+@pytest.mark.feature("not container")
+@pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
+@pytest.mark.root(reason="required to query audit logs")
+def test_audit_rules_for_logging_attempts_to_delete_privileges(audit_rule):
+    """
+    As per DISA STIG requirement, we need to verify that the operating system
+    generates audit records when successful/unsuccessful attempts to delete privileges occur
 
-    # this fails in the current setup
-    # assert audit_rule(syscall="setcap")
+    Ref: SRG-OS-000466-GPOS-00210
+    """
+    for file in ["passwd", "shadow", "group", "sudoers", "sudoers.d", "pam.d"]:
+        assert audit_rule(
+            fs_watch_path=f"/etc/{file}", access_types="wa"
+        ), f"stigcompliance: writing to or changing metadata of /etc/{file} should be audited"
 
-    # for demo only
-    assert audit_rule(syscall="umount2")
+
+@pytest.mark.feature("not container")
+@pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
+@pytest.mark.root(reason="required to query audit logs")
+def test_audit_rules_for_files_capabilities_removal(audit_rule):
+    """
+    As per DISA STIG requirement, we need to verify that the operating system
+    generates audit records when successful/unsuccessful attempts to delete privileges occur
+
+    Ref: SRG-OS-000466-GPOS-00210
+    """
+    # NOTE: no rule for that in GL as of 05.03.2026
+    assert audit_rule(
+        syscall="setcap"
+    ), "stigcompliance: setcap syscall audit rule is not configured"
