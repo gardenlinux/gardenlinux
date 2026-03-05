@@ -2,7 +2,6 @@ import json
 import re
 import time
 from dataclasses import dataclass
-from os import system
 from typing import Tuple
 
 import pytest

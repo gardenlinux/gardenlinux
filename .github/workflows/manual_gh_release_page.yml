@@ -25,7 +25,7 @@ jobs:
   # Create new version in GLVD so it has the package list of the new release
   # This is needed for the automatic changelog generation
   glvd:
-    if: ${{ inputs.type }} == 'minor'
+    if: ${{ inputs.type == 'minor' }}
     name: Update GLVD distro list
     runs-on: ubuntu-latest
     env:
@@ -87,7 +87,7 @@ jobs:
       - name: install dependencies for generate_release_note.py script
         run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@e68236134acc7416606052599f4cfab7b9ea3b7c # pin@0.10.14
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
@@ -123,9 +123,10 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          ref: '${{ inputs.commit }}'
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@e68236134acc7416606052599f4cfab7b9ea3b7c # pin@0.10.14
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
       - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
@@ -139,7 +140,8 @@ jobs:
       - name: Download from S3 bucket ${{ secrets.aws_s3_bucket }} for ${{ matrix.flavor }} (${{ matrix.arch }})
         run: |
           commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
-          CNAME="${{ matrix.flavor }}-${{ matrix.arch }}-${{ inputs.version }}-$commit"
+          resolved_cname="$(./build --resolve-cname '${{ matrix.flavor }}-${{ matrix.arch }}-${{ inputs.version }}')"
+          CNAME="${resolved_cname%-*}-$commit"
 
           echo "CNAME=$CNAME" | tee -a "$GITHUB_ENV"
 
@@ -165,7 +167,7 @@ jobs:
           done
 
   tag_container_as_latest:
-    if: ${{ inputs.type }} == 'minor'
+    if: ${{ inputs.type == 'minor' }}
     uses: ./.github/workflows/tag_latest_container.yml
     with:
       version: ${{ inputs.version }}

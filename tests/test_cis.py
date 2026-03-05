@@ -1,6 +1,11 @@
 import pytest
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-cis-config-cis-hardening",
+    ]
+)
 @pytest.mark.feature("cis")
 @pytest.mark.root(reason="CIS audit requires root privileges")
 @pytest.mark.booted(reason="Must be run on a booted system")

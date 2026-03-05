@@ -11,7 +11,12 @@ rootfs="$(mktemp -d)"
 mount -t tmpfs -o size="$TEMPFS_SIZE" tmpfs "$rootfs"
 tar --extract --xattrs --xattrs-include '*' --directory "$rootfs" < "$input"
 
+kernel="$(find "$rootfs/boot/" -name 'vmlinuz-*' -printf '%P\n' | sort -V | tail -n 1)"
+
 echo "creating root EROFS disk"
+
+kernel_stash_dir="$(mktemp -d)"
+mv "$rootfs/boot/$kernel" "$kernel_stash_dir/$kernel"
 
 erofs_cpio_dir="$(mktemp -d)"
 erofs="$erofs_cpio_dir/root.img"
@@ -20,6 +25,8 @@ mkfs.erofs --quiet -z zstd,12 -E force-inode-compact -T "$BUILDER_TIMESTAMP" -U 
 size_chroot="$(du -s "$rootfs" | cut -f 1)"
 size_erofs="$(du "$erofs" | cut -f 1)"
 echo "root disk compressed by $(( ( ( size_chroot - size_erofs ) * 100 ) / size_chroot ))% ($(du -sh "$rootfs" | cut -f 1) -> $(du -h "$erofs" | cut -f 1))"
+
+mv "$kernel_stash_dir/$kernel" "$rootfs/boot/$kernel"
 
 echo
 echo "building initrd with embedded root disk"
@@ -60,8 +67,6 @@ uki="$(mktemp)"
 touch "$rootfs/initrd"
 touch "$rootfs/uki"
 mount --bind "$uki" "$rootfs/uki"
-
-kernel="$(find "$rootfs/boot/" -name 'vmlinuz-*' -printf '%P\n' | sort -V | tail -n 1)"
 
 chroot "$rootfs" dracut \
 	--no-hostonly \

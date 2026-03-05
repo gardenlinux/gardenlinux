@@ -1,0 +1,3 @@
+markers:
+  "etc/kernel/cmdline.d/90-lsm.cfg":
+  - "GL-TESTCOV-_selinux-config-kernel-cmdline-lsm"

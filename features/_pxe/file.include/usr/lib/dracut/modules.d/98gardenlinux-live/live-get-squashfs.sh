@@ -27,7 +27,7 @@ if [ ! -f "${shaFile}" ]; then
 	exit 1
 fi
 
-if ! echo "$(grep . ${shaFile}) ${squashFile}" | sha256sum --status --check; then
+if ! echo "$(grep . ${shaFile})  ${squashFile}" | sha256sum --status --check -; then
 	warn "the hash verification of the squashfs has failed - exiting"
 	exit 1
 fi

@@ -1,0 +1,5 @@
+markers:
+  "etc/audit/rules.d/99-cis.rules":
+  - "GL-TESTCOV-cisAudit-config-audit-cis"
+  "etc/systemd/system/audit-rules.service.d/override.conf":
+  - "GL-TESTCOV-cisAudit-config-service-audit-rules-override"

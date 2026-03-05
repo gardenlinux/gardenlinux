@@ -1,0 +1,7 @@
+markers:
+  "etc/repart.d/10-var.conf":
+  - "GL-TESTCOV-_ephemeral-config-initrd-repart-var"
+  "etc/systemd/system/ephemeral-cryptsetup.service":
+  - "GL-TESTCOV-_ephemeral-service-initrd-ephemeral-cryptsetup-unit"
+  "etc/systemd/system/sysroot-var.mount":
+  - "GL-TESTCOV-_ephemeral-config-initrd-mount-var"

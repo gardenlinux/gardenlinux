@@ -1,0 +1,3 @@
+markers:
+  "usr/bin/exportLibs.py":
+  - "GL-TESTCOV-pythonDev-script-exportLibs"

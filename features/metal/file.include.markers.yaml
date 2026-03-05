@@ -1,0 +1,21 @@
+markers:
+  "etc/kernel/cmdline.d/00-default.cfg":
+  - "GL-TESTCOV-metal-config-kernel-cmdline-default"
+  "etc/kernel/cmdline.d/10-console.cfg":
+  - "GL-TESTCOV-metal-config-kernel-cmdline-console"
+  "etc/kernel/entry-token":
+  - "GL-TESTCOV-metal-config-kernel-entry-token"
+  "etc/kernel/postinst.d/00-kernel-cmdline":
+  - "GL-TESTCOV-metal-config-kernel-postinst-cmdline"
+  "etc/kernel/postinst.d/00-ucode":
+  - "GL-TESTCOV-metal-config-kernel-postinst-ucode"
+  "etc/kernel/postinst.d/zz-update-syslinux":
+  - "GL-TESTCOV-metal-config-kernel-postinst-update-syslinux"
+  "etc/kernel/postrm.d/zz-update-syslinux":
+  - "GL-TESTCOV-metal-config-kernel-postrm-update-syslinux"
+  "etc/udev/rules.d/69-nostbyrot.rules":
+  - "GL-TESTCOV-metal-config-udev-rules-nostbyrot"
+  "etc/udev/rules.d/71-intellldp.rules":
+  - "GL-TESTCOV-metal-config-udev-rules-intellldp"
+  "usr/sbin/update-usbids":
+  - "GL-TESTCOV-metal-script-update-usbids"
