@@ -85,15 +85,15 @@ def test_setreuid_event_logged(shell: ShellRunner, parse_file: ParseFile):
     Ref: SRG-OS-000465-GPOS-00209
     """
 
-    test_user = "audit_test_user"
+    TEST_USER = "audit_test_user"
 
     passwd_lines = parse_file.lines("/etc/passwd")
-    user_pattern = re.compile(rf"^{test_user}:")
+    user_pattern = re.compile(rf"^{TEST_USER}:")
 
     if user_pattern not in passwd_lines:
-        shell(cmd=f"useradd {test_user}")
+        shell(cmd=f"useradd {TEST_USER}")
 
-    shell(cmd=f"su - {test_user} -c 'id'")
+    shell(cmd=f"su - {TEST_USER} -c 'id'")
 
     result = shell(
         cmd="ausearch -sc setreuid -ts recent",
