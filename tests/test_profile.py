@@ -104,7 +104,7 @@ def test_shell_tmout_is_exported_stig(parse_file: ParseFile):
 TMOUT_FILE_CLOUD = "/etc/profile.d/50-autologout.sh"
 
 
-@pytest.mark.feature("cloud or openstack or metal")
+@pytest.mark.feature("cloud or (openstack and metal)")
 def test_shell_tmout_file_exists_cloud(parse_file: ParseFile):
     """
     As per DISA STIG requirement, this test validates that the shell inactivity
@@ -116,7 +116,7 @@ def test_shell_tmout_file_exists_cloud(parse_file: ParseFile):
     ), "stigcompliance: shell inactivity timeout configuration file is missing"
 
 
-@pytest.mark.feature("cloud or openstack or metal")
+@pytest.mark.feature("cloud or (openstack and metal)")
 def test_shell_tmout_is_configured_cloud(parse_file: ParseFile):
     """
     As per DISA STIG requirement, this test verifies that TMOUT variable is configured.
@@ -127,7 +127,7 @@ def test_shell_tmout_is_configured_cloud(parse_file: ParseFile):
     ), "stigcompliance: TMOUT is not configured"
 
 
-@pytest.mark.feature("cloud or openstack or metal")
+@pytest.mark.feature("cloud or (openstack and metal)")
 def test_shell_tmout_is_readonly_cloud(parse_file: ParseFile):
     """
     As per DISA STIG requirement, this test verifies that TMOUT is marked ReadOnly.
@@ -138,7 +138,7 @@ def test_shell_tmout_is_readonly_cloud(parse_file: ParseFile):
     ), "stigcompliance: TMOUT is not marked as readonly"
 
 
-@pytest.mark.feature("cloud or openstack or metal")
+@pytest.mark.feature("cloud or (openstack and metal)")
 def test_shell_tmout_is_exported_cloud(parse_file: ParseFile):
     """
     As per DISA STIG requirement, this test verifies that TMOUT is
