@@ -84,9 +84,9 @@ def audit_rule():
                 rule
                 for rule in rules
                 if rule.startswith("-w ")
-                if Path(fs_watch_path).is_relative_to(
+                if Path(fs_watch_path).is_relative_to(  # pyright: ignore
                     rule.split()[1]
-                )  # pyright: ignore
+                )
                 if _access_types_included(rule, access_types)
             ]
             if file_path_rules:
