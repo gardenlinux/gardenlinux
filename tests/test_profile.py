@@ -1,6 +1,7 @@
 import re
 
 import pytest
+
 from plugins.parse_file import ParseFile
 
 
@@ -141,7 +142,7 @@ def test_shell_tmout_is_readonly_cloud(parse_file: ParseFile):
 def test_shell_tmout_is_exported_cloud(parse_file: ParseFile):
     """
     As per DISA STIG requirement, this test verifies that TMOUT is
-    exported to subshells.
+    exported to subshells
     Ref: SRG-OS-000755-GPOS-00220
     """
     assert re.compile(r"export\s+TMOUT") in parse_file.lines(
