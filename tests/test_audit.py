@@ -31,3 +31,32 @@ def test_audit_rules_for_files_capabilities_removal(audit_rule):
     assert audit_rule(
         syscall="setcap"
     ), "stigcompliance: setcap syscall audit rule is not configured"
+
+
+@pytest.mark.feature("_selinux")
+def test_audit_rules_for_selinux_policies_changes(audit_rule):
+    """
+    As per DISA STIG requirement, we need to verify that the operating system
+    generates audit records when successful/unsuccessful attempts to delete privileges occur
+
+    Ref: SRG-OS-000466-GPOS-00210
+    """
+    assert audit_rule(
+        fs_watch_path="/etc/selinux", access_types="wa"
+    ), "stigcompliance: changes of selinux configuration files should be audited"
+
+
+@pytest.mark.feature("not container")
+@pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
+@pytest.mark.root(reason="required to query audit logs")
+def test_audit_rules_for_logging_attempts_to_modify_apparmor_policies(audit_rule):
+    """
+    As per DISA STIG requirement, we need to verify that the operating system
+    generates audit records when successful/unsuccessful attempts to delete privileges occur
+
+    Ref: SRG-OS-000466-GPOS-00210
+    """
+    for file in ["apparmor", "apparmor.d"]:
+        assert audit_rule(
+            fs_watch_path=f"/etc/{file}", access_types="wa"
+        ), f"stigcompliance: writing to or changing metadata of /etc/{file} should be audited"
