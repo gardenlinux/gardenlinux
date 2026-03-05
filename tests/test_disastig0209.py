@@ -74,6 +74,7 @@ def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
+@pytest.mark.invasive(reason="creates temporary user and modifies system state")
 def test_setreuid_event_logged(shell: ShellRunner, parse_file: ParseFile):
     """
     As per DISA STIG requirement, the operating system must generate audit
