@@ -3,7 +3,7 @@ import re
 import pytest
 from plugins.file import File
 from plugins.parse_file import Parse, ParseFile
-from plugins.shell import ShellRunner
+from plugins.shell import ShellRunner, shell
 
 PRIV_ESC_RULE_FILE = "/etc/audit/rules.d/70-privilege-escalation.rules"
 
@@ -48,8 +48,7 @@ def test_setreuid_rule_contains_syscall(parse_file: ParseFile):
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
 def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
-    """
-    As per DISA STIG requirement, the operating system must generate audit
+    """    As per DISA STIG requirement, the operating system must generate audit
     records when successful or unsuccessful attempts to modify categories
     of information occur (e.g., privilege changes such as setreuid).
     This test verifies that the audit subsystem is capable of searching
@@ -74,7 +73,7 @@ def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
-@pytest.mark.invasive(reason="creates temporary user and modifies system state")
+@pytest.mark.modify(reason="creates temporary user and modifies system state")
 def test_setreuid_event_logged(shell: ShellRunner, parse_file: ParseFile):
     """
     As per DISA STIG requirement, the operating system must generate audit
@@ -102,3 +101,7 @@ def test_setreuid_event_logged(shell: ShellRunner, parse_file: ParseFile):
     )
 
     assert result.stdout.strip(), "stigcompliance: setreuid audit event not detected"
+
+    shell(cmd=f"pkill -u {TEST_USER}")
+
+    shell(cmd=f"userdel -r {TEST_USER}")
