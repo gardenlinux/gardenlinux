@@ -26,7 +26,8 @@ def _extract_syscalls(auditd_rule):
     Return a list of syscalls referred by -S arguments in the auditd rule.
     Note there can be more than one syscall following an -S argument.
 
-    For example: -S mknod,chroot,mount,umount2,mknodat,mount_setattr.
+    For example for an auditd_rule that contains "-S mknod,chroot,mount,umount2,mknodat,mount_setattr"
+    this function will return ["mknod", "chroot", "mount", "umount2", "mknodat", "mount_setattr"]
     """
     sc_re = re.compile(
         r"""
@@ -46,13 +47,13 @@ def _extract_syscalls(auditd_rule):
 
 def _access_types_included(auditd_rule, access_types):
     """
-    Returns true if access types are included in full in the auditd rule.
+    Return true if access types are included in full in the auditd rule.
     Here access_types is a string in the format passed to auditctl's -p option
     (see: man auditctl)
 
-    For example, this function will return true if access_types' value is "wa"
-    and the auditd_rule is "wa", "war", "warx" etc,
-    but will return false if auditd_rule is "w", "a" or "x" etc.
+    For example, this function will return true if access_types' parameter value is "wa"
+    and the auditd_rule has "wa", "war", "warx" etc,
+    but will return false if auditd_rule has "w", "a" or "x" etc.
     """
     path_re = re.compile(
         r"""
