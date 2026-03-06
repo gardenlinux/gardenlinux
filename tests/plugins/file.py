@@ -329,6 +329,67 @@ class File:
         """
         return self.get_user(path) == user and self.get_group(path) == group
 
+    def has_permissions(self, path: str | Path, permissions: str | int) -> bool:
+        actual_mode = stat.S_IMODE(Path(path).stat().st_mode)
+        expected_mode = self._normalize_permissions(permissions)
+        return actual_mode == expected_mode
+
+    def _normalize_permissions(self, permissions: str | int) -> int:
+        if isinstance(permissions, int):
+            return permissions
+
+        if not isinstance(permissions, str):
+            raise ValueError("Permissions must be int or string")
+
+        permissions = permissions.strip()
+
+        if permissions.isdigit():
+            return int(permissions, 8)
+
+        if len(permissions) != 9:
+            raise ValueError(
+                "Symbolic permissions must be 9 characters (e.g., 'rwxr-x---')"
+            )
+
+        perm_map = {"r": 4, "w": 2, "x": 1, "-": 0}
+
+        mode = 0
+        special = 0
+
+        for idx in range(3):
+            chunk = permissions[idx * 3 : (idx + 1) * 3]
+            value = 0
+
+            for pos, char in enumerate(chunk):
+                if char in perm_map:
+                    value += perm_map[char]
+
+                elif pos == 2:
+                    if idx == 0 and char in ("s", "S"):
+                        special |= stat.S_ISUID
+                        if char == "s":
+                            value += 1
+
+                    elif idx == 1 and char in ("s", "S"):
+                        special |= stat.S_ISGID
+                        if char == "s":
+                            value += 1
+
+                    elif idx == 2 and char in ("t", "T"):
+                        special |= stat.S_ISVTX
+                        if char == "t":
+                            value += 1
+
+                    else:
+                        raise ValueError(f"Invalid permission character: {char}")
+
+                else:
+                    raise ValueError(f"Invalid permission character: {char}")
+
+            mode = (mode << 3) | value
+
+        return special | mode
+
 
 @pytest.fixture
 def file() -> File:
