@@ -88,6 +88,12 @@ def audit_rule():
 
     For a syscall audit rule the lookup is successful
     if there is at least one auditd rule that concerns the syscall parameter's value.
+
+    Examples:
+
+    assert audit_rule(fs_watch_path="/etc/passwd", access_types="wa")
+    assert audit_rule(syscall="setcap")
+
     """
 
     def _audit_rule(syscall=None, access_types=None, fs_watch_path=None):
