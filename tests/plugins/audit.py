@@ -6,6 +6,9 @@ import pytest
 
 
 def _extract_paths(auditd_rule):
+    """
+    Return a list of file paths referred by -F path= or -F dir= arguments in the auditd rule.
+    """
     path_re = re.compile(
         r"""
         (
@@ -18,8 +21,13 @@ def _extract_paths(auditd_rule):
     return [match[0] for match in path_re.findall(auditd_rule)]
 
 
-# support for this format: -S mknod,chroot,mount,umount2,mknodat,mount_setattr
 def _extract_syscalls(auditd_rule):
+    """
+    Return a list of syscalls referred by -S arguments in the auditd rule.
+    Note there can be more than one syscall following an -S argument.
+
+    For example: -S mknod,chroot,mount,umount2,mknodat,mount_setattr.
+    """
     sc_re = re.compile(
         r"""
         (
@@ -37,13 +45,21 @@ def _extract_syscalls(auditd_rule):
 
 
 def _access_types_included(auditd_rule, access_types):
+    """
+    Returns true if access types are included in full in the auditd rule.
+    Here access_types is a string in the format passed to auditctl's -p option
+    (see: man auditctl)
+
+    For example, this function will return true if access_types' value is "wa"
+    and the auditd_rule is "wa", "war", "warx" etc,
+    but will return false if auditd_rule is "w", "a" or "x" etc.
+    """
     path_re = re.compile(
         r"""
         (
-            -F\s*perm=
-            (\S+)
+            -F\s*perm=(\S+)
             |
-            -p\s*
+            -p\s *
             (\S+)
         )
         """,
@@ -59,6 +75,21 @@ def _access_types_included(auditd_rule, access_types):
 
 @pytest.fixture
 def audit_rule():
+    """
+    Returns a factory function that, when called, returns an audit rule lookup function.
+    Said factory function returns a file path audit rule lookup function
+    if fs_watch_path and access_type arguments are not empty
+    or a syscall audit rule lookup function if syscall argument is not empty.
+
+    For a file path audit rule the lookup is successful (function return True)
+    if and only if there is at least one auditd rule that covers the provided fs_watch_path
+    and access_types' values. Given that auditd file path rules are recursive, a lookup for /etc/passwd
+    will be successful if there's a rule for /etc with matching access_types.
+
+    For a syscall audit rule the lookup is successful
+    if there is at least one auditd rule that concerns the syscall parameter's value.
+    """
+
     def _audit_rule(syscall=None, access_types=None, fs_watch_path=None):
         try:
             result = subprocess.run(
