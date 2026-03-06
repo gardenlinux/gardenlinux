@@ -29,7 +29,7 @@ def test_audit_rules_for_logging_attempts_to_delete_privileges(audit_rule):
         ), f"stigcompliance: writing to or changing metadata of /etc/{file} should be audited"
 
 
-@pytest.skip("not implemented")
+@pytest.mark.skip("not implemented")
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
