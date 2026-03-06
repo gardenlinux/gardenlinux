@@ -49,7 +49,8 @@ def _access_types_included(auditd_rule, access_types):
     """
     Return true if access types are included in full in the auditd rule.
     Here access_types is a string in the format passed to auditctl's -p option
-    (see: man auditctl)
+    (see: man auditctl).
+    access_types are searched within the auditd_rule by looking up -F perm= or -p parameters.
 
     For example, this function will return true if access_types' parameter value is "wa"
     and the auditd_rule has "wa", "war", "warx" etc,
@@ -78,7 +79,7 @@ def _access_types_included(auditd_rule, access_types):
 def audit_rule():
     """
     Returns a factory function that, when called, returns an audit rule lookup function.
-    Said factory function returns a file path audit rule lookup function
+    Said factory function calls a file path audit rule lookup function
     if fs_watch_path and access_type arguments are not empty
     or a syscall audit rule lookup function if syscall argument is not empty.
 
