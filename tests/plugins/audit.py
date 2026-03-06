@@ -1,8 +1,11 @@
+import logging
 import re
 import subprocess
 from pathlib import Path
 
 import pytest
+
+logger = logging.getLogger(__name__)
 
 
 def _extract_paths(auditd_rule):
@@ -116,7 +119,7 @@ def audit_rule():
         rules = result.stdout.splitlines()
 
         def file_path_audit_rule():
-            print(
+            logger.debug(
                 f"File path audit rule for {fs_watch_path} with access {access_types}"
             )
             file_path_rules = [
@@ -129,7 +132,7 @@ def audit_rule():
                 if _access_types_included(rule, access_types)
             ]
             if file_path_rules:
-                print(f"Matched file path rules: {file_path_rules}")
+                logger.debug(f"Matched file path rules: {file_path_rules}")
                 return True
 
             file_syscall_rules = [
@@ -143,12 +146,14 @@ def audit_rule():
                 if _access_types_included(rule, access_types)
             ]
             if matching_file_syscall_rules:
-                print(f"Matched file syscall rules: {matching_file_syscall_rules}")
+                logger.debug(
+                    f"Matched file syscall rules: {matching_file_syscall_rules}"
+                )
                 return True
             return False
 
         def syscall_audit_rule():
-            print(f"Syscall audit rule for {syscall}")
+            logger.debug(f"Syscall audit rule for {syscall}")
             matched_rules = [
                 rule
                 for rule in rules
@@ -156,7 +161,7 @@ def audit_rule():
                 if syscall in rule_syscall
             ]
             if matched_rules:
-                print(f"Matched syscall rules: {matched_rules}")
+                logger.debug(f"Matched syscall rules: {matched_rules}")
                 return True
             return False
 
