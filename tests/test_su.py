@@ -2,6 +2,7 @@ import pytest
 from plugins.pam import PamConfig
 
 
+@pytest.mark.testcov(["GL-TESTCOV-server-config-pam-su-wheel"])
 @pytest.mark.security_id(166)
 @pytest.mark.root
 @pytest.mark.feature("not container")

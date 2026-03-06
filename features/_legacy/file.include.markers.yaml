@@ -1,0 +1,7 @@
+markers:
+  "usr/local/sbin/update-bootloaders":
+  - "GL-TESTCOV-_legacy-script-update-bootloaders"
+  "usr/local/sbin/update-kernel-cmdline":
+  - "GL-TESTCOV-_legacy-script-update-kernel-cmdline"
+  "usr/local/sbin/update-syslinux":
+  - "GL-TESTCOV-_legacy-script-update-syslinux"
