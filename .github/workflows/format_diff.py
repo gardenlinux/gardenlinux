@@ -5,7 +5,7 @@ import yaml
 import json
 
 # This script takes the differ_files results from the reproducibility check and generates a Result.md
-# The differ_files contain paths of files which were different when building the flavor two times 
+# The differ_files contain paths of files which were different when building the flavor two times
 
 flavors = os.listdir("diffs")
 
@@ -22,7 +22,7 @@ for flavor in flavors:
     if flavor.endswith("-diff"):
         with open(f"diffs/{flavor}", "r") as f:
             content = f.read()
-        
+
         all.add(flavor[:-5])
         if content == "\n":
             successful.append(flavor[:-5])
@@ -68,7 +68,7 @@ def dependencies(feature, excludes):
                 excludes.update(ex)
     return includes, excludes
 
-# Returns a hierarchical order and a flat set 
+# Returns a hierarchical order and a flat set
 def buildFeatureTree(flavor):
     separated = flavor.split("-")
     if len(separated) == 2:
@@ -162,21 +162,16 @@ if os.path.isfile("nightly_stats"):
         nightlys = f.read().replace("\n", "").split(";")
     nightlys[0] = nightlys[0].split(",")
     nightlys[1] = nightlys[1].split(",")
-    if nightlys[0][0] != "":
-        explanation += f"\n\nComparison of nightly **[#{nightlys[0][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[0][1]})** \
-and **[#{nightlys[1][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[1][1]})**"
-        if nightlys[0][2] != nightlys[1][2]:
-            explanation += f"\n\n⚠️ The nightlys used different commits: `{nightlys[0][2][:7]}` (#{nightlys[0][0]}) != `{nightlys[1][2][:7]}` (#{nightlys[1][0]})"
-        if nightlys[0][0] == nightlys[1][0]:
-            explanation += f"\n\n⚠️ Comparing the nightly **[#{nightlys[0][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[0][1]})** to itself can not reveal any issues"
-    else:
-        explanation += f"\n\nComparison of the latest nightly **[#{nightlys[1][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[1][1]})** \
-with a new build"
-        if nightlys[0][2] != nightlys[1][2]:
-            explanation += f"\n\n⚠️ The build used different commits: `{nightlys[1][2][:7]}` (#{nightlys[1][0]}) != `{nightlys[0][2][:7]}` (new build)"
+
+    explanation += f"\n\nComparison of build **[{nightlys[0][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[0][1]})** \
+and **[{nightlys[1][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[1][1]})**"
+    if nightlys[0][2] != nightlys[1][2]:
+        explanation += f"\n\n⚠️ The builds used different commits: `{nightlys[0][2][:7]}` (#{nightlys[0][0]}) != `{nightlys[1][2][:7]}` (#{nightlys[1][0]})"
+    if nightlys[0][0] == nightlys[1][0]:
+        explanation += f"\n\n⚠️ Comparing the build **[#{nightlys[0][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[0][1]})** to itself can not reveal any issues"
 
 if len(whitelist) > 0:
-    explanation += "\n\n<details><summary>📃 These flavors only passed due to the nightly whitelist</summary><pre>" + "<br>".join(sorted(whitelist)) + "</pre></details>"
+    explanation += "\n\n<details><summary>📃 These flavors only passed due to the whitelist</summary><pre>" + "<br>".join(sorted(whitelist)) + "</pre></details>"
 
 if len(unexpected_falvors) > 0:
     # This should never happen, but print a warning if it somehow does
@@ -233,5 +228,5 @@ if len(successful) != len(expected_falvors):
     rows += "\n*To add affected files to the whitelist, edit the `whitelist` variable in `.github/workflows/generate_diff.sh`*"
 
 with open("Result.md", "w") as f:
-    f.write(result.format(emoji=emoji, successrate=successrate, total_count=total_count, 
+    f.write(result.format(emoji=emoji, successrate=successrate, total_count=total_count,
                           problem_count=problem_count, explanation=explanation, rows=rows))

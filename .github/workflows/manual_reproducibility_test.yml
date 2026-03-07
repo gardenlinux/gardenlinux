@@ -1,0 +1,325 @@
+name: Check build reproducibility
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-reproducibility
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Compared builds"
+        type: choice
+        required: true
+        default: "One new build with latest nightly"
+        options:
+        - "Two new builds"
+        - "One new build with an existing one"
+        - "Two existing builds"
+      run_id_a:
+        description: "Workflow build run for A (required if not both are newly build)"
+        type: string
+      run_id_b:
+        description: "Workflow build run for B (required if at least one already exists)"
+        type: string
+
+jobs:
+  build_a:
+    if: ${{ inputs.mode == 'Two new builds' }}
+    name: Build A
+    uses: ./.github/workflows/build.yml
+    permissions:
+      id-token: write
+      actions: write
+      packages: write
+    with:
+      version: now
+      target: nightly
+      fail_fast: true
+      prefix: a-
+    secrets:
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
+      aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
+      secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
+
+  generate_workflow_data_a:
+    needs: build_a
+    name: Generate workflow data for A
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+    steps:
+      - name: Store data in JSON file
+        run: |
+          jq -r --arg 'matrix' '${{ needs.build_a.outputs.flavors_matrix }}' --arg 'bare_matrix' '${{ needs.build_a.outputs.bare_flavors_matrix }}' -n '{
+            "id": ${{ github.run_id }},
+            "flavors_matrix": $matrix,
+            "bare_flavors_matrix": $bare_matrix,
+            "version": "${{ needs.build_a.outputs.version }}",
+            "original_workflow_name": "${{ github.workflow }}"
+          }' '.' > workflow_data.json
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
+        with:
+          name: workflow-data
+          path: workflow_data.json
+          if-no-files-found: error
+
+  workflow_data_a:
+    if: always() && (needs.build_a.result == 'success' || needs.build_a.result == 'skipped')
+    needs: [ build_a, generate_workflow_data_a ]
+    name: Workflow data for A
+    uses: ./.github/workflows/download_workflow_data.yml
+    with:
+      run_id: ${{ case(inputs.mode == 'Two new builds', github.run_id, inputs.run_id_a) }}
+      prefix: ${{ case(inputs.mode == 'Two new builds', 'a-', '') }}
+
+  build_b:
+    if: ${{ inputs.mode != 'Two existing builds' }}
+    name: Build B
+    uses: ./.github/workflows/build.yml
+    permissions:
+      id-token: write
+      actions: write
+      packages: write
+    with:
+      version: now
+      target: nightly
+      fail_fast: true
+      prefix: b-
+    secrets:
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
+      aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
+      secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
+
+  generate_workflow_data_b:
+    needs: [ build_b, generate_workflow_data_a ]
+    name: Generate workflow data for B
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+    steps:
+      - name: Store data in JSON file
+        run: |
+          jq -r --arg 'matrix' '${{ needs.build_b.outputs.flavors_matrix }}' --arg 'bare_matrix' '${{ needs.build_b.outputs.bare_flavors_matrix }}' -n '{
+            "id": ${{ github.run_id }},
+            "flavors_matrix": $matrix,
+            "bare_flavors_matrix": $bare_matrix,
+            "version": "${{ needs.build_b.outputs.version }}",
+            "original_workflow_name": "${{ github.workflow }}"
+          }' '.' > workflow_data.json
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
+        with:
+          name: workflow-data
+          path: workflow_data.json
+          if-no-files-found: error
+          overwrite: true
+
+  workflow_data_b:
+    if: always() && (needs.build_b.result == 'success' || needs.build_b.result == 'skipped')
+    needs: [ build_b, generate_workflow_data_b ]
+    name: Workflow data for B
+    uses: ./.github/workflows/download_workflow_data.yml
+    with:
+      run_id: ${{ case(inputs.mode == 'Two existing builds', inputs.run_id_b, github.run_id) }}
+      prefix: ${{ case(inputs.mode == 'Two existing builds', '', 'b-') }}
+
+  combined_flavors_matrix:
+    # Hack around GitHub issue with default `if: success()`: Resolves with false if a dependent job is skipped
+    if: always() && !(contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure'))
+    needs: [ workflow_data_a, workflow_data_b ]
+    name: Combine flavor matrices
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.data.outputs.matrix }}
+    permissions:
+      actions: read
+    steps:
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        id: data
+        with:
+          script: |
+            let combinedMatrix = (${{ needs.workflow_data_a.outputs.flavors_matrix }})['include'];
+            let combinedList = [];
+
+            for (const flavor of combinedMatrix) {
+              combinedList.push(flavor['flavor'] + "-" + flavor['arch']);
+            }
+
+            for (const flavor of (${{ needs.workflow_data_b.outputs.flavors_matrix }})['include']) {
+              if (!combinedList.includes(flavor['flavor'] + "-" + flavor['arch'])) {
+                  combinedMatrix.push(flavor);
+                  combinedList.push(flavor['flavor'] + "-" + flavor['arch']);
+              }
+            }
+
+            core.setOutput("matrix", { "include": combinedMatrix });
+
+            return true;
+
+  difference_check:
+    if: always() && !(contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure'))
+    needs: [ workflow_data_a, workflow_data_b, combined_flavors_matrix ]
+    name: Difference check
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+
+    strategy:
+      matrix: ${{ fromJson(needs.combined_flavors_matrix.outputs.matrix) }}
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # pin@v6.0.2
+      with:
+        submodules: true
+    - name: Load flavor A build artifact
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+      with:
+        pattern: ${{ needs.workflow_data_a.outputs.prefix }}build-${{ matrix.flavor }}-${{ matrix.arch }}
+        path: A
+        run-id: ${{ needs.workflow_data_a.outputs.run_id }}
+        github-token: ${{ github.token }}
+    - name: Load flavor B build artifact
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+      with:
+        pattern: ${{ needs.workflow_data_b.outputs.prefix }}build-${{ matrix.flavor }}-${{ matrix.arch }}
+        path: B
+        run-id: ${{ needs.workflow_data_b.outputs.run_id }}
+        github-token: ${{ github.token }}
+    - name: Compare builds
+      continue-on-error: true
+      run: |
+        artifact_a=$(ls A | sed -E "s/.tar.gz$//")
+        artifact_b=$(ls B | sed -E "s/.tar.gz$//")
+
+        tar -C A -xzf A/${artifact_a}.tar.gz ${artifact_a}.tar
+        mkdir "A/unpacked"
+        tar -C A/unpacked -xf A/${artifact_a}.tar
+
+        tar -C B -xzf B/${artifact_b}.tar.gz ${artifact_b}.tar
+        mkdir "B/unpacked"
+        tar -C B/unpacked -xf B/${artifact_b}.tar
+
+        ./.github/workflows/generate_diff.sh ${{ inputs.mode == 'Two existing builds' && '' || '--nightly' }} ${{ matrix.flavor }}-${{ matrix.arch }} ${artifact_a} ${artifact_b}
+    - name: Upload diff data
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
+      with:
+        if-no-files-found: error
+        name: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
+        path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
+
+  combined_bare_flavors_matrix:
+    if: always() && !(contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure'))
+    needs: [ workflow_data_a, workflow_data_b ]
+    name: Combine bare flavor matrices
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.data.outputs.matrix }}
+    permissions:
+      actions: read
+    steps:
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        id: data
+        with:
+          script: |
+            let combinedMatrix = (${{ needs.workflow_data_a.outputs.bare_flavors_matrix }})['include'];
+            let combinedList = [];
+
+            for (const flavor of combinedMatrix) {
+              combinedList.push(flavor['flavor'] + "-" + flavor['arch']);
+            }
+
+            for (const flavor of (${{ needs.workflow_data_b.outputs.bare_flavors_matrix }})['include']) {
+              if (!combinedList.includes(flavor['flavor'] + "-" + flavor['arch'])) {
+                  combinedMatrix.push(flavor);
+                  combinedList.push(flavor['flavor'] + "-" + flavor['arch']);
+              }
+            }
+
+            core.setOutput("matrix", { "include": combinedMatrix });
+
+            return true;
+
+  bare_difference_check:
+    if: always() && !(contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure'))
+    needs: [ workflow_data_a, workflow_data_b, combined_bare_flavors_matrix ]
+    name: Difference check for bare flavors
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+
+    strategy:
+      matrix: ${{ fromJson(needs.combined_bare_flavors_matrix.outputs.matrix) }}
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # pin@v6.0.2
+      with:
+        submodules: true
+    - name: Load flavor A build artifact
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+      with:
+        pattern: ${{ needs.workflow_data_a.outputs.prefix }}build-${{ matrix.flavor }}-${{ matrix.arch }}
+        path: A
+        run-id: ${{ needs.workflow_data_a.outputs.run_id }}
+        github-token: ${{ github.token }}
+    - name: Load flavor B build artifact
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+      with:
+        pattern: ${{ needs.workflow_data_b.outputs.prefix }}build-${{ matrix.flavor }}-${{ matrix.arch }}
+        path: B
+        run-id: ${{ needs.workflow_data_b.outputs.run_id }}
+        github-token: ${{ github.token }}
+    - name: Compare builds
+      continue-on-error: true
+      run: |
+        podman unshare /bin/bash -c '\
+          FILENAME=$(echo "${{ matrix.flavor }}-${{ matrix.arch }}.oci" | sed -E "s/bare-//");\
+
+          a_sha=$(podman load -qi A/$FILENAME 2>/dev/null | awk '\''{ print $NF }'\'');\
+          a_mount=$(podman image mount "$a_sha");\
+
+          b_sha=$(podman load -qi B/$FILENAME 2>/dev/null | awk '\''{ print $NF }'\'');\
+          b_mount=$(podman image mount "$b_sha");\
+
+          depth=$(echo "$a_mount" | tr -cd '\''/'\'' | wc -c);\
+          depth=$(($depth + 1))
+
+          ./.github/workflows/generate_diff.sh --oci ${{ inputs.mode == 'Two nightly builds' && '--nightly' || '' }} ${{ matrix.flavor }}-${{ matrix.arch }} "$a_mount" "$b_mount" "$depth";\
+        '
+    - name: Upload diff data
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
+      with:
+        if-no-files-found: error
+        name: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
+        path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
+
+  format_result:
+    if: always() && !contains(needs.*.result, 'cancelled')
+    needs: [ difference_check, bare_difference_check, workflow_data_a, workflow_data_b, combined_flavors_matrix, combined_bare_flavors_matrix ]
+    name: Format result
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # pin@v6.0.2
+      with:
+        submodules: true
+    - name: download result data
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+      with:
+        pattern: "*-diff"
+        path: diffs/
+        merge-multiple: true
+    - name: Provide stats
+      run: |
+        echo -e "${{ needs.workflow_data_a.outputs.version }},${{ needs.workflow_data_a.outputs.run_id }},${{ needs.workflow_data_a.outputs.commit_id }};\
+        ${{ needs.workflow_data_b.outputs.version }},${{ needs.workflow_data_b.outputs.run_id }},${{ needs.workflow_data_b.outputs.commit_id }}"\
+        > nightly_stats
+    - name: generate Result.md
+      run: |
+        ./.github/workflows/format_diff.py '${{ needs.combined_flavors_matrix.outputs.matrix }}' '${{ needs.combined_bare_flavors_matrix.outputs.matrix }}'
+    - name: Upload Result.md
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
+      with:
+        if-no-files-found: error
+        name: formatted-result
+        path: Result.md
