@@ -15,6 +15,9 @@ class File:
     existence, type, permissions, ownership, etc.
     """
 
+    def __init__(self, path: str | Path | None = None):
+        self.file = Path(path) if path else None
+
     def exists(self, path: str | Path) -> bool:
         """Check if a path exists (any type).
 
@@ -334,3 +337,105 @@ class File:
 def file() -> File:
     """Fixture providing the ``File`` helper for file metadata operations."""
     return File()
+
+
+PERMISSION_BITS = {
+    "r": 4,
+    "w": 2,
+    "x": 1,
+    "-": 0,
+}
+
+
+class Permissions(File):
+    """Helper class for checking file permission modes.
+
+    This class extends ``File`` and provides utilities for validating
+    file permissions against expected values. It supports both octal
+    (e.g., ``"0644"`` or ``644``) and symbolic permission formats
+    (e.g., ``"rw-r--r--"``).
+
+    The current file's permission mode is read at initialization and
+    stored for comparison operations.
+    """
+
+    def __init__(self, file: str | Path):
+        """Initialize a Permissions helper for a specific file.
+
+        Args:
+            file: Path to the file whose permissions will be evaluated.
+
+        Raises:
+            FileNotFoundError: If the provided path does not exist.
+            PermissionError: If the process lacks permission to stat the file.
+        """
+        super().__init__(file)
+        self.mode = stat.S_IMODE(self.file.stat().st_mode)
+
+    def has_permissions(self, permissions: str | int) -> bool:
+        """Check whether the file has the specified permission mode.
+
+        The comparison supports both octal and symbolic formats.
+
+        Args:
+            permissions: Expected permission mode, either as:
+                - an octal integer (e.g., ``644``),
+                - an octal string (e.g., ``"0644"``),
+                - a symbolic string (e.g., ``"rw-r--r--"``).
+
+        Returns:
+            bool: ``True`` if the file's permissions match the expected
+            mode, otherwise ``False``.
+        """
+        expected = self._normalize(permissions)
+        return self.mode == expected
+
+    def _normalize(self, permissions: str | int) -> int:
+        """Convert a permission specification to an integer mode.
+
+        Accepts octal or symbolic permission representations and converts
+        them to a numeric mode suitable for comparison.
+
+        Args:
+            permissions: Permission representation to normalize. Supported
+                formats include:
+                - integer octal value (e.g., ``644``)
+                - octal string (e.g., ``"0644"``)
+                - symbolic string (e.g., ``"rw-r--r--"``)
+
+        Returns:
+            int: Numeric permission mode.
+
+        Raises:
+            ValueError: If the symbolic permission string is invalid.
+        """
+        if isinstance(permissions, int):
+            return permissions
+
+        permissions = permissions.strip()
+
+        if permissions.isdigit():
+            return int(permissions, 8)
+
+        if len(permissions) != 9:
+            raise ValueError(
+                "Symbolic permissions must be 9 characters (e.g. rwxr-x---)"
+            )
+
+        mode = 0
+
+        for i in range(3):
+            chunk = permissions[i * 3 : (i + 1) * 3]
+            value = sum(PERMISSION_BITS[c] for c in chunk)
+            mode = (mode << 3) | value
+
+        return mode
+
+    def __repr__(self):
+        """Return the file's permission mode in octal representation.
+
+        Returns:
+            str: Permission mode formatted as a four-digit octal string
+            (e.g., ``"0644"``).
+        """
+        return format(self.mode, "04o")
