@@ -1,0 +1,130 @@
+name: upload to S3
+on:
+  workflow_call:
+    inputs:
+      commit_id:
+        type: string
+        required: true
+      version:
+        type: string
+        required: true
+      flavors_matrix:
+        type: string
+        required: true
+      run_id:
+        type: string
+        required: true
+      release_id:
+        type: boolean
+        default: false
+      compatibility_flags:
+        description: 'Flags to activate compatibility modes'
+        type: string
+        default: ''
+    secrets:
+      aws_role:
+        required: true
+      aws_session:
+        required: true
+      aws_region:
+        required: true
+      aws_s3_bucket:
+        required: true
+env:
+  GL_COMPATIBILITY_FLAGS: ${{ inputs.compatibility_flags }}
+jobs:
+  upload_to_github_release:
+    name: Upload artifacts to a GitHub release
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME: ""
+      GL_ALLOW_MULTIPLE_PLATFORMS: "1"
+    permissions:
+      id-token: write
+    environment: oidc_aws_s3_upload
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(inputs.flavors_matrix) }}
+    steps:
+      - if: ${{ contains(inputs.compatibility_flags, 'full_checkout') }}
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ inputs.commit_id }}
+          submodules: true
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
+      - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.aws_role }}
+          role-session-name: ${{ secrets.aws_session }}
+          aws-region: ${{ secrets.aws_region }}
+          role-duration-seconds: 14400 # 4 hours
+      - name: Set flavor version reference
+        run: |
+          echo "${{ inputs.commit_id }}" | tee COMMIT
+          echo "${{ inputs.version }}" | tee VERSION
+      - name: Set CNAME
+        run: |
+          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} --release-file "${{ matrix.flavor }}-${{ matrix.arch }}-*.release" cname)" | tee -a "$GITHUB_ENV"
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+        with:
+          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - name: Load test artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+        with:
+          pattern: "*-test-${{ env.CNAME }}"
+          merge-multiple: true
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - name: Load certs artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+        with:
+          name: certs
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+          path: cert/
+      - name: Prepare upload artifacts
+        run: |
+          pushd cert
+          for file in "secureboot."*; do
+            mv "$file" "../$CNAME/$CNAME.$file"
+          done
+          popd
+
+          mkdir -p "$CNAME"
+          tar -C $CNAME -xzvf "$CNAME.tar.gz"
+          rm "$CNAME.tar.gz"
+
+          if [ -f "$CNAME.chroot.test.log" ]; then
+            mv $CNAME.chroot.test.log "$CNAME"
+            mv $CNAME.chroot.test.xml "$CNAME"
+          fi
+
+          if [ -f "$CNAME.cloud.test.log" ]; then
+            mv $CNAME.cloud.test.log "$CNAME"
+            mv $CNAME.cloud.test.xml "$CNAME"
+          fi
+
+          if [ -f "$CNAME.oci.test.log" ]; then
+            mv $CNAME.oci.test.log "$CNAME"
+            mv $CNAME.oci.test.xml "$CNAME"
+          fi
+
+          if [ -f "$CNAME.qemu.test.log" ]; then
+            mv $CNAME.qemu.test.log "$CNAME"
+            mv $CNAME.qemu.test.xml "$CNAME"
+          fi
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pushd "$CNAME"
+          for file in *; do
+            gl-gh-release upload --release_id "${{ inputs.release_id }}" --file_path "$file"
+          done
+          popd
