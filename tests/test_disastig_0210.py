@@ -1,4 +1,5 @@
 import fileinput
+import os
 import shutil
 
 import pytest
@@ -11,6 +12,7 @@ def sudoers_edit():
             print(line, end="")
     yield
     shutil.copy2("/etc/sudoers.bak", "/etc/sudoers")
+    os.remove("/etc/sudoers.bak")
 
 
 @pytest.mark.feature("not container")
