@@ -1,0 +1,25 @@
+markers:
+  "etc/dracut.conf.d/20-gl-live.conf":
+  - "GL-TESTCOV-_pxe-config-initrd-gl-live"
+  "etc/dracut.conf.d/30-omit-cdc-ether.conf":
+  - "GL-TESTCOV-_pxe-config-initrd-omit-cdc-ether"
+  "etc/kernel/cmdline.d/80-pxe.cfg":
+  - "GL-TESTCOV-_pxe-config-kernel-cmdline-pxe"
+  "usr/lib/dracut/modules.d/98gardenlinux-live/99-any.conf":
+  - "GL-TESTCOV-_pxe-config-initrd-module-gardenlinux-live-any"
+  "usr/lib/dracut/modules.d/98gardenlinux-live/cleanup.sh":
+  - "GL-TESTCOV-_pxe-config-initrd-module-gardenlinux-live-cleanup"
+  "usr/lib/dracut/modules.d/98gardenlinux-live/gl-end.service":
+  - "GL-TESTCOV-_pxe-config-initrd-module-gardenlinux-live-gl-end-unit"
+  "usr/lib/dracut/modules.d/98gardenlinux-live/is-live-image.sh":
+  - "GL-TESTCOV-_pxe-config-initrd-module-gardenlinux-live-is-live-image"
+  "usr/lib/dracut/modules.d/98gardenlinux-live/live-get-squashfs.sh":
+  - "GL-TESTCOV-_pxe-config-initrd-module-gardenlinux-live-live-get-squashfs"
+  "usr/lib/dracut/modules.d/98gardenlinux-live/live-overlay-setup.sh":
+  - "GL-TESTCOV-_pxe-config-initrd-module-gardenlinux-live-live-overlay-setup"
+  "usr/lib/dracut/modules.d/98gardenlinux-live/live-sysroot-generator.sh":
+  - "GL-TESTCOV-_pxe-config-initrd-module-gardenlinux-live-live-sysroot-generator"
+  "usr/lib/dracut/modules.d/98gardenlinux-live/module-setup.sh":
+  - "GL-TESTCOV-_pxe-config-initrd-module-gardenlinux-live-module-setup"
+  "usr/lib/dracut/modules.d/98gardenlinux-live/squash-mount-generator.sh":
+  - "GL-TESTCOV-_pxe-config-initrd-module-gardenlinux-live-squash-mount-generator"

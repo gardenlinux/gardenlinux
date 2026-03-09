@@ -1,6 +1,6 @@
 import logging
-from pathlib import Path
-from typing import Dict, List, Optional, TypeVar
+import os
+from typing import List, Optional, TypeVar
 
 # Various utility functions to make tests more readable
 # This should not contain test-assertions, but only abstract details that make tests harder to read
@@ -19,6 +19,18 @@ def get_normalized_sets(*sets: set) -> tuple[set, ...]:
 
 def is_set(obj) -> bool:
     return isinstance(obj, set)
+
+
+def tree(path: str) -> set[str]:
+    """Returns all subpaths of `path`, like the find command"""
+    tree = {path}
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            tree.add(f"{root}/{file}")
+        for dir in dirs:
+            tree.add(f"{root}/{dir}")
+
+    return tree
 
 
 T = TypeVar("T")

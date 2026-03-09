@@ -6,6 +6,10 @@ on:
         description: Workflow run ID
         type: number
         required: true
+      checkout_commit:
+        type: string
+        required: false
+        default: ""
   workflow_run:
     workflows: [ 'Build and publish a release', 'nightly' ]
     types: [ 'completed' ]
@@ -46,6 +50,7 @@ jobs:
     with:
       run_id: ${{ needs.workflow_data.outputs.run_id }}
       commit_id: ${{ needs.workflow_data.outputs.commit_id }}
+      checkout_commit: ${{ github.event_name == 'workflow_dispatch' && inputs.checkout_commit || '' }}
       version: ${{ needs.workflow_data.outputs.version }}
       target: ${{ needs.workflow_data.outputs.target }}
       flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}

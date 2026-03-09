@@ -1,10 +1,9 @@
-from pathlib import Path
-
 import pytest
 from plugins.parse_file import ParseFile
 from plugins.systemd import Systemd
 
 
+@pytest.mark.testcov(["GL-TESTCOV-aide-service-aide-check-timer"])
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")
@@ -16,6 +15,7 @@ def test_aide_timer_exists(systemd: Systemd):
     assert matches, f"AIDE timer '{timer}' not found — CIS requirement failed"
 
 
+@pytest.mark.testcov(["GL-TESTCOV-aide-service-aide-check-timer"])
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")
@@ -29,6 +29,7 @@ def test_aide_timer_loaded(systemd: Systemd):
     ), f"AIDE timer must be loaded but is {matches[0].load}"
 
 
+@pytest.mark.testcov(["GL-TESTCOV-aide-service-aide-check-timer"])
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")
@@ -38,6 +39,7 @@ def test_aide_timer_active(systemd: Systemd):
     assert systemd.is_active(timer), f"AIDE timer '{timer}' exists but is not active."
 
 
+@pytest.mark.testcov(["GL-TESTCOV-aide-service-aide-check-timer"])
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")

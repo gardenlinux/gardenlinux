@@ -1,0 +1,9 @@
+markers:
+  "etc/kernel/cmdline.d/99-no-gpt-auto.cfg":
+  - "GL-TESTCOV-_usi-config-kernel-cmdline-no-gpt-auto"
+  "etc/update-motd.d/25-secureboot":
+  - "GL-TESTCOV-_usi-config-update-motd-secureboot"
+  "usr/local/sbin/update-kernel-cmdline":
+  - "GL-TESTCOV-_usi-config-script-update-kernel-cmdline"
+  "usr/sbin/enroll-gardenlinux-secureboot-keys":
+  - "GL-TESTCOV-_usi-config-script-enroll-gardenlinux-secureboot-keys"

@@ -1,0 +1,7 @@
+markers:
+  "etc/gcrypt/fips_enabled":
+  - "GL-TESTCOV-_fips-config-gcrypt-fips"
+  "etc/kernel/cmdline.d/30-fips.cfg":
+  - "GL-TESTCOV-_fips-config-kernel-cmdline-fips"
+  "etc/system-fips":
+  - "GL-TESTCOV-_fips-config-system-fips"
