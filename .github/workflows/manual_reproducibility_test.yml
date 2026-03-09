@@ -170,12 +170,10 @@ jobs:
       matrix: ${{ fromJson(needs.combined_flavors_matrix.outputs.matrix) }}
       fail-fast: false
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # pin@v6.0.2
+    - name: Install python-gardenlinux-lib
+      uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d4170113b2512e7f5b6deee604ada54c54666ef5
       with:
-        submodules: true
-        sparse-checkout: |
-          .github
-        sparse-checkout-cone-mode: false
+        version: "d4170113b2512e7f5b6deee604ada54c54666ef5"
     - name: Load flavor A build artifact
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
       with:
@@ -193,24 +191,19 @@ jobs:
     - name: Compare builds
       continue-on-error: true
       run: |
-        artifact_a=$(ls A | sed -E "s/.tar.gz$//")
-        artifact_b=$(ls B | sed -E "s/.tar.gz$//")
+        artifact_a="$(ls A | sed -E 's/.tar.gz$//')"
+        artifact_b="$(ls B | sed -E 's/.tar.gz$//')"
 
         tar -C A -xzf A/${artifact_a}.tar.gz ${artifact_a}.tar
-        mkdir "A/unpacked"
-        tar -C A/unpacked -xf A/${artifact_a}.tar
-
         tar -C B -xzf B/${artifact_b}.tar.gz ${artifact_b}.tar
-        mkdir "B/unpacked"
-        tar -C B/unpacked -xf B/${artifact_b}.tar
 
-        ./.github/workflows/generate_diff.sh ${{ inputs.mode == 'Two existing builds' && '' || '--nightly' }} ${{ matrix.flavor }}-${{ matrix.arch }} ${artifact_a} ${artifact_b}
+        gl-feature-fs-diff generate ${{ inputs.mode == 'Two existing builds' && '' || '--nightly' }} --out ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt ${artifact_a}.tar ${artifact_b}.tar
     - name: Upload diff data
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
       with:
         if-no-files-found: error
         name: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
-        path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
+        path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
 
   combined_bare_flavors_matrix:
     if: always() && !(contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure'))
@@ -256,12 +249,10 @@ jobs:
       matrix: ${{ fromJson(needs.combined_bare_flavors_matrix.outputs.matrix) }}
       fail-fast: false
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # pin@v6.0.2
+    - name: Install python-gardenlinux-lib
+      uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d4170113b2512e7f5b6deee604ada54c54666ef5
       with:
-        submodules: true
-        sparse-checkout: |
-          .github
-        sparse-checkout-cone-mode: false
+        version: "d4170113b2512e7f5b6deee604ada54c54666ef5"
     - name: Load flavor A build artifact
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
       with:
@@ -279,26 +270,14 @@ jobs:
     - name: Compare builds
       continue-on-error: true
       run: |
-        podman unshare /bin/bash -c '\
-          FILENAME=$(echo "${{ matrix.flavor }}-${{ matrix.arch }}.oci" | sed -E "s/bare-//");\
-
-          a_sha=$(podman load -qi A/$FILENAME 2>/dev/null | awk '\''{ print $NF }'\'');\
-          a_mount=$(podman image mount "$a_sha");\
-
-          b_sha=$(podman load -qi B/$FILENAME 2>/dev/null | awk '\''{ print $NF }'\'');\
-          b_mount=$(podman image mount "$b_sha");\
-
-          depth=$(echo "$a_mount" | tr -cd '\''/'\'' | wc -c);\
-          depth=$(($depth + 1))
-
-          ./.github/workflows/generate_diff.sh --oci ${{ inputs.mode == 'Two nightly builds' && '--nightly' || '' }} ${{ matrix.flavor }}-${{ matrix.arch }} "$a_mount" "$b_mount" "$depth";\
-        '
+        artifact_oci="$(echo "${{ matrix.flavor }}-${{ matrix.arch }}.oci" | sed -E 's/bare-//')"
+        gl-feature-fs-diff generate ${{ inputs.mode == 'Two existing builds' && '' || '--nightly' }} --out ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt A/${artifact_oci} B/${artifact_oci}
     - name: Upload diff data
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
       with:
         if-no-files-found: error
         name: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
-        path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
+        path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff.txt
 
   format_result:
     if: always() && !contains(needs.*.result, 'cancelled')
@@ -310,20 +289,24 @@ jobs:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # pin@v6.0.2
       with:
         submodules: true
-    - name: download result data
+    - name: Install python-gardenlinux-lib
+      uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d4170113b2512e7f5b6deee604ada54c54666ef5
+      with:
+        version: "d4170113b2512e7f5b6deee604ada54c54666ef5"
+    - name: Download result data
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
       with:
-        pattern: "*-diff"
+        pattern: "*-diff.txt"
         path: diffs/
         merge-multiple: true
     - name: Provide stats
       run: |
         echo -e "${{ needs.workflow_data_a.outputs.version }},${{ needs.workflow_data_a.outputs.run_id }},${{ needs.workflow_data_a.outputs.commit_id }}
         ${{ needs.workflow_data_b.outputs.version }},${{ needs.workflow_data_b.outputs.run_id }},${{ needs.workflow_data_b.outputs.commit_id }}"\
-        > nightly_stats
-    - name: generate Result.md
+        > nightly_stats.csv
+    - name: Generate Result.md
       run: |
-        ./.github/workflows/format_diff.py '${{ needs.combined_flavors_matrix.outputs.matrix }}' '${{ needs.combined_bare_flavors_matrix.outputs.matrix }}'
+        gl-feature-fs-diff format "${{ needs.flavors_matrix.outputs.matrix }}" "${{ needs.bare_flavors_matrix.outputs.matrix }}" > Result.md
     - name: Upload Result.md
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
       with:
