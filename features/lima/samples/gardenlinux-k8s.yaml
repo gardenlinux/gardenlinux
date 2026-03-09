@@ -15,19 +15,9 @@
 
 minimumLimaVersion: 2.0.0
 
-images:
-- location: https://gardenlinux-github-releases.s3.amazonaws.com/objects/lima-amd64-2150.0.0-eb8696b9/lima-amd64-2150.0.0-eb8696b9.qcow2
-  arch: x86_64
-- location: https://gardenlinux-github-releases.s3.amazonaws.com/objects/lima-arm64-2150.0.0-eb8696b9/lima-arm64-2150.0.0-eb8696b9.qcow2
-  arch: aarch64
-mountTypesUnsupported:
-- 9p
-ssh:
-  loadDotSSHPubKeys: true
-  forwardAgent: true
+base:
+- _images/gardenlinux-2150.yaml
 
-# Mounts are disabled in this template, but can be enabled optionally.
-mounts: []
 containerd:
   system: true
   user: false
