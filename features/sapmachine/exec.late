@@ -2,6 +2,7 @@
 
 set -eufo pipefail
 
+# GL-TESTCOV-sapmachine-config-apt-keyrings-sapmachine
 cp /builder/features/sapmachine/sapmachine.key /etc/apt/keyrings/sapmachine-apt-keyring.asc
 echo "deb [signed-by=/etc/apt/keyrings/sapmachine-apt-keyring.asc] https://dist.sapmachine.io/debian/$(dpkg --print-architecture)/ ./" | tee /etc/apt/sources.list.d/sapmachine.list
 apt-get update -y

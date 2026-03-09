@@ -1,0 +1,7 @@
+markers:
+  "etc/cloud/cloud.cfg.d/91-gdch-system.cfg":
+  - "GL-TESTCOV-gdch-config-cloud-ntp"
+  "etc/kernel/cmdline.d/00-cmdline.cfg":
+  - "GL-TESTCOV-gdch-config-kernel-cmdline-default"
+  "etc/kernel/cmdline.d/10-console.cfg":
+  - "GL-TESTCOV-gdch-config-kernel-cmdline-console"
