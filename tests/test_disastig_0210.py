@@ -47,7 +47,7 @@ def test_audit_rules_for_files_capabilities_removal(audit_rule):
     ), "stigcompliance: setcap syscall audit rule is not configured"
 
 
-@pytest.mark.feature("_selinux")
+@pytest.mark.feature("_selinux and not container")
 def test_audit_rules_for_selinux_policies_changes(audit_rule):
     """
     As per DISA STIG requirement, we need to verify that the operating system
