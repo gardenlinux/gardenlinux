@@ -165,7 +165,7 @@ jobs:
               const matrix = gitHubLib.intersectFlavorsMatrix(t.inputMatrix, t.supported);
               const isEnabled = !gitHubLib.isMatrixEmpty(matrix);
               core.setOutput(t.outTests, isEnabled);
-              console.log(`${t.key}: ${isEnabled ? 'enabled' : 'disabled'} (${isEnabled ? matrix.length : 0} flavors)`);
+              console.log(`${t.key}: ${isEnabled ? 'enabled' : 'disabled'} (${isEnabled ? matrix['include'].length : 0} flavors)`);
 
               if (isEnabled) {
                 core.setOutput(t.outMatrix, matrix);
