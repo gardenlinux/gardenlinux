@@ -104,3 +104,70 @@ jobs:
           name: workflow-data
           path: workflow_data.json
           if-no-files-found: error
+  testng:
+    needs: build
+    name: Test
+    uses: ./.github/workflows/tests_ng.yml
+    with:
+      flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
+      bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
+      test_types: "chroot,qemu,cloud,oci,bare"
+    permissions:
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      actions: write # TODO: 3215 elevated permissions for included workflow
+      checks: write # Required for test_report job to write workflow summary
+    secrets:
+      gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      gcp_project_id: ${{ secrets.GCP_PROJECT }}
+      gcp_region: ${{ secrets.GCP_REGION }}
+      gcp_zone: ${{ secrets.GCP_ZONE }}
+      aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+      aws_region: ${{ secrets.AWS_TESTS_REGION }}
+      aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
+      az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      alibaba_cloud_role_arn: ${{ secrets.ALIBABA_CLOUD_ROLE_ARN }}
+      alibaba_cloud_oidc_provider_arn: ${{ secrets.ALIBABA_CLOUD_OIDC_PROVIDER_ARN }}
+      alibaba_cloud_region: ${{ secrets.ALIBABA_CLOUD_REGION }}
+      tf_encryption: ${{ secrets.TF_ENCRYPTION }}
+  testng_retry:
+    needs: testng
+    if: ${{ failure() && needs.test.result == 'failure' }}
+    name: "Retry checkpoint: Test"
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Retry failed test
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
+
+            const gitHubRef = "${{ github.head_ref == '' && github.ref_name || github.head_ref }}";
+            return await gitHubLib.dispatchRetryWorkflow(core, github.rest.actions, context, gitHubRef, 3);
+  upload_workflow_data_testng:
+    needs: [build, testng]
+    name: Store workflow data
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+    steps:
+      - name: Store data in JSON file
+        run: |
+          jq -r --arg 'matrix' '${{ needs.build.outputs.flavors_matrix }}' --arg 'bare_matrix' '${{ needs.build.outputs.bare_flavors_matrix }}' -n '{
+            "id": ${{ github.run_id }},
+            "flavors_matrix": $matrix,
+            "bare_flavors_matrix": $bare_matrix,
+            "version": "${{ needs.build.outputs.version }}",
+            "original_workflow_name": "${{ github.workflow }}"
+          }' '.' > workflow_data_testng.json
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
+        with:
+          name: workflow-data_testng
+          path: workflow_data_testng.json
+          if-no-files-found: error

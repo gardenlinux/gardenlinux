@@ -170,3 +170,29 @@ jobs:
       flavor: ${{ matrix.flavor }}
     permissions:
       id-token: write
+  test_report:
+    needs:
+      - test_flavors_chrooted
+      - test_platform_flavors
+      - test_bare_flavors
+    name: Generate Test Report
+    if: always()
+    uses: ./.github/workflows/test_report.yml
+    permissions:
+      actions: write
+      checks: write
+    with:
+      test_jobs: "test_flavors_chrooted,test_platform_flavors,test_bare_flavors"
+  # we need to trigger testng here, to have a central starting point    
+  tests_ng:
+    name: Tests-NG
+    uses: ./.github/workflows/tests_ng.yml
+    secrets: inherit
+    permissions:
+      id-token: write
+      actions: write
+      checks: write
+    with:
+      flavors_matrix: ${{ inputs.flavors_matrix }}
+      bare_flavors_matrix: ${{ inputs.bare_flavors_matrix }}
+      test_types: "chroot,qemu,oci,bare"
