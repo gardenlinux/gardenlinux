@@ -99,3 +99,23 @@ export async function retryWorkflow(core, githubActions, context, runID, retries
 
     return true;
 }
+
+// backported for testng
+export function getTestEnvironmentsEnabled(commaSeparatedTestsRequested) {
+    const knownTests = ["chroot", "cloud", "oci", "qemu", "bare"];
+    const testsRequested = commaSeparatedTestsRequested.split(",");
+    let tests = [];
+
+    for (const test of knownTests) {
+        if (testsRequested.includes(test)) {
+            tests.push(test);
+        }
+    }
+
+    return tests;
+}
+
+// backported for testng
+export function isMatrixEmpty(matrix) {
+    return (matrix == "" || matrix == `{"include":[]}`);
+}

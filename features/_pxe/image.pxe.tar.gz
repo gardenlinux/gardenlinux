@@ -19,79 +19,18 @@ tar --extract --xattrs --xattrs-include '*' --directory "$chroot_dir" < "$input"
 cp "$chroot_dir/boot/"vmlinuz* vmlinuz
 cp "$chroot_dir/boot/"initrd* initrd
 
+read -r _ cmdline < "$chroot_dir/etc/kernel/cmdline"
+echo "$cmdline" > cmdline
+
 mksquashfs "$chroot_dir" root.squashfs -noappend -comp xz -mkfs-time "$BUILDER_TIMESTAMP" -all-time "$BUILDER_TIMESTAMP"
 
 sha256sum root.squashfs | head -c 64 > root.squashfs.sha256sum
 echo root.squashfs.sha256sum | cpio -H newc -o | xz --check=crc32 >> initrd
 
-echo "console=ttyS0 gl.live=1 gl.ovl=/:tmpfs" > cmdline
-
-touch tmp_initrd
-[[ ! -e "$chroot_dir/initrd" ]]
-touch "$chroot_dir/initrd"
-mount --bind tmp_initrd "$chroot_dir/initrd"
-[[ ! -e "$chroot_dir/root.squashfs" ]]
-touch "$chroot_dir/root.squashfs"
-mount --bind root.squashfs "$chroot_dir/root.squashfs"
-
-[[ -d "$chroot_dir/proc" ]] && [[ -z "$(ls -A "$chroot_dir/proc")" ]]
-mount --rbind /proc "$chroot_dir/proc"
-
-kernel_file=$(find "$chroot_dir/boot/" -name 'vmlinuz-*')
-kernel_version="${kernel_file#*-}"
-
-unshare --user --map-root-user --mount -- bash -c 'mount -t tmpfs tmpfs '"$chroot_dir/var/tmp"' && mount -t tmpfs none /sys && mount --bind /usr/bin/false /usr/bin/systemd-detect-virt && "$@"' -- \
-chroot "$chroot_dir" env dracut \
-	--force \
-	--kver "$kernel_version" \
-	--modules "bash dash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd fs-lib shutdown gardenlinux-live" \
-	--include "/root.squashfs" "root.squashfs" \
-	--reproducible \
-	--no-hostonly \
-	"/initrd"
-
-umount -l "$chroot_dir/proc"
-
-umount "$chroot_dir/initrd"
-rm "$chroot_dir/initrd"
-umount "$chroot_dir/root.squashfs"
-rm "$chroot_dir/root.squashfs"
-
-case "$BUILDER_ARCH" in
-	amd64)
-		uefi_arch=x64
-		;;
-	arm64)
-		uefi_arch=aa64
-		;;
-esac
-
-/lib/systemd/ukify build \
-	--stub "${chroot_dir}/usr/lib/systemd/boot/efi/linux$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi.stub" \
-	--linux "vmlinuz" \
-	--initrd "tmp_initrd" \
-	--cmdline "cmdline" \
-	--output "unified_image"
-
-export PKCS11_MODULE_PATH="/usr/lib/$(uname -m)-linux-gnu/pkcs11/aws_kms_pkcs11.so"
-cert_base="/builder/cert/secureboot.db"
-
-if [ -f "$cert_base.key" ]; then
-	key_params=(--key "$cert_base.key")
-elif [ -f "$cert_base.arn" ]; then
-	key_params=(--engine pkcs11 --key "pkcs11:token=$(basename "$(cat "$cert_base.arn")" | cut -c -32)")
-else
-	echo "neither $cert_base.key nor $cert_base.arn exists, but at least one is required" >&2
-	exit 1
-fi
-
-# sign unified image
-sbsign --cert "$cert_base.crt" "${key_params[@]}" --output boot.efi unified_image
-
 umount "$chroot_dir"
 rmdir "$chroot_dir"
 
-tar --create --mtime="@$BUILDER_TIMESTAMP" --sort name --numeric-owner --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime vmlinuz initrd root.squashfs boot.efi | gzip > "$output"
+tar --create --mtime="@$BUILDER_TIMESTAMP" --sort name --numeric-owner --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime vmlinuz initrd cmdline root.squashfs | gzip > "$output"
 
 popd > /dev/null
 rm -rf "$dir"
