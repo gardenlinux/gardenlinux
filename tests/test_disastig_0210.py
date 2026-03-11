@@ -15,7 +15,7 @@ def sudoers_edit():
     os.remove("/etc/sudoers.bak")
 
 
-@pytest.mark.feature("not (container or chroot or lima)")
+@pytest.mark.feature("not container and not chroot and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
 def test_audit_rules_for_logging_attempts_to_delete_privileges(audit_rule):
@@ -32,7 +32,7 @@ def test_audit_rules_for_logging_attempts_to_delete_privileges(audit_rule):
 
 
 @pytest.mark.skip("not implemented")
-@pytest.mark.feature("not (container or chroot or lima)")
+@pytest.mark.feature("not container and not chroot and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
 def test_audit_rules_for_files_capabilities_removal(audit_rule):
@@ -47,7 +47,7 @@ def test_audit_rules_for_files_capabilities_removal(audit_rule):
     ), "stigcompliance: setcap syscall audit rule is not configured"
 
 
-@pytest.mark.feature("_selinux and not (container or chroot or lima)")
+@pytest.mark.feature("_selinux and not container and not chroot and not lima")
 def test_audit_rules_for_selinux_policies_changes(audit_rule):
     """
     As per DISA STIG requirement, we need to verify that the operating system
@@ -60,7 +60,7 @@ def test_audit_rules_for_selinux_policies_changes(audit_rule):
     ), "stigcompliance: changes of selinux configuration files should be audited"
 
 
-@pytest.mark.feature("not (container or chroot or lima)")
+@pytest.mark.feature("not container and not chroot and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
 def test_audit_rules_for_logging_attempts_to_modify_apparmor_policies(audit_rule):
@@ -76,7 +76,7 @@ def test_audit_rules_for_logging_attempts_to_modify_apparmor_policies(audit_rule
         ), f"stigcompliance: writing to or changing metadata of /etc/{file} should be audited"
 
 
-@pytest.mark.feature("not (container or chroot or lima)")
+@pytest.mark.feature("not container and not chroot and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
 def test_attempt_to_delete_privileges_event_logged(audit_rule, shell, sudoers_edit):
