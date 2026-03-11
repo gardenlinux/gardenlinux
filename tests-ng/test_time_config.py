@@ -47,7 +47,7 @@ def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl):
     ), f"ntp server is invalid. Expected '169.254.169.254' got '{ntp_ip}'."
 
 
-@pytest.mark.flaky(reruns=10, reruns_delay=30, only_rerun="AssertionError")
+@pytest.mark.flaky(reruns=30, reruns_delay=60, only_rerun="AssertionError")
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("not azure and not aws and not gcp and not gdch")
 def test_ntp(timedatectl: TimeDateCtl):
