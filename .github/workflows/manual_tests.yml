@@ -165,6 +165,7 @@ jobs:
     permissions:
       id-token: write
       actions: write
+      checks: write # for testng
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
