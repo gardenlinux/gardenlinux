@@ -1,0 +1,11 @@
+markers:
+  "etc/systemd/system/getty@tty1.service.d/autologin.conf":
+  - "GL-TESTCOV-_iso-service-getty-tty1-autologin"
+  "etc/systemd/system/serial-getty@.service.d/autologin.conf":
+  - "GL-TESTCOV-_iso-service-serial-getty-autologin"
+  "opt/install/install.fstab":
+  - "GL-TESTCOV-_iso-script-install-fstab"
+  "opt/install/install.part":
+  - "GL-TESTCOV-_iso-script-install-part"
+  "opt/install/install.sh":
+  - "GL-TESTCOV-_iso-script-install-sh"

@@ -1,0 +1,27 @@
+# Feature exclusion list for coverage reporting
+#
+# Add one feature name per line to exclude it from coverage analysis.
+# Lines starting with # are treated as comments and ignored.
+# Empty lines are ignored.
+#
+_bfpxe
+_build
+_curl
+_debug
+_dev
+_initrdDebug
+_nopkg
+_oci
+_readonly
+_secureboot
+baremetal
+bluefield
+capi
+cisPackages
+container
+firecracker
+nodejs
+python
+pythonDev
+sssd
+stigDev

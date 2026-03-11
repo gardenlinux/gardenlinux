@@ -2,7 +2,6 @@ import os
 import shutil
 
 import pytest
-from handlers.pip import pip_requests
 from plugins.dpkg import Dpkg
 from plugins.shell import ShellRunner
 from plugins.utils import tree
@@ -29,6 +28,7 @@ dependencies = {
         "/required_libs_test/usr/lib/aarch64-linux-gnu",
         "/required_libs_test/usr/lib/aarch64-linux-gnu/libpthread.so.0",
         "/required_libs_test/usr/lib/aarch64-linux-gnu/libc.so.6",
+        "/required_libs_test/usr/lib/aarch64-linux-gnu/libm.so.6",
         "/required_libs_test/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
     },
     "amd64": {
@@ -38,6 +38,7 @@ dependencies = {
         "/required_libs_test/usr/lib/x86_64-linux-gnu",
         "/required_libs_test/usr/lib/x86_64-linux-gnu/libpthread.so.0",
         "/required_libs_test/usr/lib/x86_64-linux-gnu/libc.so.6",
+        "/required_libs_test/usr/lib/x86_64-linux-gnu/libm.so.6",
         "/required_libs_test/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
     },
 }

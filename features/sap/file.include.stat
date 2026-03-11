@@ -1,4 +1,7 @@
+# GL-TESTCOV-sap-config-audit-rules-privilege-escalaction-permissions
 root	root	0640 /etc/audit/rules.d/70-privilege-escalation.rules
+# GL-TESTCOV-sap-config-audit-rules-privileged-special-permissions
 root	root	0640 /etc/audit/rules.d/70-privileged-special.rules
 root	root	0640 /etc/audit/rules.d/70-privileged-special.rules.arm64
+# GL-TESTCOV-sap-config-audit-rules-system-integrity-permissions
 root	root	0640 /etc/audit/rules.d/70-system-integrity.rules

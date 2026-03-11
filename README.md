@@ -139,3 +139,8 @@ Link: <a href="https://gitter.im/gardenlinux/community">https://gitter.im/garden
 Copyright 2025 SAP SE or an SAP affiliate company and GardenLinux contributors. Please see our [LICENSE](LICENSE.md) for
 copyright and license information. Detailed information including third-party components and their licensing/copyright
 information is available [via the REUSE tool](https://reuse.software).
+
+<p align="center">
+  <img alt="Bundesministerium für Wirtschaft und Energie (BMWE)-EU funding logo" src="https://apeirora.eu/assets/img/BMWK-EU.png" width="400"/>
+</p>
+

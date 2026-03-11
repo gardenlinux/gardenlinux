@@ -1,8 +1,15 @@
+# GL-TESTCOV-metal-config-no-network
 /etc/network
 # prefer systemd unit files
+# GL-TESTCOV-metal-config-no-init-irqbalance
 /etc/init.d/irqbalance
+# GL-TESTCOV-metal-config-no-init-ipmievd
 /etc/init.d/ipmievd
+# GL-TESTCOV-metal-config-no-runit-001
 /etc/runit
+# GL-TESTCOV-metal-config-no-sv
 /etc/sv
+# GL-TESTCOV-metal-config-no-runit-002
 /usr/share/runit
+# GL-TESTCOV-metal-config-no-mdadm
 /etc/mdadm/mdadm.conf

@@ -19,14 +19,20 @@ procps
 quota
 sosreport
 sudo
+# GL-TESTCOV-server-service-sysstat-enable
 sysstat
 systemd
 systemd-boot
 systemd-boot-efi
+# GL-TESTCOV-server-service-systemd-coredump-enable
 systemd-coredump
+# GL-TESTCOV-server-service-cron-update-enable
 systemd-cron
+# GL-TESTCOV-server-service-systemd-repart-socket-enable
 systemd-repart
+## GL-TESTCOV-server-service-systemd-resolved-enable
 systemd-resolved
+# GL-TESTCOV-server-service-systemd-timesyncd-enable
 systemd-timesyncd
 tcpdump
 traceroute

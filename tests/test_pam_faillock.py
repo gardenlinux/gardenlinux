@@ -1,6 +1,12 @@
 import pytest
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-server-config-pam-garden",
+        "GL-TESTCOV-server-config-pam-garden-extra",
+    ]
+)
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-auth"], indirect=["pam_config"]
 )
@@ -29,6 +35,11 @@ def test_common_auth_pam_faillock(pam_config):
     ), "Control value of PAM Module pam_faillock.so must be set to required (postauth action configured)"
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-server-config-pam-garden",
+    ]
+)
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-account"], indirect=["pam_config"]
 )
@@ -43,6 +54,11 @@ def test_common_account_pam_faillock(pam_config):
     ), "User account should be validated for its lock status before session starts"
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-server-config-pam-garden",
+    ]
+)
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-password"], indirect=["pam_config"]
 )
@@ -64,6 +80,11 @@ def test_common_password_passwdqc_pam_faillock(pam_config):
     ), "User password should conform to password strength requirements"
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-server-config-pam-garden",
+    ]
+)
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-password"], indirect=["pam_config"]
 )
