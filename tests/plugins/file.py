@@ -15,9 +15,6 @@ class File:
     existence, type, permissions, ownership, etc.
     """
 
-    def __init__(self, path: str | Path | None = None):
-        self.file = Path(path) if path else None
-
     def exists(self, path: str | Path) -> bool:
         """Check if a path exists (any type).
 
@@ -332,85 +329,66 @@ class File:
         """
         return self.get_user(path) == user and self.get_group(path) == group
 
+    def has_permissions(self, path: str | Path, permissions: str | int) -> bool:
+        """Check if a file has the specified permission mode.
 
-@pytest.fixture
-def file() -> File:
-    """Fixture providing the ``File`` helper for file metadata operations."""
-    return File()
-
-
-PERMISSION_BITS = {
-    "r": 4,
-    "w": 2,
-    "x": 1,
-    "-": 0,
-}
-
-
-class Permissions(File):
-    """Helper class for checking file permission modes.
-
-    This class extends ``File`` and provides utilities for validating
-    file permissions against expected values. It supports both octal
-    (e.g., ``"0644"`` or ``644``) and symbolic permission formats
-    (e.g., ``"rw-r--r--"``).
-
-    The current file's permission mode is read at initialization and
-    stored for comparison operations.
-    """
-
-    def __init__(self, file: str | Path):
-        """Initialize a Permissions helper for a specific file.
+        This helper retrieves the current permission bits of the given path
+        and compares them with the expected permissions. The expected value
+        may be provided either as an octal representation (e.g., ``"0644"``
+        or ``644``) or as a symbolic string (e.g., ``"rw-r--r--"``).
 
         Args:
-            file: Path to the file whose permissions will be evaluated.
-
-        Raises:
-            FileNotFoundError: If the provided path does not exist.
-            PermissionError: If the process lacks permission to stat the file.
-        """
-        super().__init__(file)
-        self.mode = stat.S_IMODE(self.file.stat().st_mode)
-
-    def has_permissions(self, permissions: str | int) -> bool:
-        """Check whether the file has the specified permission mode.
-
-        The comparison supports both octal and symbolic formats.
-
-        Args:
-            permissions: Expected permission mode, either as:
-                - an octal integer (e.g., ``644``),
-                - an octal string (e.g., ``"0644"``),
-                - a symbolic string (e.g., ``"rw-r--r--"``).
+        path: File path.
+        permissions: Expected permissions as either:
+            - an octal integer (e.g., ``644``),
+            - an octal string (e.g., ``"0644"``),
+            - a symbolic string (e.g., ``"rw-r--r--"``).
 
         Returns:
-            bool: ``True`` if the file's permissions match the expected
-            mode, otherwise ``False``.
+        bool: ``True`` if the file's permissions match the expected
+        permission mode, otherwise ``False``.
+
+        Raises:
+        FileNotFoundError: If the path does not exist.
+        PermissionError: If permission to access the path is denied.
+        ValueError: If the permission specification is invalid.
         """
-        expected = self._normalize(permissions)
-        return self.mode == expected
+        actual_mode = stat.S_IMODE(Path(path).stat().st_mode)
+        expected_mode = self._normalize_permissions(permissions)
+        return actual_mode == expected_mode
 
-    def _normalize(self, permissions: str | int) -> int:
-        """Convert a permission specification to an integer mode.
+    def _normalize_permissions(self, permissions: str | int) -> int:
+        """Normalize a permission specification to a numeric mode.
 
-        Accepts octal or symbolic permission representations and converts
-        them to a numeric mode suitable for comparison.
+        Converts a permission representation into the integer mode used by
+        the operating system. Supported formats include octal values and
+        symbolic POSIX permission strings.
+
+        Examples:
+            ``"0644"`` → ``420``
+            ``644`` → ``420``
+            ``"rw-r--r--"`` → ``420``
 
         Args:
             permissions: Permission representation to normalize. Supported
                 formats include:
-                - integer octal value (e.g., ``644``)
-                - octal string (e.g., ``"0644"``)
-                - symbolic string (e.g., ``"rw-r--r--"``)
+                - integer octal value (e.g., ``644``),
+                - octal string (e.g., ``"0644"``),
+                - symbolic permission string (e.g., ``"rwxr-x---"``).
 
         Returns:
-            int: Numeric permission mode.
+            int: Normalized permission mode as an integer suitable for
+            comparison with values returned by ``stat.S_IMODE``.
 
         Raises:
-            ValueError: If the symbolic permission string is invalid.
+            ValueError: If the provided permission format is invalid or
+            contains unsupported characters.
         """
         if isinstance(permissions, int):
             return permissions
+
+        if not isinstance(permissions, str):
+            raise ValueError("Permissions must be int or string")
 
         permissions = permissions.strip()
 
@@ -419,23 +397,50 @@ class Permissions(File):
 
         if len(permissions) != 9:
             raise ValueError(
-                "Symbolic permissions must be 9 characters (e.g. rwxr-x---)"
+                "Symbolic permissions must be 9 characters (e.g., 'rwxr-x---')"
             )
 
-        mode = 0
+        perm_map = {"r": 4, "w": 2, "x": 1, "-": 0}
 
-        for i in range(3):
-            chunk = permissions[i * 3 : (i + 1) * 3]
-            value = sum(PERMISSION_BITS[c] for c in chunk)
+        mode = 0
+        special = 0
+
+        for idx in range(3):
+            chunk = permissions[idx * 3 : (idx + 1) * 3]
+            value = 0
+
+            for pos, char in enumerate(chunk):
+                if char in perm_map:
+                    value += perm_map[char]
+
+                elif pos == 2:
+                    if idx == 0 and char in ("s", "S"):
+                        special |= stat.S_ISUID
+                        if char == "s":
+                            value += 1
+
+                    elif idx == 1 and char in ("s", "S"):
+                        special |= stat.S_ISGID
+                        if char == "s":
+                            value += 1
+
+                    elif idx == 2 and char in ("t", "T"):
+                        special |= stat.S_ISVTX
+                        if char == "t":
+                            value += 1
+
+                    else:
+                        raise ValueError(f"Invalid permission character: {char}")
+
+                else:
+                    raise ValueError(f"Invalid permission character: {char}")
+
             mode = (mode << 3) | value
 
-        return mode
+        return special | mode
 
-    def __repr__(self):
-        """Return the file's permission mode in octal representation.
 
-        Returns:
-            str: Permission mode formatted as a four-digit octal string
-            (e.g., ``"0644"``).
-        """
-        return format(self.mode, "04o")
+@pytest.fixture
+def file() -> File:
+    """Fixture providing the ``File`` helper for file metadata operations."""
+    return File()
