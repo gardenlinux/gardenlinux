@@ -361,24 +361,19 @@ class File:
         """Normalize a permission specification to a numeric mode.
 
         Converts a permission representation into the integer mode used by
-        the operating system. Supported formats include octal values and
-        symbolic POSIX permission strings.
+        the operating system.
 
-        Examples:
-            ``"0644"`` → ``420``
-            ``644`` → ``420``
-            ``"rw-r--r--"`` → ``420``
+        Supported formats include:
+        - integer permission modes (e.g., ``644``), which are returned unchanged,
+        - octal strings (e.g., ``"0644"``),
+        - symbolic POSIX permission strings (e.g., ``"rwxr-x---"``).
 
         Args:
-            permissions: Permission representation to normalize. Supported
-                formats include:
-                - integer octal value (e.g., ``644``),
-                - octal string (e.g., ``"0644"``),
-                - symbolic permission string (e.g., ``"rwxr-x---"``).
+            permissions: Permission representation to normalize.
 
         Returns:
-            int: Normalized permission mode as an integer suitable for
-            comparison with values returned by ``stat.S_IMODE``.
+            int: Numeric permission mode suitable for comparison with
+            values returned by ``stat.S_IMODE``.
 
         Raises:
             ValueError: If the provided permission format is invalid or
