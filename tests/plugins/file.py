@@ -334,7 +334,7 @@ class File:
 
         This helper retrieves the current permission bits of the given path
         and compares them with the expected permissions. The expected value
-        may be provided either as an octal representation (e.g., ``"0644"``
+        may be provided either as an octal **string** representation (e.g., ``"0644"``
         or ``644``) or as a symbolic string (e.g., ``"rw-r--r--"``).
 
         Args:
