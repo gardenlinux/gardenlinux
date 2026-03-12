@@ -23,7 +23,11 @@ on:
         default: '{"include":[]}'
       original_workflow_name:
         type: string
-        default: ""
+        default: ''
+      compatibility_flags:
+        description: 'Flags to activate compatibility modes'
+        type: string
+        default: ''
     secrets:
       aws_role:
         required: true
@@ -82,7 +86,8 @@ jobs:
           - flavor: "container-pythonDev"
             subpath: "/container-python-dev"
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - if: ${{ contains(inputs.compatibility_flags, 'full_checkout') }}
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Set container version reference
@@ -251,7 +256,8 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 8
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - if: ${{ contains(inputs.compatibility_flags, 'full_checkout') }}
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # pin@v4
@@ -325,7 +331,8 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 1
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - if: ${{ contains(inputs.compatibility_flags, 'full_checkout') }}
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Install python-gardenlinux-lib

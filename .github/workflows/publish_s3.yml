@@ -3,19 +3,26 @@ on:
   workflow_dispatch:
     inputs:
       run_id:
-        description: Workflow run ID
+        description: Build workflow run ID
         type: number
         required: true
-  workflow_run:
-    workflows: ["Build and publish a release", "nightly"]
-    types: ["completed"]
+      compatibility_flags:
+        description: 'Flags to activate compatibility modes'
+        type: string
+        default: ''
+  workflow_call:
+    inputs:
+      run_id:
+        type: number
+        required: true
+env:
+  GL_COMPATIBILITY_FLAGS: ${{ inputs.compatibility_flags }}
 jobs:
   workflow_data:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.conclusion == 'success' }}
     name: Download workflow JSON data from trigger
     uses: ./.github/workflows/download_workflow_data.yml
     with:
-      run_id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
+      run_id: ${{ inputs.run_id }}
   workflow_data_artifact:
     name: Publish parent workflow-data artifact
     needs: [workflow_data]
@@ -33,7 +40,7 @@ jobs:
         with:
           name: parent-workflow-data
           overwrite: true
-          path: "workflow_data.json"
+          path: workflow_data.json
   trustedboot_flavors_supported_matrix:
     needs: workflow_data
     name: Generate flavors matrix for trustedboot

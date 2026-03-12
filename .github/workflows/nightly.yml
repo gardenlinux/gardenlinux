@@ -106,3 +106,24 @@ jobs:
           name: workflow-data
           path: workflow_data.json
           if-no-files-found: error
+  publish_ghcr:
+    needs: upload_workflow_data
+    name: Publish nightly to ghcr.io
+    uses: gardenlinux/gardenlinux/.github/workflows/publish.yml@main
+    with:
+      run_id: ${{ github.run_id }}
+    permissions:
+      actions: write  # TODO: 3215 elevated permissions for included workflow
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      packages: write # TODO: 3215 elevated permissions for included workflow
+    secrets: inherit
+  publish_s3:
+    needs: upload_workflow_data
+    name: Publish nightly to S3
+    uses: gardenlinux/gardenlinux/.github/workflows/publish_s3.yml@main
+    with:
+      run_id: ${{ github.run_id }}
+    permissions:
+      actions: write  # TODO: 3215 elevated permissions for included workflow
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+    secrets: inherit
