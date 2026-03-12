@@ -14,7 +14,7 @@ on:
       run_id:
         type: string
         required: true
-      with_certs:
+      release_id:
         type: boolean
         default: false
       compatibility_flags:
@@ -33,8 +33,8 @@ on:
 env:
   GL_COMPATIBILITY_FLAGS: ${{ inputs.compatibility_flags }}
 jobs:
-  upload_to_s3:
-    name: upload to S3
+  upload_to_github_release:
+    name: Upload artifacts to a GitHub release
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -62,14 +62,18 @@ jobs:
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
           role-duration-seconds: 14400 # 4 hours
+      - name: Set flavor version reference
+        run: |
+          echo "${{ inputs.commit_id }}" | tee COMMIT
+          echo "${{ inputs.version }}" | tee VERSION
+      - name: Set CNAME
+        run: |
+          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} --release-file "${{ matrix.flavor }}-${{ matrix.arch }}-*.release" cname)" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - name: Set CNAME
-        run: |
-          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} --release-file "${{ matrix.flavor }}-${{ matrix.arch }}-*.release" cname)" | tee -a "$GITHUB_ENV"
       - name: Load test artifacts
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
@@ -77,16 +81,21 @@ jobs:
           merge-multiple: true
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - if: ${{ inputs.with_certs }}
-        name: Load certs artifact
+      - name: Load certs artifact
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
           name: certs
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
           path: cert/
-      - name: Prepare S3 upload artifacts
+      - name: Prepare upload artifacts
         run: |
+          pushd cert
+          for file in "secureboot."*; do
+            mv "$file" "../$CNAME/$CNAME.$file"
+          done
+          popd
+
           mkdir -p "$CNAME"
           tar -C $CNAME -xzvf "$CNAME.tar.gz"
           rm "$CNAME.tar.gz"
@@ -110,14 +119,12 @@ jobs:
             mv $CNAME.qemu.test.log "$CNAME"
             mv $CNAME.qemu.test.xml "$CNAME"
           fi
-      - if: ${{ inputs.with_certs }}
-        name: Add certs to build artifacts
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          pushd cert
-          for file in "secureboot."*; do
-            mv "$file" "../$CNAME/$CNAME.$file"
+          pushd "$CNAME"
+          for file in *; do
+            gl-gh-release upload --release_id "${{ inputs.release_id }}" --file_path "$file"
           done
           popd
-      - name: Upload to S3 bucket ${{ secrets.aws_s3_bucket }}
-        run: |
-          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$CNAME" upload-artifacts-to-bucket --artifact-name "$CNAME"
