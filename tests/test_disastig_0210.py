@@ -8,7 +8,7 @@ import pytest
 @pytest.fixture
 def sudoers_edit():
     for line in fileinput.input("/etc/sudoers", inplace=True, backup=".bak"):
-        if not line.startswith("%sudo"):
+        if not line.startswith("# Host alias specification"):
             print(line, end="")
     yield
     shutil.copy2("/etc/sudoers.bak", "/etc/sudoers")
