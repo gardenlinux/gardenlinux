@@ -5,6 +5,9 @@ on:
       run_id:
         type: string
         required: true
+      prefix:
+        type: string
+        default: ''
     outputs:
       run_id:
         value: ${{ inputs.run_id }}
@@ -12,6 +15,8 @@ on:
         value: ${{ jobs.flavor_version_data.outputs.commit_id }}
       version:
         value: ${{ jobs.flavor_version_data.outputs.version }}
+      prefix:
+        value: ${{ jobs.flavor_version_data.outputs.prefix }}
 jobs:
   flavor_version_data:
     name: Download flavor version data from trigger (${{ inputs.run_id }})
@@ -22,7 +27,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
-          name: flavor-version-data
+          name: ${{ inputs.prefix }}flavor-version-data
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
       - name: Set flavor version data
@@ -33,9 +38,10 @@ jobs:
             const fs = await import("fs");
 
             fs.accessSync("flavor_version_data.json", (fs.constants.F_OK | fs.constants.R_OK));
-            flavorVersionData = JSON.parse(fs.readFileSync("flavor_version_data.json"));
+            const flavorVersionData = JSON.parse(fs.readFileSync("flavor_version_data.json"));
 
             core.setOutput("commit_id", flavorVersionData.commit_id);
             core.setOutput("version", flavorVersionData.version);
+            core.setOutput("prefix", ("prefix" in flavorVersionData ? flavorVersionData.prefix : ""));
 
             return true;

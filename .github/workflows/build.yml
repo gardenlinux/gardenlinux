@@ -127,7 +127,8 @@ jobs:
           jq -r -n '{
             "commit_id": "${{ needs.requirements.outputs.commit_id }}",
             "version": "${{ needs.requirements.outputs.version }}",
-            "target": "${{ needs.requirements.outputs.target }}"
+            "target": "${{ needs.requirements.outputs.target }}",
+            "prefix": "${{ inputs.prefix }}"
           }' '.' > flavor_version_data.json
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         with:
