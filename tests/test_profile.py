@@ -1,7 +1,6 @@
 import re
 
 import pytest
-
 from plugins.file import File
 from plugins.parse_file import ParseFile
 
