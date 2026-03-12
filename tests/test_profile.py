@@ -27,7 +27,7 @@ def test_profile_autologout_stig(parse_file: ParseFile):
     """Test that the autologout profile is set correctly."""
     file = "/etc/profile.d/99-terminal_tmout.sh"
     lines_list = [
-        "TMOUT=600",
+        "TMOUT=900",
         "readonly TMOUT",
         "export TMOUT",
     ]
@@ -45,7 +45,7 @@ def test_profile_autologout_openstack_metal(parse_file: ParseFile):
     """Test that the autologout profile is set correctly."""
     file = "/etc/profile.d/50-autologout.sh"
     lines_list = [
-        "TMOUT=600",
+        "TMOUT=900",
         "readonly TMOUT",
         "export TMOUT",
     ]
@@ -145,7 +145,7 @@ def test_shell_tmout_is_readonly_cloud(parse_file: ParseFile):
 def test_shell_tmout_is_exported_cloud(parse_file: ParseFile):
     """
     As per DISA STIG requirement, this test verifies that TMOUT is
-    exported to subshells.
+    exported to subshells
     Ref: SRG-OS-000755-GPOS-00220
     """
     assert re.compile(r"export\s+TMOUT") in parse_file.lines(
