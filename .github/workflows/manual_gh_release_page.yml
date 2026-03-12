@@ -2,30 +2,83 @@ name: release page
 on:
   workflow_dispatch:
     inputs:
-      type:
-        type: choice
-        default: minor
-        description: "Patch"
-        options:
-          - minor
-          - dev
-      version:
+      run_id:
+        description: Build workflow run ID
+        type: number
         required: true
-        type: string
-        description: "Version"
       is_latest:
         default: false
         type: boolean
-        description: "Tag Github Release and OCI image as latest"
-      commit:
-        required: true
+        description: 'Tag Github release and OCI image as latest'
+      is_dev_release:
+        default: false
+        type: boolean
+        description: 'Github development release'
+      compatibility_flags:
+        description: 'Flags to activate compatibility modes'
         type: string
-        description: "Full commitish"
+        default: ''
+env:
+  GL_COMPATIBILITY_FLAGS: ${{ inputs.compatibility_flags }}
 jobs:
+  workflow_data:
+    name: Download workflow JSON data from trigger
+    uses: ./.github/workflows/download_workflow_data.yml
+    with:
+      run_id: ${{ inputs.run_id }}
+  flavors_matrix:
+    needs: workflow_data
+    name: Generate flavors matrix (marked for publishing)
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: "--no-arch --json-by-arch --publish"
+      ref: ${{ needs.workflow_data.outputs.commit_id }}
+  glrd:
+    needs: workflow_data
+    name: Create GLRD release
+    permissions:
+      id-token: write
+    runs-on: ubuntu-24.04
+    env:
+      COMMIT: ${{ needs.workflow_data.outputs.commit_id }}
+      VERSION: ${{ needs.workflow_data.outputs.version }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Create GLRD release
+        uses: gardenlinux/glrd@30fcac2ec9ad6cee873fcc503f0ca11022a4609e # v4.1.0
+        with:
+          cmd: |
+            type="${{ inputs.is_dev_release && 'dev' || 'minor' }}"
+            major="$(echo ${VERSION} | cut -d'.' -f1)"
+            minor="$(echo ${VERSION} | cut -d'.' -f2)"
+
+            if [ ${type} = "minor" ]; then
+              # check for major version and create if missing
+              if ! glrd --no-header --type major --version ${major} | grep ${major}; then
+                glrd-manage --s3-update --create major --version ${major}
+              fi
+
+              glrd-manage --s3-update --create minor --version ${version} --commit ${COMMIT}
+            elif [ ${type} = "dev" ]; then
+              glrd-manage --s3-update --create dev --version ${version} --commit ${COMMIT}
+            fi
+      - name: Get created GLRD release
+        uses: gardenlinux/glrd@30fcac2ec9ad6cee873fcc503f0ca11022a4609e # v4.1.0
+        with:
+          cmd: |
+            glrd --type major,minor,dev --version "$(echo ${VERSION} | cut -d'.' -f1)"
   # Create new version in GLVD so it has the package list of the new release
   # This is needed for the automatic changelog generation
   glvd:
-    if: ${{ inputs.type == 'minor' }}
+    needs: workflow_data
+    if: ${{ !inputs.is_dev_release }}
     name: Update GLVD distro list
     runs-on: ubuntu-latest
     env:
@@ -42,7 +95,6 @@ jobs:
           server: https://api.live.gl-live.shoot.live.k8s-hana.ondemand.com
           server-ca-discovery-url: https://discovery.ingress.garden.live.k8s.ondemand.com/projects/gl-live/shoots/3f2715e7-dc7c-4bf1-a594-dc0d90cd0f1c/cluster-ca
           audience: ${{ env.OIDC_AUDIENCE }}
-
       - name: Start a new ingestion job in GLVD to import package list for new version
         env:
           KUBECONFIG: kubeconfig.yaml
@@ -55,24 +107,20 @@ jobs:
               --env=PGUSER="${{ secrets.GLVD_DB_USERNAME }}" \
               --env=PGHOST=glvd-database-0.glvd-database \
               --env=PGPORT=5432 \
-              --env=PGPASSWORD="${{ secrets.GLVD_DB_PASSWORD }}" -- /usr/local/src/ingest-single-gl-release.sh ${{ inputs.version }}
+              --env=PGPASSWORD="${{ secrets.GLVD_DB_PASSWORD }}" -- /usr/local/src/ingest-single-gl-release.sh "${{ needs.workflow_data.outputs.version }}"
       - name: Wait for GLVD to ingest the package list of the new version
         run: |
           echo "Give GLVD some time to ingest the data. It is not clear how long this takes exactly, and there is no single indicator for when it was done."
           sleep 180
-  flavors_matrix:
-    needs: glvd
-    name: Generate flavors matrix of the release commit
-    uses: ./.github/workflows/build_flavors_matrix.yml
-    with:
-      flags: "--no-arch --json-by-arch --publish"
-      ref: ${{ inputs.commit }}
   github_release:
-    needs: glvd
+    needs: [ glvd, workflow_data ]
+    if: always() && (needs.glvd.result == 'skipped' || needs.glvd.result == 'success')
     runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
+    outputs:
+      id: ${{ steps.github_release.outputs.id }}
     permissions:
       id-token: write
       contents: write
@@ -82,126 +130,49 @@ jobs:
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - name: create GitHub release
+      - id: github_release
+        name: Create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ "${{ inputs.is_latest }}" == "true" ]]; then
-            gl-gh-release create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")" --latest
+            gl-gh-release create --tag "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}" --latest
           else
-            gl-gh-release create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
+            gl-gh-release create --tag "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}")"
           fi
-      - uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
-        with:
-          key: release-${{ github.run_id }}
-          path: .github_release_id
 
+          echo "id=$(cat .github_release_id)" | tee -a $GITHUB_OUTPUT
   github_release_artifacts_upload:
-    needs: [github_release, flavors_matrix]
-    runs-on: ubuntu-24.04
+    needs: [ workflow_data, github_release, flavors_matrix ]
+    if: always() && !(contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure'))
+    name: Upload to existing GitHub release
     permissions:
       contents: write
       id-token: write
-    environment: oidc_aws_s3_upload
-    env:
-      CNAME: ""
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix ) }}
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          sparse-checkout: |
-            .github/**
-          sparse-checkout-cone-mode: false
-      - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
-      - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
-        with:
-          key: release-${{ github.run_id }}
-          path: .github_release_id
-          fail-on-cache-miss: true
-      - name: Set CNAME
-        run: |
-          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version "${{ inputs.version }}" --commit "${{ inputs.commit }}" cname)" | tee -a "$GITHUB_ENV"
-      - name: Download from S3 bucket ${{ secrets.aws_s3_bucket }} for ${{ matrix.flavor }} (${{ matrix.arch }})
-        run: |
-          mkdir "$CNAME"
-          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$CNAME" download-artifacts-from-bucket --cname "$CNAME"
-          tar -cJf "$CNAME.tar.xz" -C "$CNAME" .
-      - name: Upload to release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          release="$(cat .github_release_id)"
-
-          echo "$release $CNAME.tar.xz"
-          echo "$CNAME.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-
-          # upload test logs separately (if they exist)
-          log_suffixes="chroot.test.log chroot.test.xml platform.test.log platform.test.xml"
-          for suffix in $log_suffixes; do
-            log="$CNAME/$CNAME.$suffix"
-            if [ -f "$log" ]; then
-              gl-gh-release upload --release_id "$release" --file_path "$log"
-            fi
-          done
-
+    uses: ./.github/workflows/upload_to_github_release.yml
+    with:
+      commit_id: ${{ needs.workflow_data.outputs.commit_id }}
+      version: ${{ needs.workflow_data.outputs.version }}
+      flavors_matrix: ${{ needs.flavors_matrix.outputs.matrix }}
+      run_id: ${{ needs.workflow_data.outputs.run_id }}
+      release_id: ${{ needs.github_release.outputs.id }}
+      compatibility_flags: ${{ inputs.compatibility_flags }}
+    secrets:
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_role: ${{ secrets.AWS_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_OIDC_SESSION }}
+      aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
   tag_container_as_latest:
-    if: ${{ inputs.type == 'minor' }}
+    needs: workflow_data
+    if: ${{ !inputs.is_dev_release }}
     uses: ./.github/workflows/tag_latest_container.yml
     with:
-      version: ${{ inputs.version }}
+      version: ${{ needs.workflow_data.outputs.version }}
       is_latest: ${{ inputs.is_latest }}
     permissions:
       packages: write
-  glrd:
-    name: create GLRD release
-    permissions:
-      id-token: write
-    runs-on: ubuntu-24.04
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - name: Create GLRD release
-        uses: gardenlinux/glrd@30fcac2ec9ad6cee873fcc503f0ca11022a4609e # v4.1.0
-        with:
-          cmd: |
-            type=${{ inputs.type }}
-            commit=${{ inputs.commit }}
-            version=${{ inputs.version }}
-            major=$(echo ${version} | cut -d'.' -f1)
-            minor=$(echo ${version} | cut -d'.' -f2)
-            if [ ${type} = "minor" ]; then
-              # check for major version and create if missing
-              if ! glrd --no-header --type major --version ${major} | grep ${major}; then
-                glrd-manage --s3-update --create major --version ${major}
-              fi
-              glrd-manage --s3-update --create minor --version ${version} --commit ${commit}
-            elif [ ${type} = "dev" ]; then
-              glrd-manage --s3-update --create dev --version ${version} --commit ${commit}
-            fi
-      - name: Get created GLRD release
-        uses: gardenlinux/glrd@30fcac2ec9ad6cee873fcc503f0ca11022a4609e # v4.1.0
-        with:
-          cmd: |
-            version=${{ inputs.version }}
-            major=$(echo ${version} | cut -d'.' -f1)
-            minor=$(echo ${version} | cut -d'.' -f2)
-            glrd --type major,minor,dev --version ${major}
