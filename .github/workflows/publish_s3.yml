@@ -1,4 +1,4 @@
-name: 'Publish to S3 - ${{ inputs.run_id }}'
+name: 'Publish to S3'
 on:
   workflow_dispatch:
     inputs:
