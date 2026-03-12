@@ -5,10 +5,11 @@ MAKEFLAGS += --no-builtin-rules
 .SILENT:
 .DELETE_ON_ERROR:
 
-.PHONY: dist clean
+.PHONY: dist dist-disk clean
 
 all: dist edk2
-dist: .build/dist.tar.gz .build/dist.ext2.raw
+dist: .build/dist.tar.gz
+dist-disk: dist .build/dist.ext2.raw
 edk2: .build/edk2-qemu-x86_64-code .build/edk2-qemu-x86_64-vars .build/edk2-qemu-aarch64-code .build/edk2-qemu-aarch64-vars
 
 clean:

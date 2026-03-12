@@ -587,6 +587,103 @@ def test_example(systemd: Systemd):
 > [!NOTE]
 > Have a look at the [user documentation](README.md#debugging-tests) if you want to know how to view those debug logs when running tests.
 
+### Debugging Tests in a Booted VM
+
+When you need to debug tests on a fully booted system (QEMU or a cloud VM), you can use the dev runner scripts to:
+
+- Quickly sync the local test distribution and test files into a VM.
+- Re-run tests on demand (oneshot) or automatically on file changes.
+
+#### QEMU VM Workflow
+
+##### Start VM
+
+Run the tests with `--ssh --skip-cleanup --skip-tests` to start a QEMU VM. This will simply boot the VM, enable ssh but not start any tests and keep your VM running until you hit `Ctrl+C`:
+
+```bash
+./test --ssh --skip-cleanup --skip-tests .build/aws-gardener_prod-amd64-today-local.raw
+```
+
+##### Oneshot Test Run
+
+In a second shell run a oneshot test run. Run `run_dev_qemu.sh` with any `--test-args` to run the specific tests you want:
+
+```bash
+tests/util/run_dev_qemu.sh --test-args "test_ssh.py -v"
+```
+
+This will:
+
+- Sync `.build/dist.tar.gz` into the VM.
+- Sync the current `tests/` tree.
+- Run `pytest` inside the VM with the provided `--test-args`.
+
+##### Watch for file changes
+
+In a second shell, To automatically re-run tests when you change files under `tests/` or `features/`, just add `--watch`:
+
+```bash
+tests/util/run_dev_qemu.sh --test-args "test_ssh.py -v" --watch
+```
+
+The script will:
+
+- Wait for file changes in `tests/` and `features/`.
+- Re-sync the changed tests into the VM.
+- Re-run `pytest` with your given arguments after each change.
+
+You can stop watch mode at any time with `Ctrl+C`.
+
+#### Cloud VM Workflow
+
+##### Start VM
+
+Run the tests with `--skip-cleanup --skip-tests` to start a QEMU VM. This will simply boot the VM, enable ssh but not start any tests and keep your VM running until you hit `Ctrl+C`:
+
+```bash
+./test --skip-cleanup --skip-tests --cloud azure .build/azure-gardener_prod-amd64-today-local.raw
+# or use an already uploaded image
+./test --skip-cleanup --skip-tests --cloud azure \
+    --cloud-image --image-requirements-file .build/azure-gardener_prod-amd64-today-local.requirements \
+    /CommunityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/Images/gardenlinux-nvme-gardener_prod-amd64/Versions/2150.0.0
+```
+
+##### Oneshot Test Run
+
+Run a oneshot test run. Run `run_dev_qemu.sh` with any `--test-args` to run the specific tests you want:
+
+```bash
+tests/util/run_dev_cloud.sh --test-args "test_ssh.py -v" .build/azure-gardener_prod-amd64-today-local.raw
+# or use an already uploaded image
+tests/util/run_dev_cloud.sh --test-args "test_ssh.py -v" \
+    /CommunityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/Images/gardenlinux-nvme-gardener_prod-amd64/Versions/2150.0.0
+```
+
+This will:
+
+- Sync `.build/dist.tar.gz` into the VM.
+- Sync the current `tests/` tree.
+- Run `pytest` inside the VM with the provided `--test-args`.
+
+##### Watch for file changes
+
+To automatically re-run tests when you change files under `tests/` or `features/`, just add `--watch`:
+
+```bash
+tests/util/run_dev_cloud.sh --test-args "test_ssh.py -v" --watch .build/azure-gardener_prod-amd64-today-local.raw
+# or use an already uploaded image
+tests/util/run_dev_cloud.sh --test-args "test_ssh.py -v" --watch \
+    /CommunityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/Images/gardenlinux-nvme-gardener_prod-amd64/Versions/2150.0.0
+```
+
+The script will:
+
+- Wait for file changes in `tests/` and `features/`.
+- Re-sync the changed tests into the VM.
+- Re-run `pytest` with your given arguments after each change.
+
+You can stop watch mode at any time with `Ctrl+C`.
+
 ## Python Best Practices
 
 ### Code Style and CI Enforcement

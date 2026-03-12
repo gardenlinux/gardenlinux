@@ -118,7 +118,9 @@ source "$image_requirements"
 [ -n "$cloud" ]
 
 cleanup() {
-	get_logs || true
+	if ! ((skip_tests)); then
+    	get_logs || true
+    fi
 	if ! ((skip_cleanup)); then
 		echo "⚙️  cleaning up cloud resources"
 		(
