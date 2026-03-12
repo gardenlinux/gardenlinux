@@ -7,6 +7,7 @@ AUDIT_TOOL_PATHS = [
     "/usr/bin/journalctl",
 ]
 
+
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
@@ -20,6 +21,7 @@ def test_shadow_permissions(file):
         f"stigcompliance: incorrect permissions on /etc/shadow "
         f"(expected 640, got {actual})"
     )
+
 
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
@@ -35,6 +37,7 @@ def test_passwd_permissions_numeric(file):
         f"(expected 0644, got {actual})"
     )
 
+
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
@@ -48,6 +51,7 @@ def test_passwd_permissions_symbolic(file):
         f"stigcompliance: incorrect symbolic permissions on /etc/passwd "
         f"(expected rw-r--r--, got {actual})"
     )
+
 
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
@@ -71,6 +75,7 @@ def test_audit_tools_permissions(file):
     assert not invalid, (
         "stigcompliance: audit tools must have 755: " f"{', '.join(invalid)}"
     )
+
 
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
