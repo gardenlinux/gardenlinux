@@ -18,12 +18,16 @@ minimumLimaVersion: 2.0.0
 base:
 - _images/gardenlinux-2150.yaml
 
-containerd:
-  system: true
-  user: false
-
 provision:
 # See <https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/>
+- mode: system
+  script: |
+    #!/bin/bash
+    set -eux -o pipefail
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get -y install containerd
+    systemctl enable --now containerd
 - mode: system
   script: |
     #!/bin/bash
@@ -80,6 +84,7 @@ provision:
       [plugins."io.containerd.cri.v1.runtime".cni]
         bin_dirs = ["/usr/local/libexec/cni","/opt/cni/bin"]
     EOF
+    ln -s /opt/cni/bin /usr/lib/cni
     systemctl restart containerd
 # See <https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/>
 - mode: system
