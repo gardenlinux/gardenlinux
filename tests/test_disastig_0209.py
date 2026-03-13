@@ -1,5 +1,3 @@
-import re
-
 import pytest
 from plugins.file import File
 from plugins.parse_file import Parse, ParseFile
@@ -10,7 +8,7 @@ TEST_USER = "audit_test_user"
 
 
 @pytest.fixture
-def audit_test_user(shell: ShellRunner, parse_file: ParseFile):
+def audit_test_user(shell: ShellRunner):
     """
     As per DISA STIG requirement, the operating system must generate audit
     records when successful or unsuccessful attempts to modify categories
@@ -20,17 +18,9 @@ def audit_test_user(shell: ShellRunner, parse_file: ParseFile):
     escalation.
     Ref: SRG-OS-000465-GPOS-00209
     """
-    passwd_lines = parse_file.lines("/etc/passwd")
-    user_pattern = re.compile(rf"^{TEST_USER}:")
-
-    if user_pattern not in passwd_lines:
-        shell(cmd=f"useradd {TEST_USER}")
-
+    shell(cmd=f"useradd {TEST_USER}")
     yield TEST_USER
-
-    passwd_lines = parse_file.lines("/etc/passwd", ignore_missing=True)
-    if user_pattern in passwd_lines:
-        shell(cmd=f"userdel -r {TEST_USER}", ignore_exit_code=True)
+    shell(cmd=f"userdel -fr {TEST_USER}")
 
 
 @pytest.mark.feature("not container")
