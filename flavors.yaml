@@ -142,6 +142,17 @@ targets:
         test: true
         test-platform: true
         publish: true
+      - features:
+          - gardener
+          - _prod
+          - _tpm2
+          - _trustedboot
+          - _fips
+        arch: arm64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
   - name: azure
     category: public-cloud
     flavors:
