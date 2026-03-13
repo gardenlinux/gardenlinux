@@ -86,6 +86,16 @@ targets:
           - gardener
           - _prod
           - _trustedboot
+          - _fips
+        arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: false
+      - features:
+          - gardener
+          - _prod
+          - _trustedboot
         arch: arm64
         build: true
         test: true
