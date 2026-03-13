@@ -116,11 +116,7 @@ jobs:
       actions: write  # TODO: 3215 elevated permissions for included workflow
       id-token: write # TODO: 3215 elevated permissions for included workflow
       packages: write # TODO: 3215 elevated permissions for included workflow
-    secrets:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      KMS_SIGNING_IAM_ROLE: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
-      AWS_OIDC_SESSION: ${{ secrets.AWS_OIDC_SESSION }}
-      OCI_KMS_ARN: ${{ secrets.OCI_KMS_ARN }}
+    secrets: inherit
   publish_s3:
     needs: upload_workflow_data
     name: Publish nightly to S3
@@ -130,12 +126,4 @@ jobs:
     permissions:
       actions: write  # TODO: 3215 elevated permissions for included workflow
       id-token: write # TODO: 3215 elevated permissions for included workflow
-    secrets:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_IAM_ROLE: ${{ secrets.AWS_IAM_ROLE }}
-      AWS_OIDC_SESSION: ${{ secrets.AWS_OIDC_SESSION }}
-      AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-      AWS_CN_REGION: ${{ secrets.AWS_CN_REGION }}
-      AWS_CN_IAM_ROLE: ${{ secrets.AWS_CN_IAM_ROLE }}
-      AWS_CN_OIDC_SESSION: ${{ secrets.AWS_CN_OIDC_SESSION }}
-      AWS_CN_S3_BUCKET: ${{ secrets.AWS_CN_S3_BUCKET }}
+    secrets: inherit
