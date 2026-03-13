@@ -62,13 +62,9 @@ jobs:
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
           role-duration-seconds: 14400 # 4 hours
-      - name: Set flavor version reference
-        run: |
-          echo "${{ inputs.commit_id }}" | tee COMMIT
-          echo "${{ inputs.version }}" | tee VERSION
       - name: Set CNAME
         run: |
-          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} --release-file "${{ matrix.flavor }}-${{ matrix.arch }}-*.release" cname)" | tee -a "$GITHUB_ENV"
+          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}

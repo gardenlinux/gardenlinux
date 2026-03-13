@@ -113,11 +113,11 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - name: Set CNAMEs
         run: |
-          echo "CNAME_AMD64=$(gl-features-parse --cname ${{ matrix.flavor }}-amd64 --release-file "${{ matrix.flavor }}-amd64-*.release" cname)" | tee -a "$GITHUB_ENV"
-          echo "CNAME_ARM64=$(gl-features-parse --cname ${{ matrix.flavor }}-arm64 --release-file "${{ matrix.flavor }}-arm64-*.release" cname)" | tee -a "$GITHUB_ENV"
+          echo "CNAME_AMD64=$(gl-features-parse --cname ${{ matrix.flavor }} --arch amd64 --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
+          echo "CNAME_ARM64=$(gl-features-parse --cname ${{ matrix.flavor }} --arch arm64 --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
       - name: Publish container images
         run: |
-          if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
+          if [ "${{ inputs.target }}" = "nightly" ]; then
             is_nightly=true
           else
             is_nightly=false
@@ -195,7 +195,7 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - name: Publish bare flavor image ${{ matrix.config }}
         run: |
-          if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
+          if [ "${{ inputs.target }}" = "nightly" ]; then
             is_nightly=true
           else
             is_nightly=false
@@ -285,7 +285,7 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - name: Set CNAME
         run: |
-          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} --release-file "${{ matrix.flavor }}-${{ matrix.arch }}-*.release" cname)" | tee -a "$GITHUB_ENV"
+          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
       - name: Push using the glcli util
         env:
           GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -347,7 +347,7 @@ jobs:
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
       - name: Set CNAME
         run: |
-          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} --release-file "${{ matrix.flavor }}-${{ matrix.arch }}-*.release" cname)" | tee -a "$GITHUB_ENV"
+          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
       - name: Update index using glcli tool
         env:
           GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -393,7 +393,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
+          if [ "${{ inputs.target }}" = "nightly" ]; then
             is_nightly=true
           else
             is_nightly=false
