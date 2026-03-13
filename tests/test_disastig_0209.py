@@ -99,7 +99,7 @@ def test_setreuid_event_logged(shell: ShellRunner, audit_test_user: str):
     Ref: SRG-OS-000465-GPOS-00209
     """
 
-    shell(cmd=f"su - {audit_test_user} -c true")
+    shell(cmd=f"su - {TEST_USER} -c true")
 
     shell(cmd="sleep 1")
 
