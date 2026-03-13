@@ -40,7 +40,7 @@ jobs:
           bare_flavor="${flavor//bare-/}"
 
           ./build_bare_flavors "${bare_flavor}"
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
         with:
           name: ${{ inputs.prefix }}build-${{ inputs.bare_flavor }}-${{ inputs.arch }}
           path: .build/bare_flavors/*.oci

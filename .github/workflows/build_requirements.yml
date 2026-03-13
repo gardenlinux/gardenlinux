@@ -116,7 +116,7 @@ jobs:
           for f in secureboot.{{pk,null.pk,kek,db}.{crt,der,auth},db.arn,aws-efivars} oci-sign.crt; do
             ln -sr "cert/gardenlinux-${{ inputs.target }}-$f" "cert/$f"
           done
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
         with:
           name: ${{ inputs.prefix }}certs
           path: cert/*.*
