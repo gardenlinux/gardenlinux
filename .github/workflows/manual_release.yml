@@ -142,7 +142,7 @@ jobs:
     name: Publish release to ghcr.io
     uses: ./.github/workflows/publish.yml
     with:
-      run_id: ${{ inputs.run_id }}
+      run_id: ${{ github.run_id }}
     permissions:
       actions: write  # TODO: 3215 elevated permissions for included workflow
       id-token: write # TODO: 3215 elevated permissions for included workflow
@@ -153,7 +153,7 @@ jobs:
     name: Publish release to S3
     uses: ./.github/workflows/publish_s3.yml
     with:
-      run_id: ${{ inputs.run_id }}
+      run_id: ${{ github.run_id }}
     permissions:
       actions: write  # TODO: 3215 elevated permissions for included workflow
       id-token: write # TODO: 3215 elevated permissions for included workflow
