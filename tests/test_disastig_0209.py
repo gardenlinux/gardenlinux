@@ -1,3 +1,5 @@
+import time
+
 import pytest
 from plugins.file import File
 from plugins.parse_file import Parse, ParseFile
@@ -76,11 +78,8 @@ def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
         output.returncode == 0
     ), f"stigcompliance: unable to list audit rules: {output.stderr}"
 
-    parser = parse.from_str(output.stdout, label="auditctl -l output")
-    lines = parser.lines()
-
     assert (
-        "setreuid" in lines
+        "setreuid" in output.stdout
     ), "stigcompliance: setreuid audit rule not loaded in kernel"
 
 
@@ -99,12 +98,12 @@ def test_setreuid_event_logged(shell: ShellRunner, audit_test_user: str):
     Ref: SRG-OS-000465-GPOS-00209
     """
 
-    shell(cmd=f"su - {TEST_USER} -c true")
+    shell(cmd=f"su - {TEST_USER} -c 'id'")
 
-    shell(cmd="sleep 1")
+    time.sleep(1)
 
     result = shell(
-        cmd="ausearch -sc setreuid -ts today",
+        cmd="ausearch -sc setreuid -ts recent",
         capture_output=True,
     )
 
