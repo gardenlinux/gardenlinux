@@ -1,12 +1,36 @@
 import re
 
 import pytest
-
 from plugins.file import File
 from plugins.parse_file import Parse, ParseFile
 from plugins.shell import ShellRunner
 
 PRIV_ESC_RULE_FILE = "/etc/audit/rules.d/70-privilege-escalation.rules"
+TEST_USER = "audit_test_user"
+
+
+@pytest.fixture
+def audit_test_user(shell: ShellRunner, parse_file: ParseFile):
+    """
+    As per DISA STIG requirement, the operating system must generate audit
+    records when successful or unsuccessful attempts to modify categories
+    of information occur (e.g., privilege changes such as setreuid).
+    This test verifies that the audit subsystem is capable of searching
+    for events associated with the configured audit key for privilege
+    escalation.
+    Ref: SRG-OS-000465-GPOS-00209
+    """
+    passwd_lines = parse_file.lines("/etc/passwd")
+    user_pattern = re.compile(rf"^{TEST_USER}:")
+
+    if user_pattern not in passwd_lines:
+        shell(cmd=f"useradd {TEST_USER}")
+
+    yield TEST_USER
+
+    passwd_lines = parse_file.lines("/etc/passwd", ignore_missing=True)
+    if user_pattern in passwd_lines:
+        shell(cmd=f"userdel -r {TEST_USER}", ignore_exit_code=True)
 
 
 @pytest.mark.feature("not container")
@@ -22,8 +46,6 @@ def test_setreuid_rule_file_exists(file: File):
     escalation.
     Ref: SRG-OS-000465-GPOS-00209
     """
-
-    # assert file.exists(path), f"stigcompliance: '{path}' audit rule file does not exist"
     assert file.exists(PRIV_ESC_RULE_FILE), f"'{PRIV_ESC_RULE_FILE}' does not exist"
 
 
@@ -76,7 +98,7 @@ def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
 @pytest.mark.modify(reason="creates temporary user and modifies system state")
-def test_setreuid_event_logged(shell: ShellRunner, parse_file: ParseFile):
+def test_setreuid_event_logged(shell: ShellRunner, audit_test_user: str):
     """
     As per DISA STIG requirement, the operating system must generate audit
     records when successful or unsuccessful attempts to modify categories
@@ -87,23 +109,13 @@ def test_setreuid_event_logged(shell: ShellRunner, parse_file: ParseFile):
     Ref: SRG-OS-000465-GPOS-00209
     """
 
-    TEST_USER = "audit_test_user"
+    shell(cmd=f"su - {audit_test_user} -c true")
 
-    passwd_lines = parse_file.lines("/etc/passwd")
-    user_pattern = re.compile(rf"^{TEST_USER}:")
-
-    if user_pattern not in passwd_lines:
-        shell(cmd=f"useradd {TEST_USER}")
-
-    shell(cmd=f"su - {TEST_USER} -c 'id'")
+    shell(cmd="sleep 1")
 
     result = shell(
-        cmd="ausearch -sc setreuid -ts recent",
+        cmd="ausearch -sc setreuid -ts today",
         capture_output=True,
     )
 
     assert result.stdout.strip(), "stigcompliance: setreuid audit event not detected"
-
-    shell(cmd=f"pkill -9 -u {TEST_USER}")
-
-    shell(cmd=f"userdel -r {TEST_USER}")
