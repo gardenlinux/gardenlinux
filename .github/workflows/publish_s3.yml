@@ -13,6 +13,7 @@ on:
   workflow_call:
     inputs:
       run_id:
+        # type: number is not supported (2026/03)
         type: number
         required: true
 env:
