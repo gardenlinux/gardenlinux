@@ -18,6 +18,10 @@ on:
         options:
           - release
           - nightly
+      publish:
+        description: "True to publish build results"
+        type: boolean
+        default: true
       flavors_parse_params_test:
         description: "Run bin/flavors_parse.py with these parameters"
         default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
@@ -139,8 +143,9 @@ jobs:
           if-no-files-found: error
   publish_ghcr:
     needs: upload_workflow_data
+    if: ${{ inputs.publish }}
     name: Publish release to ghcr.io
-    uses: ./.github/workflows/publish.yml
+    uses: gardenlinux/gardenlinux/.github/workflows/publish.yml@main
     with:
       run_id: ${{ github.run_id }}
     permissions:
@@ -150,8 +155,9 @@ jobs:
     secrets: inherit
   publish_s3:
     needs: upload_workflow_data
+    if: ${{ inputs.publish }}
     name: Publish release to S3
-    uses: ./.github/workflows/publish_s3.yml
+    uses: gardenlinux/gardenlinux/.github/workflows/publish.yml@main
     with:
       run_id: ${{ github.run_id }}
     permissions:
