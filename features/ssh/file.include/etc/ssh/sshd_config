@@ -56,3 +56,5 @@ AuthenticationMethods publickey
 
 HostKey /etc/ssh/ssh_host_ed25519_key
 HostKey /etc/ssh/ssh_host_rsa_key
+
+Include /etc/ssh/sshd_config.d/*.conf
