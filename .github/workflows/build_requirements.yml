@@ -59,8 +59,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
-      - name: Prepare build reference from GitHub
-        if: ${{ inputs.version == '' || ! inputs.use_glrd }}
+      - if: ${{ inputs.version == '' || ! inputs.use_glrd }}
+        name: Prepare build reference from GitHub
         id: prepare_github_reference
         run: |
           version="${{ inputs.version }}"
@@ -70,8 +70,8 @@ jobs:
 
           echo "COMMIT_ID=$(git rev-parse HEAD)" | tee -a "$GITHUB_ENV"
           echo "VERSION=$(./bin/garden-version "$version")" | tee -a "$GITHUB_ENV"
-      - name: Prepare build reference from GLRD
-        if: ${{ steps.prepare_github_reference.conclusion == 'skipped' }}
+      - if: ${{ steps.prepare_github_reference.conclusion == 'skipped' }}
+        name: Prepare build reference from GLRD
         run: |
           version=$(./bin/garden-version "${{ inputs.version }}")
 
@@ -81,11 +81,12 @@ jobs:
             glrd_data="$(./bin/glrd --type major,minor,nightly,dev --output-format=json --version ${{ inputs.version }})"
           fi
 
-          commit_id=$(echo $glrd_data | jq -r '.releases[0].git.commit')
-          version=$(echo $glrd_data | jq -r '(.releases[0].version.major | tostring) + "." + (.releases[0].version.minor | tostring)')
+          glrd_release=$(echo $glrd_data | jq -r 'first(.releases[] | select(.git != null))')
+          commit_id=$(echo $glrd_release | jq -r '.git.commit')
+          version=$(echo $glrd_release | jq -r '(.version.major | tostring) + "." + (.version.minor | tostring)')
 
-          echo "COMMIT_ID=$commit_id" | tee -a "$GITHUB_ENV"
-          echo "VERSION=$version" | tee -a "$GITHUB_ENV"
+          echo "COMMIT_ID=${commit_id}" | tee -a "$GITHUB_ENV"
+          echo "VERSION=${version}" | tee -a "$GITHUB_ENV"
       - name: Set build reference
         id: version_reference
         run: |
