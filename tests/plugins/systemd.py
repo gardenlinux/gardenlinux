@@ -193,6 +193,15 @@ class Systemd:
         elapsed = time.time() - start_time
         return SystemRunningState(result.stdout.strip(), result.returncode, elapsed)
 
+    def get_unit_config_params(self, service_name, *args) -> dict:
+        result = self._shell(
+            cmd=f"systemctl show -p {','.join(args)} {service_name}.service",
+            capture_output=True,
+        )
+        return {
+            k: v for kv in result.stdout.strip().split("\n") for k, v in [kv.split("=")]
+        }
+
 
 @pytest.fixture
 def systemd(shell: ShellRunner):
