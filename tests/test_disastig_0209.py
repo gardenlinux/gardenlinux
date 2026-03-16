@@ -107,4 +107,6 @@ def test_setreuid_event_logged(shell: ShellRunner, audit_test_user: str):
         capture_output=True,
     )
 
-    assert result.stdout.strip(), "stigcompliance: setreuid audit event not detected"
+    assert (
+        "privilege_escalation" in result.stdout
+    ), "stigcompliance: setreuid audit event not detected"
