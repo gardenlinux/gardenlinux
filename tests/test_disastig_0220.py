@@ -1,5 +1,11 @@
 import pytest
 
+"""
+Ref: SRG-OS-000475-GPOS-00220
+
+Verify the operating system generates audit records for all direct access to the information system.
+"""
+
 
 def test_journald_should_not_store_logs_in_memory(parse_file):
     """
