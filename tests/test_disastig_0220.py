@@ -7,6 +7,7 @@ Verify the operating system generates audit records for all direct access to the
 """
 
 
+@pytest.mark.booted(reason="requires running systemd")
 def test_journald_should_not_store_logs_in_memory(parse_file):
     """
     Confirm that journald is not configured to store logs in memory
@@ -16,6 +17,7 @@ def test_journald_should_not_store_logs_in_memory(parse_file):
         assert config["Journal"]["Storage"] != "volatile"
 
 
+@pytest.mark.feature("ssh")
 def test_sshd_log_level_is_set_to_verbose(parse_file):
     """
     Confirm sshd log level is not manipulated
