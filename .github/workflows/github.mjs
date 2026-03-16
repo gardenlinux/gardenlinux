@@ -74,7 +74,7 @@ export function getGitHubSigningEnvironmentFromTarget(target) {
 }
 
 export function getTestEnvironmentsEnabled(commaSeparatedTestsRequested) {
-    const knownTests = ["chroot", "cloud", "oci", "qemu", "bare"];
+    const knownTests = ["chroot", "cloud", "cloud-plan", "oci", "qemu", "bare"];
     const testsRequested = commaSeparatedTestsRequested.split(",");
     let tests = [];
 
