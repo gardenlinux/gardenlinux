@@ -24,6 +24,7 @@ def test_sshd_log_level_is_set_to_verbose(parse_file):
     assert config["LogLevel"] == "VERBOSE"
 
 
+@pytest.mark.booted(reason="requires running systemd")
 def test_sshd_unit_is_journald_friendly(systemd):
     """
     The sshd.service unit must forward stdout/stderr to the journal.
