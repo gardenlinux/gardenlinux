@@ -5,11 +5,15 @@ from pathlib import Path
 
 import pytest
 
+from plugins.dpkg import Dpkg
+
 logger = logging.getLogger(__name__)
 
 
 class AuditRule:
     def __init__(self):
+        if not Dpkg().package_is_installed("auditd"):
+            raise RuntimeError("auditd is not installed")
         try:
             result = subprocess.run(
                 ["auditctl", "-l"],
