@@ -4,7 +4,6 @@ import subprocess
 from pathlib import Path
 
 import pytest
-
 from plugins.dpkg import Dpkg
 
 logger = logging.getLogger(__name__)
