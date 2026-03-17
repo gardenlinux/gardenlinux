@@ -6,9 +6,6 @@ on:
         description: Workflow run ID
         type: number
         required: true
-  workflow_run:
-    workflows: [ 'Build and publish a release', 'nightly' ]
-    types: [ 'completed' ]
 jobs:
   workflow_data:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.conclusion == 'success' }}
@@ -23,7 +20,7 @@ jobs:
     permissions:
       id-token: write
       packages: write
-      actions: write    
+      actions: write
     # @TODO: Replace with safe OCI manifast handling variant
     #strategy:
     #  fail-fast: false
@@ -50,7 +47,7 @@ jobs:
       run_id: ${{ needs.workflow_data.outputs.run_id }}
       version: ${{ needs.workflow_data.outputs.version }}
     permissions:
-      packages: write      
+      packages: write
   publish_retry:
     needs: [ publish_oci_containers, publish_kmodbuild_container ]
     if: ${{ failure() && ( needs.publish_oci_containers.result == 'failure' || needs.publish_kmodbuild_container.result == 'failure' ) }}
@@ -59,7 +56,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Retry failed publishing
         uses: actions/github-script@v7
         with:

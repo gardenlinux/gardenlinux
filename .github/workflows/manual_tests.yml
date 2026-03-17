@@ -24,11 +24,11 @@ on:
         description: 'Tag to run platform-test containers. "latest" or GL version. Tag must be available in `ghcr.io/gardenlinux/gardenlinux/platform-test-*`'
         type: string
         default: latest
-      flavors_parse_params:
+      flavors_parse_params_test:
         description: 'Run bin/flavors_parse.py with these parameters'
         default: '--no-arch --json-by-arch --publish --test-platform'
         type: string
-      bare_flavors_parse_params:
+      flavors_parse_params_test_bare:
         description: 'Run bin/parse_flavors.py with these parameters for bare flavors'
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
@@ -47,9 +47,9 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ inputs.version }}
-      flavors_parse_params: ${{ inputs.flavors_parse_params }}
+      flavors_parse_params_test: ${{ inputs.flavors_parse_params_test }}
       platform_test_tag: ${{ inputs.platform_test_tag }}
-      bare_flavors_parse_params: ${{ inputs.bare_flavors_parse_params }}
+      flavors_parse_params_test_bare: ${{ inputs.flavors_parse_params_test_bare }}
     permissions:
       actions: write
       id-token: write
@@ -68,7 +68,7 @@ jobs:
     permissions:
       id-token: write
       actions: write
-      checks: write # for test-ng      
+      checks: write # for test-ng
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -109,7 +109,7 @@ jobs:
       - name: Prepare flavor version reference
         run: |
           jq -r -n '{ "commit_id": "${{ needs.download_build_requirements.outputs.commit_id }}", "version": "${{ needs.download_build_requirements.outputs.version }}" }' '.' > flavor_version_data.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
         with:
           name: flavor-version-data
           path: flavor_version_data.json
@@ -117,7 +117,7 @@ jobs:
   test_distribution_build:
     needs: download_build_requirements
     name: Build and cache test distribution
-    uses: ./.github/workflows/build_tests.yml
+    uses: ./.github/workflows/build_tests_ng.yml
     with:
       commit_id: ${{ needs.download_build_requirements.outputs.commit_id }}
       version: ${{ needs.download_build_requirements.outputs.version }}
@@ -142,7 +142,7 @@ jobs:
       aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
       aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
       aws_region: ${{ secrets.AWS_TESTS_REGION }}
-      aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}          
+      aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
   test_download_platform_test:
     needs:
       [
@@ -155,6 +155,7 @@ jobs:
     uses: ./.github/workflows/tests.yml
     with:
       flavors_matrix: ${{ needs.download_test_flavors_matrix.outputs.matrix }}
+      version: ${{ inputs.version }}
       test_types: ${{ inputs.test_types }}
       bare_flavors_matrix: '{"include":[]}'
     permissions:
