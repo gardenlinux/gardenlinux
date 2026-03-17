@@ -69,7 +69,7 @@ def test_common_password_passwdqc_pam_faillock(pam_config):
         control_contains="required",
         module_contains="pam_passwdqc.so",
         arg_contains=[
-            "min=disabled,disabled,12,8,8",
+            "min=disabled,disabled,15,15,8",
             "passphrase=4",
             "similar=deny",
             "retry=5",
