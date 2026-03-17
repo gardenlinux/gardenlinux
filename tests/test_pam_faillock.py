@@ -18,11 +18,11 @@ def test_common_auth_pam_faillock(pam_config):
         type_="auth",
         control_contains="required",
         module_contains="pam_faillock.so",
-        arg_contains=["preauth", "silent", "audit", "deny=5", "unlock_time=900"],
+        arg_contains=["preauth", "silent", "audit", "deny=3", "unlock_time=900"],
     )
     assert (
         len(results) == 1
-    ), "Logins should be blocked for 900 seconds after 5 failed attempts (preauth check configured)"
+    ), "Logins should be blocked for 15 minutes after 3 failed attempts (preauth check configured)"
 
     pam_config.find_entries(
         type_="auth",
