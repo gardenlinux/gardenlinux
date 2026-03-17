@@ -157,7 +157,7 @@ jobs:
     needs: upload_workflow_data
     if: ${{ inputs.publish }}
     name: Publish release to S3
-    uses: gardenlinux/gardenlinux/.github/workflows/publish.yml@main
+    uses: gardenlinux/gardenlinux/.github/workflows/publish_s3.yml@main
     with:
       run_id: ${{ github.run_id }}
     permissions:
