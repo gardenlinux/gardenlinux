@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from plugins.file import File
 from plugins.parse_file import Parse, ParseFile
@@ -81,7 +83,17 @@ def test_setreuid_event_logged(shell: ShellRunner):
     escalation.
     Ref: SRG-OS-000465-GPOS-00209
     """
-    shell(cmd="python3 -c 'import os; os.setreuid(123456,123456)'")
+    pid = os.fork()
+
+    if pid == 0:
+        try:
+            os.setreuid(123456, 123456)
+        except Exception:
+            pass
+        finally:
+            os._exit(0)
+    else:
+        os.waitpid(pid, 0)
 
     result = shell(
         cmd="ausearch -k privilege_escalation -ts recent",
