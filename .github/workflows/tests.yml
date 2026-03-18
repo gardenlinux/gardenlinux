@@ -170,7 +170,7 @@ jobs:
               if (isEnabled) {
                 core.setOutput(t.outMatrix, matrix);
               } else {
-                core.setOutput(t.outMatrix, SKIP_MATRIX);
+                core.setOutput(t.outMatrix, skipFlavorMatrix);
               }
             }
   ## test-ng start

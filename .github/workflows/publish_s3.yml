@@ -13,7 +13,8 @@ on:
   workflow_call:
     inputs:
       run_id:
-        type: number
+        # type: number is not supported (2026/03)
+        type: string
         required: true
 env:
   GL_COMPATIBILITY_FLAGS: ${{ inputs.compatibility_flags }}

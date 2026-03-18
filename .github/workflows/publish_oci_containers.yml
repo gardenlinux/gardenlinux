@@ -90,8 +90,7 @@ jobs:
           - flavor: "container-pythonDev"
             subpath: "/container-python-dev"
     steps:
-      - if: ${{ contains(inputs.compatibility_flags, 'full_checkout') }}
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ inputs.commit_id }}
           submodules: true
@@ -113,11 +112,11 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - name: Set CNAMEs
         run: |
-          echo "CNAME_AMD64=$(gl-features-parse --cname ${{ matrix.flavor }}-amd64 --release-file "${{ matrix.flavor }}-amd64-*.release" cname)" | tee -a "$GITHUB_ENV"
-          echo "CNAME_ARM64=$(gl-features-parse --cname ${{ matrix.flavor }}-arm64 --release-file "${{ matrix.flavor }}-arm64-*.release" cname)" | tee -a "$GITHUB_ENV"
+          echo "CNAME_AMD64=$(gl-features-parse --cname ${{ matrix.flavor }} --arch amd64 --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
+          echo "CNAME_ARM64=$(gl-features-parse --cname ${{ matrix.flavor }} --arch arm64 --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
       - name: Publish container images
         run: |
-          if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
+          if [ "${{ inputs.target }}" = "nightly" ]; then
             is_nightly=true
           else
             is_nightly=false
@@ -195,7 +194,7 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - name: Publish bare flavor image ${{ matrix.config }}
         run: |
-          if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
+          if [ "${{ inputs.target }}" = "nightly" ]; then
             is_nightly=true
           else
             is_nightly=false
@@ -262,8 +261,7 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 8
     steps:
-      - if: ${{ contains(inputs.compatibility_flags, 'full_checkout') }}
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ inputs.commit_id }}
           submodules: true
@@ -285,8 +283,8 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - name: Set CNAME
         run: |
-          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} --release-file "${{ matrix.flavor }}-${{ matrix.arch }}-*.release" cname)" | tee -a "$GITHUB_ENV"
-      - name: Push using the glcli util
+          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
+      - name: Push using the gl-oci util
         env:
           GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
@@ -334,20 +332,19 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 1
     steps:
-      - if: ${{ contains(inputs.compatibility_flags, 'full_checkout') }}
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ inputs.commit_id }}
           submodules: true
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@e68236134acc7416606052599f4cfab7b9ea3b7c # pin@0.10.14
+      - name: Set CNAME
+        run: |
+          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
       - uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
-      - name: Set CNAME
-        run: |
-          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} --release-file "${{ matrix.flavor }}-${{ matrix.arch }}-*.release" cname)" | tee -a "$GITHUB_ENV"
       - name: Update index using glcli tool
         env:
           GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -393,7 +390,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
+          if [ "${{ inputs.target }}" = "nightly" ]; then
             is_nightly=true
           else
             is_nightly=false
