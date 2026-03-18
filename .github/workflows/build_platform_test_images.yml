@@ -282,11 +282,12 @@ jobs:
             glrd_data="$(./bin/glrd --type stable,patch,nightly,dev --output-format=json --version ${{ inputs.platform_test_tag }})"
           fi
 
-          COMMIT_ID="$(echo $glrd_data | jq -r '.releases[0].git.commit_short')"
-          VERSION="$(echo $glrd_data | jq -r '(.releases[0].version.major | tostring) + "." + (.releases[0].version.minor | tostring)')"
+          glrd_release=$(echo $glrd_data | jq -r 'first(.releases[] | select(.git != null))')
+          commit_id=$(echo $glrd_release | jq -r '.git.commit_short')
+          version=$(echo $glrd_release | jq -r '(.version.major | tostring) + "." + (.version.minor | tostring)')
 
-          echo "commit_id=$COMMIT_ID" | tee -a "$GITHUB_OUTPUT"
-          echo "version=$VERSION" | tee -a "$GITHUB_OUTPUT"
+          echo "commit_id=${commit_id}" | tee -a "$GITHUB_OUTPUT"
+          echo "version=${version}" | tee -a "$GITHUB_OUTPUT"
   pull_images:
     name: Provide platform-test image
     needs: [ generate_matrix, pull_images_version ]

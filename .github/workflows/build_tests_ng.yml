@@ -66,7 +66,7 @@ jobs:
           set -euo pipefail
           arch="${{ matrix.arch }}"
           echo "Building tests for arch=$arch"
-          repo="ghcr.io/${{ github.repository_owner }}/test-ng"
+          repo="ghcr.io/${{ github.repository_owner }}/test"
           version="$(cat VERSION)"
 
           podman build --arch ${arch} --build-context dist_ctx=.build -t ${repo}:${arch}-${version} tests-ng/util/container
