@@ -120,7 +120,7 @@ jobs:
           submodules: true
       - name: Set build reference
         run: |
-          version="$(./bin/garden-version "$version")"
+          version="$(./bin/garden-version "${{ inputs.version }}")"
           echo "$version" | tee VERSION
           echo "GL_VERSION=$version" >> ${GITHUB_ENV}
       - name: Build base image (${{ matrix.arch }})
@@ -155,7 +155,7 @@ jobs:
           submodules: true
       - name: Set build reference
         run: |
-          version="$(./bin/garden-version "$version")"
+          version="$(./bin/garden-version "${{ inputs.version }}")"
           echo "$version" | tee VERSION
           echo "GL_VERSION=$version" >> ${GITHUB_ENV}
       - name: Load base image (${{ matrix.arch }})
