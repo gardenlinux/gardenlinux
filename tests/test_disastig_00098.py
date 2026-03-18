@@ -1,4 +1,3 @@
-import stat
 from pathlib import Path
 
 import pytest
@@ -26,10 +25,15 @@ def test_audit_log_directory_protected(file):
         AUDIT_LOG_DIR, "root"
     ), f"stigcompliance: {AUDIT_LOG_DIR} must be owned by root"
 
-    mode = int(file.get_mode(AUDIT_LOG_DIR), 8)
+    allowed_modes = [
+        "rwx------",
+        "rwxr-x---",
+        "rwxr-----",
+        "rwx--x---",
+    ]
 
-    assert not (mode & stat.S_IWGRP or mode & stat.S_IWOTH), (
-        f"stigcompliance: {AUDIT_LOG_DIR} is group/world writable "
+    assert any(file.has_permissions(AUDIT_LOG_DIR, mode) for mode in allowed_modes), (
+        f"stigcompliance: {AUDIT_LOG_DIR} has insecure permissions "
         f"(mode {file.get_mode(AUDIT_LOG_DIR)})"
     )
 
@@ -51,6 +55,11 @@ def test_audit_log_files_protected(file):
     if not file.exists(AUDIT_LOG_DIR):
         pytest.skip(f"{AUDIT_LOG_DIR} does not exist")
 
+    allowed_modes = [
+        "rw-------",
+        "rw-r-----",
+    ]
+
     violations = []
 
     for path in Path(AUDIT_LOG_DIR).glob("*"):
@@ -59,10 +68,9 @@ def test_audit_log_files_protected(file):
 
         owner_ok = file.is_owned_by_user(path, "root")
 
-        mode = int(file.get_mode(path), 8)
-        writable = mode & stat.S_IWGRP or mode & stat.S_IWOTH
+        perms_ok = any(file.has_permissions(path, mode) for mode in allowed_modes)
 
-        if not owner_ok or writable:
+        if not owner_ok or not perms_ok:
             violations.append(
                 f"{path.name} (owner={file.get_user(path)}, mode={file.get_mode(path)})"
             )
