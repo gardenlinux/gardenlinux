@@ -64,6 +64,9 @@ def test_common_account_pam_faillock(pam_config):
 )
 @pytest.mark.feature("server")
 def test_common_password_passwdqc_pam_faillock(pam_config):
+    """
+    Requirement of SRG-OS-000078-GPOS-00046
+    """
     results = pam_config.find_entries(
         type_="password",
         control_contains="required",
