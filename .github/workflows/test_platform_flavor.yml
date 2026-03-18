@@ -11,12 +11,6 @@ on:
       version:
         type: string
         required: true
-      chroot_test:
-        type: boolean
-        default: true
-      platform_test:
-        type: boolean
-        default: false
     secrets:
       gcp_identity_provider:
         required: true

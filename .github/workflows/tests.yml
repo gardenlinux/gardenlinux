@@ -11,14 +11,6 @@ on:
         description: "Generated GitHub workflow flavors matrix"
         type: string
         required: true
-      chroot_test:
-        description: 'Execute chrooted tests'
-        type: boolean
-        default: true
-      platform_test:
-        description: 'Execute platform tests'
-        type: boolean
-        default: false
       test_types:
         description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,oci,bare)"
         type: string
@@ -27,10 +19,6 @@ on:
         description: 'Generated GitHub workflow flavors matrix for bare flavors'
         type: string
         default: '{"include":[]}'
-      bare_flavors_test:
-        description: 'Execute bare flavors container tests'
-        type: boolean
-        default: true
     secrets:
       gcp_identity_provider:
         required: false

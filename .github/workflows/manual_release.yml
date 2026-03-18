@@ -78,7 +78,6 @@ jobs:
     with:
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
       version: ${{ needs.build.outputs.version }}
-      platform_test: true
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
       test_types: ${{ inputs.test_types }}
     permissions:
