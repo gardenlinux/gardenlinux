@@ -79,6 +79,9 @@ def test_audit_rules_for_logging_attempts_to_modify_apparmor_policies(audit_rule
 
 @pytest.mark.feature("not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
+@pytest.mark.modify(
+    reason="changing /etc/sudoers file to check if audit works on a running system"
+)
 @pytest.mark.root(reason="required to query audit logs")
 def test_attempt_to_delete_privileges_event_logged(audit_rule, shell, sudoers_edit):
     """
