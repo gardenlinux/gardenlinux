@@ -40,6 +40,10 @@ on:
         description: 'Execute platform tests'
         type: boolean
         default: true
+      test_types:
+        description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,oci,bare). Note: bare tests only work when build=true"
+        type: string
+        default: "chroot,qemu,cloud,oci"
 jobs:
   build:
     name: Build
@@ -65,6 +69,7 @@ jobs:
       chroot_test: ${{ inputs.chroot_test }}
       platform_test: ${{ inputs.platform_test }}
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
+      test_types: ${{ inputs.test_types }}
     permissions:
       id-token: write
       actions: write
