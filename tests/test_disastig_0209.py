@@ -1,4 +1,3 @@
-
 import pytest
 from plugins.file import File
 from plugins.parse_file import Parse, ParseFile
@@ -7,7 +6,7 @@ from plugins.shell import ShellRunner
 PRIV_ESC_RULE_FILE = "/etc/audit/rules.d/70-privilege-escalation.rules"
 
 
-@pytest.mark.feature("not container")
+@pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to inspect audit config")
 def test_setreuid_rule_file_exists(file: File):
@@ -25,7 +24,7 @@ def test_setreuid_rule_file_exists(file: File):
     ), f"stigcompliance: {PRIV_ESC_RULE_FILE} does not exist"
 
 
-@pytest.mark.feature("not container")
+@pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to inspect audit config")
 def test_setreuid_rule_contains_syscall(parse_file: ParseFile):
@@ -45,7 +44,7 @@ def test_setreuid_rule_contains_syscall(parse_file: ParseFile):
     ), "stigcompliance: setreuid audit rule not configured"
 
 
-@pytest.mark.feature("not container")
+@pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit rules")
 def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
@@ -69,7 +68,7 @@ def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
     ), "stigcompliance: setreuid audit rule not loaded in kernel"
 
 
-@pytest.mark.feature("not container")
+@pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit event validation requires audit subsystem")
 @pytest.mark.root(reason="required to trigger syscall and read audit logs")
 def test_setreuid_event_logged(shell: ShellRunner):
