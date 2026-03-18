@@ -92,10 +92,6 @@ def test_setreuid_event_logged(shell: ShellRunner):
         capture_output=True,
     )
 
-    assert result.stdout.strip() != "", (
-        "stigcompliance: no audit events captured"
-    )
+    assert result.stdout.strip() != "", "stigcompliance: no audit events captured"
 
-    assert "SYSCALL" in result.stdout, (
-        "stigcompliance: no syscall audit event detected"
-    )
+    assert "SYSCALL" in result.stdout, "stigcompliance: no syscall audit event detected"
