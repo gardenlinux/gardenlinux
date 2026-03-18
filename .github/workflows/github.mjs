@@ -117,5 +117,5 @@ export function getTestEnvironmentsEnabled(commaSeparatedTestsRequested) {
 
 // backported for testng
 export function isMatrixEmpty(matrix) {
-    return (matrix == "" || matrix == `{"include":[]}`);
+    return (!Object.keys(matrix).includes('include') || matrix['include'].length < 1);
 }

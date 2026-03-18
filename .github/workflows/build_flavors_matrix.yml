@@ -7,6 +7,9 @@ on:
         required: true
       flavors_matrix:
         type: string
+      ref:
+        type: string
+        default: ${{ github.ref }}
     outputs:
       matrix:
         description: 'Flavors matrix'
@@ -21,15 +24,21 @@ jobs:
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          submodules: true
+          ref: ${{ inputs.ref }}
+          sparse-checkout: |
+            flavors.yaml
+          sparse-checkout-cone-mode: false
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
       - id: matrix
+        name: Generate flavors matrix
         run: |
           MATRIX='${{ inputs.flavors_matrix }}'
 
           if [[ $(echo "${MATRIX}" | jq -r 'type') != 'object' ]]; then
-            FLAVORS=$(./bin/flavors_parse.py ${{ inputs.flags }})
+            FLAVORS=$(gl-flavors-parse ${{ inputs.flags }})
             MATRIX=$(jq -nc \
               --argjson flavors "$(echo $FLAVORS)" \
               '{
