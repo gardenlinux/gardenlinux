@@ -1,4 +1,3 @@
-import time
 
 import pytest
 from plugins.file import File
@@ -85,10 +84,8 @@ def test_setreuid_event_logged(shell: ShellRunner):
     """
     shell(cmd="python3 -c 'import os; os.setreuid(123456,123456)'")
 
-    time.sleep(1)
-
     result = shell(
-        cmd="ausearch -k privilege_escalation -ts recent || true",
+        cmd="ausearch -k privilege_escalation -ts recent",
         capture_output=True,
     )
 
