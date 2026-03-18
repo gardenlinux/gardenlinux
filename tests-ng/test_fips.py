@@ -130,6 +130,15 @@ def test_that_openssl_has_fips_provider_is_presented(file: File):
 
 
 @pytest.mark.feature("_fips")
+def test_that_openssl_configuration_file_readable_for_users(file: File):
+    """
+    To ensure that a User can use the FIPS provide, the openssl configuration file needs to readable
+    by group and world.
+    """
+    assert file.has_mode(f"/usr/lib/{arch()}-linux-gnu/ossl-modules/fips.so", "0644")
+
+
+@pytest.mark.feature("_fips")
 def test_libssl_is_in_fips_mode():
     """
     We get OSSL_LIB_CTX_get0_global_default from libssl. For this we need to set up the correct
