@@ -40,7 +40,6 @@ This directory contains the testing framework for Garden Linux images. The frame
     - [Automatic Building](#automatic-building)
     - [Test Distribution Structure](#test-distribution-structure)
   - [Test Development](#test-development)
-    - [Markers](#markers)
 
 ## Structure
 
@@ -55,9 +54,16 @@ tests/
 │   ├── login_qemu.sh       # SSH login to QEMU VM
 │   ├── login_cloud.sh      # SSH login to cloud VM
 │   └── tf/                 # Terraform configurations for cloud
-├── plugins/                # Test plugins and utilities
+├── plugins/                # Test plugins
 │   └── ...
-└── test_*.py               # Individual tests
+├── handlers/               # Test handlers
+│   └── ...
+├── integration             # Directory for all tests and their categories
+│   ├── boot                # Boot category
+│   │   └── test_*.py       # Individual tests
+│   ├── core                # Core category
+│   │   └── test_*.py       # Individual tests
+│   └── ...
 ```
 
 ## Running Tests
@@ -417,7 +423,7 @@ spec:
       image: ghcr.io/gardenlinux/test:nightly
       securityContext:
         privileged: true
-      args: [ "./run_tests", "--system-booted", "--expected-users", "gardener" ]
+      args: ["./run_tests", "--system-booted", "--expected-users", "gardener"]
 ```
 
 After this is deployed and the tests ran you can simply get the pod logs to see the test results. If you want to target a specific node to run the tests on you should also pin this pod to that node.
@@ -425,7 +431,15 @@ After this is deployed and the tests ran you can simply get the pod logs to see 
 If you want to get a JUnit XML output of the test run you can adjust the `args` as follows:
 
 ```yml
-args: [ "./run_tests", "--junit-xml", "output/test.xml", "--system-booted", "--expected-users", "gardener" ]
+args:
+  [
+    "./run_tests",
+    "--junit-xml",
+    "output/test.xml",
+    "--system-booted",
+    "--expected-users",
+    "gardener",
+  ]
 ```
 
 and bind mount a volume or similar at `/tests/tests/output`. Obviously this will work with arbitrary locations, as long as the volume is mounted below `/tests` and the `--junit-xml` path is given relative to `/tests/tests`.
@@ -475,30 +489,22 @@ The built distribution contains:
 ```
 dist/
 ├── runtime/           # Python runtime and dependencies
-│   ├── x86_64/      # x86_64 Python binaries
-│   ├── aarch64/     # aarch64 Python binaries
+│   ├── x86_64/        # x86_64 Python binaries
+│   ├── aarch64/       # aarch64 Python binaries
 │   └── site-packages/ # Python packages
-├── tests/            # Test framework and test files
-│   ├── plugins/      # Test plugins
-│   ├── test_*.py     # Individual test modules
-│   └── conftest.py   # Pytest configuration
-└── run_tests         # Test execution script
+├── tests/             # Test framework and test files
+│   ├── plugins/       # Test plugins
+│   ├── handlers/      # Test plugins
+│   ├── test_*.py      # Individual test modules
+│   └── conftest.py    # Pytest configuration
+├── integration        # Directory for all tests and their categories
+│   ├── boot           # Boot category
+│   │   └── test_*.py  # Individual tests
+│   ├── core           # Core category
+│   │   └── test_*.py  # Individual tests
+└── run_tests          # Test execution script
 ```
 
 ## Test Development
 
-### Markers
-
-Tests can be decorated with pytest markers to indicate certain limitations or properties of the test:
-
-`@pytest.mark.booted(reason="Some reason, this is optional")`: This test can only be run in a booted system, not in a chroot test. Use the optional `reason` argument to document why this is needed, in cases where this is not really obvious.
-
-`@pytest.mark.modify(reason="Some reason, this is optional")`: This test modifies the underlying system, like starting services, installing software or creating files. Use the optional `reason` argument to document why this is needed, in cases where this is not really obvious.
-
-`@pytest.mark.root(reason="Some reason, this is optional")`: This test is run as the root user, not as an unprivileged user. Use the optional `reason` argument to document why this is needed, in cases where this is not really obvious.
-
-`@pytest.mark.feature("a and not b", reason="Some reason, this is optional")`: This test is only run if the boolean condition is true. Use this to limit feature-specific tests. Use the optional `reason` argument to document why this is needed, in cases where this is not really obvious.
-
-`@pytest.mark.performance_metric`: This is a performance metric test that can be skipped when running under emulation.
-
-`@pytest.mark.security_id(42)`: Map a test to a security id. Must be an positive integer value.
+Have a look at the [developer documentation](DEVELOPER.md).
