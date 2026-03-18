@@ -1,7 +1,4 @@
 name: build_requirements
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-build-requirements
-  cancel-in-progress: true
 on:
   workflow_call:
     inputs:
@@ -33,6 +30,9 @@ jobs:
     outputs:
       environment: ${{ steps.signing_environment.outputs.environment }}
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: true
       - name: Set signing environment
         id: signing_environment
         run: |
@@ -56,11 +56,11 @@ jobs:
       commit_id: ${{ steps.version_reference.outputs.commit_id }}
       version: ${{ steps.version_reference.outputs.version }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
-      - name: Prepare build reference from GitHub
-        if: ${{ inputs.version == '' || ! inputs.use_glrd }}
+      - if: ${{ inputs.version == '' || ! inputs.use_glrd }}
+        name: Prepare build reference from GitHub
         id: prepare_github_reference
         run: |
           version="${{ inputs.version }}"
@@ -70,8 +70,8 @@ jobs:
 
           echo "COMMIT_ID=$(git rev-parse HEAD)" | tee -a "$GITHUB_ENV"
           echo "VERSION=$(./bin/garden-version "$version")" | tee -a "$GITHUB_ENV"
-      - name: Prepare build reference from GLRD
-        if: ${{ steps.prepare_github_reference.conclusion == 'skipped' }}
+      - if: ${{ steps.prepare_github_reference.conclusion == 'skipped' }}
+        name: Prepare build reference from GLRD
         run: |
           version=$(./bin/garden-version "${{ inputs.version }}")
 
@@ -81,11 +81,12 @@ jobs:
             glrd_data="$(./bin/glrd --type stable,patch,nightly,dev --output-format=json --version ${{ inputs.version }})"
           fi
 
-          commit_id=$(echo $glrd_data | jq -r '.releases[0].git.commit')
-          version=$(echo $glrd_data | jq -r '(.releases[0].version.major | tostring) + "." + (.releases[0].version.minor | tostring)')
+          glrd_release=$(echo $glrd_data | jq -r 'first(.releases[] | select(.git != null))')
+          commit_id=$(echo $glrd_release | jq -r '.git.commit')
+          version=$(echo $glrd_release | jq -r '(.version.major | tostring) + "." + (.version.minor | tostring)')
 
-          echo "COMMIT_ID=$commit_id" | tee -a "$GITHUB_ENV"
-          echo "VERSION=$version" | tee -a "$GITHUB_ENV"
+          echo "COMMIT_ID=${commit_id}" | tee -a "$GITHUB_ENV"
+          echo "VERSION=${version}" | tee -a "$GITHUB_ENV"
       - name: Set build reference
         id: version_reference
         run: |
@@ -101,7 +102,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Set VERSION=${{ needs.calculate_version.outputs.version }}
@@ -116,7 +117,7 @@ jobs:
           for f in secureboot.{{pk,null.pk,kek,db}.{crt,der,auth},db.arn,aws-efivars} oci-sign.crt; do
             ln -sr "cert/gardenlinux-${{ inputs.target }}-$f" "cert/$f"
           done
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
         with:
           name: certs
           path: cert/*.*

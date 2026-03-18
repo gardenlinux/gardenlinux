@@ -1,4 +1,7 @@
 name: dev
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-dev
+  cancel-in-progress: true
 on:
   push:
     branches:
@@ -18,7 +21,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Use VERSION file to support dev build on rel-branch
         id: version
         run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
@@ -28,11 +31,11 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ needs.set_version.outputs.version }}
-      fail_fast: true
+      fail_fast: false
     permissions:
-      actions: write
-      id-token: write
-      packages: write
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      actions: write  # TODO: 3215 elevated permissions for included workflow
+      packages: write # TODO: 3215 elevated permissions for included workflow
   test:
     needs: build
     if: ${{ success() || failure() }}
@@ -42,7 +45,8 @@ jobs:
       version: ${{ needs.build.outputs.version }}
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
+      test_types: "chroot,qemu,oci,bare,platform_test"
     permissions:
-      id-token: write
-      actions: write
-      checks: write # for testng
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      actions: write # TODO: 3215 elevated permissions for included workflow
+      checks: write # Required for test_report job to write workflow summary

@@ -1,7 +1,4 @@
 name: build_flavor
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-build-flavor-${{ inputs.bare_flavor }}-${{ inputs.arch }}
-  cancel-in-progress: true
 on:
   workflow_call:
     inputs:
@@ -25,12 +22,11 @@ jobs:
       run:
         shell: bash
     permissions:
-      id-token: write
       actions: write
     env:
       CNAME: ''
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Set build reference
@@ -38,7 +34,7 @@ jobs:
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
       - name: Load bootstrap stage cache
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
         with:
           path: .build
           key: base-${{ inputs.arch }}-${{ github.run_id }}
@@ -53,13 +49,13 @@ jobs:
           bare_flavor="${flavor//bare-/}"
 
           ./build_bare_flavors "${bare_flavor}"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
         with:
           name: build-${{ inputs.bare_flavor }}-${{ inputs.arch }}
           path: .build/bare_flavors/*.oci
           include-hidden-files: true
           if-no-files-found: error
-      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
         with:
           path: |
             COMMIT

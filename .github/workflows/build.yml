@@ -1,18 +1,15 @@
 name: build
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-build
-  cancel-in-progress: true
 on:
   workflow_call:
     inputs:
       version:
-        description: 'Garden Linux version'
+        description: "Garden Linux version"
         type: string
         default: today
       target:
         type: string
         default: dev
-      flavors_parse_params:
+      flavors_parse_params_test:
         description: 'Run bin/parse_flavors.py with these parameters'
         default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
         type: string
@@ -23,12 +20,12 @@ on:
         description: 'Tag to run platform-test containers. "latest" or GL version. Tag must be available in `ghcr.io/gardenlinux/gardenlinux/platform-test-*`'
         type: string
         default: latest
-      bare_flavors_parse_params:
-        description: 'Run bin/parse_flavors.py with these parameters for bare flavors'
+      flavors_parse_params_test_bare:
+        description: "Run bin/parse_flavors.py with these parameters for bare flavors"
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
       fail_fast:
-        description: 'Cancel workflow run on first error'
+        description: "Cancel workflow run on first error"
         type: boolean
         default: false
     secrets:
@@ -55,13 +52,7 @@ jobs:
       version: ${{ inputs.version == '' && 'now' || inputs.version }}
       target: ${{ inputs.target }}
     permissions:
-      actions: write
-  test_distribution_build: # backport from 1877
-    needs: requirements
-    name: Build and Cache Test Distribution
-    uses: ./.github/workflows/build_test_dist.yml
-    with:
-      prefix: ${{ inputs.prefix }}      
+      actions: write # TODO: 3215 elevated permissions for included workflow
   bootstrap:
     needs: requirements
     name: Bootstrap build
@@ -69,28 +60,14 @@ jobs:
     with:
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
-    permissions:
-      actions: write
-  platform_test_image:
-    needs: requirements
-    name: Build platform-test image
-    uses: ./.github/workflows/build_platform_test_images.yml
-    with:
-      version: ${{ needs.requirements.outputs.version }}
-      platforms: '["tofu"]'
-      platform_test_tag: ${{ inputs.platform_test_tag }}
-      build: false
-    permissions:
-      actions: write
-      packages: write
   flavors_matrix:
     name: Generate flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
-      flags: ${{ inputs.flavors_parse_params }}
+      flags: ${{ inputs.flavors_parse_params_test }}
       flavors_matrix: ${{ inputs.flavors_matrix }}
   flavors:
-    needs: [ bootstrap, flavors_matrix, requirements ]
+    needs: [bootstrap, flavors_matrix, requirements]
     name: Build flavors
     strategy:
       matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix ) }}
@@ -105,9 +82,9 @@ jobs:
     secrets: inherit
     permissions:
       id-token: write
-      actions: write    
+      actions: write
   kmodbuild_container:
-    needs: [ flavors, requirements ]
+    needs: [flavors, requirements]
     name: Build kernel module build dev container
     uses: ./.github/workflows/build_kmodbuild_container.yml
     with:
@@ -118,9 +95,9 @@ jobs:
     name: Generate bare flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
-      flags: ${{ inputs.bare_flavors_parse_params }}
+      flags: ${{ inputs.flavors_parse_params_test_bare }}
   bare_flavors:
-    needs: [ bootstrap, bare_flavors_matrix, requirements ]
+    needs: [bootstrap, bare_flavors_matrix, requirements]
     name: Build bare flavors
     strategy:
       matrix: ${{ fromJson(needs.bare_flavors_matrix.outputs.matrix) }}
@@ -133,10 +110,28 @@ jobs:
     uses: ./.github/workflows/build_bare_flavor.yml
     secrets: inherit
     permissions:
-      id-token: write
-      actions: write    
+      actions: write
+  platform_test_image:
+    needs: requirements
+    name: Build platform-test image
+    uses: ./.github/workflows/build_platform_test_images.yml
+    with:
+      version: ${{ needs.requirements.outputs.version }}
+      platforms: '["tofu"]'
+      platform_test_tag: ${{ inputs.platform_test_tag }}
+      build: false
+    permissions:
+      actions: write
+      packages: write
+  test_distribution_build: # backport from 1877
+    needs: requirements
+    name: Build and cache test distribution
+    uses: ./.github/workflows/build_tests_ng.yml
+    with:
+      commit_id: ${{ needs.requirements.outputs.commit_id }}
+      version: ${{ needs.requirements.outputs.version }}
   upload_flavor_version_data:
-    needs: [ requirements, flavors ]
+    needs: [requirements, flavors]
     name: Store flavor version data
     runs-on: ubuntu-24.04
     permissions:
@@ -149,7 +144,7 @@ jobs:
             "version": "${{ needs.requirements.outputs.version }}",
             "target": "${{ needs.requirements.outputs.target }}"
           }' '.' > flavor_version_data.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
         with:
           name: flavor-version-data
           path: flavor_version_data.json
