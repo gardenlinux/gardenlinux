@@ -613,6 +613,77 @@ def test_example(systemd: Systemd):
 > [!NOTE]
 > Have a look at the [user documentation](README.md#debugging-tests) if you want to know how to view those debug logs when running tests.
 
+### Debugging Tests in a Booted VM
+
+When you need to debug tests on a fully booted system (QEMU or a cloud VM), you can use the `--dev` flag to:
+
+- Quickly sync the local test distribution and test files into a VM.
+- Re-run tests on demand (oneshot) or automatically on file changes.
+
+#### QEMU VM Workflow
+
+##### Start VM
+
+Run the tests with `--dev` (or `--ssh --skip-cleanup --skip-tests --watch` for the long version) to start a QEMU VM in dev mode.
+
+```bash
+./test --dev .build/aws-gardener_prod-amd64-today-local.raw
+```
+
+You can also pass additional `--test-args`.
+
+```bash
+./test --dev --test-args "test_ssh.py -v" .build/aws-gardener_prod-amd64-today-local.raw
+```
+
+This will:
+
+- Start a QEMU VM.
+- Sync `.build/dist.tar.gz` into the VM.
+- Sync the current `tests/` tree.
+- Run `pytest` inside the VM with the provided `--test-args` once.
+- Wait for file changes in `tests/` and `features/`.
+- Re-sync the changed tests into the VM.
+- Re-run `pytest` with your given arguments after each change.
+
+You can stop watch mode at any time with `Ctrl+C`.
+
+#### Cloud VM Workflow
+
+##### Start VM
+
+Run the tests with `--dev` (or `--skip-cleanup --skip-tests --watch` for the lang version) to start a Cloud VM in dev mode.
+
+```bash
+./test --dev --cloud azure .build/azure-gardener_prod-amd64-today-local.raw
+# or use an already uploaded image
+./test --dev --cloud azure \
+    --cloud-image --image-requirements-file .build/azure-gardener_prod-amd64-today-local.requirements \
+    /CommunityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/Images/gardenlinux-nvme-gardener_prod-amd64/Versions/2150.0.0
+```
+
+You can also pass additional `--test-args`.
+
+```bash
+./test --dev --cloud azure --test-args "test_ssh.py -v" .build/aws-gardener_prod-amd64-today-local.raw
+```
+
+This will:
+
+- Deploy a Cloud VM.
+- Sync `.build/dist.tar.gz` into the VM.
+- Sync the current `tests/` tree.
+- Run `pytest` inside the VM with the provided `--test-args`.
+- Wait for file changes in `tests/` and `features/`.
+- Re-sync the changed tests into the VM.
+- Re-run `pytest` with your given arguments after each change.
+
+You can stop watch mode at any time with `Ctrl+C`.
+
+### Debugging Tests in the Chroot Environment
+
+The `--dev` flag will work the same as [in the VM Setup](#debugging-tests-in-a-booted-vm).
+
 ## Python Best Practices
 
 ### Code Style and CI Enforcement
