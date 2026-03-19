@@ -199,7 +199,9 @@ class Systemd:
             capture_output=True,
         )
         return {
-            k: v for kv in result.stdout.strip().split("\n") for k, v in [kv.split("=")]
+            k: v
+            for kv in result.stdout.strip().split("\n")
+            for k, v in [kv.split("=", 1)]
         }
 
 
