@@ -102,7 +102,7 @@ export async function retryWorkflow(core, githubActions, context, runID, retries
 
 // backported for testng
 export function getTestEnvironmentsEnabled(commaSeparatedTestsRequested) {
-    const knownTests = ["chroot", "cloud", "oci", "qemu", "bare"];
+    const knownTests = ["chroot", "cloud", "oci", "qemu", "bare", "platform_test"];
     const testsRequested = commaSeparatedTestsRequested.split(",");
     let tests = [];
 
