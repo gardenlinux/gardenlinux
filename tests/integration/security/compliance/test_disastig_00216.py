@@ -24,7 +24,7 @@ def module_cleanup(shell: ShellRunner):
         shell(f"modprobe -r {module} || true")
 
 
-@pytest.mark.feature("not container")
+@pytest.mark.feature("not container and not fips and not lima")
 @pytest.mark.booted(reason="requires kernel logging")
 @pytest.mark.root(reason="required to manage kernel modules")
 @pytest.mark.modify(reason="modifies kernel module state")
