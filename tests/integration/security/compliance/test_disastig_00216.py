@@ -34,4 +34,8 @@ def test_kernel_module_load_logged(kernel_module, shell):
 
     logs = (dmesg_result.stdout + journal_result.stdout).lower()
 
-    assert "802.1q" in logs, "stigcompliance: kernel module load event not logged"
+    expected = MODULE.replace("8021q", "802.1q")
+
+    assert (
+        expected in logs
+    ), f"stigcompliance: kernel module load event for {MODULE} not logged"
