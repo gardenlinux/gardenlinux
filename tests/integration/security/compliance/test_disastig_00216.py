@@ -3,7 +3,7 @@ import time
 import pytest
 
 
-@pytest.mark.feature("not container and not gardener and not lima and not capi")
+@pytest.mark.feature("not container and not gardener and not lima and not capi and not baremetal")
 @pytest.mark.booted(reason="requires kernel logging")
 @pytest.mark.root(reason="required to manage kernel modules")
 @pytest.mark.modify(reason="modifies kernel module state")
