@@ -28,6 +28,7 @@ This directory contains the testing framework for Garden Linux images. The frame
     - [Login Scripts](#login-scripts)
       - [QEMU Environment](#qemu-environment)
       - [Cloud Environment](#cloud-environment)
+    - [Debugging Tests in a Booted VM](#debugging-tests-in-a-booted-vm)
   - [Test Environment Details](#test-environment-details)
     - [Chroot Testing](#chroot-testing)
     - [QEMU Testing](#qemu-testing)
@@ -95,7 +96,7 @@ If you plan to provision cloud resources, the cloud provider specific CLIs might
 
 ```
 apt-get update
-apt-get install podman make curl jq libxml2-utils unzip uuid-runtime qemu swtpm socat
+apt-get install podman make curl inotify-tools jq libxml2-utils unzip uuid-runtime qemu swtpm socat
 # install cloud provider CLIs
 apt-get install azure-cli awscli openstackclient # for GCP and ALI look at tip
 ```
@@ -112,7 +113,7 @@ apt-get install azure-cli awscli openstackclient # for GCP and ALI look at tip
 #### Install on MacOS
 
 ```
-brew install bash coreutils curl gnu-getopt gnu-sed gnupg jq libxml2 make ossp-uuid podman socat swtpm unzip
+brew install bash coreutils curl gnu-getopt gnu-sed gnupg inotify-tools jq libxml2 make ossp-uuid podman socat swtpm unzip
 # install cloud provider CLIs
 brew install azure-cli awscli gcloud-cli aliyun-cli openstackclient
 ```
@@ -377,6 +378,11 @@ cd /run/gardenlinux-tests && sudo ./run_tests --system-booted --allow-system-mod
 2. Use `./util/login_cloud.sh` with the image file to connect
 3. Investigate the system state, check logs, or run tests manually
 4. Re-run tests without `--skip-cleanup` or use `--only-cleanup` to clean up resources when done
+
+### Debugging Tests in a Booted VM
+
+> [!NOTE]
+> Have a look at the [developer documentation](DEVELOPER.md#debugging-tests-in-a-booted-vm) if you want to know how to debug tests in a booted VM.
 
 ## Test Environment Details
 

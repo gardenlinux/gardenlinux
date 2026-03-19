@@ -2,24 +2,27 @@
 
 set -eufo pipefail
 
-while [ $# -gt 0 ]; do
-    case "$1" in
-    *)
-        break
-        ;;
-    esac
-done
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 [--watch] [--test-args \"...\"] IMAGE" >&2
+    exit 1
+fi
 
-image="$1"
-shift
+# Treat the last positional argument as the image, everything before it
+# is forwarded to run_dev_common.sh (e.g. --watch, --test-args, --user).
+args=("$@")
+image="${args[${#args[@]} - 1]}"
+unset 'args[${#args[@]}-1]'
+set -- "${args[@]}"
+
 image_basename="$(basename -- "$image")"
 image_name="${image_basename%.*}"
 
 util_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")")"
+ssh_private_key="$util_dir/../.ssh/id_ed25519_gl"
+
 tf_dir="$util_dir/tf"
 tofuenv_dir="$tf_dir/.tofuenv"
 PATH="$tofuenv_dir/bin:$PATH"
-ssh_private_key="$util_dir/../.ssh/id_ed25519_gl"
 uuid_file="$util_dir/.uuid"
 uuid=$(<"$uuid_file")
 seed=${uuid%%-*}
@@ -30,19 +33,11 @@ else
     workspace="test-${image_name}-${seed}"
 fi
 
+echo "⚙️  getting terraform outputs"
 vm_ip="$(cd "$tf_dir" && tofu workspace select "$workspace" >/dev/null && tofu output --raw vm_ip)"
 ssh_user="$(cd "$tf_dir" && tofu workspace select "$workspace" >/dev/null && tofu output --raw ssh_user)"
-ssh_opts=(-q -o ConnectTimeout=5 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i "$ssh_private_key")
+echo "📋  VM IP: $vm_ip, SSH User: $ssh_user"
+export ssh_opts=(-q -o ConnectTimeout=5 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i "$ssh_private_key")
 
-for i in {1..30}; do
-    if ssh "${ssh_opts[@]}" "$ssh_user@$vm_ip" true 2>/dev/null; then
-        break
-    fi
-    sleep 1
-    if [ "$i" -eq 30 ]; then
-        echo "❌ SSH not available after timeout"
-        exit 1
-    fi
-done
-
-exec ssh "${ssh_opts[@]}" "$ssh_user@$vm_ip" "$@"
+# shellcheck source=/dev/null
+source "$util_dir/run_dev_common.sh"
