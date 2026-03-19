@@ -132,7 +132,6 @@ targets:
         test: true
         test-platform: true
         publish: true
-    flavors:
       - features:
           - gardener
           - _prod
@@ -324,7 +323,6 @@ targets:
         test: true
         test-platform: true
         publish: true
-    flavors:
       - features:
           - gardener
           - _prod
