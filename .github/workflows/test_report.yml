@@ -66,6 +66,8 @@ jobs:
           summary: true
           result-types: "skipped,passed,failed,error"
           fail-on-empty: false
+          metadata-fields: ''
+          metadata-field-mapping: ''
 
       - name: Upload report artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
