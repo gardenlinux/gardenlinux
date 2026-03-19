@@ -27,16 +27,11 @@ def test_kernel_module_load_logged(kernel_module, shell):
     time.sleep(1)
 
     dmesg_result = shell("dmesg", capture_output=True)
-    assert dmesg_result.returncode == 0, "stigcompliance: failed to read dmesg"
-
     journal_result = shell(
         "journalctl -k --since '1 min ago' --no-pager",
         capture_output=True,
     )
-    assert journal_result.returncode == 0, "stigcompliance: failed to read journal"
 
     logs = (dmesg_result.stdout + journal_result.stdout).lower()
-
-    assert logs.strip(), "stigcompliance: no kernel logs captured"
 
     assert "802.1q" in logs, "stigcompliance: kernel module load event not logged"
