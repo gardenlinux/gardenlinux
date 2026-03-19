@@ -22,7 +22,7 @@ def test_journald_should_not_store_logs_in_memory(shell):
         for k, v in [line.split("=")]
     ]
     if config:
-        assert config[0] != "volatile"
+        assert config[-1] != "volatile"
 
 
 @pytest.mark.feature("ssh")
