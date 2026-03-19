@@ -20,7 +20,9 @@ def concurrent_login_environment(shell: ShellRunner):
     shell(f"rm -f {OUTPUT_FILE} {TIME_FILE}")
 
 
-@pytest.mark.feature("not container")
+@pytest.mark.feature(
+    "not container and not gardener and not lima and not capi and not baremetal"
+)
 @pytest.mark.booted(reason="requires kernel logging")
 @pytest.mark.root(reason="required to generate audit events")
 def test_audit_concurrent_logins(shell: ShellRunner, concurrent_login_environment):
