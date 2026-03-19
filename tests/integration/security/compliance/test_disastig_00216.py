@@ -3,8 +3,14 @@ import time
 import pytest
 from plugins.shell import ShellRunner
 
+
 @pytest.fixture
 def module_cleanup(shell: ShellRunner):
+    """
+    As per DISA STIG compliance requirement, the audit system must be
+    configured to audit the loading and unloading of dynamic kernel modules.
+    Ref: SRG-OS-000471-GPOS-00216
+    """
     before = shell("lsmod", capture_output=True).stdout
     yield
     after = shell("lsmod", capture_output=True).stdout
@@ -17,13 +23,15 @@ def module_cleanup(shell: ShellRunner):
     for module in new_modules:
         shell(f"modprobe -r {module} || true")
 
+
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="requires kernel logging")
 @pytest.mark.root(reason="required to manage kernel modules")
 @pytest.mark.modify(reason="modifies kernel module state")
 def test_module_load(shell: ShellRunner, module_cleanup):
     """
-    Verify kernel module load generates logs
+    As per DISA STIG compliance requirement, the audit system must be
+    configured to audit the loading and unloading of dynamic kernel modules.
     Ref: SRG-OS-000471-GPOS-00216
     """
 
