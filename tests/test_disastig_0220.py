@@ -8,13 +8,21 @@ Verify the operating system generates audit records for all direct access to the
 
 
 @pytest.mark.booted(reason="requires running systemd")
-def test_journald_should_not_store_logs_in_memory(parse_file):
+def test_journald_should_not_store_logs_in_memory(shell):
     """
     Confirm that journald is not configured to store logs in memory
     """
-    config = parse_file.parse("/etc/systemd/journald.conf", format="ini")
-    if "Storage" in config["Journal"]:
-        assert config["Journal"]["Storage"] != "volatile"
+    result = shell(
+        "systemd-analyze cat-config /etc/systemd/journald.conf", capture_output=True
+    )
+    config = [
+        v
+        for line in result.stdout.splitlines()
+        if line.startswith("Storage=")
+        for k, v in [line.split("=")]
+    ]
+    if config:
+        assert config[0] != "volatile"
 
 
 @pytest.mark.feature("ssh")
@@ -32,7 +40,7 @@ def test_sshd_unit_is_journald_friendly(systemd):
     """
     The sshd.service unit must forward stdout/stderr to the journal.
     """
-    result = systemd.get_unit_config_params("ssh", "StandardOutput", "StandardError")
+    result = systemd.get_unit_properties("ssh", "StandardOutput", "StandardError")
     assert (
         result["StandardOutput"] == "journal"
     ), f"sshd stdout not directed to journal: {result['StandardOutput']}"
