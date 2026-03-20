@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+
 from plugins.dpkg import Dpkg
 
 logger = logging.getLogger(__name__)
@@ -83,7 +84,7 @@ class AuditRule:
             (
                 -F\s*perm=(\S+)
                 |
-                -p\s *
+                -p\s*
                 (\S+)
             )
             """,
