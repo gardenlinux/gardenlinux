@@ -133,7 +133,6 @@ targets:
         test: true
         test-platform: true
         publish: true
-    flavors:
       - features:
           - gardener
           - _prod
@@ -325,7 +324,6 @@ targets:
         test: true
         test-platform: true
         publish: true
-    flavors:
       - features:
           - gardener
           - _prod
@@ -522,14 +520,14 @@ targets:
         test-platform: false
         publish: true
       - features:
-          - capi 
+          - capi
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: true
       - features:
-          - capi 
+          - capi
         arch: arm64
         build: true
         test: true
