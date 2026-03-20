@@ -1,5 +1,4 @@
 import pytest
-from plugins.shell import ShellRunner
 
 ALLOWED_PORTS = {22}
 
@@ -12,16 +11,14 @@ FORBIDDEN_SERVICES = [
 ]
 
 
-@pytest.mark.feature(
-    "not container and not gardener and not lima and not capi and not baremetal"
-)
+@pytest.mark.feature("not container")
 @pytest.mark.booted(reason="requires booted system")
 @pytest.mark.root(reason="requires audit operations")
 def test_ports_protocols_and_services_restricted(shell, systemd):
     """
-    As per DISA STIG compliance requirements, its needed to verify 
-    the operating system is configured to prohibit or restrict the 
-    use of functions, ports, protocols, and/or servicesto 
+    As per DISA STIG compliance requirements, its needed to verify
+    the operating system is configured to prohibit or restrict the
+    use of functions, ports, protocols, and/or servicesto
     verify that only approved ports and services are active.
     Ref: SRG-OS-000096-GPOS-00050
     """
@@ -37,18 +34,16 @@ def test_ports_protocols_and_services_restricted(shell, systemd):
 
     unauthorized_ports = open_ports - ALLOWED_PORTS
 
-    assert not unauthorized_ports, (
-        f"stigcompliance: unauthorized ports open: {unauthorized_ports}"
-    )
-    
+    assert (
+        not unauthorized_ports
+    ), f"stigcompliance: unauthorized ports open: {unauthorized_ports}"
+
     running_units = systemd.list_running_units()
 
     running_names = {unit.unit for unit in running_units}
 
-    found_forbidden = [
-        svc for svc in FORBIDDEN_SERVICES if svc in running_names
-    ]
+    found_forbidden = [svc for svc in FORBIDDEN_SERVICES if svc in running_names]
 
-    assert not found_forbidden, (
-        f"stigcompliance: forbidden services running: {found_forbidden}"
-    )
+    assert (
+        not found_forbidden
+    ), f"stigcompliance: forbidden services running: {found_forbidden}"
