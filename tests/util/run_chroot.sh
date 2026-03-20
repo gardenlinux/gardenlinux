@@ -132,21 +132,6 @@ trap cleanup EXIT INT TERM
 mkdir -p "$log_dir"
 tmpdir="$(mktemp -d)"
 
-tmpdir=
-
-cleanup() {
-	get_logs
-	[ -z "$tmpdir" ] || [ ! -e "$tmpdir/chroot" ] || umount -l "$tmpdir/chroot" || rmdir "$tmpdir/chroot"
-	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
-	tmpdir=
-}
-trap cleanup EXIT
-tmpdir="$(mktemp -d)"
-
-get_logs() {
-	cp "$tmpdir/chroot/run/gardenlinux-tests/tests/log/$log_file_junit" "$log_dir" || true
-}
-
 run_sync() {
 	mkdir -p "$tmpdir/chroot"
 	mount -t tmpfs -o mode=0755 none "$tmpdir/chroot"
