@@ -111,8 +111,8 @@ cleanup() {
 	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
 	tmpdir=
 }
-
 trap cleanup EXIT
+
 tmpdir="$(mktemp -d)"
 
 if ((is_pxe_archive)); then

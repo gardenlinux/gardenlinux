@@ -117,6 +117,10 @@ source "$image_requirements"
 [ -n "$arch" ]
 [ -n "$cloud" ]
 
+get_logs() {
+	"$login_cloud_sh" "$image_basename" "sudo cat /run/gardenlinux-tests/tests/log/$log_file_junit" >"$log_dir/$log_file_junit"
+}
+
 cleanup() {
 	if ! ((skip_tests)); then
 		get_logs || true
@@ -134,11 +138,6 @@ cleanup() {
 		)
 	fi
 }
-
-get_logs() {
-	"$login_cloud_sh" "$image_basename" "sudo cat /run/gardenlinux-tests/tests/log/$log_file_junit" >"$log_dir/$log_file_junit"
-}
-
 trap cleanup EXIT
 
 # shellcheck source=/dev/null
