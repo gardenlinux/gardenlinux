@@ -32,6 +32,17 @@ fi
 
 vm_ip="$(cd "$tf_dir" && tofu workspace select "$workspace" >/dev/null && tofu output --raw vm_ip)"
 ssh_user="$(cd "$tf_dir" && tofu workspace select "$workspace" >/dev/null && tofu output --raw ssh_user)"
-ssh_opts=(-o ConnectTimeout=5 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i "$ssh_private_key")
+ssh_opts=(-q -o ConnectTimeout=5 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i "$ssh_private_key")
+
+for i in {1..30}; do
+    if ssh "${ssh_opts[@]}" "$ssh_user@$vm_ip" true 2>/dev/null; then
+        break
+    fi
+    sleep 1
+    if [ "$i" -eq 30 ]; then
+        echo "❌ SSH not available after timeout"
+        exit 1
+    fi
+done
 
 exec ssh "${ssh_opts[@]}" "$ssh_user@$vm_ip" "$@"

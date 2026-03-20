@@ -2,7 +2,6 @@ import json
 import re
 import time
 from dataclasses import dataclass
-from os import system
 from typing import Tuple
 
 import pytest
@@ -142,6 +141,81 @@ class Systemd:
             print(result_status.stdout)
 
         return active
+
+    def is_inactive(self, unit_name: str) -> bool:
+        result = self._shell(
+            f"{self._systemctl} is-active {unit_name}",
+            capture_output=True,
+            ignore_exit_code=True,
+        )
+        inactive = result.stdout.strip() == "inactive"
+        if not inactive:
+            result_status = self._shell(
+                f"{self._systemctl} status {unit_name}",
+                capture_output=True,
+                ignore_exit_code=True,
+            )
+            print(result_status.stdout)
+
+        return inactive
+
+    def is_enabled(self, unit_name: str) -> bool:
+        """Check if a system-level systemd unit is enabled.
+
+        Note: This also returns True for 'static' units (units without [Install] section
+        that are enabled by default or pulled in by other units).
+        """
+        result = self._shell(
+            f"{self._systemctl} is-enabled {unit_name}",
+            capture_output=True,
+            ignore_exit_code=True,
+        )
+        state = result.stdout.strip()
+        enabled = state in ("enabled", "static")
+        if not enabled:
+            result_status = self._shell(
+                f"{self._systemctl} status {unit_name}",
+                capture_output=True,
+                ignore_exit_code=True,
+            )
+            print(result_status.stdout)
+
+        return enabled
+
+    def is_disabled(self, unit_name: str) -> bool:
+        result = self._shell(
+            f"{self._systemctl} is-enabled {unit_name}",
+            capture_output=True,
+            ignore_exit_code=True,
+        )
+        disabled = result.stdout.strip() == "disabled"
+        if not disabled:
+            result_status = self._shell(
+                f"{self._systemctl} status {unit_name}",
+                capture_output=True,
+                ignore_exit_code=True,
+            )
+            print(result_status.stdout)
+
+        return disabled
+
+    def is_masked(self, unit_name: str) -> bool:
+        result = self._shell(
+            f"{self._systemctl} is-enabled {unit_name}",
+            capture_output=True,
+            ignore_exit_code=True,
+        )
+        state = result.stdout.strip()
+        masked = state in ("masked")
+        if not masked:
+            result_status = self._shell(
+                f"{self._systemctl} status {unit_name}",
+                capture_output=True,
+                ignore_exit_code=True,
+            )
+            print(result_status.stdout)
+
+        return masked
 
     def start_unit(self, unit_name: str):
         if not allow_system_modifications():

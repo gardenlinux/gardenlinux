@@ -165,21 +165,22 @@ jobs:
               const matrix = gitHubLib.intersectFlavorsMatrix(t.inputMatrix, t.supported);
               const isEnabled = !gitHubLib.isMatrixEmpty(matrix);
               core.setOutput(t.outTests, isEnabled);
-              console.log(`${t.key}: ${isEnabled ? 'enabled' : 'disabled'} (${isEnabled ? matrix.length : 0} flavors)`);
+              console.log(`${t.key}: ${isEnabled ? 'enabled' : 'disabled'} (${isEnabled ? matrix['include'].length : 0} flavors)`);
 
               if (isEnabled) {
                 core.setOutput(t.outMatrix, matrix);
               } else {
-                core.setOutput(t.outMatrix, SKIP_MATRIX);
+                core.setOutput(t.outMatrix, skipFlavorMatrix);
               }
             }
+  ## test-ng start
   test_flavors_chroot:
     needs: determine_test_settings
     name: Test chroot flavors
     uses: ./.github/workflows/test_flavor_chroot.yml
     if: ${{ needs.determine_test_settings.outputs.chroot_tests == 'true' }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.chroot_test_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
@@ -224,13 +225,14 @@ jobs:
     uses: ./.github/workflows/test_flavor_oci.yml
     if: ${{ needs.determine_test_settings.outputs.oci_flavors_tests == 'true' }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.oci_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
     permissions:
       actions: write
+  ## test-ng end
   test_report:
     needs:
       - test_flavors_chroot

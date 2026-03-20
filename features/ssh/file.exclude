@@ -1,2 +1,3 @@
+# GL-TESTCOV-ssh-config-no-init-ssh
 /etc/init.d/ssh
 /etc/ssh/ssh_host_*

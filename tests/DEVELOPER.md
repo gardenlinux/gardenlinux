@@ -83,6 +83,10 @@ The following principles guide all test development in Garden Linux:
 - Examples of state to restore: service status, kernel modules, installed packages, filesystem changes, network configuration
 - For examples, see [Handlers for Setup/Teardown](#handlers-for-setupteardown)
 
+#### 9. Use Test Coverage Markers
+
+- [Test Coverage Markers](./DEVELOPER-TESTCOV.md) need to be added to features and tests to assure a high test coverage.
+
 ## Framework Structure
 
 ### How Tests, Plugins, and Handlers Connect
@@ -91,7 +95,7 @@ The framework uses pytest's plugin system to automatically register fixtures:
 
 1. **Plugins** (`tests/plugins/`) - Provide fixtures for system access
 2. **Handlers** (`tests/handlers/`) - Provide fixtures for setup/teardown
-3. **Tests** (`tests/test_*.py`) - Use fixtures via dependency injection
+3. **Tests** (`tests/integration/test_*.py`) - Use fixtures via dependency injection
 
 **Registration**: All plugins are automatically registered as pytest fixtures via `conftest.py`
 
@@ -125,13 +129,39 @@ Utility functions provide reusable functionality:
 
 ## Test Organization and Naming
 
+### Directory Structure
+
+All test files are placed into `tests/integration/{category}`. The following tree structure shows how tests are organized by functional area:
+
+```
+tests/integration/
+├── boot/                    # Boot-related tests (ignition, cloud-init, initrd, secureboot, etc.)
+├── core/                    # Core system functionality (services, network, users, logging, etc.)
+├── infrastructure/          # Infrastructure and platform tests (cloud platforms, iscsi, nvme, kvm, metal)
+├── kernel/                  # Kernel-related tests (cmdline, modules, parameters, etc.)
+├── runtime/                 # Runtime environment tests (containers, SAP, gardener, nodejs, etc.)
+└── security/                # Security tests (SSH, firewall, PAM, capabilities, etc.)
+    └── compliance/          # Compliance tests (CIS, FIPS, STIG, FedRAMP)
+```
+
+The purpose of categorizing tests is to improve maintainability and discoverability. By grouping related tests together, developers can more easily:
+
+- Locate existing tests for a specific functional area
+- Understand the scope and coverage of the test suite
+- Organize test execution by category when needed
+- Maintain consistency when adding new tests
+
+These categories are subject to change as new tests are added and the test suite evolves.
+
 ### File Naming Convention
 
 Test files follow the pattern `test_*.py` and should be named based on the functionality they test:
 
-- `test_ssh.py` - SSH configuration and functionality
-- `test_packages.py` - Package installation and configuration
-- `test_network.py` - Network configuration and connectivity
+- `test_ignition.py` (in `boot/`) - Ignition configuration and functionality
+- `test_services.py` (in `core/`) - Enabled/disabled and started/stopped services
+- `test_network.py` (in `core/`) - Network configuration and connectivity
+- `test_ssh.py` (in `security/`) - SSH configuration and security
+- `test_fips.py` (in `security/compliance/`) - FIPS compliance tests
 
 > [!NOTE]
 > Tests are not strictly tied to features in the `features` folder anymore. Have a look at `@pytest.mark.feature()` if you need a test condition related to a feature.
@@ -536,6 +566,10 @@ def test_weird_cases(input_val, expected):
 
 **Guideline:** Prefer clarity and intent over DRY-ness in tests. Parametrize when it makes tests simpler, not just shorter.
 
+### Test Coverage Markers
+
+Please have a look at the [Test Coverage Documentation](./DEVELOPER-TESTCOV.md)
+
 ### Missing Markers (TODO)
 
 #### `@pytest.mark.security_id`
@@ -578,6 +612,77 @@ def test_example(systemd: Systemd):
 
 > [!NOTE]
 > Have a look at the [user documentation](README.md#debugging-tests) if you want to know how to view those debug logs when running tests.
+
+### Debugging Tests in a Booted VM
+
+When you need to debug tests on a fully booted system (QEMU or a cloud VM), you can use the `--dev` flag to:
+
+- Quickly sync the local test distribution and test files into a VM.
+- Re-run tests on demand (oneshot) or automatically on file changes.
+
+#### QEMU VM Workflow
+
+##### Start VM
+
+Run the tests with `--dev` (or `--ssh --skip-cleanup --skip-tests --watch` for the long version) to start a QEMU VM in dev mode.
+
+```bash
+./test --dev .build/aws-gardener_prod-amd64-today-local.raw
+```
+
+You can also pass additional `--test-args`.
+
+```bash
+./test --dev --test-args "test_ssh.py -v" .build/aws-gardener_prod-amd64-today-local.raw
+```
+
+This will:
+
+- Start a QEMU VM.
+- Sync `.build/dist.tar.gz` into the VM.
+- Sync the current `tests/` tree.
+- Run `pytest` inside the VM with the provided `--test-args` once.
+- Wait for file changes in `tests/` and `features/`.
+- Re-sync the changed tests into the VM.
+- Re-run `pytest` with your given arguments after each change.
+
+You can stop watch mode at any time with `Ctrl+C`.
+
+#### Cloud VM Workflow
+
+##### Start VM
+
+Run the tests with `--dev` (or `--skip-cleanup --skip-tests --watch` for the lang version) to start a Cloud VM in dev mode.
+
+```bash
+./test --dev --cloud azure .build/azure-gardener_prod-amd64-today-local.raw
+# or use an already uploaded image
+./test --dev --cloud azure \
+    --cloud-image --image-requirements-file .build/azure-gardener_prod-amd64-today-local.requirements \
+    /CommunityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/Images/gardenlinux-nvme-gardener_prod-amd64/Versions/2150.0.0
+```
+
+You can also pass additional `--test-args`.
+
+```bash
+./test --dev --cloud azure --test-args "test_ssh.py -v" .build/aws-gardener_prod-amd64-today-local.raw
+```
+
+This will:
+
+- Deploy a Cloud VM.
+- Sync `.build/dist.tar.gz` into the VM.
+- Sync the current `tests/` tree.
+- Run `pytest` inside the VM with the provided `--test-args`.
+- Wait for file changes in `tests/` and `features/`.
+- Re-sync the changed tests into the VM.
+- Re-run `pytest` with your given arguments after each change.
+
+You can stop watch mode at any time with `Ctrl+C`.
+
+### Debugging Tests in the Chroot Environment
+
+The `--dev` flag will work the same as [in the VM Setup](#debugging-tests-in-a-booted-vm).
 
 ## Python Best Practices
 

@@ -1,0 +1,3 @@
+markers:
+  "etc/systemd/system/tmp.mount":
+  - "GL-TESTCOV-cisPartition-config-mount-tmp"
