@@ -63,7 +63,11 @@ class Sysctl:
 
     def __getitem__(self, key: str):
         """Enable dictionary-style access to sysctl parameters"""
+        import re
+
         value = self._read_sysctl_parameter(key)
+        # Normalize whitespace: convert tabs and multiple spaces to single space
+        value = re.sub(r"\s+", " ", value)
         return int(value) if value.isdigit() else value
 
     def __contains__(self, key: object) -> bool:
