@@ -1,3 +1,5 @@
+import pytest
+
 """
 Ref: SRG-OS-000032-GPOS-00013
 
@@ -5,6 +7,7 @@ Verify the operating system monitors remote access methods.
 """
 
 
+@pytest.mark.feature("ssh")
 def test_sshguard_is_enabled(systemd):
     """
     sshguard blocks and logs IP addresses that brute-force ssh access
@@ -12,6 +15,7 @@ def test_sshguard_is_enabled(systemd):
     assert systemd.is_active("sshguard")
 
 
+@pytest.mark.feature("ssh")
 def test_sshguard_journal_reading_is_configured(parse_file):
     """
     sshguard by itself reads ssh logs to know about access attempts
@@ -21,6 +25,8 @@ def test_sshguard_journal_reading_is_configured(parse_file):
     assert "journalctl" in config["LOGREADER"]
 
 
+@pytest.mark.booted(reason="requires running journald")
+@pytest.mark.feature("ssh")
 def test_sshguard_can_log_to_journald_dev_log_is_managed_by_journald(file):
     """
     sshguard logs IPs that it blocked:
