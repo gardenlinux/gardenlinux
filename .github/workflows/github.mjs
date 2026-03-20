@@ -119,3 +119,35 @@ export function getTestEnvironmentsEnabled(commaSeparatedTestsRequested) {
 export function isMatrixEmpty(matrix) {
     return (!Object.keys(matrix).includes('include') || matrix['include'].length < 1);
 }
+
+// backported for testng
+export function getGHCRRepositoryFromTarget(target) {
+    let repository = "";
+
+    switch(target) {
+        case "release":
+            repository = "ghcr.io/gardenlinux/gardenlinux";
+            break;
+        case "nightly":
+            repository = "ghcr.io/gardenlinux/nightly";
+            break;
+    }
+
+    return repository;
+}
+
+// backported for testng
+export function getGitHubSigningEnvironmentFromTarget(target) {
+    let environment = "";
+
+    switch(target) {
+        case "release":
+            environment = "oidc_aws_kms_release";
+            break;
+        case "nightly":
+            environment = "oidc_aws_kms_nightly";
+            break;
+    }
+
+    return environment;
+}
