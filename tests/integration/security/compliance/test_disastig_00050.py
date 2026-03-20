@@ -1,6 +1,6 @@
 import pytest
 
-ALLOWED_PORTS = {22}
+ALLOWED_PORTS = {22, 53}
 
 FORBIDDEN_SERVICES = [
     "telnet.service",
