@@ -83,7 +83,7 @@ class AuditRule:
             (
                 -F\s*perm=(\S+)
                 |
-                -p\s *
+                -p\s*
                 (\S+)
             )
             """,
