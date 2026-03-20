@@ -90,7 +90,7 @@ jobs:
     steps:
       - name: Authenticate to cluster
         id: kube_auth
-        uses: gardener/cc-utils/.github/actions/kubernetes-auth@18d94dca4a9859320a58344ccf210c1ec912a7f0 # 1.2743.0
+        uses: gardener/cc-utils/.github/actions/kubernetes-auth@340fbae4cd197fe87e2053fb02bd3573ff0034d3 # 1.2746.0
         with:
           server: https://api.live.gl-live.shoot.live.k8s-hana.ondemand.com
           server-ca-discovery-url: https://discovery.ingress.garden.live.k8s.ondemand.com/projects/gl-live/shoots/3f2715e7-dc7c-4bf1-a594-dc0d90cd0f1c/cluster-ca
