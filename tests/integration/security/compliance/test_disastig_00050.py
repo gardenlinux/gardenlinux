@@ -11,7 +11,9 @@ FORBIDDEN_SERVICES = [
 ]
 
 
-@pytest.mark.feature("not container and not gardener and not lima and not capi and not baremetal")
+@pytest.mark.feature(
+    "not container and not gardener and not lima and not capi and not baremetal"
+)
 @pytest.mark.booted(reason="requires booted system")
 @pytest.mark.root(reason="requires audit operations")
 def test_ports_protocols_and_services_restricted(shell, systemd):
