@@ -181,7 +181,7 @@ def detect_hypervisor() -> Hypervisor:
     return Hypervisor.none
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def systemd_detect_virt() -> Hypervisor:
     return detect_hypervisor()
 

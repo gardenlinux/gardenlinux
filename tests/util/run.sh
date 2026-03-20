@@ -15,14 +15,18 @@ DESCRIPTION
 COMMON OPTIONS
   --help                           Show this help message and exit
 
-  --skip-cleanup                  Skip cleanup of cloud resources after testing
+  --skip-cleanup                   Skip cleanup of cloud resources after testing
                                    QEMU VM: After running/skipping tests, stop/cleanup with ctrl+c
                                    Cloud: To cleanup resources after passing this flag, re-run without it
 
-  --skip-tests                    Skip running the actual test suite
+  --skip-tests                     Skip running the actual test suite (and do not build dist disk)
 
-  --test-args <args>              Pass any commandline argument to pytest
+  --test-args <args>               Pass any commandline argument to pytest
                                    Put multiple arguments inside quotes
+
+  --watch                          Run test suite once and re-run on feature/test file changes.
+
+  --dev                            Combination of '--skip-cleanup --skip-tests --watch [--ssh]'
 
 CLOUD SPECIFIC OPTIONS
   --cloud <provider>              Specify cloud provider (aws, gcp, azure, ali)
@@ -93,10 +97,13 @@ EOF
 cloud=
 
 cloud_image=0
+skip_tests=0
+watch=0
 chroot_args=()
 cloud_args=()
 qemu_args=()
 oci_args=()
+test_args=()
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -116,17 +123,32 @@ while [ $# -gt 0 ]; do
 		shift
 		;;
 	--skip-tests)
+		skip_tests=1
 		cloud_args+=("$1")
 		qemu_args+=("$1")
 		oci_args+=("$1")
 		shift
 		;;
 	--test-args)
+		test_args+=("$2")
 		chroot_args+=("$1" "$2")
 		cloud_args+=("$1" "$2")
 		qemu_args+=("$1" "$2")
 		oci_args+=("$1" "$2")
 		shift 2
+		;;
+	--watch)
+		watch=1
+		shift
+		;;
+	--dev)
+		skip_tests=1
+		watch=1
+		chroot_args+=("--watch")
+		cloud_args+=("--skip-cleanup" "--skip-tests")
+		qemu_args+=("--skip-cleanup" "--skip-tests" "--ssh")
+		oci_args+=("--skip-cleanup")
+		shift
 		;;
 	# cloud specific
 	--cloud)
@@ -212,11 +234,14 @@ if [ -z "$cloud" ] && ! ((cloud_image)); then
 	[ -n "$type" ]
 fi
 
-if [ ! -f ".build/.gh_artifact" ]; then
-	echo "Building test distribution..."
-	./util/build.makefile
-else
+if [ -f ".build/.gh_artifact" ]; then
 	echo "Using cached test distribution from github artifact"
+elif ((skip_tests)); then
+	echo "Skipping test disk build; building dist and firmware only..."
+	./util/build.makefile dist edk2
+else
+	echo "Building test distribution..."
+	./util/build.makefile dist-disk
 fi
 
 if [ -n "$cloud" ]; then
@@ -229,19 +254,28 @@ if [ -n "$cloud" ]; then
 		fi
 		./util/run_cloud.sh --cloud "$cloud" "${cloud_args[@]}" .build "$artifact"
 	fi
+	if ((watch)); then
+		"./util/run_dev_cloud.sh" --watch ${test_args[@]:+"--test-args" "${test_args[*]}"} .build "$artifact"
+	fi
 else
 	case "$type" in
 	tar)
-		./util/run_chroot.sh "${chroot_args[@]}" .build "$artifact"
+		"./util/run_chroot.sh" "${chroot_args[@]}" .build "$artifact"
 		;;
-	raw)
-		./util/run_qemu.sh "${qemu_args[@]}" .build "$artifact"
+	raw | pxe.tar.gz)
+		if ! ((watch)); then
+			"./util/run_qemu.sh" "${qemu_args[@]}" .build "$artifact"
+		else
+			qemu_pid=""
+			trap 'if [ -n "$qemu_pid" ]; then kill "$qemu_pid" 2>/dev/null || true; fi' EXIT
+			"./util/run_qemu.sh" "${qemu_args[@]}" .build "$artifact" &
+			qemu_pid=$!
+			"./util/login_qemu.sh" true
+			"./util/run_dev_qemu.sh" --watch ${test_args[@]:+"--test-args" "${test_args[*]}"}
+		fi
 		;;
 	oci)
 		./util/run_oci.sh "${oci_args[@]}" .build "$artifact"
-		;;
-	pxe.tar.gz)
-		./util/run_qemu.sh "${qemu_args[@]}" .build "$artifact"
 		;;
 	*)
 		echo "artifact type $type not supported" >&2
