@@ -11,9 +11,9 @@ Password-Initial:
 	required pam_pwhistory.so use_authtok remember=5 retry=5
 Auth-Type: Primary
 Auth:
-	required pam_faillock.so preauth silent audit deny=3 unlock_time=900
+	required pam_faillock.so preauth silent audit deny=5 unlock_time=900
 Auth-Initial:
-	required pam_faillock.so preauth silent audit deny=3 unlock_time=900
+	required pam_faillock.so preauth silent audit deny=5 unlock_time=900
 Account-Type: Primary
 Account:
 	required pam_faillock.so
