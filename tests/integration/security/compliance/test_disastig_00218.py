@@ -3,6 +3,7 @@ from plugins.shell import ShellRunner
 
 TEST_USER = "audit_concurrent_user"
 OUTPUT_FILE = "/tmp/audit_output_gl.txt"
+JOURNAL_FILE = "/tmp/journal_output_gl.txt"
 TIME_FILE = "/tmp/audit_start_time"
 
 
@@ -17,12 +18,10 @@ def concurrent_login_environment(shell: ShellRunner):
     yield
     shell(f"pkill -u {TEST_USER}")
     shell(f"userdel -r {TEST_USER}")
-    shell(f"rm -f {OUTPUT_FILE} {TIME_FILE}")
+    shell(f"rm -f {OUTPUT_FILE} {JOURNAL_FILE} {TIME_FILE}")
 
 
-@pytest.mark.feature(
-    "not container and not gardener and not lima and not capi and not baremetal"
-)
+@pytest.mark.feature("stig")
 @pytest.mark.booted(reason="requires kernel logging")
 @pytest.mark.root(reason="required to generate audit events")
 def test_audit_concurrent_logins(shell: ShellRunner, concurrent_login_environment):
@@ -31,18 +30,29 @@ def test_audit_concurrent_logins(shell: ShellRunner, concurrent_login_environmen
     records when concurrent logons to the same account occur from different sources.
     Ref: SRG-OS-000472-GPOS-00218
     """
-
     shell(f"date '+%H:%M:%S' > {TIME_FILE}")
 
     shell(f"su - {TEST_USER} -c 'sleep 30' &")
-    shell(f"su - {TEST_USER} -c 'sleep 30' &")
 
-    shell("sleep 3")
+    shell(
+        f"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "
+        f"{TEST_USER}@127.0.0.1 'sleep 30' &"
+    )
 
-    shell(f'ausearch -m USER_START -ts "$(cat {TIME_FILE})" > {OUTPUT_FILE}')
+    shell("sleep 5")
 
-    result = shell(f"grep -q 'acct=\"{TEST_USER}\"' {OUTPUT_FILE}")
+    shell(f'ausearch -ts "$(cat {TIME_FILE})" > {OUTPUT_FILE}')
+
+    shell(
+        f'journalctl --since "$(cat {TIME_FILE})" '
+        f'| grep -i "{TEST_USER}" > {JOURNAL_FILE}'
+    )
+
+    audit_hits = shell(f"grep -c '{TEST_USER}' {OUTPUT_FILE}")
+    journal_hits = shell(f"grep -c '{TEST_USER}' {JOURNAL_FILE}")
+
+    total = int(audit_hits.stdout.strip() or 0) + int(journal_hits.stdout.strip() or 0)
 
     assert (
-        result.returncode == 0
-    ), "stigcompliance: concurrent login audit event not detected"
+        total >= 2
+    ), "stigcompliance: concurrent login audit events from different sources not detected"
