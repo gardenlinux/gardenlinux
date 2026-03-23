@@ -49,6 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          ref: main
           sparse-checkout: |
             .github/**
           sparse-checkout-cone-mode: false
@@ -95,7 +96,7 @@ jobs:
           ref: ${{ inputs.commit_id }}
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@e68236134acc7416606052599f4cfab7b9ea3b7c # pin@0.10.14
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
       - name: Set container version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -337,7 +338,7 @@ jobs:
           ref: ${{ inputs.commit_id }}
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@e68236134acc7416606052599f4cfab7b9ea3b7c # pin@0.10.14
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
       - name: Set CNAME
         run: |
           echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
