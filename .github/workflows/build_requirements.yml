@@ -82,7 +82,7 @@ jobs:
           fi
 
           commit_id=$(echo $glrd_data | jq -r '.releases[0].git.commit')
-          version=$(echo $glrd_data | jq -r '(.releases[0].version.major | tostring) + "." + (.releases[0].version.minor | tostring)')
+          version=$(echo $glrd_data | jq -r '(.releases[0].version.major | tostring) + "." + (.releases[0].version.minor | tostring) + "." + (.releases[0].version.patch | tostring)')
 
           echo "COMMIT_ID=$commit_id" | tee -a "$GITHUB_ENV"
           echo "VERSION=$version" | tee -a "$GITHUB_ENV"

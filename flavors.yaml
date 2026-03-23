@@ -78,6 +78,16 @@ targets:
           - _prod
           - _usi
           - _fips
+        arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
+          - _usi
+          - _fips
         arch: arm64
         build: true
         test: true
