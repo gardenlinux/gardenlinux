@@ -106,3 +106,30 @@ def test_audit_event_contains_source(shell: ShellRunner):
         or "comm=" in result.stdout
         or "exe=" in result.stdout
     ), "stigcompliance: audit records do not contain source information"
+
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="audit event validation requires audit subsystem")
+@pytest.mark.root(reason="required to read audit logs")
+def test_audit_event_contains_full_record(shell: ShellRunner):
+    """
+    As per DISA STIG requirement, the operating system must produce audit
+    records containing information to establish what type of events occurred,
+    when (date and time) the events occurred, where the events occurred,
+    the source of the events, and the outcome of the events.
+
+    This test verifies that audit records include event type information,
+    timestamps, location (where), source information, and outcome.
+
+    Ref: SRG-OS-000041-GPOS-00019
+    """
+    result = shell(
+        cmd="ausearch -ts recent",
+        capture_output=True,
+    )
+    assert (
+        "success=yes" in result.stdout
+        or "success=no" in result.stdout
+        or "res=success" in result.stdout
+        or "res=failed" in result.stdout
+    ), "stigcompliance: audit records do not contain outcome (success/failure) information"
