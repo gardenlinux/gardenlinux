@@ -435,7 +435,7 @@ class File:
         return special | mode
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def file() -> File:
     """Fixture providing the ``File`` helper for file metadata operations."""
     return File()

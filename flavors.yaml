@@ -76,6 +76,26 @@ targets:
       - features:
           - gardener
           - _prod
+          - _usi
+          - _fips
+        arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
+          - _usi
+          - _fips
+        arch: arm64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
         arch: amd64
         build: true
@@ -122,7 +142,6 @@ targets:
         test: true
         test-platform: true
         publish: true
-    flavors:
       - features:
           - gardener
           - _prod
@@ -153,6 +172,16 @@ targets:
           - gardener
           - _prod
           - _usi
+        arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
+          - _usi
+          - _fips
         arch: amd64
         build: true
         test: true
@@ -304,7 +333,6 @@ targets:
         test: true
         test-platform: true
         publish: true
-    flavors:
       - features:
           - gardener
           - _prod
