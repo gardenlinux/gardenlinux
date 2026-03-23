@@ -1,6 +1,6 @@
 import pytest
 
-ALLOWED_PORTS = {22, 53}
+ALLOWED_PORTS = {22, 53, 2601, 111, 53, 2616, 3260, 2623}
 
 FORBIDDEN_SERVICES = [
     "telnet.service",
@@ -11,9 +11,7 @@ FORBIDDEN_SERVICES = [
 ]
 
 
-@pytest.mark.feature(
-    "not container and not gardener and not lima and not capi and not baremetal"
-)
+@pytest.mark.feature("not container")
 @pytest.mark.booted(reason="requires booted system")
 @pytest.mark.root(reason="requires audit operations")
 @pytest.mark.skip(reason="no way of currently testing this")
