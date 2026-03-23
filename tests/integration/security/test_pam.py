@@ -22,7 +22,7 @@ def test_common_auth_pam_faillock(pam_config):
         type_="auth",
         control_contains="required",
         module_contains="pam_faillock.so",
-        arg_contains=["preauth", "silent", "audit", "deny=3", "unlock_time=900"],
+        arg_contains=["preauth", "silent", "audit", "deny=5", "unlock_time=900"],
     )
     assert (
         len(results) == 1
@@ -32,7 +32,7 @@ def test_common_auth_pam_faillock(pam_config):
         type_="auth",
         control_contains="default=die",
         module_contains="pam_faillock.so",
-        arg_contains=["authfail", "silent", "audit", "deny=3", "unlock_time=900"],
+        arg_contains=["authfail", "silent", "audit", "deny=5", "unlock_time=900"],
     )
     assert (
         len(results) == 1
