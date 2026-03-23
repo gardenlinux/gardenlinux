@@ -37,9 +37,9 @@ def test_ports_protocols_and_services_restricted(shell):
 
     unauthorized_ports = open_ports - ALLOWED_PORTS
 
-    assert not unauthorized_ports, (
-        f"stigcompliance: unauthorized ports open: {unauthorized_ports}"
-    )
+    assert (
+        not unauthorized_ports
+    ), f"stigcompliance: unauthorized ports open: {unauthorized_ports}"
 
 
 @pytest.mark.feature("not container")
@@ -62,6 +62,6 @@ def test_forbidden_services_not_running(shell):
 
     found_forbidden = [svc for svc in FORBIDDEN_SERVICES if svc in running_services]
 
-    assert not found_forbidden, (
-        f"stigcompliance: forbidden services running: {found_forbidden}"
-    )
+    assert (
+        not found_forbidden
+    ), f"stigcompliance: forbidden services running: {found_forbidden}"
