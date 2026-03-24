@@ -61,7 +61,6 @@ cleanup() {
     echo "⚙️  cleaning up containers and images $image_name"
     podman rmi -f "$image_sha" 2>/dev/null || true
 }
-
 trap cleanup EXIT
 
 echo "⚙️  loading OCI image $image_name"
