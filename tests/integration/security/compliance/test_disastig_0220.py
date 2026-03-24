@@ -8,16 +8,14 @@ Verify the operating system generates audit records for all direct access to the
 
 
 @pytest.mark.booted(reason="requires running systemd")
-def test_journald_should_not_store_logs_in_memory(shell):
+def test_journald_should_not_store_logs_in_memory(systemd):
     """
     Confirm that journald is not configured to store logs in memory
     """
-    result = shell(
-        "systemd-analyze cat-config /etc/systemd/journald.conf", capture_output=True
-    )
+    result = systemd.get_config("/etc/systemd/journald.conf")
     config = [
         v
-        for line in result.stdout.splitlines()
+        for line in result.splitlines()
         if line.startswith("Storage=")
         for k, v in [line.split("=")]
     ]

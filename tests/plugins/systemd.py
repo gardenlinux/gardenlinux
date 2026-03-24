@@ -278,6 +278,11 @@ class Systemd:
             for k, v in [kv.split("=", 1)]
         }
 
+    def get_config(self, config_path):
+        return self._shell(
+            f"systemd-analyze cat-config {config_path}", capture_output=True
+        ).stdout
+
 
 @pytest.fixture
 def systemd(shell: ShellRunner):
