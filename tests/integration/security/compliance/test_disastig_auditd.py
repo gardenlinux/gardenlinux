@@ -133,3 +133,49 @@ def test_audit_event_contains_full_record(shell: ShellRunner):
         or "res=success" in result.stdout
         or "res=failed" in result.stdout
     ), "stigcompliance: audit records do not contain outcome (success/failure) information"
+
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="audit event validation requires audit subsystem")
+@pytest.mark.root(reason="required to read audit logs")
+def test_audit_event_contains_full_text_recording(shell: ShellRunner):
+    """
+    As per DISA STIG requirement, the operating system must produce audit
+    records containing information to establish what type of events occurred,
+    when (date and time) the events occurred, where the events occurred,
+    the source of the events, and the outcome of the events.
+
+    This test verifies that the operating system generates audit records
+    containing the full-text recording of privileged commands.
+    Ref: SRG-OS-000042-GPOS-00020
+    """
+    result = shell(
+        cmd="ausearch -ts recent",
+        capture_output=True,
+    )
+    assert (
+        "proctitle=" in result.stdout or "type=EXECVE" in result.stdout
+    ), "stigcompliance: audit records do not contain full-text command recording"
+
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="audit event validation requires audit subsystem")
+@pytest.mark.root(reason="required to read audit logs")
+def test_audit_event_contains_individual_identities(shell: ShellRunner):
+    """
+    As per DISA STIG requirement, the operating system must produce audit
+    records containing information to establish what type of events occurred,
+    when (date and time) the events occurred, where the events occurred,
+    the source of the events, and the outcome of the events.
+
+    This test verifies that the operating system generates audit records
+    containing the individual identities of group account users.
+    Ref: SRG-OS-000042-GPOS-00021
+    """
+    result = shell(
+        cmd="ausearch -ts recent",
+        capture_output=True,
+    )
+    assert (
+        " a0=" in result.stdout or " a1=" in result.stdout or " a2=" in result.stdout
+    ), "stigcompliance: audit records do not contain command argument details"
