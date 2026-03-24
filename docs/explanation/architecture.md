@@ -12,4 +12,6 @@ github_repo: gardenlinux
 github_source_path: docs/explanation/architecture.md
 ---
 
+
+
 # Architecture

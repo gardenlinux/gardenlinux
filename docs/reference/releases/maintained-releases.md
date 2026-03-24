@@ -16,6 +16,8 @@ github_source_path: docs/src/aggregation/releases.py
 github_target_path: docs/reference/releases/maintained-releases.md
 ---
 
+
+
 # Maintained Releases
 
 The table below provides the current list of actively maintained Garden Linux releases. For details about the release lifecycle phases, see [Release Lifecycle](release-lifecycle.md).

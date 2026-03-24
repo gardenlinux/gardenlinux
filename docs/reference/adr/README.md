@@ -1,3 +1,9 @@
+---
+title: Architecture Decision Records (ADR) for Garden Linux
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: docs/architecture/decisions/README.md
+---
 # Architecture Decision Records (ADR) for Garden Linux
 
 In Garden Linux, we use Architecture Decision Records (ADR) to capture important architectural decisions made about the system. This provides context, clarity, and documentation about the decisions we make.
