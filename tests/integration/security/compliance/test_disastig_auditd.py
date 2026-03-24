@@ -1,4 +1,3 @@
-
 import pytest
 from plugins.shell import ShellRunner
 
