@@ -288,3 +288,41 @@ def test_audit_log_retention_and_availability(shell: ShellRunner):
     assert (
         "type=" in output
     ), "stigcompliance: audit records not in expected structured format"
+
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="audit retention validation requires audit subsystem")
+@pytest.mark.root(reason="required to read audit configuration and logs")
+def test_audit_log_audit_fields(shell: ShellRunner):
+    """
+    As per DISA STIG requirement, the operating system should provide the
+    capability to filter audit records for events of interest based
+    upon all audit fields within audit records
+    Ref: SRG-OS-000054-GPOS-00025
+    """
+    uid_result = shell("ausearch -ua 0", capture_output=True)
+    assert (
+        uid_result.returncode == 0
+    ), "stigcompliance: unable to filter audit records by user identity (uid)"
+
+    type_result = shell(
+        "ausearch -ts recent -m USER_LOGIN", capture_output=True, ignore_exit_code=True
+    )
+    assert type_result.returncode in (
+        0,
+        1,
+    ), "stigcompliance: unable to filter audit records by event type"
+
+    cmd_result = shell(
+        "ausearch -ts recent -c id", capture_output=True, ignore_exit_code=True
+    )
+    assert cmd_result.returncode in (
+        0,
+        1,
+    ), "stigcompliance: unable to filter audit records by command"
+
+    assert (
+        "type=" in uid_result.stdout
+        or "type=" in type_result.stdout
+        or "type=" in cmd_result.stdout
+    ), "stigcompliance: audit filtering does not return structured audit records"
