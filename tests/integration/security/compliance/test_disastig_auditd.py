@@ -1,3 +1,4 @@
+
 import pytest
 from plugins.shell import ShellRunner
 
@@ -138,7 +139,7 @@ def test_audit_event_contains_full_record(shell: ShellRunner):
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit event validation requires audit subsystem")
 @pytest.mark.root(reason="required to read audit logs")
-def test_audit_event_contains_full_text_recording(shell: ShellRunner):
+def test_audit_event_contains_full_text_recording(audit_rule, shell: ShellRunner):
     """
     As per DISA STIG requirement, the operating system must produce audit
     records containing information to establish what type of events occurred,
@@ -154,8 +155,10 @@ def test_audit_event_contains_full_text_recording(shell: ShellRunner):
         capture_output=True,
     )
     assert (
-        "proctitle=" in result.stdout or "type=EXECVE" in result.stdout
-    ), "stigcompliance: audit records do not contain full-text command recording"
+        "type=EXECVE" in result.stdout and " a0=" in result.stdout
+    ) or "proctitle=" in result.stdout, (
+        "stigcompliance: audit records do not contain full-text command recording"
+    )
 
 
 @pytest.mark.feature("not container and not lima")
@@ -202,3 +205,87 @@ def test_audit_event_contains_audit_processing_failures(shell: ShellRunner):
         or "lost=" in result.stdout
         or "backlog" in result.stdout
     ), "stigcompliance: audit records do not indicate alerting or detection of audit processing failures"
+
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="audit event validation requires audit subsystem")
+@pytest.mark.root(reason="required to read audit logs")
+def test_audit_event_contains_audit_multiple_components(shell: ShellRunner):
+    """
+    As per DISA STIG requirement, the operating system provides the
+    capability to centrally review and analyze audit records from
+    multiple components within the system
+    Ref: SRG-OS-000051-GPOS-00024
+    """
+    result = shell(
+        cmd="ausearch -ts recent",
+        capture_output=True,
+    )
+
+    assert (
+        result.stdout.strip() != "" and "type=" in result.stdout
+    ), "stigcompliance: audit records are not retained or retrievable for analysis"
+
+
+AUDITD_CONF = "/etc/audit/auditd.conf"
+
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="audit retention validation requires audit subsystem")
+@pytest.mark.root(reason="required to read audit configuration and logs")
+def test_audit_log_retention_and_availability(shell: ShellRunner):
+    """
+    As per DISA STIG requirement, the operating system must retain audit
+    records and provide the capability to extract and review them.
+    This test verifies:
+    1. Audit retention configuration (auditd.conf)
+    2. Audit logs are present and retrievable (ausearch)
+    Ref: SRG-OS-000051-GPOS-00024
+    """
+    result = shell(f"cat {AUDITD_CONF}", capture_output=True)
+    assert result.returncode == 0, "stigcompliance: unable to read auditd.conf"
+
+    content = result.stdout
+
+    config = {}
+    for line in content.splitlines():
+        line = line.strip()
+
+        if not line or line.startswith("#"):
+            continue
+
+        if "=" in line:
+            key, value = line.split("=", 1)
+            config[key.strip()] = value.strip()
+
+    assert (
+        "max_log_file" in config
+    ), "stigcompliance: max_log_file not configured in auditd.conf"
+
+    assert (
+        "num_logs" in config
+    ), "stigcompliance: num_logs not configured in auditd.conf"
+
+    assert (
+        "space_left_action" in config
+    ), "stigcompliance: space_left_action not configured in auditd.conf"
+
+    assert (
+        int(config["max_log_file"]) > 0
+    ), "stigcompliance: max_log_file must be greater than 0"
+
+    assert int(config["num_logs"]) >= 1, "stigcompliance: num_logs must be at least 1"
+
+    result = shell("ausearch -ts recent", capture_output=True)
+
+    assert (
+        result.returncode == 0
+    ), "stigcompliance: ausearch failed, audit logs not retrievable"
+
+    output = result.stdout.strip()
+
+    assert output != "", "stigcompliance: no audit records found (retention failure)"
+
+    assert (
+        "type=" in output
+    ), "stigcompliance: audit records not in expected structured format"
