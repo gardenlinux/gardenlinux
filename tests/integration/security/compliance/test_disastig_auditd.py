@@ -179,3 +179,26 @@ def test_audit_event_contains_individual_identities(shell: ShellRunner):
     assert (
         " a0=" in result.stdout or " a1=" in result.stdout or " a2=" in result.stdout
     ), "stigcompliance: audit records do not contain command argument details"
+
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="audit event validation requires audit subsystem")
+@pytest.mark.root(reason="required to read audit logs")
+def test_audit_event_contains_audit_processing_failures(shell: ShellRunner):
+    """
+    As per DISA STIG requirement, the operating system must produce audit
+    the operating system alerts the ISSO and SA (at a minimum)
+    in the event of an audit processing failure.
+    Ref: SRG-OS-000043-GPOS-00022
+    """
+    result = shell(
+        cmd="ausearch -ts recent",
+        capture_output=True,
+    )
+
+    assert "audit" in result.stdout and (
+        "fail" in result.stdout
+        or "error" in result.stdout
+        or "lost=" in result.stdout
+        or "backlog" in result.stdout
+    ), "stigcompliance: audit records do not indicate alerting or detection of audit processing failures"
