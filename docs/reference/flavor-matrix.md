@@ -12,6 +12,8 @@ editLink: false
 # extended by docs-ng/src/aggregation/flavor_matrix.py
 ---
 
+
+
 # Flavor Matrix
 
 The following table lists all Garden Linux [flavors](/reference/glossary.html#flavor) with their explicit [features](/reference/glossary.html#feature) and recursively resolved dependencies.

@@ -18,6 +18,8 @@ github_source_path: docs/how-to/getting-images.md
 github_target_path: docs/how-to/getting-images.md
 ---
 
+
+
 # Getting Images
 
 Once you have [chosen a flavor](/how-to/choosing-flavors), you need to obtain
