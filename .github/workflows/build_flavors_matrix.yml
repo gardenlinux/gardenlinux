@@ -31,7 +31,7 @@ jobs:
             flavors.yaml
           sparse-checkout-cone-mode: false
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@96715cd11e3cfd2deb13e7040c1689045bcb4483 # pin@0.10.17
       - id: matrix
         name: Generate flavors matrix
         run: |
