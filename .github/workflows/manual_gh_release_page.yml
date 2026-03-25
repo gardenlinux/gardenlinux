@@ -65,9 +65,9 @@ jobs:
                 glrd-manage --s3-update --create major --version ${major}
               fi
 
-              glrd-manage --s3-update --create minor --version ${version} --commit ${COMMIT}
+              glrd-manage --s3-update --create minor --version ${VERSION} --commit ${COMMIT}
             elif [ ${type} = "dev" ]; then
-              glrd-manage --s3-update --create dev --version ${version} --commit ${COMMIT}
+              glrd-manage --s3-update --create dev --version ${VERSION} --commit ${COMMIT}
             fi
       - name: Get created GLRD release
         uses: gardenlinux/glrd@30fcac2ec9ad6cee873fcc503f0ca11022a4609e # v4.1.0
@@ -143,7 +143,7 @@ jobs:
           if [[ "${{ inputs.is_latest }}" == "true" ]]; then
             gl-gh-release create --tag "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}" --latest
           else
-            gl-gh-release create --tag "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}")"
+            gl-gh-release create --tag "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}"
           fi
 
           echo "id=$(cat .github_release_id)" | tee -a $GITHUB_OUTPUT
