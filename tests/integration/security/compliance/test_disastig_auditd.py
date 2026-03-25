@@ -417,7 +417,7 @@ def test_audit_log_directory_permissions_restricted(file: File):
     audit information from unauthorized access, modification, and deletion.
     This test verifies that audit log files are not readable or writable by
     group or others.
-    Ref: 
+    Ref:
     - SRG-OS-000057-GPOS-00027 (read protection)
     - SRG-OS-000058-GPOS-00028 (modification protection)
     - SRG-OS-000059-GPOS-00029 (deletion protection)
@@ -438,7 +438,7 @@ def test_audit_log_file_permissions_restricted(file: File):
     audit information from unauthorized access, modification, and deletion.
     This test verifies that audit log files are not readable or writable by
     group or others.
-    Ref: 
+    Ref:
     - SRG-OS-000057-GPOS-00027 (read protection)
     - SRG-OS-000058-GPOS-00028 (modification protection)
     """
@@ -457,7 +457,7 @@ def test_audit_log_owned_by_root(file: File):
     As per DISA STIG compliance requirements, the operating system must protect
     audit information from unauthorized access, modification, and deletion.
     This test verifies that audit log files are owned by root.
-    Ref: 
+    Ref:
     - SRG-OS-000057-GPOS-00027 (read protection)
     - SRG-OS-000058-GPOS-00028 (modification protection)
     - SRG-OS-000059-GPOS-00029 (deletion protection)
