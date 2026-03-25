@@ -404,10 +404,20 @@ def test_audit_records_have_valid_timestamps(shell: ShellRunner):
     """
     result = shell("ausearch -ts recent", capture_output=True)
 
-    assert result.returncode == 0, "stigcompliance: failed to retrieve audit records"
-
     timestamp_pattern = r"time->\w{3}\s+\w{3}\s+\d+\s+\d+:\d+:\d+\s+\d{4}"
 
     assert re.search(
         timestamp_pattern, result.stdout
     ), "stigcompliance: audit records do not contain valid timestamps"
+
+    timedate = shell("timedatectl status", capture_output=True)
+
+    assert timedate.returncode == 0, "stigcompliance: unable to check time sync status"
+
+    assert (
+        "System clock synchronized: yes" in timedate.stdout
+    ), "stigcompliance: system clock is not synchronized"
+
+    assert (
+        "NTP service: active" in timedate.stdout
+    ), "stigcompliance: NTP service is not active (systemd-timesyncd)"
