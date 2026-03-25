@@ -15,8 +15,8 @@ on:
         type: string
         required: true
       release_id:
-        type: boolean
-        default: false
+        type: string
+        required: true
       compatibility_flags:
         description: 'Flags to activate compatibility modes'
         type: string
