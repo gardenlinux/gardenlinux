@@ -1,3 +1,11 @@
+---
+title: "Contributing Workflow"
+github_target_path: "contributing/workflow.md"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: CONTRIBUTING.md
+---
+
 # Contributing to Garden Linux
 
 ## Code of conduct
