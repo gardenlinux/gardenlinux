@@ -2,6 +2,7 @@ import re
 
 import pytest
 from plugins.shell import ShellRunner
+from plugins.file import File
 
 
 @pytest.mark.feature("not container and not lima")
@@ -401,3 +402,58 @@ def test_audit_records_have_valid_timestamps(shell: ShellRunner):
     assert (
         "NTP service: active" in timedate.stdout
     ), "stigcompliance: NTP service is not active (systemd-timesyncd)"
+
+
+AUDIT_LOG_DIR = "/var/log/audit"
+AUDIT_LOG_FILE = "/var/log/audit/audit.log"
+
+
+@pytest.mark.feature("stig")
+@pytest.mark.booted(reason="requires audit subsystem")
+@pytest.mark.root(reason="required to inspect audit log permissions")
+def test_audit_log_directory_permissions_restricted(file: File):
+    """
+    As per DISA STIG compliance requirements, audit records must be protected
+    from unauthorized read access.
+    This test verifies that audit log files are not readable by group or others.
+    Ref: SRG-OS-000057-GPOS-00027
+    """
+
+    if file.exists(AUDIT_LOG_DIR):
+        assert file.has_permissions(AUDIT_LOG_DIR, "rwx------"), (
+            f"stigcompliance: audit log directory {AUDIT_LOG_DIR} permissions are not restricted"
+        )
+
+
+@pytest.mark.feature("stig")
+@pytest.mark.booted(reason="requires audit subsystem")
+@pytest.mark.root(reason="required to inspect audit log permissions")
+def test_audit_log_file_permissions_restricted(file: File):
+    """
+    As per DISA STIG compliance requirements, audit records must be protected
+    from unauthorized read access.
+    This test verifies that audit log files are not readable by group or others.
+    Ref: SRG-OS-000057-GPOS-00027
+    """
+
+    if file.exists(AUDIT_LOG_FILE):
+        assert file.has_permissions(AUDIT_LOG_FILE, "rw-------"), (
+            f"stigcompliance: audit log file {AUDIT_LOG_FILE} permissions are not restricted"
+        )
+
+
+@pytest.mark.feature("stig")
+@pytest.mark.booted(reason="requires audit subsystem")
+@pytest.mark.root(reason="required to inspect audit log ownership")
+def test_audit_log_owned_by_root(file: File):
+    """
+    As per DISA STIG compliance requirements, audit records must be protected
+    from unauthorized read access.
+    This test verifies that audit log files are not readable by group or others.
+    Ref: SRG-OS-000057-GPOS-00027
+    """
+
+    if file.exists(AUDIT_LOG_FILE):
+        assert file.is_owned_by_user(AUDIT_LOG_FILE, "root"), (
+            f"stigcompliance: audit log file {AUDIT_LOG_FILE} is not owned by root"
+        )
