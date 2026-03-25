@@ -5,6 +5,7 @@ Verify the operating system automatically audits account modification.
 """
 
 
+@pytest.mark.feature("stig")
 def test_audit_calling_user_group_related_utilities(audit_rule):
     for bin in [
         "/usr/sbin/visudo",
