@@ -65,7 +65,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
-      - uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
+      - uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # pin@v5.0.4
         with:
           path: |
             COMMIT
@@ -83,7 +83,7 @@ jobs:
           name: certs
           path: cert/
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@96715cd11e3cfd2deb13e7040c1689045bcb4483 # pin@0.10.17
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@91654fde83a7039f568337d04fdac4b47828a59a # pin@0.10.18
       - name: Set CNAME
         run: |
           echo "CNAME=$(gl-features-parse --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname)" | tee -a "$GITHUB_ENV"
@@ -143,7 +143,7 @@ jobs:
       - id: "auth_azure"
         if: ${{ startsWith(inputs.flavor, 'azure-') }}
         name: "Authenticate to Azure"
-        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # pin@v1
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # pin@v1
         with:
           client-id: ${{ secrets.az_client_id }}
           tenant-id: ${{ secrets.az_tenant_id }}
