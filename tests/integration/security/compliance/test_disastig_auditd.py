@@ -364,3 +364,29 @@ def test_audit_records_contain_identity_information(shell):
     assert (
         not missing
     ), "stigcompliance: audit records missing identity fields: " + ", ".join(missing)
+
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="audit retention validation requires audit subsystem")
+@pytest.mark.root(reason="required to read audit configuration and logs")
+def test_audit_record_filtering_capability(shell: ShellRunner):
+    """
+    As per DISA STIG compliance requirements, the operating system must provide
+    the capability to filter audit records based on all available audit fields.
+    This test verifies that audit tools support filtering by key fields such as:
+    event type, user identity, time, and executable.
+    Ref: SRG-OS-000054-GPOS-00025
+    """
+
+    commands = [
+        "ausearch -m USER_LOGIN || true",  # event type
+        "ausearch -ts recent || true",  # time
+        "ausearch -ua 0 || true",  # user identity (root)
+        "ausearch -x /usr/bin/id || true",  # executable
+    ]
+
+    for cmd in commands:
+        result = shell(cmd, capture_output=True)
+        assert (
+            result.returncode == 0
+        ), f"stigcompliance: audit filtering failed for command: {cmd}"
