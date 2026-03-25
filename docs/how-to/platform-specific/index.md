@@ -11,8 +11,8 @@ github_repo: gardenlinux
 github_source_path: docs/how-to/platform-specific/index.md
 ---
 
-
-
 # Platform-Specific Guides
 
 <!-- TODO: Create new content -->
+
+<SectionIndex />

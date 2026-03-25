@@ -11,8 +11,8 @@ github_repo: gardenlinux
 github_source_path: docs/how-to/customization/index.md
 ---
 
-
-
 # Customization
 
 <!-- TODO: Create new content -->
+
+<SectionIndex />
