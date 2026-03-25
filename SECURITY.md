@@ -1,3 +1,11 @@
+---
+title: "Security Response Process"
+github_target_path: "contributing/security.md"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: SECURITY.md
+---
+
 # Garden Linux Security Response Process
 
 Garden Linux has a growing community of volunteers and users. The Garden Linux
