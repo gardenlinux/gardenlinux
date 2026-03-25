@@ -44,6 +44,8 @@ jobs:
       GL_ALLOW_MULTIPLE_PLATFORMS: "1"
     permissions:
       id-token: write
+      contents: write
+      actions: write
     environment: oidc_aws_s3_upload
     strategy:
       fail-fast: false
