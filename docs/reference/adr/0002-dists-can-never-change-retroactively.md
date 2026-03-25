@@ -1,12 +1,12 @@
 ---
-title: 2. Distributions Can Never Change Retroactively
+title: "ADR 0002: Distributions Can Never Change Retroactively"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0002-dists-can-never-change-retroactively.md
 github_target_path: docs/reference/adr/0002-dists-can-never-change-retroactively.md
 ---
 
-# 2. Distributions Can Never Change Retroactively
+# ADR 0002: Distributions Can Never Change Retroactively
 
 **Date:** 2023-09-22
 

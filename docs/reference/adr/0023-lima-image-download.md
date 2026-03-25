@@ -1,12 +1,12 @@
 ---
-title: 23. Providing Garden Linux Images for Lima-VM via Containerized YAML Generator
+title: "ADR 0023: Providing Garden Linux Images for Lima-VM via Containerized YAML Generator"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0023-lima-image-download.md
 github_target_path: docs/reference/adr/0023-lima-image-download.md
 ---
 
-# 23. Providing Garden Linux Images for Lima-VM via Containerized YAML Generator
+# ADR 0023: Providing Garden Linux Images for Lima-VM via Containerized YAML Generator
 
 Date: 2025-11-20
 

@@ -1,12 +1,12 @@
 ---
-title: 19. Standardize on systemd Timers
+title: "ADR 0019: Standardize on systemd Timers"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0019-standardize-on-systemd-timers.md
 github_target_path: docs/reference/adr/0019-standardize-on-systemd-timers.md
 ---
 
-# 19. Standardize on systemd Timers
+# ADR 0019: Standardize on systemd Timers
 
 Date: 2025-10-30
 

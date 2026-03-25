@@ -1,12 +1,12 @@
 ---
-title: 14. Enforce Pull Request References in git Commit History
+title: "ADR 0014: Enforce Pull Request References in git Commit History"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0014-enforce-pr-references-in-commits.md
 github_target_path: docs/reference/adr/0014-enforce-pr-references-in-commits.md
 ---
 
-# 14. Enforce Pull Request References in git Commit History
+# ADR 0014: Enforce Pull Request References in git Commit History
 
 Date: 2025-10-17
 

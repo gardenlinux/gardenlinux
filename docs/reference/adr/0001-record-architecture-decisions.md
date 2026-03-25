@@ -1,12 +1,12 @@
 ---
-title: 1. Adopting Architecture Decision Records (ADR) for Garden Linux
+title: "ADR 0001: Adopting Architecture Decision Records (ADR) for Garden Linux"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0001-record-architecture-decisions.md
 github_target_path: docs/reference/adr/0001-record-architecture-decisions.md
 ---
 
-# 1. Adopting Architecture Decision Records (ADR) for Garden Linux
+# ADR 0001: Adopting Architecture Decision Records (ADR) for Garden Linux
 
 Date: 2023-08-23
 
@@ -16,7 +16,7 @@ Accepted
 
 ## Context
 
-To ensure clarity and traceability of architectural decisions in Garden Linux, we recognized the need for a structured documentation approach. Refer to [Issue #1742](https://github.com/gardenlinux/gardenlinux/issues/1742) for more details. Please note that, Garden Linux has daily versions, with select versions being designated as "supported". ADRs in Garden Linux reflect the current state and decisions of the repository/branch they reside in. Unless otherwise specified, they do not retroactively apply to past versions that are still supported. 
+To ensure clarity and traceability of architectural decisions in Garden Linux, we recognized the need for a structured documentation approach. Refer to [Issue #1742](https://github.com/gardenlinux/gardenlinux/issues/1742) for more details. Please note that, Garden Linux has daily versions, with select versions being designated as "supported". ADRs in Garden Linux reflect the current state and decisions of the repository/branch they reside in. Unless otherwise specified, they do not retroactively apply to past versions that are still supported.
 
 For more context about ADR itself please refer to https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions
 

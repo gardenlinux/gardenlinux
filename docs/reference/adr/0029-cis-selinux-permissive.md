@@ -1,12 +1,12 @@
 ---
-title: 29. Build features/cis with SELINUX=permissive Instead of SELINUX=enforcing
+title: "ADR 0029: Build features/cis with SELINUX=permissive Instead of SELINUX=enforcing"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0029-cis-selinux-permissive.md
 github_target_path: docs/reference/adr/0029-cis-selinux-permissive.md
 ---
 
-# 29. Build features/cis with SELINUX=permissive Instead of SELINUX=enforcing
+# ADR 0029: Build features/cis with SELINUX=permissive Instead of SELINUX=enforcing
 
 Date: 2025-12-13
 

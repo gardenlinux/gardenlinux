@@ -1,12 +1,12 @@
 ---
-title: 16. Avoid Host Dependency on `retry` Command in Makefile for tests-ng
+title: "ADR 0016: Avoid Host Dependency on `retry` Command in Makefile for tests-ng"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0016-minimal-host-dependencies-for-test-ng.md
 github_target_path: docs/reference/adr/0016-minimal-host-dependencies-for-test-ng.md
 ---
 
-# 16. Avoid Host Dependency on `retry` Command in Makefile for tests-ng
+# ADR 0016: Avoid Host Dependency on `retry` Command in Makefile for tests-ng
 
 Date: 2025-10-22
 

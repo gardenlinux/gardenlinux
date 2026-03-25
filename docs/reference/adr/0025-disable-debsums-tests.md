@@ -1,12 +1,12 @@
 ---
-title: 25. Disable Debsums Tests entirely
+title: "ADR 0025: Disable Debsums Tests entirely"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0025-disable-debsums-tests.md
 github_target_path: docs/reference/adr/0025-disable-debsums-tests.md
 ---
 
-# 25. Disable Debsums Tests entirely
+# ADR 0025: Disable Debsums Tests entirely
 
 Date: 2025-11-24
 

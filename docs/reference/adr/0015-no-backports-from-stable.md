@@ -1,12 +1,12 @@
 ---
-title: 15. No Backports from Debian Stable in Garden Linux
+title: "ADR 0015: No Backports from Debian Stable in Garden Linux"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0015-no-backports-from-stable.md
 github_target_path: docs/reference/adr/0015-no-backports-from-stable.md
 ---
 
-# 15. No Backports from Debian Stable in Garden Linux
+# ADR 0015: No Backports from Debian Stable in Garden Linux
 
 Date: 2025-10-21
 

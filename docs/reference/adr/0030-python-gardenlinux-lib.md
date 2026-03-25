@@ -1,12 +1,12 @@
 ---
-title: 30. Defining python-gardenlinux-lib as an internal tool
+title: "ADR 0030: Defining python-gardenlinux-lib as an internal tool"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0030-python-gardenlinux-lib.md
 github_target_path: docs/reference/adr/0030-python-gardenlinux-lib.md
 ---
 
-# 30. Defining python-gardenlinux-lib as an internal tool
+# ADR 0030: Defining python-gardenlinux-lib as an internal tool
 
 Date: 2026-01-21
 

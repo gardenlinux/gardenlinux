@@ -1,12 +1,12 @@
 ---
-title: 5. How to handle Secure Boot Keys in glci
+title: "ADR 0005: How to handle Secure Boot Keys in glci"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0005-secure-boot-keys-glci.md
 github_target_path: docs/reference/adr/0005-secure-boot-keys-glci.md
 ---
 
-# 5. How to handle Secure Boot Keys in glci
+# ADR 0005: How to handle Secure Boot Keys in glci
 
 **Date:** 2024-12-05
 

@@ -1,12 +1,12 @@
 ---
-title: 24. Promote Lima Image to Official Garden Linux Product
+title: "ADR 0024: Promote Lima Image to Official Garden Linux Product"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0024-promote-lima-image-to-official.md
 github_target_path: docs/reference/adr/0024-promote-lima-image-to-official.md
 ---
 
-# 24. Promote Lima Image to Official Garden Linux Product
+# ADR 0024: Promote Lima Image to Official Garden Linux Product
 
 Date: 2025-11-21
 

@@ -1,12 +1,12 @@
 ---
-title: 31. S3 Artifact and Metadata Publishing Contract Between Builder and GLCI
+title: "ADR 0031: S3 Artifact and Metadata Publishing Contract Between Builder and GLCI"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0031-builder-glci-interface.md
 github_target_path: docs/reference/adr/0031-builder-glci-interface.md
 ---
 
-# 31. S3 Artifact and Metadata Publishing Contract Between Builder and GLCI
+# ADR 0031: S3 Artifact and Metadata Publishing Contract Between Builder and GLCI
 
 Date: 2026-02-05
 
