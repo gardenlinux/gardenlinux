@@ -13,14 +13,8 @@ def test_journald_should_not_store_logs_in_memory(systemd):
     Confirm that journald is not configured to store logs in memory
     """
     result = systemd.get_config("/etc/systemd/journald.conf")
-    config = [
-        v
-        for line in result.splitlines()
-        if line.startswith("Storage=")
-        for k, v in [line.split("=")]
-    ]
-    if config:
-        assert config[-1] != "volatile"
+    if "Storage" in result.keys():
+        assert result["Storage"] != "volatile"
 
 
 @pytest.mark.feature("ssh")

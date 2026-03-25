@@ -278,10 +278,18 @@ class Systemd:
             for k, v in [kv.split("=", 1)]
         }
 
-    def get_config(self, config_path):
-        return self._shell(
+    def get_config(self, config_path) -> dict:
+        result = self._shell(
             f"systemd-analyze cat-config {config_path}", capture_output=True
-        ).stdout
+        )
+        config_lines = [
+            line
+            for line in result.stdout.split("\n")
+            if not line.startswith("#")
+            if "=" in line
+        ]
+
+        return {k: v for kv in config_lines for k, v in [kv.split("=", 1)]}
 
 
 @pytest.fixture
