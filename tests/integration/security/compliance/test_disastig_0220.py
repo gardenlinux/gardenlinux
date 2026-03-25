@@ -32,7 +32,7 @@ def test_sshd_unit_is_journald_friendly(systemd):
     """
     The sshd.service unit must forward stdout/stderr to the journal.
     """
-    result = systemd.get_unit_properties("ssh", "StandardOutput", "StandardError")
+    result = systemd.get_unit_properties("ssh")
     assert (
         result["StandardOutput"] == "journal"
     ), f"sshd stdout not directed to journal: {result['StandardOutput']}"
