@@ -1,12 +1,12 @@
 ---
-title: 12. Remove the Firecracker Feature from Garden Linux
+title: "ADR 0012: Remove the Firecracker Feature from Garden Linux"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0012-remove-firecracker-feature.md
 github_target_path: docs/reference/adr/0012-remove-firecracker-feature.md
 ---
 
-# 12. Remove the Firecracker Feature from Garden Linux
+# ADR 0012: Remove the Firecracker Feature from Garden Linux
 
 Date: 2025-10-01
 

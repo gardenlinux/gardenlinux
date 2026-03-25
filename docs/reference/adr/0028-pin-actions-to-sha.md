@@ -1,12 +1,12 @@
 ---
-title: 28. Pinning All GitHub Actions in Garden Linux Workflows
+title: "ADR 0028: Pinning All GitHub Actions in Garden Linux Workflows"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0028-pin-actions-to-sha.md
 github_target_path: docs/reference/adr/0028-pin-actions-to-sha.md
 ---
 
-# 28. Pinning All GitHub Actions in Garden Linux Workflows
+# ADR 0028: Pinning All GitHub Actions in Garden Linux Workflows
 
 Date: 2025-11-09
 

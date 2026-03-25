@@ -1,12 +1,12 @@
 ---
-title: 4. Vendoring dependencies in Go Applications
+title: "ADR 0004: Vendoring dependencies in Go Applications"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0004-vendoring-go-dependencies.md
 github_target_path: docs/reference/adr/0004-vendoring-go-dependencies.md
 ---
 
-# 4. Vendoring dependencies in Go Applications
+# ADR 0004: Vendoring dependencies in Go Applications
 
 **Date:** 2024-08-01
 

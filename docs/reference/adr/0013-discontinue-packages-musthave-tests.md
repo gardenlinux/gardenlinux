@@ -1,12 +1,12 @@
 ---
-title: 13. Discontinue `packages_musthave` tests
+title: "ADR 0013: Discontinue `packages_musthave` tests"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0013-discontinue-packages-musthave-tests.md
 github_target_path: docs/reference/adr/0013-discontinue-packages-musthave-tests.md
 ---
 
-# 13. Discontinue `packages_musthave` tests
+# ADR 0013: Discontinue `packages_musthave` tests
 
 Date: 2025-10-09
 

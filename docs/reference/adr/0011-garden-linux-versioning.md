@@ -1,12 +1,12 @@
 ---
-title: 11. Garden Linux versioning
+title: "ADR 0011: Garden Linux versioning"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0011-garden-linux-versioning.md
 github_target_path: docs/reference/adr/0011-garden-linux-versioning.md
 ---
 
-# 11. Garden Linux versioning
+# ADR 0011: Garden Linux versioning
 
 Date: 2025-08-25
 
