@@ -273,24 +273,13 @@ class Systemd:
             cmd=f"systemctl show {service_name}.service",
             capture_output=True,
         )
-        return {
-            k: v
-            for kv in result.stdout.strip().split("\n")
-            for k, v in [kv.split("=", 1)]
-        }
+        return Parse.from_str(result.stdout).parse("keyval", forbid_duplicates=False)
 
     def get_config(self, config_path) -> dict:
         result = self._shell(
             f"systemd-analyze cat-config {config_path}", capture_output=True
         )
-        config_lines = [
-            line
-            for line in result.stdout.split("\n")
-            if not line.startswith("#")
-            if "=" in line
-        ]
-
-        return {k: v for kv in config_lines for k, v in [kv.split("=", 1)]}
+        return Parse.from_str(result.stdout).parse("keyval", forbid_duplicates=False)
 
 
 @pytest.fixture

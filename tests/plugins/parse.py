@@ -265,8 +265,8 @@ class Parse:
         """
         return cls(content, label)
 
-    def _parse_keyval(self, content: str) -> Dict[str, str]:
-        cfg = configparser.ConfigParser(allow_no_value=True)
+    def _parse_keyval(self, content: str, forbid_duplicates: False) -> Dict[str, str]:
+        cfg = configparser.ConfigParser(allow_no_value=True, strict=forbid_duplicates)
         cfg.optionxform = lambda optionstr: optionstr  # type: ignore[assignment]
         wrapped = "[default]\n" + content
         cfg.read_file(StringIO(wrapped))
@@ -315,11 +315,13 @@ class Parse:
             )
         return tomllib.loads(content)
 
-    def _parse_content(self, format: str, ignore_comments: bool = True) -> Any:
+    def _parse_content(
+        self, format: str, ignore_comments: bool = True, forbid_duplicates: bool = True
+    ) -> Any:
         fmt = format.lower()
         match fmt:
             case "keyval":
-                return self._parse_keyval(self.content)
+                return self._parse_keyval(self.content, forbid_duplicates)
             case "spacedelim":
                 return self._parse_spacedelim(self.content)
             case "ini":
@@ -336,13 +338,16 @@ class Parse:
                     f"Supported formats: {', '.join(SUPPORTED_FORMATS)}."
                 )
 
-    def parse(self, format: str, ignore_comments: bool = True) -> Any:
+    def parse(
+        self, format: str, ignore_comments: bool = True, forbid_duplicates: bool = True
+    ) -> Any:
         """Parse content and return data structure based on format.
 
 
         Args:
             format: One of the supported format identifiers (json, yaml, toml, ini, keyval).
             ignore_comments: (optional, default=True) If True, strip comments where applicable.
+            forbid_duplicates: If False, won't raise an exception if duplicate key (where applicable) is found.
 
         Returns:
             Parsed data structure (dict, list, etc.) based on format.
@@ -354,7 +359,7 @@ class Parse:
             >>> assert config["database"]["port"] == 5432
             >>> assert "missing" not in config["database"]
         """
-        return self._parse_content(format, ignore_comments)
+        return self._parse_content(format, ignore_comments, forbid_duplicates)
 
     def lines(
         self,
