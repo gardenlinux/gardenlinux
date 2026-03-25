@@ -612,7 +612,7 @@ def test_cissshd_sshd_config_content(parse_file: ParseFile):
         "AcceptEnv LANG LC_*",
         "Subsystem sftp /usr/lib/openssh/sftp-server -f AUTHPRIV -l INFO",
         "ClientAliveInterval 300",
-        "ClientAliveCountMax 1",
+        "ClientAliveCountMax 0",
         "AuthenticationMethods publickey",
         "PubkeyAuthentication yes",
         "PasswordAuthentication no",

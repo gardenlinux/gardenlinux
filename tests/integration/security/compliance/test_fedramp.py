@@ -149,7 +149,7 @@ def test_fedramp_sshd_config_content(parse_file: ParseFile):
         "AcceptEnv LANG",
         "Subsystem sftp /usr/lib/openssh/sftp-server -f AUTHPRIV -l INFO",
         "ClientAliveInterval 600",
-        "ClientAliveCountMax 1",
+        "ClientAliveCountMax 0",
         "AuthenticationMethods publickey",
         "PermitEmptyPasswords no",
         "Banner /etc/issue.net",
