@@ -143,10 +143,7 @@ class AuditRule:
     def binary_call_audit_rule(self, binary_path):
         logger.debug(f"Binary call audit rule for {binary_path}")
         matched_rules = [
-            rule
-            for rule in self.rules
-            if "-S execve" in rule
-            if f"-F exe={binary_path}" in rule
+            rule for rule in self.rules if f"-S execve -F exe={binary_path}" in rule
         ]
         if matched_rules:
             logger.debug(f"Matched binary call rules: {matched_rules}")
