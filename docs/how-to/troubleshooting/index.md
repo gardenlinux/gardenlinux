@@ -11,8 +11,8 @@ github_source_path: docs/how-to/troubleshooting/index.md
 github_target_path: docs/how-to/troubleshooting/index.md
 ---
 
-
-
 # Troubleshooting
 
 <!-- TODO: Adapt from 01_developers/troubleshooting/index.md -->
+
+<SectionIndex />

@@ -11,8 +11,8 @@ github_source_path: docs/reference/releases/index.md
 github_target_path: docs/reference/releases/index.md
 ---
 
-
-
 # Releases
 
 <!-- TODO: Create new content -->
+
+<SectionIndex />
