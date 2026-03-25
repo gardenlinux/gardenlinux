@@ -173,3 +173,26 @@
 # https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238277
 -a always,exit -F path=/usr/bin/sudo -F perm=x -F auid>=1000 -F auid!=4294967295 -k priv_cmd
 
+# Ref: SRG-OS-000239-GPOS-00089
+-a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/visudo      -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/vipw        -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/vigr        -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/bin/passwd       -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/bin/chpasswd     -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/bin/chgpasswd    -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/bin/chage        -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/bin/chfn         -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/bin/chsh         -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/bin/gpasswd      -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/bin/shadowconfig -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/pwconv      -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/pwunconv    -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/groupadd    -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/groupdel    -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/groupmod    -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/grpconv     -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/grpunconv   -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/newusers    -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/useradd     -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/userdel     -k account_mod
+-a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/usermod     -k account_mod
