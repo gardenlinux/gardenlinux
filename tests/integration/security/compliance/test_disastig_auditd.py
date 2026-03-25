@@ -1,8 +1,8 @@
 import re
 
 import pytest
-from plugins.shell import ShellRunner
 from plugins.file import File
+from plugins.shell import ShellRunner
 
 
 @pytest.mark.feature("not container and not lima")
@@ -420,9 +420,9 @@ def test_audit_log_directory_permissions_restricted(file: File):
     """
 
     if file.exists(AUDIT_LOG_DIR):
-        assert file.has_permissions(AUDIT_LOG_DIR, "rwx------"), (
-            f"stigcompliance: audit log directory {AUDIT_LOG_DIR} permissions are not restricted"
-        )
+        assert file.has_permissions(
+            AUDIT_LOG_DIR, "rwx------"
+        ), f"stigcompliance: audit log directory {AUDIT_LOG_DIR} permissions are not restricted"
 
 
 @pytest.mark.feature("stig")
@@ -437,9 +437,9 @@ def test_audit_log_file_permissions_restricted(file: File):
     """
 
     if file.exists(AUDIT_LOG_FILE):
-        assert file.has_permissions(AUDIT_LOG_FILE, "rw-------"), (
-            f"stigcompliance: audit log file {AUDIT_LOG_FILE} permissions are not restricted"
-        )
+        assert file.has_permissions(
+            AUDIT_LOG_FILE, "rw-------"
+        ), f"stigcompliance: audit log file {AUDIT_LOG_FILE} permissions are not restricted"
 
 
 @pytest.mark.feature("stig")
@@ -454,6 +454,6 @@ def test_audit_log_owned_by_root(file: File):
     """
 
     if file.exists(AUDIT_LOG_FILE):
-        assert file.is_owned_by_user(AUDIT_LOG_FILE, "root"), (
-            f"stigcompliance: audit log file {AUDIT_LOG_FILE} is not owned by root"
-        )
+        assert file.is_owned_by_user(
+            AUDIT_LOG_FILE, "root"
+        ), f"stigcompliance: audit log file {AUDIT_LOG_FILE} is not owned by root"
