@@ -42,7 +42,7 @@ The "next" release is a projection of the upcoming stable release. It exists pri
 
 In this section you can find more about the releases that are currently actively maintained and receive maintenance by the Garden Linux Maintainers team.
 
-Information about each active release can be found in the [Public Roadmap, Theme:"Release Plan"](https://github.com/orgs/gardenlinux/projects/15/views/1?filterQuery=theme%3A%22Release+Plan%22+is%3Aopen). The issues in status open with title following the "Release and maintain <release number> (YEAR,HALF1/2)" contain the information about releases that are actively maintained by the Garden Linux Maintainers team.
+Information about each active release can be found in the [Public Roadmap, Theme:"Release Plan"](https://github.com/orgs/gardenlinux/projects/15/views/1?filterQuery=theme%3A%22Release+Plan%22+is%3Aopen). The issues in status open with title following the "Release and maintain `<release number>` (YEAR,HALF1/2)" contain the information about releases that are actively maintained by the Garden Linux Maintainers team.
 
 
 
@@ -50,7 +50,7 @@ Information about each active release can be found in the [Public Roadmap, Theme
 
 In this section you can find more about the releases that are already out of maintenance and considered archived with no further maintenance expected. Only deviation could arise in an exceptional and extraordinary situation, which would require special agreement between the Garden Linux Maintainers and specific adopter. In general, if you are using a version listed below, you are encouraged to migrate as soon as possible to latest release in standard maintenance. 
 
-Starting with release 1312 (23Q3) the information is available in the [Public Roadmap, Theme:"Release Plan"](https://github.com/orgs/gardenlinux/projects/15/views/1?filterQuery=theme%3A%22Release+Plan%22+is%3Aclosed). The issues in status closed with title follwing the "Release and maintain <release number> (YEAR,HALF1/2)" contain the information about releases that are actively maintained by the Garden Linux Maintainers team. Older releases do not have such structure and are listed in the table below.
+Starting with release 1312 (23Q3) the information is available in the [Public Roadmap, Theme:"Release Plan"](https://github.com/orgs/gardenlinux/projects/15/views/1?filterQuery=theme%3A%22Release+Plan%22+is%3Aclosed). The issues in status closed with title follwing the "Release and maintain `<release number>` (YEAR,HALF1/2)" contain the information about releases that are actively maintained by the Garden Linux Maintainers team. Older releases do not have such structure and are listed in the table below.
 
 | Release                                                                   | Release date  | Extended maintenance  | End of maintenance    |
 | -                                                                         | -             | -                     | -                     |
