@@ -86,15 +86,15 @@ jobs:
           path: cert/
       - name: Prepare upload artifacts
         run: |
+          mkdir -p "$CNAME"
+          tar -C $CNAME -xzvf "$CNAME.tar.gz"
+          rm "$CNAME.tar.gz"
+
           pushd cert
           for file in "secureboot."*; do
             mv "$file" "../$CNAME/$CNAME.$file"
           done
           popd
-
-          mkdir -p "$CNAME"
-          tar -C $CNAME -xzvf "$CNAME.tar.gz"
-          rm "$CNAME.tar.gz"
 
           if [ -f "$CNAME.chroot.test.log" ]; then
             mv $CNAME.chroot.test.log "$CNAME"
