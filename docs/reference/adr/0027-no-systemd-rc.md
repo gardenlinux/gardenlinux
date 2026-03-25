@@ -1,12 +1,12 @@
 ---
-title: 27. Do not use systemd release candidates
+title: "ADR 0027: Do not use systemd release candidates"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0027-no-systemd-rc.md
 github_target_path: docs/reference/adr/0027-no-systemd-rc.md
 ---
 
-# 27. Do not use systemd release candidates
+# ADR 0027: Do not use systemd release candidates
 
 Date: 2025-12-05
 

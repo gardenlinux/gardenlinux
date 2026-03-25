@@ -1,12 +1,12 @@
 ---
-title: 3. Update the Builder using Dependabot
+title: "ADR 0003: Update the Builder using Dependabot"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0003-builder-updates-dependabot.md
 github_target_path: docs/reference/adr/0003-builder-updates-dependabot.md
 ---
 
-# 3. Update the Builder using Dependabot
+# ADR 0003: Update the Builder using Dependabot
 
 **Date:** 2023-12-11
 

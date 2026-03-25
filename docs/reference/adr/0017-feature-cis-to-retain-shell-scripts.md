@@ -1,12 +1,12 @@
 ---
-title: 17. Retain Shell-Based CIS Implementation for tests-ng (No Custom Python Rewrite)
+title: "ADR 0017: Retain Shell-Based CIS Implementation for tests-ng (No Custom Python Rewrite)"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0017-feature-cis-to-retain-shell-scripts.md
 github_target_path: docs/reference/adr/0017-feature-cis-to-retain-shell-scripts.md
 ---
 
-# 17. Retain Shell-Based CIS Implementation for tests-ng (No Custom Python Rewrite)
+# ADR 0017: Retain Shell-Based CIS Implementation for tests-ng (No Custom Python Rewrite)
 
 Date: 2025-10-24
 

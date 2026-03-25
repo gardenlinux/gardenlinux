@@ -1,12 +1,12 @@
 ---
-title: 6. New Test Framework to enable In-Place, Self-Contained Test Execution
+title: "ADR 0006: New Test Framework to enable In-Place, Self-Contained Test Execution"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0006-new-test-framework-in-place-self-contained-test-execution.md
 github_target_path: docs/reference/adr/0006-new-test-framework-in-place-self-contained-test-execution.md
 ---
 
-# 6. New Test Framework to enable In-Place, Self-Contained Test Execution
+# ADR 0006: New Test Framework to enable In-Place, Self-Contained Test Execution
 
 **Date:** 2025-07-25
 

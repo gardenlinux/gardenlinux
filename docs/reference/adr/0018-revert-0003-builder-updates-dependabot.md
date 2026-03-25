@@ -1,12 +1,12 @@
 ---
-title: 18. Revert ADR 3 Update the Builder using Dependabot
+title: "ADR 0018: Revert ADR 3 Update the Builder using Dependabot"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0018-revert-0003-builder-updates-dependabot.md
 github_target_path: docs/reference/adr/0018-revert-0003-builder-updates-dependabot.md
 ---
 
-# 18. Revert ADR 3 Update the Builder using Dependabot
+# ADR 0018: Revert ADR 3 Update the Builder using Dependabot
 
 Date: 2025-10-27
 

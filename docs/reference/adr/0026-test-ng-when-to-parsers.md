@@ -1,12 +1,12 @@
 ---
-title: 26. Use Parser Plugins for Files and Command Output in Test Framework
+title: "ADR 0026: Use Parser Plugins for Files and Command Output in Test Framework"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0026-test-ng-when-to-parsers.md
 github_target_path: docs/reference/adr/0026-test-ng-when-to-parsers.md
 ---
 
-# 26. Use Parser Plugins for Files and Command Output in Test Framework
+# ADR 0026: Use Parser Plugins for Files and Command Output in Test Framework
 
 **Date:** 2025-11-19
 

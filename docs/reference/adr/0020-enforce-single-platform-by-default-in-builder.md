@@ -1,12 +1,12 @@
 ---
-title: 20. Enforce Single Platform by Default in Garden Linux Builder
+title: "ADR 0020: Enforce Single Platform by Default in Garden Linux Builder"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0020-enforce-single-platform-by-default-in-builder.md
 github_target_path: docs/reference/adr/0020-enforce-single-platform-by-default-in-builder.md
 ---
 
-# 20. Enforce Single Platform by Default in Garden Linux Builder
+# ADR 0020: Enforce Single Platform by Default in Garden Linux Builder
 
 Date: 2025-11-06
 

@@ -1,12 +1,12 @@
 ---
-title: 21. Use of tiger tool in tests-ng
+title: "ADR 0021: Use of tiger tool in tests-ng"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/adr/0021-use-of-tiger-tool-in-tests-ng.md
 github_target_path: docs/reference/adr/0021-use-of-tiger-tool-in-tests-ng.md
 ---
 
-# 21. Use of tiger tool in tests-ng
+# ADR 0021: Use of tiger tool in tests-ng
 
 Date: 2025-11-11
 
