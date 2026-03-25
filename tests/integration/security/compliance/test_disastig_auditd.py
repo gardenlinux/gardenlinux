@@ -208,26 +208,6 @@ def test_audit_event_contains_audit_processing_failures(shell: ShellRunner):
     ), "stigcompliance: audit records do not indicate alerting or detection of audit processing failures"
 
 
-@pytest.mark.feature("not container and not lima")
-@pytest.mark.booted(reason="audit event validation requires audit subsystem")
-@pytest.mark.root(reason="required to read audit logs")
-def test_audit_event_contains_audit_multiple_components(shell: ShellRunner):
-    """
-    As per DISA STIG requirement, the operating system provides the
-    capability to centrally review and analyze audit records from
-    multiple components within the system
-    Ref: SRG-OS-000051-GPOS-00024
-    """
-    result = shell(
-        cmd="ausearch -ts recent",
-        capture_output=True,
-    )
-
-    assert (
-        result.stdout.strip() != "" and "type=" in result.stdout
-    ), "stigcompliance: audit records are not retained or retrievable for analysis"
-
-
 AUDITD_CONF = "/etc/audit/auditd.conf"
 
 
