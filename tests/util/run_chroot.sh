@@ -44,19 +44,6 @@ log_dir="$test_dist_dir/../log"
 log_file_log="chroot.test.log"
 log_file_junit="chroot.test.xml"
 
-mkdir -p "$log_dir"
-
-tmpdir=
-
-cleanup() {
-	get_logs
-	[ -z "$tmpdir" ] || [ ! -e "$tmpdir/chroot" ] || umount -l "$tmpdir/chroot" || rmdir "$tmpdir/chroot"
-	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
-	tmpdir=
-}
-trap cleanup EXIT
-tmpdir="$(mktemp -d)"
-
 get_logs() {
 	cp "$tmpdir/chroot/run/gardenlinux-tests/tests/log/$log_file_junit" "$log_dir" || true
 }
@@ -130,11 +117,20 @@ run_watch() {
 }
 
 container_name="gl-chroot-test-$$"
+tmpdir=
 
-cleanup_container() {
+cleanup() {
 	podman rm -f "$container_name" 2>/dev/null || true
+
+	get_logs
+	[ -z "$tmpdir" ] || [ ! -e "$tmpdir/chroot" ] || umount -l "$tmpdir/chroot" || rmdir "$tmpdir/chroot"
+	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
+	tmpdir=
 }
-trap cleanup_container EXIT INT TERM
+trap cleanup EXIT INT TERM
+
+mkdir -p "$log_dir"
+tmpdir="$(mktemp -d)"
 
 if [[ "$rootfs_tar" != "/mnt/rootfs.tar" ]]; then
 	# We're not running inside a container, extract artifact name and add metadata

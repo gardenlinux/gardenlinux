@@ -26,7 +26,7 @@ def test_common_auth_pam_faillock(pam_config):
     )
     assert (
         len(results) == 1
-    ), "Logins should be blocked for 900 seconds after 5 failed attempts (preauth check configured)"
+    ), "Logins should be blocked for 15 minutes after 5 failed attempts (preauth check configured)"
 
     pam_config.find_entries(
         type_="auth",
