@@ -96,13 +96,16 @@ arch="$(map_arch "$arch")"
 
 tmpdir=
 
+bg_pids=()
+
 cleanup() {
-	if [ -n "${pxe_http_pid:-}" ]; then
-		kill "$pxe_http_pid" 2>/dev/null || true
-	fi
-	if [ -n "${metadata_server_pid:-}" ]; then
-		kill "$metadata_server_pid" 2>/dev/null || true
-	fi
+	# Kill any background processes
+	for pid in "${bg_pids[@]}"; do
+		kill "$pid" 2>/dev/null || true
+		wait "$pid" 2>/dev/null || true
+	done
+	bg_pids=()
+
 	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
 	tmpdir=
 }
@@ -138,9 +141,8 @@ fi
 echo "⚙️  preparing test VM"
 
 ./util/metadata-server.py >/dev/null 2>&1 &
-metadata_server_pid=$!
-echo "✅ Started metadata server on 127.0.0.1:8181 (PID: $metadata_server_pid)"
-echo "$metadata_server_pid" >"$tmpdir/metadata_server.pid"
+bg_pids+=("$!")
+echo "✅ Started metadata server on 127.0.0.1:8181"
 
 if ((is_pxe_archive)); then
 	# For PXE testing, we'll use network boot instead of a disk image
@@ -359,10 +361,7 @@ EOF
 
 	# Start HTTP server for serving the files
 	python3 -m http.server 8080 --directory "$http_dir" >/dev/null 2>&1 &
-	http_pid=$!
-
-	# Store HTTP server PID for cleanup
-	pxe_http_pid=$http_pid
+	bg_pids+=("$!")
 
 	if ((ssh)); then
 		qemu_opts+=(
