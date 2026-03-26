@@ -40,6 +40,12 @@ jobs:
           echo "Tagging as ${version_major}"
           gl-oci push-index-tags --index "${container}" --index-tag "${version}" --tag "${version_major}"
 
+          # Tag the patch release version
+          if [ -z "${version_patch}" ]; then
+            echo "Tagging as ${version}.0"
+            gl-oci push-index-tags --index "${container}" --index-tag "${version}" --tag "${version}.0"
+          fi
+
           # Tag latest only if requested
           if [ "${is_latest}" == "true" ]; then
             echo "Tagging as latest"
