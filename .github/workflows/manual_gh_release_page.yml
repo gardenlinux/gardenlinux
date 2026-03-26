@@ -121,6 +121,7 @@ jobs:
   github_release:
     needs: [ glvd, workflow_data ]
     if: always() && (needs.glvd.result == 'skipped' || needs.glvd.result == 'success')
+    name: Generate GitHub release
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -140,7 +141,7 @@ jobs:
             flavors.yaml
           sparse-checkout-cone-mode: false
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@96715cd11e3cfd2deb13e7040c1689045bcb4483 # pin@0.10.17
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@91654fde83a7039f568337d04fdac4b47828a59a # pin@0.10.18
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # pin@v4
         with:
@@ -182,6 +183,7 @@ jobs:
   tag_container_as_latest:
     needs: workflow_data
     if: ${{ !inputs.is_dev_release }}
+    name: Tag containers released
     uses: ./.github/workflows/tag_latest_container.yml
     with:
       version: ${{ needs.workflow_data.outputs.version }}
