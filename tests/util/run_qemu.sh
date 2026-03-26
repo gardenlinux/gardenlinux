@@ -396,8 +396,15 @@ echo "🚀  starting test VM"
 # Colors are preserved in console output but removed from log file
 "qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 tee >(sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g' >"$log_dir/$log_file_log")
 
-num_errors=$(xmllint --xpath 'string(/testsuites/testsuite/@errors)' "$log_dir/$log_file_junit")
-num_failures=$(xmllint --xpath 'string(/testsuites/testsuite/@failures)' "$log_dir/$log_file_junit")
-if [ "${num_errors}" -gt 0 ] || [ "${num_failures}" -gt 0 ]; then
-	exit 1
+if [ "$(wc -l "$log_dir/$log_file_junit" | cut -d' ' -f1)" != "0" ]; then
+	num_errors=$(xmllint --xpath 'string(/testsuites/testsuite/@errors)' "$log_dir/$log_file_junit")
+	num_failures=$(xmllint --xpath 'string(/testsuites/testsuite/@failures)' "$log_dir/$log_file_junit")
+	if [ "${num_errors}" -gt 0 ] || [ "${num_failures}" -gt 0 ]; then
+		exit 1
+	fi
+else
+	if ! ((skip_tests)); then
+		echo "⚠️  No test results found in $log_dir/$log_file_junit"
+		exit 1
+	fi
 fi
