@@ -60,11 +60,6 @@ if [[ "$image" == *.pxe.tar.gz ]]; then
 	is_pxe_archive=1
 fi
 
-is_openstack=0
-if [[ "$image" =~ ^.*openstack-.*$ ]]; then
-	is_openstack=1
-fi
-
 mkdir -p "$log_dir"
 test_args+=("--junit-xml=/dev/virtio-ports/test_junit")
 
@@ -142,12 +137,10 @@ fi
 
 echo "⚙️  preparing test VM"
 
-if ((is_openstack)); then
-	./util/metadata-server.py >/dev/null 2>&1 &
-	metadata_server_pid=$!
-	echo "✅ Started metadata server on 127.0.0.1:8181 (PID: $metadata_server_pid)"
-	echo "$metadata_server_pid" >"$tmpdir/metadata_server.pid"
-fi
+./util/metadata-server.py >/dev/null 2>&1 &
+metadata_server_pid=$!
+echo "✅ Started metadata server on 127.0.0.1:8181 (PID: $metadata_server_pid)"
+echo "$metadata_server_pid" >"$tmpdir/metadata_server.pid"
 
 if ((is_pxe_archive)); then
 	# For PXE testing, we'll use network boot instead of a disk image
