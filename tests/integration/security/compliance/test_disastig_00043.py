@@ -8,6 +8,7 @@ LOGIN_DEFS = "/etc/login.defs"
 
 
 @pytest.mark.feature("stig")
+@pytest.mark.booted(reason="required to read system password policy configuration")
 @pytest.mark.root(reason="required to read system password policy configuration")
 def test_minimum_password_lifetime_configured(file: File):
     """
@@ -20,6 +21,7 @@ def test_minimum_password_lifetime_configured(file: File):
 
 
 @pytest.mark.feature("stig")
+@pytest.mark.booted(reason="required to read system password policy configuration")
 @pytest.mark.root(reason="required to read system password policy configuration")
 def test_minimum_password_lifetime_value(parse_file: ParseFile):
     """
