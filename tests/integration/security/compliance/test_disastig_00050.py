@@ -43,26 +43,21 @@ def test_ports_protocols_and_services_restricted(shell):
     ), f"stigcompliance: unauthorized ports open: {unauthorized_ports}"
 
 
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.feature("not container")
 @pytest.mark.booted(reason="requires booted system")
 @pytest.mark.root(reason="requires audit operations")
-@pytest.mark.modify(reason="required for DISA STIG check")
-def test_forbidden_services_not_running(shell):
+def test_forbidden_services_not_running(systemd):
     """
     As per DISA STIG compliance requirements, it is needed to verify
     that only approved ports and services are active.
     Ref: SRG-OS-000096-GPOS-00050
     """
 
-    result = shell(
-        "systemctl list-units --type=service --state=running --no-legend",
-        capture_output=True,
-    )
-    assert result.returncode == 0, "stigcompliance: failed to list running services"
+    found_forbidden = []
 
-    running_services = {line.split()[0] for line in result.stdout.splitlines() if line}
-
-    found_forbidden = [svc for svc in FORBIDDEN_SERVICES if svc in running_services]
+    for svc in FORBIDDEN_SERVICES:
+        if systemd.is_active(svc):
+            found_forbidden.append(svc)
 
     assert (
         not found_forbidden
