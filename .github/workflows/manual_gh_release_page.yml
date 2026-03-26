@@ -26,13 +26,6 @@ jobs:
     uses: ./.github/workflows/download_workflow_data.yml
     with:
       run_id: ${{ inputs.run_id }}
-  flavors_matrix:
-    needs: workflow_data
-    name: Generate flavors matrix (marked for publishing)
-    uses: ./.github/workflows/build_flavors_matrix.yml
-    with:
-      flags: "--no-arch --json-by-arch --publish"
-      ref: ${{ needs.workflow_data.outputs.commit_id }}
   glrd:
     needs: workflow_data
     name: Create GLRD release
@@ -46,6 +39,12 @@ jobs:
       run:
         shell: bash
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ needs.workflow_data.outputs.commit_id }}
+          sparse-checkout: |
+            flavors.yaml
+          sparse-checkout-cone-mode: false
       - uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
@@ -90,7 +89,7 @@ jobs:
     steps:
       - name: Authenticate to cluster
         id: kube_auth
-        uses: gardener/cc-utils/.github/actions/kubernetes-auth@340fbae4cd197fe87e2053fb02bd3573ff0034d3 # 1.2746.0
+        uses: gardener/cc-utils/.github/actions/kubernetes-auth@30cfa9bbb2d37fd89b08315b39e6770997bbc678 # 1.2747.0
         with:
           server: https://api.live.gl-live.shoot.live.k8s-hana.ondemand.com
           server-ca-discovery-url: https://discovery.ingress.garden.live.k8s.ondemand.com/projects/gl-live/shoots/3f2715e7-dc7c-4bf1-a594-dc0d90cd0f1c/cluster-ca
@@ -115,6 +114,7 @@ jobs:
   github_release:
     needs: [ glvd, workflow_data ]
     if: always() && (needs.glvd.result == 'skipped' || needs.glvd.result == 'success')
+    name: Generate GitHub release
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -127,8 +127,14 @@ jobs:
       actions: write
     environment: oidc_aws_s3_upload
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ needs.workflow_data.outputs.commit_id }}
+          sparse-checkout: |
+            flavors.yaml
+          sparse-checkout-cone-mode: false
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@91654fde83a7039f568337d04fdac4b47828a59a # pin@0.10.18
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # pin@v4
         with:
@@ -147,6 +153,13 @@ jobs:
           fi
 
           echo "id=$(cat .github_release_id)" | tee -a $GITHUB_OUTPUT
+  flavors_matrix:
+    needs: workflow_data
+    name: Generate flavors matrix (marked for publishing)
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: "--exclude '*trustedboot*' --no-arch --json-by-arch --publish"
+      ref: ${{ needs.workflow_data.outputs.commit_id }}
   github_release_artifacts_upload:
     needs: [ workflow_data, github_release, flavors_matrix ]
     if: always() && !(contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure'))
@@ -161,6 +174,35 @@ jobs:
       flavors_matrix: ${{ needs.flavors_matrix.outputs.matrix }}
       run_id: ${{ needs.workflow_data.outputs.run_id }}
       release_id: ${{ needs.github_release.outputs.id }}
+      with_certs: false
+      compatibility_flags: ${{ inputs.compatibility_flags }}
+    secrets:
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_role: ${{ secrets.AWS_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_OIDC_SESSION }}
+      aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
+  trustedboot_flavors_matrix:
+    needs: workflow_data
+    name: Generate trustedboot flavors matrix (marked for publishing)
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: "--include-only '*trustedboot*' --no-arch --json-by-arch --publish"
+      ref: ${{ needs.workflow_data.outputs.commit_id }}
+  github_release_trustedboot_artifacts_upload:
+    needs: [ workflow_data, github_release, trustedboot_flavors_matrix ]
+    if: always() && !(contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure'))
+    name: Upload to existing GitHub release
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/upload_to_github_release.yml
+    with:
+      commit_id: ${{ needs.workflow_data.outputs.commit_id }}
+      version: ${{ needs.workflow_data.outputs.version }}
+      flavors_matrix: ${{ needs.trustedboot_flavors_matrix.outputs.matrix }}
+      run_id: ${{ needs.workflow_data.outputs.run_id }}
+      release_id: ${{ needs.github_release.outputs.id }}
+      with_certs: true
       compatibility_flags: ${{ inputs.compatibility_flags }}
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
@@ -170,6 +212,7 @@ jobs:
   tag_container_as_latest:
     needs: workflow_data
     if: ${{ !inputs.is_dev_release }}
+    name: Tag containers released
     uses: ./.github/workflows/tag_latest_container.yml
     with:
       version: ${{ needs.workflow_data.outputs.version }}
