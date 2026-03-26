@@ -24,6 +24,7 @@ def concurrent_login_environment(shell: ShellRunner):
 @pytest.mark.feature("stig")
 @pytest.mark.booted(reason="requires kernel logging")
 @pytest.mark.root(reason="required to generate audit events")
+@pytest.mark.modify(reason="trigger multiple logins for same user for STIG compliance")
 def test_audit_concurrent_logins(shell: ShellRunner, concurrent_login_environment):
     """
     As per DISA STIG compliance requirement, the operating system must generate audit
