@@ -11,7 +11,7 @@ FORBIDDEN_SERVICES = [
 ]
 
 
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.feature("stig")
 @pytest.mark.booted(reason="requires booted system")
 @pytest.mark.root(reason="requires audit operations")
 @pytest.mark.modify(reason="required for DISA STIG check")
@@ -43,7 +43,7 @@ def test_ports_protocols_and_services_restricted(shell):
     ), f"stigcompliance: unauthorized ports open: {unauthorized_ports}"
 
 
-@pytest.mark.feature("not container")
+@pytest.mark.feature("stig")
 @pytest.mark.booted(reason="requires booted system")
 @pytest.mark.root(reason="requires audit operations")
 @pytest.mark.modify(reason="required for DISA STIG check")
