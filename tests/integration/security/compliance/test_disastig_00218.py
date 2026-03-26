@@ -12,8 +12,8 @@ TIME_FILE = "/tmp/audit_start_time"
 @pytest.mark.modify(reason="trigger multiple logins for same user for STIG compliance")
 def test_audit_concurrent_logins(shell: ShellRunner, temp_user):
     """
-    As per DISA STIG compliance requirement, the operating system must generate audit 
-    records when concurrent logons to the same account occur from different sources. 
+    As per DISA STIG compliance requirement, the operating system must generate audit
+    records when concurrent logons to the same account occur from different sources.
     Ref: SRG-OS-000472-GPOS-00218
     """
 
@@ -35,18 +35,14 @@ def test_audit_concurrent_logins(shell: ShellRunner, temp_user):
         f'| grep -i "{user}" > {JOURNAL_FILE}'
     )
 
-    audit_hits = shell(
-        f"grep -c '{user}' {OUTPUT_FILE}", ignore_exit_code=True
-    )
-    journal_hits = shell(
-        f"grep -c '{user}' {JOURNAL_FILE}", ignore_exit_code=True
-    )
+    audit_hits = shell(f"grep -c '{user}' {OUTPUT_FILE}", ignore_exit_code=True)
+    journal_hits = shell(f"grep -c '{user}' {JOURNAL_FILE}", ignore_exit_code=True)
 
     audit_count = int((audit_hits.stdout or "").strip() or 0)
     journal_count = int((journal_hits.stdout or "").strip() or 0)
 
     total = audit_count + journal_count
 
-    assert total >= 2, (
-        "stigcompliance: concurrent login audit events from different sources not detected"
-    )
+    assert (
+        total >= 2
+    ), "stigcompliance: concurrent login audit events from different sources not detected"
