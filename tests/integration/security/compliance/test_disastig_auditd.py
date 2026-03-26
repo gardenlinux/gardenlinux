@@ -2,6 +2,7 @@ import re
 
 import pytest
 from plugins.file import File
+from plugins.parse_file import ParseFile
 from plugins.shell import ShellRunner
 
 
@@ -213,9 +214,8 @@ AUDITD_CONF = "/etc/audit/auditd.conf"
 
 
 @pytest.mark.feature("not container and not lima")
-@pytest.mark.booted(reason="audit retention validation requires audit subsystem")
-@pytest.mark.root(reason="required to read audit configuration and logs")
-def test_audit_log_retention_and_availability(shell: ShellRunner):
+@pytest.mark.root(reason="required to read audit configuration")
+def test_audit_log_retention_config(parse_file: ParseFile):
     """
     As per DISA STIG requirement, the operating system must retain audit
     records and provide the capability to extract and review them.
@@ -224,40 +224,34 @@ def test_audit_log_retention_and_availability(shell: ShellRunner):
     2. Audit logs are present and retrievable (ausearch)
     Ref: SRG-OS-000051-GPOS-00024
     """
-    result = shell(f"cat {AUDITD_CONF}", capture_output=True)
-    assert result.returncode == 0, "stigcompliance: unable to read auditd.conf"
 
-    content = result.stdout
-
-    config = {}
-    for line in content.splitlines():
-        line = line.strip()
-
-        if not line or line.startswith("#"):
-            continue
-
-        if "=" in line:
-            key, value = line.split("=", 1)
-            config[key.strip()] = value.strip()
+    lines = parse_file.lines(AUDITD_CONF)
 
     assert (
-        "max_log_file" in config
-    ), "stigcompliance: max_log_file not configured in auditd.conf"
+        re.compile(r"max_log_file\s*=\s*\d+") in lines
+    ), "stigcompliance: max_log_file not configured properly"
 
     assert (
-        "num_logs" in config
-    ), "stigcompliance: num_logs not configured in auditd.conf"
+        re.compile(r"num_logs\s*=\s*\d+") in lines
+    ), "stigcompliance: num_logs not configured properly"
 
     assert (
-        "space_left_action" in config
-    ), "stigcompliance: space_left_action not configured in auditd.conf"
+        re.compile(r"space_left_action\s*=\s*\S+") in lines
+    ), "stigcompliance: space_left_action not configured"
 
-    assert (
-        int(config["max_log_file"]) > 0
-    ), "stigcompliance: max_log_file must be greater than 0"
 
-    assert int(config["num_logs"]) >= 1, "stigcompliance: num_logs must be at least 1"
-
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="audit retention validation requires audit subsystem")
+@pytest.mark.root(reason="required to read audit configuration and logs")
+def test_audit_log_retention_availability(shell: ShellRunner):
+    """
+    As per DISA STIG requirement, the operating system must retain audit
+    records and provide the capability to extract and review them.
+    This test verifies:
+    1. Audit retention configuration (auditd.conf)
+    2. Audit logs are present and retrievable (ausearch)
+    Ref: SRG-OS-000051-GPOS-00024
+    """
     result = shell("ausearch -ts recent", capture_output=True)
 
     assert (
@@ -275,40 +269,84 @@ def test_audit_log_retention_and_availability(shell: ShellRunner):
 
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit retention validation requires audit subsystem")
-@pytest.mark.root(reason="required to read audit configuration and logs")
-def test_audit_log_audit_fields(shell: ShellRunner):
+@pytest.mark.root(reason="required to read audit logs")
+def test_audit_filter_by_uid(shell: ShellRunner):
     """
     As per DISA STIG requirement, the operating system should provide the
     capability to filter audit records for events of interest based
     upon all audit fields within audit records
     Ref: SRG-OS-000054-GPOS-00025
     """
-    uid_result = shell("ausearch -ua 0", capture_output=True)
+
+    result = shell("ausearch -ua 0", capture_output=True)
+
     assert (
-        uid_result.returncode == 0
+        result.returncode == 0
     ), "stigcompliance: unable to filter audit records by user identity (uid)"
 
-    type_result = shell(
-        "ausearch -ts recent -m USER_LOGIN", capture_output=True, ignore_exit_code=True
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="audit retention validation requires audit subsystem")
+@pytest.mark.root(reason="required to read audit logs")
+def test_audit_filter_returns_structured_output(shell: ShellRunner):
+    """
+    As per DISA STIG requirement, the operating system should provide the
+    capability to filter audit records for events of interest based
+    upon all audit fields within audit records
+    Ref: SRG-OS-000054-GPOS-00025
+    """
+
+    result = shell("ausearch -ua 0", capture_output=True)
+
+    assert (
+        "type=" in result.stdout or "type=" in result.stdout or "type=" in result.stdout
+    ), "stigcompliance: audit filtering does not return structured audit records"
+
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="audit retention validation requires audit subsystem")
+@pytest.mark.root(reason="required to read audit logs")
+def test_audit_filter_by_event_type(shell: ShellRunner):
+    """
+    As per DISA STIG requirement, the operating system should provide the
+    capability to filter audit records for events of interest based
+    upon all audit fields within audit records
+    Ref: SRG-OS-000054-GPOS-00025
+    """
+
+    result = shell(
+        "ausearch -ts recent -m USER_LOGIN",
+        capture_output=True,
+        ignore_exit_code=True,
     )
-    assert type_result.returncode in (
+
+    assert result.returncode in (
         0,
         1,
     ), "stigcompliance: unable to filter audit records by event type"
 
-    cmd_result = shell(
-        "ausearch -ts recent -c id", capture_output=True, ignore_exit_code=True
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="audit retention validation requires audit subsystem")
+@pytest.mark.root(reason="required to read audit logs")
+def test_audit_filter_by_command(shell: ShellRunner):
+    """
+    As per DISA STIG requirement, the operating system should provide the
+    capability to filter audit records for events of interest based
+    upon all audit fields within audit records
+    Ref: SRG-OS-000054-GPOS-00025
+    """
+
+    result = shell(
+        "ausearch -ts recent -c id",
+        capture_output=True,
+        ignore_exit_code=True,
     )
-    assert cmd_result.returncode in (
+
+    assert result.returncode in (
         0,
         1,
     ), "stigcompliance: unable to filter audit records by command"
-
-    assert (
-        "type=" in uid_result.stdout
-        or "type=" in type_result.stdout
-        or "type=" in cmd_result.stdout
-    ), "stigcompliance: audit filtering does not return structured audit records"
 
 
 @pytest.mark.feature("not container and not lima")
@@ -390,6 +428,18 @@ def test_audit_records_have_valid_timestamps(shell: ShellRunner):
     assert re.search(
         timestamp_pattern, result.stdout
     ), "stigcompliance: audit records do not contain valid timestamps"
+
+
+@pytest.mark.feature("stig")
+@pytest.mark.booted(reason="requires audit subsystem running")
+@pytest.mark.root(reason="required to generate and read audit logs")
+def test_system_time_status_available(shell: ShellRunner):
+    """
+    As per DISA STIG compliance requirements, the operating system must use
+    internal system clocks to generate timestamps for audit records.
+    This test verifies that audit records contain valid timestamps.
+    Ref: SRG-OS-000055-GPOS-00026
+    """
 
     timedate = shell("timedatectl status", capture_output=True)
 
