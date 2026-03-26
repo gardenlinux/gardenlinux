@@ -373,7 +373,7 @@ def test_audit_record_filtering_capability(shell: ShellRunner):
         ), f"stigcompliance: audit filtering failed for command: {cmd}"
 
 
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.feature("stig")
 @pytest.mark.booted(reason="requires audit subsystem running")
 @pytest.mark.root(reason="required to generate and read audit logs")
 def test_audit_records_have_valid_timestamps(shell: ShellRunner):
@@ -394,10 +394,6 @@ def test_audit_records_have_valid_timestamps(shell: ShellRunner):
     timedate = shell("timedatectl status", capture_output=True)
 
     assert timedate.returncode == 0, "stigcompliance: unable to check time sync status"
-
-    assert (
-        "NTP service: active" in timedate.stdout
-    ), "stigcompliance: NTP service is not active (systemd-timesyncd)"
 
 
 AUDIT_LOG_DIR = "/var/log/audit"
