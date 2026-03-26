@@ -45,7 +45,10 @@ log_file_log="chroot.test.log"
 log_file_junit="chroot.test.xml"
 
 get_logs() {
-	cp "$tmpdir/chroot/run/gardenlinux-tests/tests/log/$log_file_junit" "$log_dir" || true
+	log_file="$tmpdir/chroot/run/gardenlinux-tests/tests/log/$log_file_junit"
+	if [ -f "$log_file" ]; then
+		cp "$log_file" "$log_dir"
+	fi
 }
 
 run_sync() {
@@ -179,10 +182,11 @@ if ((containerize)); then
 		"$image_id" fake_xattr "${container_cmd[@]}" &
 
 	podman_pid=$!
-	wait "$podman_pid" 2>/dev/null || true
+	wait "$podman_pid" 2>/dev/null
+	exit_code=$?
 
-	# Exit to prevent falling through to non-containerized code path
-	exit 0
+	# Exit with the same code as the podman process to prevent falling through to non-containerized code path
+	exit $exit_code
 fi
 echo "⚙️  creating chroot for test run"
 
