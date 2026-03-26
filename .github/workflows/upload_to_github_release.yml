@@ -59,7 +59,7 @@ jobs:
           ref: ${{ inputs.commit_id }}
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@91654fde83a7039f568337d04fdac4b47828a59a # pin@0.10.18
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d73b9fa491713c866e74b731b4a56ffa6d7171b6 # pin@0.10.19
       - uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
@@ -118,6 +118,6 @@ jobs:
         run: |
           pushd "$CNAME"
           for file in *; do
-            gl-gh-release upload --release_id "${{ inputs.release_id }}" --file_path "$file"
+            gl-gh-release upload --release_id "${{ inputs.release_id }}" --file_path "$file" --overwrite
           done
           popd
