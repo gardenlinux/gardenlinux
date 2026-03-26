@@ -7,6 +7,7 @@ Verify the operating system monitors remote access methods.
 """
 
 
+@pytest.mark.booted(reason="requires running sshguard")
 @pytest.mark.feature("ssh")
 def test_sshguard_is_enabled(systemd):
     """
