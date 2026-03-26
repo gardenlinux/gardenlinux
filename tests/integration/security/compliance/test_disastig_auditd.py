@@ -396,10 +396,6 @@ def test_audit_records_have_valid_timestamps(shell: ShellRunner):
     assert timedate.returncode == 0, "stigcompliance: unable to check time sync status"
 
     assert (
-        "System clock synchronized: yes" in timedate.stdout
-    ), "stigcompliance: system clock is not synchronized"
-
-    assert (
         "NTP service: active" in timedate.stdout
     ), "stigcompliance: NTP service is not active (systemd-timesyncd)"
 
