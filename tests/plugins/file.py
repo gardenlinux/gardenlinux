@@ -1,6 +1,7 @@
 import grp
 import os
 import pwd
+import re
 import stat
 from pathlib import Path
 from typing import Tuple
@@ -356,6 +357,23 @@ class File:
         actual_mode = stat.S_IMODE(Path(path).stat().st_mode)
         expected_mode = self._normalize_permissions(permissions)
         return actual_mode == expected_mode
+
+    def contains(
+        self, path: str | Path, lookup_str: str, case_sensitive: bool = True
+    ) -> bool:
+        """
+        Checks if a substring is present in a file at `path`.
+        """
+        case_flag = re.NOFLAG if case_sensitive else re.IGNORECASE
+        pattern = re.compile(re.escape(lookup_str), case_flag)
+        with Path(path).open() as f:
+            return any(pattern.search(line) for line in f)
+
+    def icontains(self, path: str | Path, lookup_str: str) -> bool:
+        """
+        Checks if a substring is present in a file at `path`. Case-INsensitive.
+        """
+        return self.contains(path, lookup_str, case_sensitive=False)
 
     def _normalize_permissions(self, permissions: str | int) -> int:
         """Normalize a permission specification to a numeric mode.
