@@ -1,3 +1,5 @@
+import pytest
+
 """
 Ref: SRG-OS-000228-GPOS-00088
 
@@ -7,9 +9,10 @@ the system.
 """
 
 
+@pytest.mark.feature("sap")
 def test_notice_and_consent_banner_is_presented_on_login(file):
     """You are accessing a U.S. Government (USG) Information System (IS) that is provided for USG-authorized use only."""
-    assert file.icontains(
+    assert file.contains(
         "/etc/motd", "You are accessing SAP computer systems and network"
     )
     assert file.icontains("/etc/motd", "unauthorized access is prohibited")
@@ -28,7 +31,7 @@ def test_notice_and_consent_banner_is_presented_on_login(file):
     )
 
     """This IS includes security measures (e.g., authentication and access controls) to protect USG interests--not for your personal benefit or privacy."""
-    assert file.icontains(
+    assert file.contains(
         "/etc/motd",
         "you should have no expectation of privacy as to any information stored in, transmitted through or processed by any portion of SAP Systems",
     )
