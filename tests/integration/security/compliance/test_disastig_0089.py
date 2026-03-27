@@ -33,4 +33,6 @@ def test_audit_calling_user_group_related_utilities(audit_rule):
         "/usr/bin/gpasswd",
         "/usr/bin/passwd",
     ]:
-        assert audit_rule(binary_call=bin)
+        assert audit_rule(
+            binary_call=bin
+        ), f"No audit rule found for {bin} binary calls"
