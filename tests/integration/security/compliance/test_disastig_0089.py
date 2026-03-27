@@ -2,8 +2,13 @@ import pytest
 
 """
 Ref: SRG-OS-000239-GPOS-00089
-
 Verify the operating system automatically audits account modification.
+
+Ref: SRG-OS-000240-GPOS-00090
+Verify the operating system automatically audits account disabling actions.
+
+Ref: SRG-OS-000241-GPOS-00091
+Verify the operating system automatically audits account removal actions.
 """
 
 
