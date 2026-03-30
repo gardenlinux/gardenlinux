@@ -35,7 +35,7 @@ FORBIDDEN_SERVICES = [
 #     return open_ports
 
 
-@pytest.mark.feature("ssh")
+@pytest.mark.feature("ssh and not gardener")
 @pytest.mark.booted(reason="requires booted system")
 @pytest.mark.root(reason="requires audit operations")
 def test_only_ssh_open_port_is_allowed(ports):
