@@ -46,7 +46,7 @@ Subsystem sftp /usr/lib/openssh/sftp-server -f AUTHPRIV -l INFO
 # autologout inactive users after 10 minutes
 
 ClientAliveInterval 600
-ClientAliveCountMax 0
+ClientAliveCountMax 1
 
 # Password based logins are disabled - only public key based logins are allowed.
 
@@ -56,5 +56,3 @@ AuthenticationMethods publickey
 
 HostKey /etc/ssh/ssh_host_ed25519_key
 HostKey /etc/ssh/ssh_host_rsa_key
-
-Include /etc/ssh/sshd_config.d/*.conf

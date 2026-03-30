@@ -45,7 +45,10 @@ log_file_log="chroot.test.log"
 log_file_junit="chroot.test.xml"
 
 get_logs() {
-	echo cp "$tmpdir/chroot/run/gardenlinux-tests/tests/log/$log_file_junit" "$log_dir" || true
+	log_file="$tmpdir/chroot/run/gardenlinux-tests/tests/log/$log_file_junit"
+	if [ -f "$log_file" ]; then
+		cp "$log_file" "$log_dir"
+	fi
 }
 
 run_sync() {
@@ -132,81 +135,6 @@ trap cleanup EXIT INT TERM
 mkdir -p "$log_dir"
 tmpdir="$(mktemp -d)"
 
-run_sync() {
-	mkdir -p "$tmpdir/chroot"
-	mount -t tmpfs -o mode=0755 none "$tmpdir/chroot"
-
-	tar --extract --xattrs --xattrs-include 'security.*' --directory "$tmpdir/chroot" <"$rootfs_tar"
-
-	mount --rbind --make-rprivate /proc "$tmpdir/chroot/proc"
-	mount --rbind --make-rprivate /sys "$tmpdir/chroot/sys"
-	mount --rbind --make-rprivate /dev "$tmpdir/chroot/dev"
-
-	echo "⚙️  setting up test framework"
-
-	mkdir "$tmpdir/chroot/run/gardenlinux-tests"
-	gzip -d <"$test_dist_dir/dist.tar.gz" | tar --extract --directory "$tmpdir/chroot/run/gardenlinux-tests"
-}
-
-run_test() {
-	env -i /sbin/chroot "$tmpdir/chroot" /bin/sh -c "cd /run/gardenlinux-tests && ./run_tests ${test_args[*]@Q} 2>&1" |
-		tee "$log_dir/$log_file_log"
-}
-
-print_watch() {
-	echo "👁️  watching for changes in tests/ and features/ directories..."
-	echo "   Press Ctrl+C to exit"
-}
-
-EXCLUDE='(__pycache__|\.pyc$|\.pytest_cache|\.test\.log|\.test\.xml|~|\.swp$|\.swo$)'
-
-run_watch_linux() {
-	command -v inotifywait >/dev/null || (echo "Error: inotifywait not found. Please install inotify-tools package." && exit 1)
-	inotifywait -m -r -e modify,create,delete,move \
-		--exclude $EXCLUDE \
-		"/mnt/watch/tests" "/mnt/watch/features" 2>/dev/null
-}
-
-run_watch_macos() {
-	command -v fswatch >/dev/null || (echo "Error: fswatch not found. Please install fswatch package." && exit 1)
-	fswatch -rEo \
-		--event Created --event Updated --event Removed --event Renamed --event MovedFrom --event MovedTo \
-		--exclude $EXCLUDE \
-		"/mnt/watch/tests" "/mnt/watch/features" 2>/dev/null
-}
-
-run_watch_read() {
-	while read -r _num1; do
-		echo "🔄  detected change"
-		# Drain all remaining events
-		while read -t 0.5 -r _num2; do
-			:
-		done
-		run_sync || true
-		run_test || true
-		print_watch
-	done
-}
-
-run_watch() {
-	print_watch
-	# Run watch in the background so we can track its PID
-	if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-		run_watch_linux | run_watch_read &
-	else
-		run_watch_macos | run_watch_read &
-	fi
-	watch_pid=$!
-	wait "$watch_pid"
-}
-
-container_name="gl-chroot-test-$$"
-
-cleanup_container() {
-	podman rm -f "$container_name" 2>/dev/null || true
-}
-trap cleanup_container EXIT INT TERM
-
 if [[ "$rootfs_tar" != "/mnt/rootfs.tar" ]]; then
 	# We're not running inside a container, extract artifact name and add metadata
 	test_artifact="$(basename "$rootfs_tar" | sed 's/-[0-9].*\.tar$//')"
@@ -254,10 +182,11 @@ if ((containerize)); then
 		"$image_id" fake_xattr "${container_cmd[@]}" &
 
 	podman_pid=$!
-	wait "$podman_pid" 2>/dev/null || true
+	wait "$podman_pid" 2>/dev/null
+	exit_code=$?
 
-	# Exit to prevent falling through to non-containerized code path
-	exit 0
+	# Exit with the same code as the podman process to prevent falling through to non-containerized code path
+	exit $exit_code
 fi
 echo "⚙️  creating chroot for test run"
 
