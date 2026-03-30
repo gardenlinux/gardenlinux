@@ -1,3 +1,5 @@
+Include /etc/ssh/ssh_config.d/*.conf
+
 Host *
 Protocol 2
 ForwardAgent no
