@@ -17,7 +17,7 @@ HostbasedAuthentication no
 
 # Set log level to be verbose.
 # we need to log the fingerprint
-LogLevel VERBOSE 
+LogLevel VERBOSE
 
 # Ensure usage of PAM
 UsePAM yes
