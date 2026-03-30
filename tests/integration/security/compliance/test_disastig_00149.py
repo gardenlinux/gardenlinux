@@ -52,7 +52,7 @@ def test_package_database_protected(file: File):
     """
     As per DISA STIG requirement, the operating system must prohibit
     user installation of system software without privileged status.
-    This test verifies that package manager binaries are owned by root
+    This test verifies that package database files are owned by root
     and not writable by non-privileged users.
     Ref: SRG-OS-000362-GPOS-00149
     """
@@ -66,8 +66,10 @@ def test_package_database_protected(file: File):
         ), f"stigcompliance: {path} is not owned by root"
 
         assert (
-            file.has_permissions(path, "rwx------")
+            file.has_permissions(path, "rwxr-xr-x")
             or file.has_permissions(path, "rwxr-x---")
-            or file.has_permissions(path, "rw-------")
+            or file.has_permissions(path, "rwx------")
+            or file.has_permissions(path, "rw-r--r--")
             or file.has_permissions(path, "rw-r-----")
+            or file.has_permissions(path, "rw-------")
         ), f"stigcompliance: {path} permissions are too permissive"
