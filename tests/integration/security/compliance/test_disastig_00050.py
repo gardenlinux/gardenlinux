@@ -38,8 +38,8 @@ FORBIDDEN_SERVICES = [
 @pytest.mark.feature("ssh")
 @pytest.mark.booted(reason="requires booted system")
 @pytest.mark.root(reason="requires audit operations")
-def test_only_ssh_open_port_is_allowed(open_ports):
-    unauthorized_ports = open_ports - {22}
+def test_only_ssh_open_port_is_allowed(ports):
+    unauthorized_ports = ports.open_ports - {22}
     assert (
         not unauthorized_ports
     ), f"stigcompliance: unauthorized ports open: {unauthorized_ports}"
