@@ -47,7 +47,7 @@ Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/
 
 In the "Published Images" section on the release page, find the AMI ID for your desired [flavor](../../explanation/flavors-and-features.md), [architecture](../../reference/glossary.md#architecture), and [region](../../reference/glossary.md#region). The default production flavor is `aws-gardener_prod-amd64`.
 
-![GitHub release page showing published images table with AMI IDs for different regions](../assets/first-boot-aws-image.png)
+![GitHub release page showing published images table with AMI IDs for different regions](/docs/tutorials/assets/first-boot-aws-image.png)
 
 For this tutorial, we'll use the `eu-central-1` region. Replace the AMI ID below with the one corresponding to your chosen region:
 
