@@ -225,6 +225,7 @@ def test_ssh_client_config_content(parse_file: ParseFile):
     """Test that SSH client configuration exists"""
     lines = parse_file.lines("/etc/ssh/ssh_config")
     lines_expected = [
+        "Include /etc/ssh/ssh_config.d/*.conf",
         "Host *",
         "Protocol 2",
         "ForwardAgent no",
