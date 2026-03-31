@@ -23,7 +23,7 @@
 </website-main>
 
 ## !! Important !!
-Starting with the major version 2017 the versioning scheme has been changed to a semver compliant one comprised of a 3 numerical segment identifier (major.minor.patch). The "old" 2017.0 is now 2017.0.0 
+Starting with the major version 2017 the versioning scheme has been changed to a semver compliant one comprised of a 3 numerical segment identifier (major.minor.patch). The "old" 2017.0 is now 2017.0.0
 
 ## Features
 - Easy to use build system
@@ -97,11 +97,11 @@ Images are published as:
 - GitHub Releses in https://github.com/gardenlinux/gardenlinux/releases
 - GitHub Packages https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux
 
-## Download Nightly Releases 
+## Download Nightly Releases
 
 [Nightly](docs/00_introduction/release.md#nightly-releases) releases can be downloaded from the same sources and are either tagged or named `nightly`.
 
-> [!WARNING]  
+> [!WARNING]
 > Nightly releases do not include maintenance commitments and never receive updates.
 > Advanced users are invited to try them out and provide feedback, but it **is strongly discouraged** to use them in any sort of production environment.
 
@@ -126,7 +126,7 @@ Please refer to [docs/README.md](https://github.com/gardenlinux/gardenlinux/tree
 
 # Contributing
 
-Contributions to the Garden Linux open source projects are welcome. 
+Contributions to the Garden Linux open source projects are welcome.
 More information are available in in <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> and our `docs/`.
 
 # Community
