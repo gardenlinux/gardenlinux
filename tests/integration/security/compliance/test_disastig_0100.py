@@ -1,5 +1,6 @@
 import fileinput
 import glob
+import platform
 
 import pytest
 
@@ -12,19 +13,27 @@ within software libraries.
 
 
 ALLOWED_LIB_DIRS = {
-    "/usr/lib",
-    "/usr/local/lib",
-    "/lib/x86_64-linux-gnu",
-    "/usr/lib/x86_64-linux-gnu",
-    "/lib/i686-linux-gnu",
-    "/lib32",
-    "/usr/lib/i386-linux-gnu",
-    "/usr/lib/i686-linux-gnu",
-    "/usr/lib/x86_64-linux-gnu/libfakeroot",
-    "/usr/lib32",
-    "/usr/local/lib/i386-linux-gnu",
-    "/usr/local/lib/i686-linux-gnu",
-    "/usr/local/lib/x86_64-linux-gnu",
+    "x86_64": {
+        "/usr/lib",
+        "/usr/local/lib",
+        "/lib/x86_64-linux-gnu",
+        "/usr/lib/x86_64-linux-gnu",
+        "/lib/i686-linux-gnu",
+        "/lib32",
+        "/usr/lib/i386-linux-gnu",
+        "/usr/lib/i686-linux-gnu",
+        "/usr/lib/x86_64-linux-gnu/libfakeroot",
+        "/usr/lib32",
+        "/usr/local/lib/i386-linux-gnu",
+        "/usr/local/lib/i686-linux-gnu",
+        "/usr/local/lib/x86_64-linux-gnu",
+    },
+    "arm64": {
+        "/usr/lib",
+        "/usr/local/lib",
+        "/usr/lib/aarch64-linux-gnu",
+        "/usr/local/lib/aarch64-linux-gnu",
+    },
 }
 
 
@@ -40,7 +49,7 @@ def ld_library_paths():
 
 
 def test_no_unsolicited_lib_path_for_ldconfig(ld_library_paths):
-    diff = ld_library_paths - ALLOWED_LIB_DIRS
+    diff = ld_library_paths - ALLOWED_LIB_DIRS[platform.machine()]
     assert not diff, f"unexpected shared libraries lookup paths configured: {diff}"
 
 
