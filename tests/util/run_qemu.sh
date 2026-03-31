@@ -193,6 +193,10 @@ systemctl reset-failed ipmievd.service >/dev/null 2>&1 || true
 # systemctl stop google-startup-scripts.service >/dev/null 2>&1 || true
 systemctl reset-failed google-guest-agent.service >/dev/null 2>&1 || true
 systemctl reset-failed google-startup-scripts.service >/dev/null 2>&1 || true
+
+# sshguard will interefere if too many ssh connections occur
+systemctl stop sshguard.service
+systemctl reset-failed sshguard.service
 EOF
 
 if ((ssh)); then
