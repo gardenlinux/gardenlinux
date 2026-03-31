@@ -182,6 +182,17 @@ cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
 # the QEMU serial output (and thus in logs).
 exec >$console_device
 exec 2>&1
+
+echo "⚙️  Qemu environment quirks..."
+# No /dev/impi0 available in Qemu
+systemctl stop ipmievd.service >/dev/null 2>&1 || true
+systemctl reset-failed ipmievd.service >/dev/null 2>&1 || true
+
+# GCP startup scripts to not work inside Qemu
+# systemctl stop google-guest-agent.service >/dev/null 2>&1 || true
+# systemctl stop google-startup-scripts.service >/dev/null 2>&1 || true
+systemctl reset-failed google-guest-agent.service >/dev/null 2>&1 || true
+systemctl reset-failed google-startup-scripts.service >/dev/null 2>&1 || true
 EOF
 
 if ((ssh)); then
