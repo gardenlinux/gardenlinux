@@ -28,7 +28,7 @@ ALLOWED_LIB_DIRS = {
         "/usr/local/lib/i686-linux-gnu",
         "/usr/local/lib/x86_64-linux-gnu",
     },
-    "arm64": {
+    "aarch64": {
         "/usr/lib",
         "/usr/local/lib",
         "/usr/lib/aarch64-linux-gnu",
