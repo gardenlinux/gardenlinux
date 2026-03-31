@@ -67,5 +67,5 @@ def test_python_disallows_installing_packages_with_pip_on_system_level(dpkg, fil
 
 
 def test_only_root_can_install_deb_packages(file):
-    assert file.get_owner("/var/lib/dpkg/lock") == ("root", "root")
-    assert file.has_permissions("/var/lib/dpkg/lock", "rwxr-xr-x")
+    assert file.get_owner("/var/lib/dpkg") == ("root", "root")
+    assert file.has_permissions("/var/lib/dpkg", "rwxr-xr-x")
