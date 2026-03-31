@@ -22,5 +22,5 @@ def test_audit_timestamp_utc_mapping(shell: ShellRunner, timedatectl):
     assert timezone, "stigcompliance: timezone not configured"
 
     assert (
-        "UTC" in timezone or "GMT" in timezone or "/" in timezone
+        "UTC" in timezone or "GMT" in timezone
     ), f"stigcompliance: timezone not mappable to UTC/GMT: {timezone}"
