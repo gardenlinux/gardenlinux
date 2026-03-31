@@ -8,7 +8,7 @@ MAKEFLAGS += --no-builtin-rules
 .PHONY: dist dist-disk clean
 
 all: dist-disk edk2
-dist: .build/dist.tar.gz
+dist: .build/dist.tar.gz edk2
 dist-disk: dist .build/dist.ext2.raw
 edk2: .build/edk2-qemu-x86_64-code .build/edk2-qemu-x86_64-vars .build/edk2-qemu-aarch64-code .build/edk2-qemu-aarch64-vars
 
