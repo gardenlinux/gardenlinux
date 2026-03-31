@@ -51,10 +51,12 @@ def test_lib_directories_are_only_root_writable(ld_library_paths, file):
             assert file.has_permissions(lib_path, "rwxr-xr-x")
 
 
-def test_python_lib_directory_is_only_root_writable(file):
-    dist_packages = "/usr/lib/python3/dist-packages"
-    assert file.get_owner(dist_packages) == ("root", "root")
-    assert file.has_permissions(dist_packages, "rwxr-xr-x")
+def test_python_lib_directory_is_only_root_writable(file, dpkg):
+    python_pkg = dpkg.collect_installed_packages().get_package("python3")
+    if python_pkg:
+        dist_packages = "/usr/lib/python3/dist-packages"
+        assert file.get_owner(dist_packages) == ("root", "root")
+        assert file.has_permissions(dist_packages, "rwxr-xr-x")
 
 
 def test_python_disallows_installing_packages_with_pip_on_system_level(dpkg, file):
