@@ -139,12 +139,26 @@ class AuditRule:
             return True
         return False
 
-    def __call__(self, syscall=None, access_types=None, fs_watch_path=None):
+    def binary_call_audit_rule(self, binary_path):
+        logger.debug(f"Binary call audit rule for {binary_path}")
+        matched_rules = [
+            rule for rule in self.rules if f"-S execve -F exe={binary_path}" in rule
+        ]
+        if matched_rules:
+            logger.debug(f"Matched binary call rules: {matched_rules}")
+            return True
+        return False
+
+    def __call__(
+        self, syscall=None, access_types=None, fs_watch_path=None, binary_call=None
+    ):
         logger.debug("In AuditRule.__call__")
         if fs_watch_path and access_types:
             return self.file_path_audit_rule(fs_watch_path, access_types)
         if syscall:
             return self.syscall_audit_rule(syscall)
+        if binary_call:
+            return self.binary_call_audit_rule(binary_call)
 
 
 @pytest.fixture
@@ -163,10 +177,13 @@ def audit_rule():
     For a syscall audit rule the lookup is successful
     if there is at least one auditd rule that concerns the syscall parameter's value.
 
+    For an audit rule that tracks when a certain binary is executed the lookup is successful
+    if a rule with 'execve' syscall and the provided binary path (binary_call argument) is found.
+
     Examples:
 
     assert audit_rule(fs_watch_path="/etc/passwd", access_types="wa")
     assert audit_rule(syscall="setcap")
-
+    assert audit_rule(binary_call="/usr/bin/passwd")
     """
     return AuditRule()
