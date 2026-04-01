@@ -60,11 +60,6 @@ if [[ "$image" == *.pxe.tar.gz ]]; then
 	is_pxe_archive=1
 fi
 
-is_openstack=0
-if [[ "$image" =~ ^.*openstack-.*$ ]]; then
-	is_openstack=1
-fi
-
 mkdir -p "$log_dir"
 test_args+=("--junit-xml=/dev/virtio-ports/test_junit")
 
@@ -101,18 +96,21 @@ arch="$(map_arch "$arch")"
 
 tmpdir=
 
+bg_pids=()
+
 cleanup() {
-	if [ -n "${pxe_http_pid:-}" ]; then
-		kill "$pxe_http_pid" 2>/dev/null || true
-	fi
-	if [ -n "${metadata_server_pid:-}" ]; then
-		kill "$metadata_server_pid" 2>/dev/null || true
-	fi
+	# Kill any background processes
+	for pid in "${bg_pids[@]}"; do
+		kill "$pid" 2>/dev/null || true
+		wait "$pid" 2>/dev/null || true
+	done
+	bg_pids=()
+
 	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
 	tmpdir=
 }
-
 trap cleanup EXIT
+
 tmpdir="$(mktemp -d)"
 
 if ((is_pxe_archive)); then
@@ -142,12 +140,9 @@ fi
 
 echo "⚙️  preparing test VM"
 
-if ((is_openstack)); then
-	./util/metadata-server.py >/dev/null 2>&1 &
-	metadata_server_pid=$!
-	echo "✅ Started metadata server on 127.0.0.1:8181 (PID: $metadata_server_pid)"
-	echo "$metadata_server_pid" >"$tmpdir/metadata_server.pid"
-fi
+./util/metadata-server.py >/dev/null 2>&1 &
+bg_pids+=("$!")
+echo "✅ Started metadata server on 127.0.0.1:8181"
 
 if ((is_pxe_archive)); then
 	# For PXE testing, we'll use network boot instead of a disk image
@@ -167,11 +162,41 @@ cat >"$tmpdir/fw_cfg-script.sh" <<EOF
 #!/usr/bin/env bash
 
 set -eufo pipefail
+EOF
 
+if ! ((skip_cleanup)); then
+	cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
+trap '
+	exit_code=$?
+	if [ "$exit_code" != 0 ]; then
+		echo "⚠️  Script failed - check the output above for errors"
+	fi
+	echo "🔄 Powering off VM..."
+	poweroff -f > /dev/null 2>&1
+' EXIT
+EOF
+fi
+
+cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
 # Send all output to console so it appears on
 # the QEMU serial output (and thus in logs).
 exec >$console_device
 exec 2>&1
+
+echo "⚙️  Qemu environment quirks..."
+# No /dev/impi0 available in Qemu
+systemctl stop ipmievd.service >/dev/null 2>&1 || true
+systemctl reset-failed ipmievd.service >/dev/null 2>&1 || true
+
+# GCP startup scripts to not work inside Qemu
+# systemctl stop google-guest-agent.service >/dev/null 2>&1 || true
+# systemctl stop google-startup-scripts.service >/dev/null 2>&1 || true
+systemctl reset-failed google-guest-agent.service >/dev/null 2>&1 || true
+systemctl reset-failed google-startup-scripts.service >/dev/null 2>&1 || true
+
+# sshguard will interefere if too many ssh connections occur
+systemctl stop sshguard.service
+systemctl reset-failed sshguard.service
 EOF
 
 if ((ssh)); then
@@ -184,7 +209,9 @@ if ((ssh)); then
 	ssh_public_key=$(cat "$ssh_public_key")
 	ssh_user="gardenlinux"
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
+echo "⚙️  Starting sshd..."
 systemctl enable --now ssh
+echo "⚙️  Authenticating ssh user..."
 useradd -U -m -G wheel -s /bin/bash $ssh_user
 mkdir -p /home/$ssh_user/.ssh
 chmod 700 /home/$ssh_user/.ssh
@@ -194,17 +221,13 @@ chmod 600 /home/$ssh_user/.ssh/authorized_keys
 EOF
 fi
 
-if ! ((skip_cleanup)); then
-	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
-trap "poweroff -f > /dev/null 2>&1" EXIT
-EOF
-fi
-
 if ! ((skip_tests)); then
 	cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
+echo "⚙️  Creating test directory..."
 mkdir /run/gardenlinux-tests
+echo "⚙️  Mounting test directory..."
 mount -o ro /dev/disk/by-label/GL_TESTS /run/gardenlinux-tests
-
+echo "️⚙️  Changing to test directory..."
 cd /run/gardenlinux-tests
 EOF
 fi
@@ -247,7 +270,21 @@ if ! ((skip_tests)); then
 	fi
 
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
-./run_tests ${test_args[*]@Q} 2>&1
+echo "⚙️  Waiting for systemd to finish initialization (timeout: 10 minutes)..."
+if timeout 600 systemctl is-system-running --wait; then
+	echo "✅  systemd initialization completed successfully"
+	./run_tests ${test_args[*]@Q} 2>&1
+	test_exit=\$?
+	echo "🔍 Tests completed with exit code: \$test_exit"
+if [ "\$test_exit" != 0 ]; then
+	echo "⚠️  Tests failed"
+fi
+else
+	echo "⚠️  systemctl is-system-running timed out or failed, checking system status"
+	systemctl is-system-running || true
+	systemctl --failed --no-legend
+fi
+
 EOF
 fi
 
@@ -366,10 +403,7 @@ EOF
 
 	# Start HTTP server for serving the files
 	python3 -m http.server 8080 --directory "$http_dir" >/dev/null 2>&1 &
-	http_pid=$!
-
-	# Store HTTP server PID for cleanup
-	pxe_http_pid=$http_pid
+	bg_pids+=("$!")
 
 	if ((ssh)); then
 		qemu_opts+=(
@@ -382,13 +416,13 @@ EOF
 	fi
 
 elif ((ssh)); then
-		qemu_opts+=(
-			-netdev "user,id=net0,net=169.254.169.0/24,dhcpstart=169.254.169.9,hostfwd=tcp::2222-:22,guestfwd=tcp:169.254.169.254:80-cmd:socat - TCP:127.0.0.1:8181"
-		)
+	qemu_opts+=(
+		-netdev "user,id=net0,net=169.254.169.0/24,dhcpstart=169.254.169.9,hostfwd=tcp::2222-:22,guestfwd=tcp:169.254.169.254:80-cmd:socat - TCP:127.0.0.1:8181"
+	)
 else
-		qemu_opts+=(
-			-netdev "user,id=net0,net=169.254.169.0/24,dhcpstart=169.254.169.9,guestfwd=tcp:169.254.169.254:80-cmd:socat - TCP:127.0.0.1:8181"
-		)
+	qemu_opts+=(
+		-netdev "user,id=net0,net=169.254.169.0/24,dhcpstart=169.254.169.9,guestfwd=tcp:169.254.169.254:80-cmd:socat - TCP:127.0.0.1:8181"
+	)
 fi
 
 echo "🚀  starting test VM"
@@ -404,8 +438,20 @@ echo "🚀  starting test VM"
 # Colors are preserved in console output but removed from log file
 "qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 tee >(sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g' >"$log_dir/$log_file_log")
 
-num_errors=$(xmllint --xpath 'string(/testsuites/testsuite/@errors)' "$log_dir/$log_file_junit")
-num_failures=$(xmllint --xpath 'string(/testsuites/testsuite/@failures)' "$log_dir/$log_file_junit")
-if [ "${num_errors}" -gt 0 ] || [ "${num_failures}" -gt 0 ]; then
-	exit 1
+# Check if JUnit log is available and parse results
+if [ -f "$log_dir/$log_file_junit" ] && [ "$(wc -c "$log_dir/$log_file_junit" | cut -d' ' -f1)" != "0" ]; then
+	command -v xmllint >/dev/null || (
+		echo "⚠️  xmllint not found, please install it to parse test results"
+		exit 1
+	)
+	num_errors=$(xmllint --xpath 'string(/testsuites/testsuite/@errors)' "$log_dir/$log_file_junit")
+	num_failures=$(xmllint --xpath 'string(/testsuites/testsuite/@failures)' "$log_dir/$log_file_junit")
+	if [ "${num_errors}" -gt 0 ] || [ "${num_failures}" -gt 0 ]; then
+		exit 1
+	fi
+else
+	if ! ((skip_tests)); then
+		echo "⚠️  No test results found in $log_dir/$log_file_junit"
+		exit 1
+	fi
 fi

@@ -44,21 +44,11 @@ log_dir="$test_dist_dir/../log"
 log_file_log="chroot.test.log"
 log_file_junit="chroot.test.xml"
 
-mkdir -p "$log_dir"
-
-tmpdir=
-
-cleanup() {
-	get_logs
-	[ -z "$tmpdir" ] || [ ! -e "$tmpdir/chroot" ] || umount -l "$tmpdir/chroot" || rmdir "$tmpdir/chroot"
-	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
-	tmpdir=
-}
-trap cleanup EXIT
-tmpdir="$(mktemp -d)"
-
 get_logs() {
-	cp "$tmpdir/chroot/run/gardenlinux-tests/tests/log/$log_file_junit" "$log_dir" || true
+	log_file="$tmpdir/chroot/run/gardenlinux-tests/tests/log/$log_file_junit"
+	if [ -f "$log_file" ]; then
+		cp "$log_file" "$log_dir"
+	fi
 }
 
 run_sync() {
@@ -130,11 +120,20 @@ run_watch() {
 }
 
 container_name="gl-chroot-test-$$"
+tmpdir=
 
-cleanup_container() {
+cleanup() {
 	podman rm -f "$container_name" 2>/dev/null || true
+
+	get_logs
+	[ -z "$tmpdir" ] || [ ! -e "$tmpdir/chroot" ] || umount -l "$tmpdir/chroot" || rmdir "$tmpdir/chroot"
+	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
+	tmpdir=
 }
-trap cleanup_container EXIT INT TERM
+trap cleanup EXIT INT TERM
+
+mkdir -p "$log_dir"
+tmpdir="$(mktemp -d)"
 
 if [[ "$rootfs_tar" != "/mnt/rootfs.tar" ]]; then
 	# We're not running inside a container, extract artifact name and add metadata
@@ -183,10 +182,11 @@ if ((containerize)); then
 		"$image_id" fake_xattr "${container_cmd[@]}" &
 
 	podman_pid=$!
-	wait "$podman_pid" 2>/dev/null || true
+	wait "$podman_pid" 2>/dev/null
+	exit_code=$?
 
-	# Exit to prevent falling through to non-containerized code path
-	exit 0
+	# Exit with the same code as the podman process to prevent falling through to non-containerized code path
+	exit $exit_code
 fi
 echo "⚙️  creating chroot for test run"
 

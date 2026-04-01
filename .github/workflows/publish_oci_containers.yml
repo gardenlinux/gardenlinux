@@ -49,6 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          ref: main
           sparse-checkout: |
             .github/**
           sparse-checkout-cone-mode: false
@@ -95,7 +96,7 @@ jobs:
           ref: ${{ inputs.commit_id }}
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@e68236134acc7416606052599f4cfab7b9ea3b7c # pin@0.10.14
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@3e2802f425fd877c5b632094fb6ce71f5334b567 # pin@0.10.20
       - name: Set container version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -271,7 +272,7 @@ jobs:
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@3e2802f425fd877c5b632094fb6ce71f5334b567 # pin@0.10.20
       - name: Install cosign
         uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22 # v4.1.0
         with:
@@ -309,7 +310,7 @@ jobs:
       - name: Verify signature
         run: |
           cosign verify --insecure-ignore-tlog=true --key "awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }}" "${{ needs.determine_environment.outputs.repository }}@$(cat digest.txt)"
-      - uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
+      - uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # pin@v5.0.4
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
@@ -337,11 +338,11 @@ jobs:
           ref: ${{ inputs.commit_id }}
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@e68236134acc7416606052599f4cfab7b9ea3b7c # pin@0.10.14
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@3e2802f425fd877c5b632094fb6ce71f5334b567 # pin@0.10.20
       - name: Set CNAME
         run: |
           echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
-      - uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
+      - uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # pin@v5.0.4
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
