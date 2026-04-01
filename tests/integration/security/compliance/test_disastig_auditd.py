@@ -531,7 +531,7 @@ def test_audit_timestamp_granularity(shell: ShellRunner):
     ), "stigcompliance: audit records do not contain valid timestamps with second granularity"
 
 
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.feature("not container and not lima and not gardener")
 @pytest.mark.booted(reason="requires audit subsystem running")
 @pytest.mark.root(reason="required to read audit logs")
 def test_audit_nonlocal_maintenance_sessions(audit_rule: AuditRule, shell: ShellRunner):
