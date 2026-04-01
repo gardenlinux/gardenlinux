@@ -7,7 +7,7 @@ from plugins.parse_file import ParseFile
 from plugins.shell import ShellRunner
 
 
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.feature("not container and not lima and not gardener")
 @pytest.mark.booted(reason="audit event validation requires audit subsystem")
 @pytest.mark.root(reason="required to read audit logs")
 def test_audit_event_generated(shell: ShellRunner):
