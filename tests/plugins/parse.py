@@ -265,7 +265,9 @@ class Parse:
         """
         return cls(content, label)
 
-    def _parse_keyval(self, content: str, forbid_duplicates: False) -> Dict[str, str]:
+    def _parse_keyval(
+        self, content: str, forbid_duplicates: bool = False
+    ) -> Dict[str, str]:
         cfg = configparser.ConfigParser(allow_no_value=True, strict=forbid_duplicates)
         cfg.optionxform = lambda optionstr: optionstr  # type: ignore[assignment]
         wrapped = "[default]\n" + content
