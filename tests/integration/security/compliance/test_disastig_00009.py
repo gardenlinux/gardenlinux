@@ -7,7 +7,7 @@ from plugins.parse_file import ParseFile
 PAM_DIR = "/etc/pam.d"
 
 
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.feature("not container and not lima and not gardener")
 @pytest.mark.root(reason="required to verify PAM authentication enforcement")
 def test_session_lock_requires_reauthentication(parse_file: ParseFile, find: Find):
     """
