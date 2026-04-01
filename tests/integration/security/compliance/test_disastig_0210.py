@@ -23,7 +23,8 @@ def test_audit_rules_for_logging_attempts_to_delete_privileges(audit_rule):
     As per DISA STIG requirement, we need to verify that the operating system
     generates audit records when successful/unsuccessful attempts to delete privileges occur
 
-    Ref: SRG-OS-000466-GPOS-00210
+    Ref: SRG-OS-000466-GPOS-00210, SRG-OS-000239-GPOS-00089, SRG-OS-000240-GPOS-00090,
+         SRG-OS-000241-GPOS-00091
     """
     for file in ["passwd", "shadow", "group", "sudoers", "sudoers.d", "pam.d"]:
         assert audit_rule(
