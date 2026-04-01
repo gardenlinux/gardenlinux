@@ -1,6 +1,7 @@
 import re
 
 import pytest
+from Eike.gardenlinux.tests.plugins.audit import AuditRule
 from plugins.file import File
 from plugins.parse_file import ParseFile
 from plugins.shell import ShellRunner
@@ -528,3 +529,30 @@ def test_audit_timestamp_granularity(shell: ShellRunner):
     assert re.search(
         timestamp_pattern, result.stdout
     ), "stigcompliance: audit records do not contain valid timestamps with second granularity"
+
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="audit subsystem must be active")
+@pytest.mark.root(reason="required to inspect audit rules and logs")
+def test_audit_nonlocal_maintenance_sessions(audit_rule: AuditRule, shell: ShellRunner):
+    """
+    As per DISA STIG compliance requirement, the operating system must audit all
+    activities performed during nonlocal maintenance and diagnostic sessions.
+    This test verifies that command execution syscalls (execve and execveat) are
+    audited and that corresponding audit records are generated.
+    Ref: SRG-OS-000392-GPOS-00172
+    """
+
+    assert audit_rule(
+        syscall="execve"
+    ), "stigcompliance: execve syscall not audited for user activity"
+
+    assert audit_rule(
+        syscall="execveat"
+    ), "stigcompliance: execveat syscall not audited for user activity"
+
+    result = shell("ausearch -ts recent", capture_output=True)
+
+    assert (
+        "type=EXECVE" in result.stdout
+    ), "stigcompliance: no EXECVE audit records found for user activity"
