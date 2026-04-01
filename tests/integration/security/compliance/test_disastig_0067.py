@@ -14,6 +14,11 @@ Ref: SRG-OS-000134-GPOS-00068
 
 Verify the operating system isolates security functions from nonsecurity
 functions.
+
+Ref: SRG-OS-000326-GPOS-00126
+
+Verify that the operating system prevents all software from executing at higher
+privilege levels than users executing the software.
 """
 
 SETUID_BINARIES_WHITELIST = {
