@@ -3,7 +3,6 @@ title: "First Boot on AWS"
 description: "Step-by-step guide to deploying Garden Linux on Amazon Web Services"
 category: "tutorials"
 tags: ["tutorial", "aws", "cloud", "beginner"]
-github_target_path: "docs/tutorials/cloud/first-boot-aws.md"
 migration_status: "new"
 migration_source: ""
 migration_issue: ""
@@ -12,11 +11,12 @@ migration_approved: false
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/tutorials/cloud/first-boot-aws.md
+github_target_path: "docs/tutorials/cloud/first-boot-aws.md"
 ---
 
 # First Boot on AWS
 
-Garden Linux is a minimal, security-hardened Linux distribution designed for cloud and container environments. This tutorial guides you through deploying your first Garden Linux instance on [AWS](../../../reference/glossary.md#aws) EC2, from selecting an Amazon Machine Image (AMI) to connecting via SSH.
+Garden Linux is a minimal, security-hardened Linux distribution designed for cloud and container environments. This tutorial guides you through deploying your first Garden Linux instance on [AWS](../../reference/glossary.md#aws) EC2, from selecting an Amazon Machine Image (AMI) to connecting via SSH.
 
 **Difficulty:** Beginner | **Time:** ~15 minutes
 
@@ -47,7 +47,7 @@ Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/
 
 In the "Published Images" section on the release page, find the AMI ID for your desired [flavor](../../explanation/flavors-and-features.md), [architecture](../../reference/glossary.md#architecture), and [region](../../reference/glossary.md#region). The default production flavor is `aws-gardener_prod-amd64`.
 
-![GitHub release page showing published images table with AMI IDs for different regions](/docs/tutorials/assets/first-boot-aws-image.png)
+![GitHub release page showing published images table with AMI IDs for different regions](../assets/first-boot-aws-image.png)
 
 For this tutorial, we'll use the `eu-central-1` region. Replace the AMI ID below with the one corresponding to your chosen region:
 
