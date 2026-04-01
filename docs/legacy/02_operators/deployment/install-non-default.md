@@ -9,7 +9,7 @@ But there maybe reasons to install Garden Linux on a hard disk without any of th
 
 ## Prerequisites
 
-You need to have the possiblity to boot a kind of live system.
+You need to have the possibility to boot a kind of live system.
 e.g. there are systems like systemrescuecd
 https://www.system-rescue.org/
 
@@ -68,7 +68,7 @@ dd if=/tmp/rootfs.raw of=/dev/sda
 This is a DESTRUCTIVE command for anything that is on disk `/dev/sda`. The disk will contain only Garden Linux afterwards! BE CAREFUL!
 
 You do not need to care about partitioning etc. Garden Linux has an integrated partition auto grow. So after the first boot the disk will be properly aligned.
-You also will not need to make the disk bootable, because Garden Linux comes with a default legacy boot (non-UEFI) if installed on the full disk (as we do here) AND it will also come with an UEFI partition that can be adressed via the EFI shell (not part of this document)
+You also will not need to make the disk bootable, because Garden Linux comes with a default legacy boot (non-UEFI) if installed on the full disk (as we do here) AND it will also come with an UEFI partition that can be addressed via the EFI shell (not part of this document)
 
 ```
 system# reboot

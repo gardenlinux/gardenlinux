@@ -226,7 +226,7 @@ $ oras attach <registry>/<project>:<version> azure-gardener_dev_oci-amd64-today-
 
 Pulling these OCI compatible images using docker or podman is not possible. The last download step failed due to the fact that this images does not contain the expected filesystem layer.
 
-We wanted to create a simple possibility to pull the image usind docker or podman and display additional information. But without building a simple container this is not possible. An idea would be to create this simple container just holding the os-release, buildlog and manifest.
+We wanted to create a simple possibility to pull the image using docker or podman and display additional information. But without building a simple container this is not possible. An idea would be to create this simple container just holding the os-release, buildlog and manifest.
 
 #### Additional information
 

@@ -74,7 +74,7 @@ Trade-offs and risks:
 
 - Rely solely on conventions, documentation and developer experience to keep tests non-invasive: insufficient enforcement; regressions would continue to slip through.
 - Post-hoc log analysis to infer modifications: indirect, incomplete, and harder to make actionable.
-- The [Landlock LSM](https://www.man7.org/linux/man-pages/man7/Landlock.7.html) could further improve the test framwork to run in a sandbox. This however does not solve the issue of comparing the system state before and after the test runs.
+- The [Landlock LSM](https://www.man7.org/linux/man-pages/man7/Landlock.7.html) could further improve the test framework to run in a sandbox. This however does not solve the issue of comparing the system state before and after the test runs.
 
 ## References
 
