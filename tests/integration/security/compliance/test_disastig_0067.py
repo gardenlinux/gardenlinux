@@ -1,0 +1,54 @@
+import os
+import pathlib
+import pwd
+
+import pytest
+
+"""
+Ref: SRG-OS-000132-GPOS-00067
+
+Verify the operating system separates user functionality (including user
+interface services) from operating system management functionality.
+"""
+
+SETUID_BINARIES_WHITELIST = {
+    "/usr/bin/chfn",
+    "/usr/bin/chsh",
+    "/usr/bin/gpasswd",
+    "/usr/bin/passwd",
+    "/usr/bin/su",
+    "/usr/bin/sudo",
+}
+
+
+@pytest.fixture
+def exposed_setuid_binaries():
+    dirs = [
+        "/usr/sbin",
+        "/usr/bin",
+        "/usr/libexec",
+        "/usr/local/sbin",
+        "/usr/local/bin",
+    ]
+    return {
+        p
+        for d in dirs
+        for root, _, files in os.walk(d)
+        for p in map(lambda n: pathlib.Path(root) / n, files)
+        if (m := p.stat().st_mode) & 0o4000  # set‑uid bit present
+        and ((m >> 3) & 0o111)  # “others” execute bit set
+    }
+
+
+def test_only_root_user_has_uid_zero():
+    adm_users = [u.pw_name for u in pwd.getpwall() if u.pw_uid == 0]
+    assert adm_users == [
+        "root"
+    ], f"only root user should have uid 0, instead {adm_users} found"
+
+
+def test_only_whitelisted_setuid_binaries_are_allowed(exposed_setuid_binaries):
+    diff = exposed_setuid_binaries - SETUID_BINARIES_WHITELIST
+    assert (
+        not diff
+    ), f"unexpected setuid binaries with too broad exec permissions: {diff}"
