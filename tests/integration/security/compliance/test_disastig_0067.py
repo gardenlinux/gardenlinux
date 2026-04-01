@@ -9,6 +9,11 @@ Ref: SRG-OS-000132-GPOS-00067
 
 Verify the operating system separates user functionality (including user
 interface services) from operating system management functionality.
+
+Ref: SRG-OS-000134-GPOS-00068
+
+Verify the operating system isolates security functions from nonsecurity
+functions.
 """
 
 SETUID_BINARIES_WHITELIST = {
