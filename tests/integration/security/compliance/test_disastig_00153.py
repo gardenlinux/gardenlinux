@@ -1,17 +1,15 @@
 import re
 
 import pytest
+from plugins.find import Find
 from plugins.parse_file import ParseFile
-from plugins.shell import ShellRunner
 
 APT_CONF_DIR = "/etc/apt/apt.conf.d"
 
 
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.root(reason="required to verify package signature enforcement")
-def test_package_signature_verification_enabled(
-    parse_file: ParseFile, shell: ShellRunner
-):
+def test_package_signature_verification_enabled(parse_file: ParseFile, find: Find):
     """
     As per DISA STIG compliance requirement, the operating system must prevent the
     installation of patches, service packs, device drivers, or operating system components
@@ -20,20 +18,15 @@ def test_package_signature_verification_enabled(
     Ref: SRG-OS-000366-GPOS-00153
     """
 
-    result = shell(
-        f"find {APT_CONF_DIR} -type f",
-        capture_output=True,
-        ignore_exit_code=True,
-    )
-
-    files = result.stdout.splitlines()
+    find.root_paths = APT_CONF_DIR
+    find.entry_type = "files"
 
     insecure_pattern_1 = re.compile(r"AllowUnauthenticated\s*=\s*true", re.IGNORECASE)
     insecure_pattern_2 = re.compile(
         r"Acquire::AllowInsecureRepositories\s*=\s*true", re.IGNORECASE
     )
 
-    for path in files:
+    for path in find:
         lines = parse_file.lines(path, ignore_missing=True)
 
         assert (
