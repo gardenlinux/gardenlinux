@@ -45,7 +45,7 @@ For efficient parallel builds of multiple targets, use the `-j ${number_of_threa
 
 - Building in parallel significantly increases memory usage.
 - There are no mechanisms in place to handle memory exhaustion gracefully.
-- This feature is only recommended for users with large build machines, ideally with 8GiB of RAM per builder thread. It may work with 4GiB per thread due to spikes in memory usage being only intermittent during the build, but your milage may vary.
+- This feature is only recommended for users with large build machines, ideally with 8GiB of RAM per builder thread. It may work with 4GiB per thread due to spikes in memory usage being only intermittent during the build, but your mileage may vary.
 
 ### Cross Architecture Builds
 

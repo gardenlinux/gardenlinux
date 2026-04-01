@@ -356,13 +356,13 @@ def test_name(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
             shell(f"DEBIAN_FRONTEND=noninteractive apt-get install -y {pkg["name"]}")
             # Save Status change for teardown
             pkg["status"] == "Installed"
-    # ... (additonal setup code) ...
+    # ... (additional setup code) ...
 
     # Yield to test
     yield
 
     # Teardown/Cleanup: reverse all changes in reverse order
-    # ... (additonal teardown code) ...
+    # ... (additional teardown code) ...
     # Uninstall needed packages again
     for pkg in TEST_NAME_PACKAGES:
         if pkg["status"] == "Installed":

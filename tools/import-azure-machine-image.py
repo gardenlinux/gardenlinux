@@ -115,7 +115,7 @@ def check_location_available(credentials: AZCredentials, location):
         logger.debug(f"location {location} is available")
         return location
     else:
-        raise RuntimeError(f"{location} is not available to your subsription")
+        raise RuntimeError(f"{location} is not available to your subscription")
 
 
 class AzureImageBuild:
@@ -541,7 +541,7 @@ class AzureImageBuild:
             "--storage-account-name",
             type=str,
             dest="storage_account_name",
-            help="Name of the storage accont to use - leave empty to use a generated name",
+            help="Name of the storage account to use - leave empty to use a generated name",
         )
         parser.add_argument(
             "--image-name",

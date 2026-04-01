@@ -63,7 +63,7 @@ variable "my_ip" {
 }
 
 variable "provider_vars" {
-  description = "AWS sepcific settings"
+  description = "AWS specific settings"
 
   type = object({
     region             = optional(string, "eu-central-1")

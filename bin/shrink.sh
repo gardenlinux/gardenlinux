@@ -23,7 +23,7 @@ resizereport=$(echo $resizereport | grep "Nothing to do")
 
 read -r blocks_fs blocksize <<< $(echo "$resizereport" | sed 's/The filesystem is already \([0-9]*\) (\([^)]*\)) blocks long. Nothing to do!/\1 \2/')
 
-if [ ! $blocks_fs -gt 0 ];   then echo "ERROR: cannot determine shrinked size"; exit 1; fi
+if [ ! $blocks_fs -gt 0 ];   then echo "ERROR: cannot determine shrunk size"; exit 1; fi
 if [ "$blocksize" != "4k" ]; then echo "ERROR: no standard blocksize 4k!=$blocksize"; exit 1; else blocksize=4096; fi
 sectors_part=$(( $blocks_fs*$blocksize/$sectorsize ))
 startsector=$(sfdisk $loopback --dump | grep "${loopback}p3" | sed "s+^${loopback}p3 : start= *\(.*\), size=.*, type=.*$+\1+")

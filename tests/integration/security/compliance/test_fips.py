@@ -380,7 +380,7 @@ def test_kernel_has_fips_entry_in_procfs(parse_file: ParseFile):
 def test_kernel_module_tcrypt_available_for_dracut(kernel_module: KernelModule):
     """
     Test that the tcrypt kernel module is available as loadable module. This will be invoke by
-    the dracut FIPS module. Since there where a bug in the kernel, we missed the configuraiton
+    the dracut FIPS module. Since there where a bug in the kernel, we missed the configuration
     """
     kernel_modules = ["tcrypt"]
     for module in kernel_modules:

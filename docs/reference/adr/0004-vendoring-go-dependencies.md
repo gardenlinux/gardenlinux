@@ -65,7 +65,7 @@ Adding multiple new packages for dependencies of a new Go package might be a lot
 ## Decision
 
 We allow vendoring dependencies for Go applications in Garden Linux.
-We require vendored dependencies to be commited to version control to allow reproduce releases.
+We require vendored dependencies to be committed to version control to allow reproduce releases.
 
 ## Consequences
 

@@ -16,7 +16,7 @@ def test_pam_wheel_is_required(pam_config: PamConfig):
     """
     Validate that we have access to su restircted by default.  The test will
     read the file from `/etc/pam.d/su` and check if it has the configuration
-    parameter we exepct.
+    parameter we expect.
 
     A user needs to be configured to be admitted to use `su`. By default, this
     is realized by a specify group, the `wheel` group. We have to ensure that

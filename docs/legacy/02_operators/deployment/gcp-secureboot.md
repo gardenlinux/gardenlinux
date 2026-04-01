@@ -175,10 +175,10 @@ If the instance is not coming up properly, you might want to have a look into th
 
 * Go to VM instances
 * Click on the newly created instance
-* Verfiy that Secure Boot, vTPM, Integrity Monitoring are enabled
+* Verify that Secure Boot, vTPM, Integrity Monitoring are enabled
 * Go up to "Logs" and click on Serial Port 1 (console)
 * If the machine shows a secure boot violation and does not boot, the machine got handed over the wrong certificates. For local builds the correct certifivates are "secureboot.*.der" and for the NIGHTLYs the correct certificates are "gardenlinux-secureboot.*.der"
-* If the machine boots, but shuts down immediately after loading the OS, this indicates to a problem with the TPM2 suppoprt. Make sure that vTPM is enabled for this instance
+* If the machine boots, but shuts down immediately after loading the OS, this indicates to a problem with the TPM2 support. Make sure that vTPM is enabled for this instance
 
 ## Cleanup everything
 

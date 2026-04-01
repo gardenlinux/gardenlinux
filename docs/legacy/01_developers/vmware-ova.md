@@ -140,7 +140,7 @@ $ govc import.ova -name garden-linux-27.1.0 \
 
 The Warning :warning: can be ignored.
 
-The following environement variables can be exported
+The following environment variables can be exported
 to avoid specifying some of the command line flags:
 
 ```bash

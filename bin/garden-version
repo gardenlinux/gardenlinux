@@ -40,7 +40,7 @@ source "${thisDir}/.constants.sh" \
 --minor		prints only the minor version
 --patch		prints only the patch/patch version
 --date 		prints the date according to the version e.g. 20200427 if garden-version=27
---datefull	prints a full date deteministically usable by debootstrap
+--datefull	prints a full date deterministically usable by debootstrap
 --epoch		prints the seconds sinc 19700101 till garden-version
 --git		prints the version plus the last git-hash
 

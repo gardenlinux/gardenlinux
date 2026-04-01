@@ -23,7 +23,7 @@ fi
 cmdline="root=$root_source $cmdline"
 
 # onmetal
-# neccessary binary has been placed into the build container
+# necessary binary has been placed into the build container
 imageid=$(onmetal-image build --rootfs-file "$targetBaseDir/rootfs.raw" --kernel-file "$targetBase.vmlinuz" --initramfs-file "$targetBase.initrd" --command-line "$cmdline" --store-path "$targetBaseDir/onmetal" | tail -n1 | cut -d" " -f3)
 onmetal-image list --store-path "$targetBaseDir/onmetal"
 

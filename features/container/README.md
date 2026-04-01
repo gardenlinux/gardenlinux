@@ -7,7 +7,7 @@ This platform feature creates artifacts for Container Runtime Environments (CRE)
 ### Features
 This feature creates a common `docker-archive` image artifact as a `.tar.gz` tarball which can be used on all common Container Runtime Environments (e.g. Podman, Docker).
 
-By default, created artifacts are only `base` images without any further features on top. This means, they may mostly be used for executing a specific `entrypoint` script. To fullfil needed dependencies of packages, libs, etc. of the `entrypoint` script a custom build may be needed.
+By default, created artifacts are only `base` images without any further features on top. This means, they may mostly be used for executing a specific `entrypoint` script. To fulfill needed dependencies of packages, libs, etc. of the `entrypoint` script a custom build may be needed.
 Custom Garden Linux artifacts created by this feature can be loaded by running e.g. `docker load -i container-amd64-today-local.container.tar.gz`.
 
 ### Unit testing
