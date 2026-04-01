@@ -532,8 +532,8 @@ def test_audit_timestamp_granularity(shell: ShellRunner):
 
 
 @pytest.mark.feature("not container and not lima")
-@pytest.mark.booted(reason="audit subsystem must be active")
-@pytest.mark.root(reason="required to inspect audit rules and logs")
+@pytest.mark.booted(reason="requires audit subsystem running")
+@pytest.mark.root(reason="required to read audit logs")
 def test_audit_nonlocal_maintenance_sessions(audit_rule: AuditRule, shell: ShellRunner):
     """
     As per DISA STIG compliance requirement, the operating system must audit all
