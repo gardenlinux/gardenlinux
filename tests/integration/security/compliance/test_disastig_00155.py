@@ -1,7 +1,9 @@
 import pytest
 
 
-@pytest.mark.feature("not container and not gardener and not lima")
+@pytest.mark.feature(
+    "not container and not gardener and not lima and not capi and not baremetal"
+)
 @pytest.mark.booted(reason="requires booted system to verify LSM enforcement")
 @pytest.mark.root(reason="requires access to system security configuration")
 def test_deny_all_execution_mechanism_present(shell):
