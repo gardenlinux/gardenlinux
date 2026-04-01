@@ -165,7 +165,7 @@ Tells Ignition the platform that is run. See [[link](https://docs.fedoraproject.
 [Ignition](https://github.com/coreos/ignition) configures the system prior to installation. It is mainly used here to write files (regular and systemd units) as instructed by the configuration file from the URL specified in boot.ipxe. Ignition only executes on firstboots.
 To improve human readability configs can also be written in *yaml* and translated to *json* by [Butane](https://github.com/coreos/butane).
 
-The main installation procedure is supplied through a seperate ignition configuration file: `install.yaml` (see *examples/ipxe-install*) and must be loaded by `ignition.json`.
+The main installation procedure is supplied through a separate ignition configuration file: `install.yaml` (see *examples/ipxe-install*) and must be loaded by `ignition.json`.
 
 This is a minimal `ignition.yaml`:
 
