@@ -58,7 +58,7 @@ def test_only_root_user_has_uid_zero():
 
 
 def test_only_whitelisted_setuid_binaries_are_allowed(exposed_setuid_binaries):
-    diff = exposed_setuid_binaries - SETUID_BINARIES_WHITELIST
+    diff = SETUID_BINARIES_WHITELIST - exposed_setuid_binaries
     assert (
         not diff
     ), f"unexpected setuid binaries with too broad exec permissions: {diff}"
