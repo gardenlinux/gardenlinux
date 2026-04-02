@@ -73,7 +73,7 @@ def test_only_whitelisted_setuid_binaries_are_allowed(exposed_setuid_binaries):
 def test_only_whitelisted_lima_setuid_binaries_are_allowed(exposed_setuid_binaries):
     if exposed_setuid_binaries:
         diff = exposed_setuid_binaries - (
-            SETUID_BINARIES_WHITELIST["default"] + SETUID_BINARIES_WHITELIST["lima"]
+            SETUID_BINARIES_WHITELIST["default"] | SETUID_BINARIES_WHITELIST["lima"]
         )
         assert (
             not diff
