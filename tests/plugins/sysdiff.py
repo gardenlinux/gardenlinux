@@ -17,6 +17,7 @@ import logging
 import os
 import re
 import shutil
+import time
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from fnmatch import fnmatch
@@ -69,6 +70,16 @@ IGNORED_SYSTEMD_PATTERNS = [
     "user@*.service",
     "user-*.slice",
 ]
+
+# Units to wait for before taking a snapshot (unit_name: expected_sub_state)
+# This prevents race conditions where socket-activated services are still settling
+WAIT_FOR_SETTLED_UNITS = {
+    "libvirtd.socket": "listening",
+    "libvirtd-ro.socket": "listening",
+    "libvirtd-tcp.socket": "listening",
+    "libvirtd-admin.socket": "listening",
+}
+
 IGNORED_KERNEL_MODULES = []
 IGNORED_SYSCTL_PARAMS = {
     # File system dynamic parameters
@@ -336,6 +347,58 @@ class SnapshotManager:
         self.state_dir = state_dir or Path(STATE_DIR)
         self.state_dir.mkdir(parents=True, exist_ok=True)
 
+    def _wait_for_units_settled(
+        self,
+        systemd: Systemd,
+        max_wait_seconds: int = 120,
+        poll_interval: float = 0.5,
+    ) -> None:
+        """
+        Wait for configured units to reach their expected sub-states.
+
+        This prevents race conditions when taking snapshots while socket-activated
+        services like libvirtd are still settling into their stable state.
+
+        Args:
+            systemd: Systemd instance for checking unit states
+            max_wait_seconds: Maximum time to wait for units to settle
+            poll_interval: Time between polls in seconds
+        """
+        if not WAIT_FOR_SETTLED_UNITS:
+            return
+
+        start_time = time.time()
+        units_to_check = set(WAIT_FOR_SETTLED_UNITS.keys())
+
+        while units_to_check and (time.time() - start_time) < max_wait_seconds:
+            current_units = systemd.list_units()
+            unit_states = {unit.unit: unit.sub for unit in current_units}
+
+            settled_units = set()
+            for unit_name in units_to_check:
+                expected_sub = WAIT_FOR_SETTLED_UNITS[unit_name]
+                current_sub = unit_states.get(unit_name)
+
+                logger.debug(
+                    f"Debug: Unit {unit_name} current state: {current_sub}, expected: {expected_sub}"
+                )
+
+                if current_sub == expected_sub:
+                    settled_units.add(unit_name)
+
+            units_to_check -= settled_units
+
+            if units_to_check:
+                time.sleep(poll_interval)
+
+        # Log if any units didn't settle (but don't fail the snapshot)
+        if units_to_check:
+            elapsed = time.time() - start_time
+            logger.warning(
+                f"Warning: Units did not settle within {max_wait_seconds}s (elapsed: {elapsed:.1f}s): "
+                f"{', '.join(units_to_check)}"
+            )
+
     def create_snapshot(
         self,
         name: str | None = None,
@@ -374,8 +437,14 @@ class SnapshotManager:
         sysctl_collector = Sysctl(shell)
         kernel_versions = KernelVersions()
         kernel_module = KernelModule(Find(), shell, kernel_versions)
-
         packages = dpkg.collect_installed_packages().packages
+
+        # Make sure no systemd services and sockets are still transitioning
+        systemd_wait = systemd.wait_is_system_running()
+        logger.debug(
+            f"Systemd settle returned state {systemd_wait.state} and took {systemd_wait.elapsed_time:.1f}s to complete"
+        )
+        self._wait_for_units_settled(systemd)
 
         systemd_units = systemd.list_units()
 
