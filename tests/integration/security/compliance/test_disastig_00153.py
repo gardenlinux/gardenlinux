@@ -7,7 +7,7 @@ from plugins.parse_file import ParseFile
 APT_CONF_DIR = "/etc/apt/apt.conf.d"
 
 
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.feature("not container and not lima and not baremetal")
 @pytest.mark.root(reason="required to verify package signature enforcement")
 def test_package_signature_verification_enabled(parse_file: ParseFile, find: Find):
     """
