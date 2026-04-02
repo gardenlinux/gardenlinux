@@ -37,6 +37,11 @@ SETUID_BINARIES_WHITELIST = {
 
 @pytest.fixture
 def exposed_setuid_binaries():
+    """
+    Returns a set of pathnames of root-owned binaries with setuid bit which are
+    also "others"-executable (i.e. binaries that give root privileges to every
+    user).
+    """
     dirs = [
         "/usr/sbin",
         "/usr/bin",
@@ -49,7 +54,8 @@ def exposed_setuid_binaries():
         for d in dirs
         for root, _, files in os.walk(d)
         for p in map(lambda n: pathlib.Path(root) / n, files)
-        if (m := p.stat().st_mode) & 0o4000  # set‑uid bit present
+        if p.stat().st_uid == 0  # file belongs to root
+        and (m := p.stat().st_mode) & 0o4000  # set‑uid bit present
         and ((m >> 3) & 0o111)  # “others” execute bit set
     }
 
@@ -61,6 +67,7 @@ def test_only_root_user_has_uid_zero():
     ], f"only root user should have uid 0, instead {adm_users} found"
 
 
+@pytest.mark.feature("not lima")
 def test_only_whitelisted_setuid_binaries_are_allowed(exposed_setuid_binaries):
     if exposed_setuid_binaries:
         diff = exposed_setuid_binaries - SETUID_BINARIES_WHITELIST["default"]
