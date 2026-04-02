@@ -41,7 +41,7 @@ def exposed_setuid_binaries():
         "/usr/local/bin",
     ]
     return {
-        p
+        str(p)
         for d in dirs
         for root, _, files in os.walk(d)
         for p in map(lambda n: pathlib.Path(root) / n, files)
