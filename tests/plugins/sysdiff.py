@@ -69,6 +69,9 @@ IGNORED_SYSTEMD_PATTERNS = [
     "user-runtime-dir@*.service",
     "user@*.service",
     "user-*.slice",
+    # runs periodically
+    "gce-workload-cert-refresh.service",
+    "gce-workload-cert-refresh.timer",
 ]
 
 # Units to wait for before taking a snapshot (unit_name: expected_sub_state)
