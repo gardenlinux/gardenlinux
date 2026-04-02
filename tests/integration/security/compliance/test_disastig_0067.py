@@ -28,6 +28,7 @@ SETUID_BINARIES_WHITELIST = {
     "/usr/bin/passwd",
     "/usr/bin/su",
     "/usr/bin/sudo",
+    "/usr/bin/sudoedit",
 }
 
 
