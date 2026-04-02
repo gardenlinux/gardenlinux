@@ -1,5 +1,7 @@
 import hashlib
 
+import pytest
+
 """
 Ref: SRG-OS-000278-GPOS-00108
 
@@ -17,6 +19,7 @@ def _checksum_file(filepath):
     return h.hexdigest()
 
 
+@pytest.mark.feature("not fips")
 def test_auditd_is_not_tampered(dpkg):
     for bin in ["auditd", "auditctl", "augenrules", "aureport", "ausearch"]:
         ideal_checksum = dpkg.package_files_checksums("auditd")[f"/usr/sbin/{bin}"]
