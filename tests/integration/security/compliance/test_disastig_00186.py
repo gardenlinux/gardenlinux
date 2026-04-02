@@ -11,10 +11,6 @@ def test_icmp_rate_limiting_enabled(sysctl):
     system is implementing rate-limiting measures on impacted network interfaces.
     Ref: RG-OS-000420-GPOS-00186
     """
-    assert (
-        "net.ipv4.icmp_ratelimit" in sysctl
-    ), "stigcompliance: sysctl parameter net.ipv4.icmp_ratelimit not found"
-
     value = sysctl["net.ipv4.icmp_ratelimit"]
 
     assert (
@@ -32,10 +28,6 @@ def test_tcp_syncookies_enabled(sysctl):
     system is implementing rate-limiting measures on impacted network interfaces.
     Ref: RG-OS-000420-GPOS-00186
     """
-    assert (
-        "net.ipv4.tcp_syncookies" in sysctl
-    ), "stigcompliance: sysctl parameter net.ipv4.tcp_syncookies not found"
-
     value = sysctl["net.ipv4.tcp_syncookies"]
 
     assert value == 1, f"stigcompliance: tcp_syncookies not enabled (value={value})"
