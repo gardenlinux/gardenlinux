@@ -22,13 +22,16 @@ privilege levels than users executing the software.
 """
 
 SETUID_BINARIES_WHITELIST = {
-    "/usr/bin/chfn",
-    "/usr/bin/chsh",
-    "/usr/bin/gpasswd",
-    "/usr/bin/passwd",
-    "/usr/bin/su",
-    "/usr/bin/sudo",
-    "/usr/bin/sudoedit",
+    "default": {
+        "/usr/bin/chfn",
+        "/usr/bin/chsh",
+        "/usr/bin/gpasswd",
+        "/usr/bin/passwd",
+        "/usr/bin/su",
+        "/usr/bin/sudo",
+        "/usr/bin/sudoedit",
+    },
+    "lima": {"/usr/bin/fusermount3", "/usr/bin/fusermount"},
 }
 
 
@@ -60,7 +63,18 @@ def test_only_root_user_has_uid_zero():
 
 def test_only_whitelisted_setuid_binaries_are_allowed(exposed_setuid_binaries):
     if exposed_setuid_binaries:
-        diff = exposed_setuid_binaries - SETUID_BINARIES_WHITELIST
+        diff = exposed_setuid_binaries - SETUID_BINARIES_WHITELIST["default"]
+        assert (
+            not diff
+        ), f"unexpected setuid binaries with too broad exec permissions: {exposed_setuid_binaries=} {diff=}"
+
+
+@pytest.mark.feature("lima")
+def test_only_whitelisted_lima_setuid_binaries_are_allowed(exposed_setuid_binaries):
+    if exposed_setuid_binaries:
+        diff = exposed_setuid_binaries - (
+            SETUID_BINARIES_WHITELIST["default"] + SETUID_BINARIES_WHITELIST["lima"]
+        )
         assert (
             not diff
         ), f"unexpected setuid binaries with too broad exec permissions: {exposed_setuid_binaries=} {diff=}"
