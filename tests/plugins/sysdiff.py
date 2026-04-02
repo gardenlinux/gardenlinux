@@ -13,6 +13,7 @@ import difflib
 import gzip
 import hashlib
 import json
+import logging
 import os
 import re
 import shutil
@@ -32,6 +33,8 @@ from .kernel_versions import KernelVersions
 from .shell import ShellRunner
 from .sysctl import Sysctl, SysctlParam
 from .systemd import Systemd, SystemdUnit
+
+logger = logging.getLogger(__name__)
 
 STATE_DIR = "/tmp/sysdiff"
 
@@ -173,7 +176,7 @@ class FileCollector:
                         existing_paths.append(path)
                         seen.add(path)
                 except Exception as e:
-                    print(f"Error normalizing paths: {e}")
+                    logger.error(f"Error normalizing paths: {e}")
 
         return existing_paths
 
@@ -190,7 +193,7 @@ class FileCollector:
                     if line and not line.startswith("#"):
                         patterns.append(line)
         except Exception as e:
-            print(f"Error loading ignore patterns from {ignore_file}: {e}")
+            logger.error(f"Error loading ignore patterns from {ignore_file}: {e}")
 
         return patterns
 
@@ -218,7 +221,7 @@ class FileCollector:
         try:
             root_dev = os.stat(root).st_dev
         except (OSError, IOError) as e:
-            print(f"Warning: Cannot access {root}: {e}")
+            logger.warning(f"Warning: Cannot access {root}: {e}")
             return
 
         for dirpath, dirnames, filenames in os.walk(
@@ -247,7 +250,7 @@ class FileCollector:
         try:
             if not os.path.exists(filepath):
                 if verbose:
-                    print(f"Warning: File not found: {filepath}")
+                    logger.warning(f"Warning: File not found: {filepath}")
                 return None
         except (OSError, IOError):
             # If we can't even check existence, skip silently
@@ -266,11 +269,11 @@ class FileCollector:
         except FileNotFoundError:
             # This shouldn't happen after the exists check, but handle it gracefully
             if verbose:
-                print(f"Warning: File disappeared: {filepath}")
+                logger.warning(f"Warning: File disappeared: {filepath}")
             return None
         except (OSError, IOError, PermissionError) as e:
             # Less common errors - always warn
-            print(f"Warning: Cannot read {filepath}: {e}")
+            logger.warning(f"Warning: Cannot read {filepath}: {e}")
             return None
 
     def collect_file_hashes(
@@ -306,7 +309,7 @@ class FileCollector:
                     files_in_path = list(self._walk_files_recursive(path))
                     all_files.extend(files_in_path)
                 except Exception as e:
-                    print(f"Warning: Error scanning {path}: {e}")
+                    logger.warning(f"Warning: Error scanning {path}: {e}")
                     continue
 
             filtered_files = [
@@ -321,7 +324,7 @@ class FileCollector:
                     file_hashes[filepath] = hash_value
 
         except Exception as e:
-            print(f"Error collecting file hashes: {e}")
+            logger.error(f"Error collecting file hashes: {e}")
 
         return file_hashes
 
