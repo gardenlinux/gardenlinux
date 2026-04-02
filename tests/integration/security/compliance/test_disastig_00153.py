@@ -29,6 +29,9 @@ def test_package_signature_verification_enabled(parse_file: ParseFile, find: Fin
     for path in find:
         lines = parse_file.lines(path, ignore_missing=True)
 
+        if not lines:
+            continue
+
         assert (
             insecure_pattern_1 not in lines
         ), f"stigcompliance: AllowUnauthenticated enabled in {path}"
