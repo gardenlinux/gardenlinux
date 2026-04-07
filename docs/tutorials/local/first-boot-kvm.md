@@ -92,7 +92,7 @@ rm "${GL_TAR_XZ}"
 To use a specific architecture instead of auto-detecting, set `GL_ARCH` before running the download commands:
 
 ```bash
-export GL_ARCH="arm64"
+GL_ARCH="arm64"
 ```
 
 :::
