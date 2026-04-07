@@ -19,7 +19,7 @@ Verify that the operating system prevents all software from executing at higher
 privilege levels than users executing the software.
 """
 
-SETUID_BINARIES_WHITELIST = {
+SETUID_BINARIES_ALLOWLIST = {
     "default": {
         "/usr/bin/chfn",
         "/usr/bin/chsh",
@@ -41,19 +41,19 @@ def test_only_root_user_has_uid_zero():
 
 
 @pytest.mark.feature("not lima")
-def test_only_whitelisted_setuid_binaries_are_allowed(exposed_setuid_binaries):
+def test_only_setuid_binaries_from_the_list_are_allowed(exposed_setuid_binaries):
     if exposed_setuid_binaries:
-        diff = exposed_setuid_binaries - SETUID_BINARIES_WHITELIST["default"]
+        diff = exposed_setuid_binaries - SETUID_BINARIES_ALLOWLIST["default"]
         assert (
             not diff
         ), f"unexpected setuid binaries with too broad exec permissions: {exposed_setuid_binaries=} {diff=}"
 
 
 @pytest.mark.feature("lima")
-def test_only_whitelisted_lima_setuid_binaries_are_allowed(exposed_setuid_binaries):
+def test_only_lima_setuid_binaries_from_the_list_are_allowed(exposed_setuid_binaries):
     if exposed_setuid_binaries:
         diff = exposed_setuid_binaries - (
-            SETUID_BINARIES_WHITELIST["default"] | SETUID_BINARIES_WHITELIST["lima"]
+            SETUID_BINARIES_ALLOWLIST["default"] | SETUID_BINARIES_ALLOWLIST["lima"]
         )
         assert (
             not diff
