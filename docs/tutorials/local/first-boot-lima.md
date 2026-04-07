@@ -66,17 +66,18 @@ Garden Linux provides pre-built images suitable for use with Lima. A containeriz
 The pre-built images are intentionally minimal and do not include much of the additional software available in Garden Linux. You can use `apt` to search and install additional packages that are available for Garden Linux.
 
 ```bash
+# For a release version:
+GL_VERSION="2150.0.0"
+podman run --rm ghcr.io/gardenlinux/gardenlinux/lima:latest --version "${GL_VERSION}" | limactl start --name gardenlinux -
+
 # For the latest nightly build:
 podman run --rm ghcr.io/gardenlinux/gardenlinux/lima:latest | limactl start --name gardenlinux -
 
 # For a specific nightly build:
-podman run --rm ghcr.io/gardenlinux/gardenlinux/lima:latest --version 2066.0.0 --allow-nightly | limactl start --name gardenlinux -
+GL_VERSION="2198.0.0"
+podman run --rm ghcr.io/gardenlinux/gardenlinux/lima:latest --version "${GL_VERSION}" --allow-nightly | limactl start --name gardenlinux -
 
-# For a release version:
-podman run --rm ghcr.io/gardenlinux/gardenlinux/lima:latest --version <version> | limactl start --name gardenlinux -
 ```
-
-Replace `<version>` with a specific Garden Linux release number (e.g., `2066.0.0`).
 
 :::tip
 The container generates a Lima YAML manifest with the correct image URL and all required configuration. You can redirect the output to a file for review or modification:
@@ -126,10 +127,10 @@ ip addr show
 
 Expected output from `/etc/os-release` should show:
 
-```
-NAME="Garden Linux"
-VERSION="<version>"
+```bash
 ID=gardenlinux
+NAME="Garden Linux"
+VERSION="${GL_VERSION}"
 ...
 ```
 

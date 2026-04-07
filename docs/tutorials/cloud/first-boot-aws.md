@@ -75,7 +75,7 @@ Create a VPC to isolate your Garden Linux instance in a dedicated network enviro
 AWS_REGION="eu-central-1"
 VPC_CIDR="10.1.0.0/18"
 VPC_ID=$(aws ec2 create-vpc \
-    --cidr-block $VPC_CIDR \
+    --cidr-block ${VPC_CIDR} \
     --output text --query 'Vpc.VpcId')
 ```
 
@@ -92,7 +92,7 @@ AZ=$(aws ec2 describe-availability-zones \
 
 SUBNET=$(aws ec2 create-subnet \
             --vpc-id $VPC_ID \
-            --availability-zone $AZ \
+            --availability-zone ${AZ} \
             --cidr-block ${SUBNET_CIDR} \
             --query 'Subnet.SubnetId' \
             --output text)
@@ -109,7 +109,7 @@ IGW_ID=$(aws ec2 create-internet-gateway \
 
 aws ec2 attach-internet-gateway \
     --vpc-id $VPC_ID \
-    --internet-gateway-id $IGW_ID
+    --internet-gateway-id ${IGW_ID}
 
 ROUTE_TABLE_ID=$(aws ec2 describe-route-tables \
         --filters "Name=vpc-id,Values=$VPC_ID" \
@@ -117,9 +117,9 @@ ROUTE_TABLE_ID=$(aws ec2 describe-route-tables \
         --output text)
 
 aws ec2 create-route \
-    --route-table-id $ROUTE_TABLE_ID \
+    --route-table-id ${ROUTE_TABLE_ID} \
     --destination-cidr-block 0.0.0.0/0 \
-    --gateway-id $IGW_ID
+    --gateway-id ${IGW_ID}
 ```
 
 #### Create a Security Group
@@ -135,14 +135,14 @@ SECURITY_GROUP_ID=$(aws ec2 create-security-group \
     --output text)
 
 aws ec2 authorize-security-group-ingress \
-    --group-id $SECURITY_GROUP_ID \
+    --group-id ${SECURITY_GROUP_ID} \
     --protocol all \
     --port 0 \
-    --source-group $SECURITY_GROUP_ID \
+    --source-group ${SECURITY_GROUP_ID} \
     --output text
 
 aws ec2 authorize-security-group-ingress \
-    --group-id $SECURITY_GROUP_ID \
+    --group-id ${SECURITY_GROUP_ID} \
     --protocol tcp \
     --port 22 \
     --cidr $(curl -s ifconfig.me)/32 \
@@ -159,14 +159,14 @@ Garden Linux disables SSH by default for security. You must explicitly enable it
 
 ```bash
 KEY_NAME="gardenlinux-tutorial-key"
-ssh-keygen -t ed25519 -f $KEY_NAME -N ""
+ssh-keygen -t ed25519 -f ${KEY_NAME} -N ""
 
 aws ec2 import-key-pair \
     --key-name $KEY_NAME \
-    --public-key-material fileb://$KEY_NAME.pub
+    --public-key-material fileb://${KEY_NAME}.pub
 
 USER_DATA=user_data.sh
-cat >$USER_DATA <<EOF
+cat >${USER_DATA} <<EOF
 #!/usr/bin/env bash
 
 # Enable SSH service on first boot
@@ -180,13 +180,13 @@ Launch your Garden Linux EC2 instance with the prepared configuration:
 
 ```bash
 aws ec2 run-instances \
-        --image-id $AMI_ID \
-        --subnet-id $SUBNET \
+        --image-id ${AMI_ID} \
+        --subnet-id ${SUBNET} \
         --instance-type t3.small \
-        --user-data file://$USER_DATA \
+        --user-data file://${USER_DATA} \
         --associate-public-ip-address \
-        --security-group-ids $SECURITY_GROUP_ID \
-        --key-name $KEY_NAME \
+        --security-group-ids ${SECURITY_GROUP_ID} \
+        --key-name ${KEY_NAME} \
         --count 1 \
         --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=gardenlinux-tutorial}]"
 ```
@@ -201,7 +201,7 @@ INSTANCE_IP=$(aws ec2 describe-instances \
     --query 'Reservations[].Instances[].PublicIpAddress' \
     --output text)
 
-ssh -i $KEY_NAME ec2-user@$INSTANCE_IP
+ssh -i ${KEY_NAME} ec2-user@${INSTANCE_IP}
 ```
 
 :::tip
@@ -228,10 +228,10 @@ ip addr show
 
 Expected output from `/etc/os-release` should show:
 
-```
-NAME="Garden Linux"
-VERSION="2150.0.0"
+```bash
 ID=gardenlinux
+NAME="Garden Linux"
+VERSION="${GL_VERSION}"
 ...
 ```
 
