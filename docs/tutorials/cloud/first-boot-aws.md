@@ -33,7 +33,7 @@ Before starting, you'll need:
 
 ## What You'll Build
 
-You'll deploy a Garden Linux instance on AWS EC2 with a basic networking setup (VPC, subnet, internet gateway, and security group), configure SSH access, and verify the installation. The tutorial uses the `gardener_prod` [flavor](../../explanation/flavors-and-features.md), which is optimized for production workloads.
+You'll deploy a Garden Linux instance on AWS EC2 with a basic networking setup (VPC, subnet, internet gateway, and security group), configure SSH access, and verify the installation. The tutorial uses the `aws-gardener_prod` [flavor](../../explanation/flavors-and-features.md), which is optimized for gardener production workloads on AWS.
 
 ## Steps
 
@@ -264,31 +264,31 @@ aws ec2 wait instance-terminated \
 
 # Delete the security group
 aws ec2 delete-security-group \
-    --group-id $SECURITY_GROUP_ID
+    --group-id ${SECURITY_GROUP_ID}
 
 # Delete the AWS key pair
 aws ec2 delete-key-pair \
-    --key-name $KEY_NAME
+    --key-name ${KEY_NAME}
 
 # Detach the internet gateway before deleting it
 aws ec2 detach-internet-gateway \
-    --vpc-id $VPC_ID \
-    --internet-gateway-id $IGW_ID
+    --vpc-id ${VPC_ID} \
+    --internet-gateway-id ${IGW_ID}
 
 # Delete the internet gateway
 aws ec2 delete-internet-gateway \
-    --internet-gateway-id $IGW_ID
+    --internet-gateway-id ${IGW_ID}
 
 # Delete the subnet
 aws ec2 delete-subnet \
-    --subnet-id $SUBNET
+    --subnet-id ${SUBNET}
 
 # Delete the VPC
 aws ec2 delete-vpc \
-    --vpc-id $VPC_ID
+    --vpc-id ${VPC_ID}
 
 # Remove local files
-rm $USER_DATA $KEY_NAME $KEY_NAME.pub
+rm ${USER_DATA} ${KEY_NAME} ${KEY_NAME}.pub
 ```
 
 ## Next Steps
