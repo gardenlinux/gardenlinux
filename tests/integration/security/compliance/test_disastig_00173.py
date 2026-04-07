@@ -29,11 +29,9 @@ def test_ssh_strong_macs_present(sshd, dpkg: Dpkg):
     strong_macs = {
         "hmac-sha2-256",
         "hmac-sha2-512",
-        "hmac-sha2-256-etm@openssh.com",
-        "hmac-sha2-512-etm@openssh.com",
     }
 
-    assert any(
+    assert all(
         mac in strong_macs for mac in mac_list
     ), "stigcompliance: no strong MAC algorithms configured for SSH integrity protection"
 
