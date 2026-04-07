@@ -1,5 +1,5 @@
 ---
-title: "First Boot on KVM"
+First Boot on Lima](./local/first-boot-lima.md)itle: "First Boot on KVM"
 description: "Step-by-step guide to deploying Garden Linux on QEMU/KVM"
 category: "tutorials"
 tags: ["tutorial", "kvm", "qemu", "virtualization", "beginner"]
@@ -59,13 +59,13 @@ Garden Linux provides pre-built disk images for KVM. Start by selecting an appro
 
 Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
 
-In the **Assets** section at the bottom of the release page, find the `kvm-gardener_prod` archive matching your workstation architecture. Garden Linux provides images for both `amd64` and `arm64`.
+In the **Assets** section at the bottom of the release page, find the `kvm-gardener_prod` archive matching your workstation architecture. Garden Linux provides images for both `amd64` and `arm64`. You will also need the `commit` of the build to download the correct image.
 
-Detect your workstation architecture and download the correct image:
+Either download and extract the image by hand or use this script to detect your workstation architecture and download the correct image:
 
 ```bash
 GL_VERSION="2150.0.0"
-GL_BUILD_ID="eb8696b9"
+GL_COMMIT="eb8696b9"
 
 # Auto-detect host architecture
 GL_ARCH="$(uname -m)"
@@ -75,15 +75,17 @@ case "$GL_ARCH" in
   *)       echo "Unsupported architecture: $GL_ARCH"; exit 1 ;;
 esac
 
-GL_IMAGE="gardenlinux-${GL_VERSION}.raw"
-GL_ASSET="kvm-gardener_prod-${GL_ARCH}-${GL_VERSION}-${GL_BUILD_ID}"
+GL_ASSET="kvm-gardener_prod-${GL_ARCH}-${GL_VERSION}-${GL_COMMIT}"
+GL_TAR_XZ="${GL_ASSET}.tar.xz"
+GL_IMAGE="${GL_ASSET}.raw"
 
-curl -L -o "${GL_ASSET}.tar.xz" \
-  "https://github.com/gardenlinux/gardenlinux/releases/download/${GL_VERSION}/${GL_ASSET}.tar.xz"
+curl -L -o "${GL_TAR_XZ}" \
+  "https://github.com/gardenlinux/gardenlinux/releases/download/${GL_VERSION}/${GL_TAR_XZ}"
 
-tar -xf "${GL_ASSET}.tar.xz"
-mv "${GL_ASSET}/${GL_ASSET}.raw" "$GL_IMAGE"
-rm -rf "${GL_ASSET}" "${GL_ASSET}.tar.xz"
+# Extract raw image
+tar -xf "${GL_TAR_XZ}" "${GL_IMAGE}"
+# Delete downloaded tar file
+rm "${GL_TAR_XZ}"
 ```
 
 :::tip
@@ -170,7 +172,7 @@ EOF
 ```
 
 :::tip
-The `fw_cfg` script mechanism passes a shell script to the VM via QEMU's firmware configuration interface. Garden Linux executes scripts found at `opt/gardenlinux/config_script` during early boot. The script output is redirected to the serial console (`/dev/ttyS0` on amd64, `/dev/ttyAMA0` on arm64) for debugging.
+The [`fw_cfg` script mechanism](https://wiki.osdev.org/QEMU_fw_cfg) passes a shell script to the VM via QEMU's firmware configuration interface. Garden Linux executes scripts found at `opt/gardenlinux/config_script` during early boot. The script output is redirected to the serial console (`/dev/ttyS0` on amd64, `/dev/ttyAMA0` on arm64) for debugging.
 :::
 
 ### Step 4: Launch the VM
@@ -187,7 +189,7 @@ esac
 GL_CPU="${GL_CPU:-2}"
 GL_MEM="${GL_MEM:-2048}"
 GL_SSH_PORT="${GL_SSH_PORT:-2222}"
-GL_IMAGE="${GL_IMAGE:-gardenlinux-2150.0.0.raw}"
+GL_IMAGE="${GL_IMAGE:-kvm-gardener_prod-amd64-2150.0.0-eb8696b9.raw}"
 
 if [ "$GL_ARCH" = "amd64" ]; then
   QEMU_BIN="${QEMU_BIN:-qemu-system-x86_64}"
@@ -209,15 +211,15 @@ cp "$UEFI_VARS" "$UEFI_VARS_TMP"
 
 # Launch QEMU
 $QEMU_BIN \
-    -machine "$QEMU_MACHINE" \
-    -cpu "$QEMU_CPU" \
+    -machine "${QEMU_MACHINE}" \
+    -cpu "${QEMU_CPU}" \
     -enable-kvm \
-    -smp "$GL_CPU" \
-    -m "$GL_MEM" \
-    -drive if=virtio,format=raw,file="$GL_IMAGE" \
-    -drive if=pflash,format=raw,unit=0,file="$UEFI_CODE",readonly=on \
-    -drive if=pflash,format=raw,unit=1,file="$UEFI_VARS_TMP" \
-    -fw_cfg name=opt/gardenlinux/config_script,file="$FW_CFG_SCRIPT" \
+    -smp "${GL_CPU}" \
+    -m "${GL_MEM}" \
+    -drive if=virtio,format=raw,file="${GL_IMAGE}" \
+    -drive if=pflash,format=raw,unit=0,file="${UEFI_CODE}",readonly=on \
+    -drive if=pflash,format=raw,unit=1,file="${UEFI_VARS_TMP}" \
+    -fw_cfg name=opt/gardenlinux/config_script,file="${FW_CFG_SCRIPT}" \
     -netdev user,id=net0,hostfwd=tcp::${GL_SSH_PORT}-:22 \
     -device virtio-net-pci,netdev=net0 \
     -device virtio-rng-pci \
@@ -228,25 +230,25 @@ $QEMU_BIN \
 
 #### Configuration Variables
 
-| Variable       | Default (amd64)                | Default (arm64)                  | Description                                |
-| -------------- | ------------------------------ | -------------------------------- | ------------------------------------------ |
-| `GL_IMAGE`     | `gardenlinux-2150.0.0.raw`     | `gardenlinux-2150.0.0.raw`       | Path to the `.raw` disk image              |
-| `GL_ARCH`      | `amd64`                        | `arm64`                          | Architecture (auto-detected)               |
-| `GL_CPU`       | `2`                            | `2`                              | Number of virtual CPUs                     |
-| `GL_MEM`       | `2048`                         | `2048`                           | Memory in MiB                              |
-| `GL_SSH_PORT`  | `2222`                         | `2222`                           | Host port forwarded to guest SSH (port 22) |
-| `QEMU_BIN`     | `qemu-system-x86_64`           | `qemu-system-aarch64`            | QEMU binary to use                         |
-| `QEMU_MACHINE` | `q35`                          | `virt`                           | QEMU machine type                          |
-| `QEMU_CPU`     | `host`                         | `max`                            | QEMU CPU model                             |
-| `UEFI_CODE`    | `/usr/share/OVMF/OVMF_CODE.fd` | `/usr/share/AAVMF/AAVMF_CODE.fd` | Path to UEFI firmware code                 |
-| `UEFI_VARS`    | `/usr/share/OVMF/OVMF_VARS.fd` | `/usr/share/AAVMF/AAVMF_VARS.fd` | Path to UEFI firmware variables            |
+| Variable       | Default (amd64)                                          | Default (arm64)                                          | Description                                |
+| -------------- | -------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------ |
+| `GL_IMAGE`     | `kvm-gardener_prod-amd64-${GL_VERSION}-${GL_COMMIT}.raw` | `kvm-gardener_prod-amd64-${GL_VERSION}-${GL_COMMIT}.raw` | Path to the `.raw` disk image              |
+| `GL_ARCH`      | `amd64`                                                  | `arm64`                                                  | Architecture (auto-detected)               |
+| `GL_CPU`       | `2`                                                      | `2`                                                      | Number of virtual CPUs                     |
+| `GL_MEM`       | `2048`                                                   | `2048`                                                   | Memory in MiB                              |
+| `GL_SSH_PORT`  | `2222`                                                   | `2222`                                                   | Host port forwarded to guest SSH (port 22) |
+| `QEMU_BIN`     | `qemu-system-x86_64`                                     | `qemu-system-aarch64`                                    | QEMU binary to use                         |
+| `QEMU_MACHINE` | `q35`                                                    | `virt`                                                   | QEMU machine type                          |
+| `QEMU_CPU`     | `host`                                                   | `max`                                                    | QEMU CPU model                             |
+| `UEFI_CODE`    | `/usr/share/OVMF/OVMF_CODE.fd`                           | `/usr/share/AAVMF/AAVMF_CODE.fd`                         | Path to UEFI firmware code                 |
+| `UEFI_VARS`    | `/usr/share/OVMF/OVMF_VARS.fd`                           | `/usr/share/AAVMF/AAVMF_VARS.fd`                         | Path to UEFI firmware variables            |
 
 ### Step 5: Connect to Your Instance
 
 Wait for the VM to boot and the configuration script to complete (typically 30-60 seconds). Then connect via SSH using the forwarded port:
 
 ```bash
-ssh -i "$SSH_KEY_DIR/id_ed25519" -p "$GL_SSH_PORT" "$SSH_USER"@localhost
+ssh -i "${SSH_KEY_DIR}/id_ed25519" -p "${GL_SSH_PORT}" "${SSH_USER}"@localhost
 ```
 
 :::tip
@@ -273,10 +275,10 @@ ip addr show
 
 Expected output from `/etc/os-release` should show:
 
-```
-NAME="Garden Linux"
-VERSION="2150.0.0"
+```bash
 ID=gardenlinux
+NAME="Garden Linux"
+VERSION="${GL_VERSION}"
 ...
 ```
 
