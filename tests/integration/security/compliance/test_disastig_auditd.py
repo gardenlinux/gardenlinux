@@ -528,3 +528,23 @@ def test_audit_timestamp_granularity(shell: ShellRunner):
     assert re.search(
         timestamp_pattern, result.stdout
     ), "stigcompliance: audit records do not contain valid timestamps with second granularity"
+
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="requires audit subsystem running")
+@pytest.mark.root(reason="required to read audit logs")
+def test_invalid_input_handling_is_audited(shell: ShellRunner):
+    """
+    As per DISA STIG compliance requirement, the operating system must behave
+    in a predictable and documented manner when invalid inputs are received.
+    This test verifies that invalid or failed operations are recorded in audit logs,
+    demonstrating that the system detects and handles invalid inputs in a controlled manner.
+    Ref: SRG-OS-000432-GPOS-00191
+    """
+
+    result = shell("ausearch -ts recent", capture_output=True)
+    stdout = result.stdout
+
+    assert (
+        "success=no" in stdout or "res=failed" in stdout or "invalid" in stdout.lower()
+    ), "stigcompliance: audit records do not contain evidence of handling invalid inputs"
