@@ -1,11 +1,10 @@
 import pytest
-from plugins.sshd import Sshd
 
 
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="requires sshd effective configuration")
 @pytest.mark.root(reason="required to inspect ssh configuration")
-def test_ssh_available_for_network_access(sshd: Sshd):
+def test_ssh_available_for_network_access(sshd):
     """
     As per DISA STIG compliance requirement, the operating system must implement
     replay-resistant authentication mechanisms for network access to privileged accounts.
