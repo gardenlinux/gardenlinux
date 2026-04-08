@@ -37,7 +37,7 @@ def test_tmp_mounted_noexec(parse_file: ParseFile):
     ), "stigcompliance: /tmp is not mounted with noexec"
 
 
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.feature("stig")
 @pytest.mark.booted(reason="requires mounted filesystem inspection")
 @pytest.mark.root(reason="required to verify execution restrictions")
 def test_var_tmp_mounted_noexec(parse_file: ParseFile):
