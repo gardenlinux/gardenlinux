@@ -1,10 +1,11 @@
-import os
-
 import pytest
+from plugins.capabilities import Capabilities
 from plugins.dpkg import Dpkg
 from plugins.file import File
 from plugins.find import Find
+from plugins.parse_file import ParseFile
 from plugins.shell import ShellRunner
+from plugins.sysctl import Sysctl
 from plugins.systemd import Systemd
 
 
@@ -93,64 +94,64 @@ def test_var_tmp_has_sticky_bit(file: File):
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="requires mounted filesystem inspection")
 @pytest.mark.root(reason="required to verify execution restrictions")
-def test_tmp_mount_exists(shell: ShellRunner):
+def test_tmp_mount_exists(parse_file: ParseFile):
     """
     As per DISA STIG requirement, the operating system must prevent program
     execution in accordance with local policies regarding software program usage.
-    This test verifies that /tmp has a mount entry.
+    This test verifies that /tmp has a mount entry in /proc/mounts.
     Ref: SRG-OS-000368-GPOS-00154
     """
-    mount_output = shell("mount", capture_output=True).stdout or ""
-    matching = [line for line in mount_output.splitlines() if " /tmp " in line]
-    assert matching, "stigcompliance: /tmp mount entry not found"
+    lines = parse_file.lines("/proc/mounts", format="spacedelim")
+    assert any(
+        "/tmp" in str(line) for line in lines
+    ), "stigcompliance: /tmp mount entry not found in /proc/mounts"
 
 
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="requires mounted filesystem inspection")
 @pytest.mark.root(reason="required to verify execution restrictions")
-def test_tmp_mounted_noexec(shell: ShellRunner):
+def test_tmp_mounted_noexec(parse_file: ParseFile):
     """
     As per DISA STIG requirement, the operating system must prevent program
     execution in accordance with local policies regarding software program usage.
-    This test verifies that /tmp is mounted with noexec.
+    This test verifies that /tmp is mounted with noexec in /proc/mounts.
     Ref: SRG-OS-000368-GPOS-00154
     """
-    mount_output = shell("mount", capture_output=True).stdout or ""
-    matching = [line for line in mount_output.splitlines() if " /tmp " in line]
+    lines = parse_file.lines("/proc/mounts", format="spacedelim")
     assert any(
-        "noexec" in line for line in matching
+        "/tmp" in str(line) and "noexec" in str(line) for line in lines
     ), "stigcompliance: /tmp is not mounted with noexec"
 
 
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="requires mounted filesystem inspection")
 @pytest.mark.root(reason="required to verify execution restrictions")
-def test_var_tmp_mount_exists(shell: ShellRunner):
+def test_var_tmp_mount_exists(parse_file: ParseFile):
     """
     As per DISA STIG requirement, the operating system must prevent program
     execution in accordance with local policies regarding software program usage.
-    This test verifies that /var/tmp has a mount entry.
+    This test verifies that /var/tmp has a mount entry in /proc/mounts.
     Ref: SRG-OS-000368-GPOS-00154
     """
-    mount_output = shell("mount", capture_output=True).stdout or ""
-    matching = [line for line in mount_output.splitlines() if " /var/tmp " in line]
-    assert matching, "stigcompliance: /var/tmp mount entry not found"
+    lines = parse_file.lines("/proc/mounts", format="spacedelim")
+    assert any(
+        "/var/tmp" in str(line) for line in lines
+    ), "stigcompliance: /var/tmp mount entry not found in /proc/mounts"
 
 
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="requires mounted filesystem inspection")
 @pytest.mark.root(reason="required to verify execution restrictions")
-def test_var_tmp_mounted_noexec(shell: ShellRunner):
+def test_var_tmp_mounted_noexec(parse_file: ParseFile):
     """
     As per DISA STIG requirement, the operating system must prevent program
     execution in accordance with local policies regarding software program usage.
-    This test verifies that /var/tmp is mounted with noexec.
+    This test verifies that /var/tmp is mounted with noexec in /proc/mounts.
     Ref: SRG-OS-000368-GPOS-00154
     """
-    mount_output = shell("mount", capture_output=True).stdout or ""
-    matching = [line for line in mount_output.splitlines() if " /var/tmp " in line]
+    lines = parse_file.lines("/proc/mounts", format="spacedelim")
     assert any(
-        "noexec" in line for line in matching
+        "/var/tmp" in str(line) and "noexec" in str(line) for line in lines
     ), "stigcompliance: /var/tmp is not mounted with noexec"
 
 
@@ -235,7 +236,7 @@ def test_apparmor_has_enforce_mode_profiles(shell: ShellRunner, dpkg: Dpkg):
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="requires mounted filesystem")
 @pytest.mark.root(reason="required to inspect filesystem for executable files")
-def test_no_executable_files_in_tmp(find: Find):
+def test_no_executable_files_in_tmp(find: Find, file: File):
     """
     As per DISA STIG requirement, the operating system must prevent program
     execution in accordance with local policies regarding software program usage.
@@ -247,7 +248,7 @@ def test_no_executable_files_in_tmp(find: Find):
     find.root_paths = ["/tmp"]
     find.entry_type = "files"
 
-    executables = [f for f in find if os.access(f, os.X_OK)]
+    executables = [f for f in find if file.is_executable(f)]
 
     assert (
         not executables
@@ -257,7 +258,7 @@ def test_no_executable_files_in_tmp(find: Find):
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="requires mounted filesystem")
 @pytest.mark.root(reason="required to inspect filesystem for executable files")
-def test_no_executable_files_in_var_tmp(find: Find):
+def test_no_executable_files_in_var_tmp(find: Find, file: File):
     """
     As per DISA STIG requirement, the operating system must prevent program
     execution in accordance with local policies regarding software program usage.
@@ -269,8 +270,46 @@ def test_no_executable_files_in_var_tmp(find: Find):
     find.root_paths = ["/var/tmp"]
     find.entry_type = "files"
 
-    executables = [f for f in find if os.access(f, os.X_OK)]
+    executables = [f for f in find if file.is_executable(f)]
 
     assert (
         not executables
     ), "stigcompliance: executable files found in /var/tmp: " + ", ".join(executables)
+
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="requires /proc/sys kernel parameters")
+@pytest.mark.root(reason="required to read kernel sysctl parameters")
+def test_aslr_enabled(sysctl: Sysctl):
+    """
+    As per DISA STIG requirement, the operating system must prevent program
+    execution in accordance with local policies regarding software program usage.
+    This test verifies that Address Space Layout Randomization (ASLR) is fully
+    enabled (kernel.randomize_va_space=2) to prevent exploitation of executed
+    programs through memory layout prediction.
+    Ref: SRG-OS-000368-GPOS-00154
+    """
+    assert sysctl["kernel.randomize_va_space"] == 2, (
+        f"stigcompliance: ASLR is not fully enabled — "
+        f"kernel.randomize_va_space={sysctl['kernel.randomize_va_space']} (expected 2)"
+    )
+
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="requires mounted filesystem")
+@pytest.mark.root(reason="required to inspect file capabilities")
+def test_no_capabilities_on_files_in_tmp(capabilities: Capabilities):
+    """
+    As per DISA STIG requirement, the operating system must prevent program
+    execution in accordance with local policies regarding software program usage.
+    This test verifies that no files in /tmp have elevated Linux capabilities
+    set, which could allow bypassing execution control policies.
+    Ref: SRG-OS-000368-GPOS-00154
+    """
+    tmp_caps = [entry for entry in capabilities.get() if entry.startswith("/tmp/")]
+
+    assert (
+        not tmp_caps
+    ), "stigcompliance: files in /tmp have elevated capabilities: " + ", ".join(
+        tmp_caps
+    )
