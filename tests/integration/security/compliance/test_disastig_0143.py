@@ -1,3 +1,5 @@
+import pytest
+
 """
 Ref: SRG-OS-000355-GPOS-00143
 
@@ -13,6 +15,7 @@ second.
 """
 
 
+@pytest.mark.booted(reason="requires running systemd")
 def test_time_sync_is_enabled(systemd):
     assert systemd.is_enabled("cronyd")
 
