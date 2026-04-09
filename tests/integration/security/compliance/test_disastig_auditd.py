@@ -1,12 +1,13 @@
 import re
 
 import pytest
+from plugins.audit import AuditRule
 from plugins.file import File
 from plugins.parse_file import ParseFile
 from plugins.shell import ShellRunner
 
 
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.feature("stig")
 @pytest.mark.booted(reason="audit event validation requires audit subsystem")
 @pytest.mark.root(reason="required to read audit logs")
 def test_audit_event_generated(shell: ShellRunner):
@@ -530,21 +531,28 @@ def test_audit_timestamp_granularity(shell: ShellRunner):
     ), "stigcompliance: audit records do not contain valid timestamps with second granularity"
 
 
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.feature("stig")
 @pytest.mark.booted(reason="requires audit subsystem running")
 @pytest.mark.root(reason="required to read audit logs")
-def test_invalid_input_handling_is_audited(shell: ShellRunner):
+def test_audit_nonlocal_maintenance_sessions(audit_rule: AuditRule, shell: ShellRunner):
     """
-    As per DISA STIG compliance requirement, the operating system must behave
-    in a predictable and documented manner when invalid inputs are received.
-    This test verifies that invalid or failed operations are recorded in audit logs,
-    demonstrating that the system detects and handles invalid inputs in a controlled manner.
-    Ref: SRG-OS-000432-GPOS-00191
+    As per DISA STIG compliance requirement, the operating system must audit all
+    activities performed during nonlocal maintenance and diagnostic sessions.
+    This test verifies that command execution syscalls (execve and execveat) are
+    audited and that corresponding audit records are generated.
+    Ref: SRG-OS-000392-GPOS-00172
     """
+
+    assert audit_rule(
+        syscall="execve"
+    ), "stigcompliance: execve syscall not audited for user activity"
+
+    assert audit_rule(
+        syscall="execveat"
+    ), "stigcompliance: execveat syscall not audited for user activity"
 
     result = shell("ausearch -ts recent", capture_output=True)
-    stdout = result.stdout
 
     assert (
-        "success=no" in stdout or "res=failed" in stdout or "invalid" in stdout.lower()
-    ), "stigcompliance: audit records do not contain evidence of handling invalid inputs"
+        "type=EXECVE" in result.stdout
+    ), "stigcompliance: no EXECVE audit records found for user activity"
