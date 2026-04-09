@@ -3,7 +3,7 @@ from plugins.sshd import Sshd
 from plugins.systemd import Systemd
 
 
-@pytest.mark.feature("not container")
+@pytest.mark.feature("not gardener")
 @pytest.mark.booted(reason="requires sshd effective configuration")
 @pytest.mark.root(reason="required to inspect ssh configuration")
 def test_sshd_config_present(sshd: Sshd):
@@ -14,11 +14,10 @@ def test_sshd_config_present(sshd: Sshd):
     Ref: SRG-OS-000112-GPOS-00057
     """
     port = sshd.get_config_section("port")
-
     assert port is not None, "stigcompliance: sshd port not configured"
 
 
-@pytest.mark.feature("not container")
+@pytest.mark.feature("not gardener")
 @pytest.mark.booted(reason="requires systemd service state")
 @pytest.mark.root(reason="required to inspect ssh service")
 def test_sshd_service_enabled(systemd: Systemd):
@@ -33,7 +32,7 @@ def test_sshd_service_enabled(systemd: Systemd):
     ), "stigcompliance: sshd.service is not enabled"
 
 
-@pytest.mark.feature("not container")
+@pytest.mark.feature("not gardener")
 @pytest.mark.booted(reason="requires systemd service state")
 @pytest.mark.root(reason="required to inspect ssh service")
 def test_sshd_service_active(systemd: Systemd):
