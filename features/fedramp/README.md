@@ -1,3 +1,11 @@
+---
+title: "Feature: fedramp"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/fedramp/README.md
+github_target_path: docs/reference/features/fedramp.md
+---
+
 ## Feature: fedramp
 ### Description
 <website-feature>

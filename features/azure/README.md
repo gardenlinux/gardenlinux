@@ -1,3 +1,11 @@
+---
+title: "Feature: azure"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/azure/README.md
+github_target_path: docs/reference/features/azure.md
+---
+
 ## Feature: azure
 ### Description
 <website-feature>

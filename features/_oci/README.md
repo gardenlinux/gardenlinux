@@ -1,3 +1,11 @@
+---
+title: "Feature: _oci"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/_oci/README.md
+github_target_path: docs/reference/features/_oci.md
+---
+
 ## Feature: _oci
 ### Description
 <website-feature>

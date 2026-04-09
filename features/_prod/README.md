@@ -1,3 +1,11 @@
+---
+title: "Feature: _prod"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/_prod/README.md
+github_target_path: docs/reference/features/_prod.md
+---
+
 ## Feature: _prod
 ### Description
 <website-feature>

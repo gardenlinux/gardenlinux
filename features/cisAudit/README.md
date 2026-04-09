@@ -1,3 +1,11 @@
+---
+title: "Feature: cisAudit"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/cisAudit/README.md
+github_target_path: docs/reference/features/cisAudit.md
+---
+
 ## Feature: cisAudit
 ### Description
 <website-feature>
