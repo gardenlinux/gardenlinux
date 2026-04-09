@@ -21,6 +21,7 @@ def test_time_sync_is_enabled(timedatectl):
 
 
 @pytest.mark.feature("azure")
+@pytest.mark.hypervisor("microsoft", reason="Need PTP timesync sources to be reachable")
 @pytest.mark.booted(reason="requires running systemd")
 def test_time_sync_ptp_daemon_running(systemd):
     assert systemd.is_active("chrony")
