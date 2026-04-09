@@ -196,3 +196,6 @@
 -a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/useradd     -k account_mod
 -a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/userdel     -k account_mod
 -a always,exit -F arch=b64 -S execve -F exe=/usr/sbin/usermod     -k account_mod
+
+#Ref: SRG-OS-000392-GPOS-00172
+-a always,exit -F arch=b64 -S execve,execveat -F auid>=1000 -F auid!=-1 -k exec
