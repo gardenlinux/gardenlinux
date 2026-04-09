@@ -1,3 +1,5 @@
+import pytest
+
 """
 Ref: SRG-OS-000138-GPOS-00069
 
@@ -7,7 +9,8 @@ transfer via shared system resources.
 
 
 # temporary files
-def test_tmp_is_configured_securely(shell):
+@pytest.mark.booted(reason="Mounts are present on a booted system")
+def test_tmp_mount_is_configured_securely(shell):
     result = shell("findmnt -n -o 'OPTIONS' /tmp", capture_output=True)
     mount_options = set(result.stdout.split(","))
     required_mount_options = {"nosuid", "seclabel"}
@@ -23,7 +26,8 @@ def test_temp_directores_are_writable_and_have_sticky_bit_set(file):
         assert file.has_mode(dir, "1777")
 
 
-def test_tmpfiles_configuration_is_sane(shell):
+@pytest.mark.booted(reason="Systemd should be running")
+def test_systemd_tmpfiles_configuration_is_sane(shell):
     result = shell("systemd-tmpfiles --cat-config", capture_output=True)
     for dir in ["/tmp", "/var/tmp"]:
         config_found = [
@@ -43,6 +47,6 @@ def test_suid_binaries_cannot_create_coredumps(sysctl):
 
 
 # memory
-def test_kernel_should_randomize_virtual_memory_addresses(sysctl):
+def test_kernel_randomizes_virtual_memory_addresses(sysctl):
     sysctl.collect_sysctl_parameters()
     assert sysctl["kernel.randomize_va_space"] == 2
