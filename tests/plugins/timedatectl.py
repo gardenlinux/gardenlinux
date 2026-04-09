@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass
+from pathlib import Path
 
 import pytest
 
@@ -115,8 +116,13 @@ class TimeDateCtl:
         TimeUSec=Tue 2025-09-16 07:01:33 UTC
         RTCTimeUSec=Tue 2025-09-16 07:01:33 UTC
         """
+        cmd = (
+            "timedatectl show; timedatectl show-timesync"
+            if Path("/sbin/systemd-timesyncd").exists()
+            else "timedatectl show"
+        )
         result = self._shell(
-            cmd="timedatectl show; timedatectl show-timesync",
+            cmd=cmd,
             capture_output=True,
             ignore_exit_code=True,
         )
@@ -130,12 +136,16 @@ class TimeDateCtl:
                 if len(line.strip()) > 0
             ]
         )
+        if "PollIntervalMaxUSec" in output:
+            poll_interval_max = self._human_time_to_seconds(
+                output["PollIntervalMaxUSec"]
+            )
+        else:
+            poll_interval_max = -1
         return TimeSyncStatus(
             ntp=(output["NTP"] == "yes"),
             ntp_synchronized=(output["NTPSynchronized"] == "yes"),
-            poll_interval_max=self._human_time_to_seconds(
-                output["PollIntervalMaxUSec"]
-            ),
+            poll_interval_max=poll_interval_max,
         )
 
     def _human_time_to_seconds(self, time_span: str) -> int:
