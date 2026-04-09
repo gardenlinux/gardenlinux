@@ -1,3 +1,11 @@
+---
+title: "Feature: _iso"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/_iso/README.md
+github_target_path: docs/reference/features/_iso.md
+---
+
 ## Feature: _iso
 ### Description
 <website-feature>

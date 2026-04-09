@@ -1,3 +1,11 @@
+---
+title: "Feature: container"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/container/README.md
+github_target_path: docs/reference/features/container.md
+---
+
 ## Feature: container
 ### Description
 <website-feature>

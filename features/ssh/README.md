@@ -1,3 +1,11 @@
+---
+title: "Feature: ssh"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/ssh/README.md
+github_target_path: docs/reference/features/ssh.md
+---
+
 ## Feature: ssh
 ### Description
 <website-feature>

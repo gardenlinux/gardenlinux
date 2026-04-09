@@ -1,3 +1,11 @@
+---
+title: "Feature: cisOS"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/cisOS/README.md
+github_target_path: docs/reference/features/cisOS.md
+---
+
 ## Feature: cisOS
 ### Description
 <website-feature>
