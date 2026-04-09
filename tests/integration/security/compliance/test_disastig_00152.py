@@ -2,7 +2,7 @@ import pytest
 from plugins.shell import ShellRunner
 
 
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.feature("stig")
 @pytest.mark.booted(reason="requires audit subsystem running")
 @pytest.mark.root(reason="required to validate enforcement audit logging")
 @pytest.mark.modify(reason="trigger permission denied event")
