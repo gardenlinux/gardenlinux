@@ -20,7 +20,7 @@ def test_tmp_mount_is_configured_securely(shell):
     ), f"Missing /tmp mount options: {missing_mount_options}"
 
 
-def test_temp_directores_are_writable_and_have_sticky_bit_set(file):
+def test_temp_directores_are_world_writable_and_have_sticky_bit_set(file):
     for dir in ["/tmp", "/var/tmp"]:
         assert file.is_dir(dir)
         assert file.has_mode(dir, "1777")
@@ -47,6 +47,8 @@ def test_suid_binaries_cannot_create_coredumps(sysctl):
 
 
 # memory
+# TODO: shouldn't ASLR be enabled for all flavors?
+@pytest.mark.feature("cloud or (openstack and metal)")
 def test_kernel_randomizes_virtual_memory_addresses(sysctl):
     sysctl.collect_sysctl_parameters()
     assert sysctl["kernel.randomize_va_space"] == 2
