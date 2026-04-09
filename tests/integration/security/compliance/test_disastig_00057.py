@@ -16,7 +16,6 @@ def test_sshd_config_present(sshd: Sshd):
     assert kexpresence is not None, "stigcompliance: sshd configuration not available"
 
 
-@pytest.mark.feature("not gardener")
 @pytest.mark.booted(reason="requires systemd service state")
 @pytest.mark.root(reason="required to inspect ssh service")
 def test_sshd_service_active(systemd: Systemd):
