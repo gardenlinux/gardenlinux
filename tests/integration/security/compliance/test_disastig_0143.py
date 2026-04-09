@@ -20,6 +20,18 @@ def test_time_sync_is_enabled(timedatectl):
     assert timedatectl.is_timesyncd_active()
 
 
+@pytest.mark.feature("azure")
+@pytest.mark.booted(reason="requires running systemd")
+def test_time_sync_ptp_daemon_running(systemd):
+    assert systemd.is_active("chrony")
+
+
+@pytest.mark.feature("not azure")
+@pytest.mark.booted(reason="requires running systemd")
+def test_time_sync_ntp_daemon_running(systemd):
+    assert systemd.is_active("systemd-timesyncd")
+
+
 @pytest.mark.booted(reason="requires running systemd")
 def test_time_is_actively_synced(timedatectl):
     assert timedatectl.get_timesync_status().ntp_synchronized
