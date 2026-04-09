@@ -7,7 +7,7 @@ from plugins.parse_file import ParseFile
 from plugins.shell import ShellRunner
 
 
-@pytest.mark.feature("not container and not lima and not gardener")
+@pytest.mark.feature("stig")
 @pytest.mark.booted(reason="audit event validation requires audit subsystem")
 @pytest.mark.root(reason="required to read audit logs")
 def test_audit_event_generated(shell: ShellRunner):
@@ -531,7 +531,7 @@ def test_audit_timestamp_granularity(shell: ShellRunner):
     ), "stigcompliance: audit records do not contain valid timestamps with second granularity"
 
 
-@pytest.mark.feature("not container and not lima and not gardener")
+@pytest.mark.feature("stig")
 @pytest.mark.booted(reason="requires audit subsystem running")
 @pytest.mark.root(reason="required to read audit logs")
 def test_audit_nonlocal_maintenance_sessions(audit_rule: AuditRule, shell: ShellRunner):
