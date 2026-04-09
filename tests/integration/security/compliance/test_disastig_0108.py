@@ -1,3 +1,5 @@
+import hashlib
+
 import pytest
 
 """
@@ -9,8 +11,6 @@ integrity of audit tools.
 
 
 def _checksum_file(filepath):
-    import hashlib
-
     h = hashlib.md5()
 
     with open(filepath, "rb") as f:
