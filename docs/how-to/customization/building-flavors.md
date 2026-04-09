@@ -15,4 +15,4 @@ github_target_path: docs/how-to/customization/building-flavors.md
 
 # Building Flavors
 
-<!-- TODO: Adapt from 01_developers/build_image.md -->
+<!-- This content is covered by docs/how-to/building-images.md -->
