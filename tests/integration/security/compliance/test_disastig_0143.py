@@ -23,3 +23,8 @@ def test_time_sync_is_enabled(timedatectl):
 @pytest.mark.booted(reason="requires running systemd")
 def test_time_is_actively_synced(timedatectl):
     assert timedatectl.get_timesync_status().ntp_synchronized
+
+
+@pytest.mark.booted(reason="requires running systemd")
+def test_time_is_synced_at_least_once_a_day(timedatectl):
+    assert timedatectl.get_timesync_status().poll_interval_max < (24 * 60 * 60)

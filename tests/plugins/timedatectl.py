@@ -2,6 +2,7 @@ import re
 from dataclasses import dataclass
 
 import pytest
+
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
 
@@ -18,6 +19,29 @@ class TimeSyncStatus:
 
     ntp: bool
     ntp_synchronized: bool
+    poll_interval_max: int
+
+
+UNITS = {
+    "s": 1,
+    "sec": 1,
+    "second": 1,
+    "seconds": 1,
+    "m": 60,
+    "min": 60,
+    "minute": 60,
+    "minutes": 60,
+    "h": 3600,
+    "hr": 3600,
+    "hour": 3600,
+    "hours": 3600,
+    "d": 86400,
+    "day": 86400,
+    "days": 86400,
+    "w": 604800,
+    "week": 604800,
+    "weeks": 604800,
+}
 
 
 class TimeDateCtl:
@@ -92,7 +116,9 @@ class TimeDateCtl:
         RTCTimeUSec=Tue 2025-09-16 07:01:33 UTC
         """
         result = self._shell(
-            cmd="timedatectl show", capture_output=True, ignore_exit_code=True
+            cmd="timedatectl show; timedatectl show-timesync",
+            capture_output=True,
+            ignore_exit_code=True,
         )
         if result.returncode != 0:
             raise ValueError(f"timedatectl failed: {result.stderr}")
@@ -107,7 +133,23 @@ class TimeDateCtl:
         return TimeSyncStatus(
             ntp=(output["NTP"] == "yes"),
             ntp_synchronized=(output["NTPSynchronized"] == "yes"),
+            poll_interval_max=self._human_time_to_seconds(
+                output["PollIntervalMaxUSec"]
+            ),
         )
+
+    def _human_time_to_seconds(self, time_span: str) -> int:
+        """
+        Converts human-readable time description
+        like "34min 8s" into integer seconds value like 2048.
+        Human-readable time spec: https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html#Parsing%20Time%20Spans
+        """
+        matches = re.findall(r"(\d+)([a-z]+)", time_span.lower())
+
+        if not matches and time_span.strip():
+            raise ValueError(f"Invalid time format: '{time_span}'")
+
+        return sum([int(value) * UNITS[unit] for (value, unit) in matches])
 
 
 @pytest.fixture
