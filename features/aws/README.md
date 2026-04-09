@@ -1,3 +1,11 @@
+---
+title: "Feature: aws"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/aws/README.md
+github_target_path: docs/reference/features/aws.md
+---
+
 ## Feature: aws
 ### Description
 <website-feature>

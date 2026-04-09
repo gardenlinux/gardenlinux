@@ -1,3 +1,11 @@
+---
+title: "Feature: capi"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/capi/README.md
+github_target_path: docs/reference/features/capi.md
+---
+
 ## Feature: capi
 ### Description
 <website-feature>

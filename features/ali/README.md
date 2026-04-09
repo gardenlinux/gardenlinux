@@ -1,3 +1,11 @@
+---
+title: "Feature: ali"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/ali/README.md
+github_target_path: docs/reference/features/ali.md
+---
+
 ## Feature: ali
 ### Description
 <website-feature>

@@ -1,3 +1,11 @@
+---
+title: "Feature: cisSysctl"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/cisSysctl/README.md
+github_target_path: docs/reference/features/cisSysctl.md
+---
+
 ## Feature: cisSysctl
 ### Description
 <website-feature>

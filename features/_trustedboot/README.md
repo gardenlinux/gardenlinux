@@ -1,3 +1,11 @@
+---
+title: "Feature: _trustedboot"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/_trustedboot/README.md
+github_target_path: docs/reference/features/_trustedboot.md
+---
+
 # Trustedboot
 
 See [GardenLinux Boot Modes](../../docs/boot_modes.md) for high level docs.

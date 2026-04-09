@@ -1,3 +1,11 @@
+---
+title: "Feature: cisPartition"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/cisPartition/README.md
+github_target_path: docs/reference/features/cisPartition.md
+---
+
 ## Feature: cisPartition
 ### Description
 <website-feature>

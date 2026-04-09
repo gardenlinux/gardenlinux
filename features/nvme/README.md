@@ -1,3 +1,11 @@
+---
+title: "Feature: nvme"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/nvme/README.md
+github_target_path: docs/reference/features/nvme.md
+---
+
 ## Feature: nvme
 ### Description
 <website-feature>

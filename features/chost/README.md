@@ -1,3 +1,11 @@
+---
+title: "Feature: chost"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/chost/README.md
+github_target_path: docs/reference/features/chost.md
+---
+
 ## Feature: chost
 ### Description
 <website-feature>

@@ -1,3 +1,11 @@
+---
+title: "Feature: _fips"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/_fips/README.md
+github_target_path: docs/reference/features/_fips.md
+---
+
 ## Feature: FIPS
 ### Description
 <website-feature>

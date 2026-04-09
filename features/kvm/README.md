@@ -1,3 +1,11 @@
+---
+title: "Feature: kvm"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/kvm/README.md
+github_target_path: docs/reference/features/kvm.md
+---
+
 ## Feature: kvm
 ### Description
 <website-feature>
