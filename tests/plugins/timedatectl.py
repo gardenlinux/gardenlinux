@@ -123,10 +123,9 @@ class TimeDateCtl:
         if result.returncode != 0:
             raise ValueError(f"timedatectl failed: {result.stderr}")
 
-        print(f"{result.stdout=}")
         output = dict(
             [
-                line.strip().split("=")
+                line.strip().split("=", maxsplit=1)
                 for line in result.stdout.splitlines()
                 if len(line.strip()) > 0
             ]
