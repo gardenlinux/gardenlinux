@@ -53,7 +53,7 @@ The build system utilises the [gardenlinux/builder](https://github.com/gardenlin
 [gardenlinux/gardenlinux](https://github.com/gardenlinux/gardenlinux) is maintained by the Garden Linux team, highlighting specialized "features" available for other projects.
 
 > [!TIP]
-> For further information about the build process, and how to set it up on your machine, refer to [the _Build Image_ documentation page](docs/01_developers/build_image.md).
+> For further information about the build process, and how to set it up on your machine, refer to [the _Build Image_ documentation page](docs/how-to/building-images.md).
 
 > [!WARNING]
 > Be sure to provide enough memory (at least 8GiB) to your container runtime or the VM that hosts your container runtime (in Podman or Docker Desktop).
