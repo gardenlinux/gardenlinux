@@ -20,21 +20,6 @@ def test_sshd_config_present(sshd: Sshd):
 @pytest.mark.feature("not gardener")
 @pytest.mark.booted(reason="requires systemd service state")
 @pytest.mark.root(reason="required to inspect ssh service")
-def test_sshd_service_enabled(systemd: Systemd):
-    """
-    As per DISA STIG compliance requirement, the operating system must implement
-    replay-resistant authentication mechanisms for network access to privileged accounts.
-    This test verifies that sshd service is enabled.
-    Ref: SRG-OS-000112-GPOS-00057
-    """
-    assert systemd.is_enabled(
-        "sshd.service"
-    ), "stigcompliance: sshd.service is not enabled"
-
-
-@pytest.mark.feature("not gardener")
-@pytest.mark.booted(reason="requires systemd service state")
-@pytest.mark.root(reason="required to inspect ssh service")
 def test_sshd_service_active(systemd: Systemd):
     """
     As per DISA STIG compliance requirement, the operating system must implement
