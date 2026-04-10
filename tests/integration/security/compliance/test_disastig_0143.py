@@ -15,7 +15,9 @@ second.
 """
 
 
-@pytest.mark.hypervisor("gdch or microsoft", reason="Need PTP timesync sources to be reachable")
+@pytest.mark.hypervisor(
+    "gdch or microsoft", reason="Need PTP timesync sources to be reachable"
+)
 @pytest.mark.booted(reason="requires running systemd")
 def test_time_sync_ptp_daemon_running(systemd):
     assert systemd.is_active("chrony")
