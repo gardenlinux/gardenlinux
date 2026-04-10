@@ -29,7 +29,7 @@ def test_time_sync_ntp_daemon_running(systemd):
 
 
 @pytest.mark.hypervisor(
-    "azure or google or microsoft",
+    "azure or gdch or google or microsoft",
     reason="Need NTP/PTP timesync sources to be reachable",
 )
 @pytest.mark.booted(reason="requires running systemd")
