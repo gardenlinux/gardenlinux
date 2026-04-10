@@ -15,14 +15,13 @@ second.
 """
 
 
-@pytest.mark.feature("azure or gdch")
-@pytest.mark.hypervisor("microsoft", reason="Need PTP timesync sources to be reachable")
+@pytest.mark.hypervisor("gdch or microsoft", reason="Need PTP timesync sources to be reachable")
 @pytest.mark.booted(reason="requires running systemd")
 def test_time_sync_ptp_daemon_running(systemd):
     assert systemd.is_active("chrony")
 
 
-@pytest.mark.feature("not (azure or gdch)")
+@pytest.mark.hypervisor("not (azure or gdch)")
 @pytest.mark.booted(reason="requires running systemd")
 def test_time_sync_ntp_daemon_running(systemd):
     assert systemd.is_active("systemd-timesyncd")
