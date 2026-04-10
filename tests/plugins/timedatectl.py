@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
 
