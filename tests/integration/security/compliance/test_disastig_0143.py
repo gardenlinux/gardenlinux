@@ -16,7 +16,7 @@ second.
 
 
 @pytest.mark.feature("azure")
-@pytest.mark.hypervisor("microsoft", reason="Need PTP timesync sources to be reachable")
+# @pytest.mark.hypervisor("microsoft", reason="Need PTP timesync sources to be reachable")
 @pytest.mark.booted(reason="requires running systemd")
 def test_time_sync_ptp_daemon_running(systemd):
     assert systemd.is_active("chrony")
@@ -28,6 +28,10 @@ def test_time_sync_ntp_daemon_running(systemd):
     assert systemd.is_active("systemd-timesyncd")
 
 
+@pytest.mark.hypervisor(
+    "azure or google or microsoft",
+    reason="Need NTP/PTP timesync sources to be reachable",
+)
 @pytest.mark.booted(reason="requires running systemd")
 def test_time_is_actively_synced(timedatectl, shell):
     shell("systemctl status systemd-timesyncd", ignore_exit_code=True)
