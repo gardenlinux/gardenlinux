@@ -1,0 +1,3 @@
+markers:
+  "etc/sysctl.d/99-stig.conf":
+  - "GL-TESTCOV-stig-config-sysctl-stig"

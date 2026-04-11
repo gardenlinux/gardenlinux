@@ -1,0 +1,3 @@
+markers:
+  "etc/modprobe.d/disabled_usb.conf":
+  - "GL-TESTCOV-stig-config-modprobe-usb-disable"
