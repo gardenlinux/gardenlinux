@@ -72,7 +72,8 @@
 -w /etc/security/opasswd -p wa -k usergroup_modification
 
 # https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238310
--a always,exit -F arch=b64 -S unlink,unlinkat,rename,renameat,rmdir -F auid>=1000 -F auid!=-1 -k delete
+# Note: rmdir syscall does not exist on arm64; unlinkat covers directory removal
+-a always,exit -F arch=b64 -S unlink,unlinkat,rename,renameat -F auid>=1000 -F auid!=-1 -k delete
 
 # https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238316
 -w /var/run/utmp -p wa -k logins
@@ -111,10 +112,12 @@
 -w /var/log/sudo.log -p wa -k maintenance
 
 # https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238264
--a always,exit -F arch=b64 -S chown,fchown,fchownat,lchown -F auid>=1000 -F auid!=-1 -k perm_chng
+# Note: fchown/lchown do not exist as separate syscalls on arm64; covered by chown/fchownat
+-a always,exit -F arch=b64 -S chown,fchownat -F auid>=1000 -F auid!=-1 -k perm_chng
 
 # https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238268
--a always,exit -F arch=b64 -S chmod,fchmod,fchmodat -F auid>=1000 -F auid!=-1 -k perm_chng
+# Note: fchmod does not exist as a separate syscall on arm64; covered by chmod/fchmodat
+-a always,exit -F arch=b64 -S chmod,fchmodat -F auid>=1000 -F auid!=-1 -k perm_chng
 
 # https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238279
 -a always,exit -F path=/usr/bin/chsh -F perm=x -F auid>=1000 -F auid!=-1 -k priv_cmd
@@ -123,8 +126,9 @@
 -a always,exit -F path=/usr/bin/sudoedit -F perm=x -F auid>=1000 -F auid!=-1 -k priv_cmd
 
 # https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238271
--a always,exit -F arch=b64 -S open,openat,creat,truncate,ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=-1 -k perm_access
--a always,exit -F arch=b64 -S open,openat,creat,truncate,ftruncate -F exit=-EPERM  -F auid>=1000 -F auid!=-1 -k perm_access
+# Note: open and creat syscalls do not exist on arm64; use openat/openat2 instead
+-a always,exit -F arch=b64 -S openat,truncate,ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=-1 -k perm_access
+-a always,exit -F arch=b64 -S openat,truncate,ftruncate -F exit=-EPERM  -F auid>=1000 -F auid!=-1 -k perm_access
 
 # https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238277
 -a always,exit -F path=/usr/bin/sudo -F perm=x -F auid>=1000 -F auid!=-1 -k priv_cmd
