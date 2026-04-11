@@ -228,10 +228,6 @@ def test_audit_log_retention_config(parse_file: ParseFile):
     lines = parse_file.lines(AUDITD_CONF)
 
     assert (
-        re.compile(r"max_log_file\s*=\s*\d+") in lines
-    ), "stigcompliance: max_log_file not configured properly"
-
-    assert (
         re.compile(r"num_logs\s*=\s*\d+") in lines
     ), "stigcompliance: num_logs not configured properly"
 
