@@ -54,6 +54,7 @@ def test_systemd_tmpfiles_configuration_is_sane(shell):
 
 
 # coredumps
+@pytest.mark.feature("stig")
 def test_suid_binaries_cannot_create_coredumps(sysctl):
     sysctl.collect_sysctl_parameters()
     assert sysctl["fs.suid_dumpable"] == 0
