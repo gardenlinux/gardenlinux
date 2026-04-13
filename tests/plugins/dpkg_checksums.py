@@ -1,5 +1,6 @@
 import os
 import tempfile
+from shutil import chown
 
 import pytest
 
@@ -22,6 +23,9 @@ class DpkgChecksums:
         oldpwd = os.getcwd()
 
         with tempfile.TemporaryDirectory(delete=False) as td:
+            uid, _ = self._shell.user
+            chown(td, uid)
+
             os.chdir(td)
 
             self._shell(f"apt-get download {package_name}={package_version}")
