@@ -1,0 +1,6 @@
+markers:
+  "etc/audit/auditd.conf":
+  - "GL-TESTCOV-stig-config-audit-auditd-conf"
+  "etc/audit/rules.d/30-stig.rules":
+  - "GL-TESTCOV-stig-config-audit-rules-d-stig-rules"
+  - "GL-TESTCOV-stig-config-audit-rules-d-30-stig-rules"

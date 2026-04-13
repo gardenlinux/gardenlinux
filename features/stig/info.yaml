@@ -1,2 +1,10 @@
 description: "DISA Security Technical Implementation Guides (STIG) Compliance"
 type: element
+features:
+  include:
+    - stigAudit
+    - stigModprobe
+    - stigOS
+    - stigPackages
+    - stigSshd
+    - stigSysctl

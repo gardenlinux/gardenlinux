@@ -1,0 +1,7 @@
+# This subfeature can only be used with
+# its base feature: stig
+description: "STIG Subfeature: OS"
+type: element
+features:
+  depends:
+    - stig
