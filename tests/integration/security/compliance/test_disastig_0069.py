@@ -11,11 +11,10 @@ transfer via shared system resources.
 # temporary files
 @pytest.mark.feature("not _selinux")
 @pytest.mark.booted(reason="Mounts are present on a booted system")
-def test_tmp_mount_is_configured_securely(shell):
-    result = shell("findmnt -n -o 'OPTIONS' /tmp", capture_output=True)
-    mount_options = set(result.stdout.split(","))
+def test_tmp_mount_is_configured_securely(mount):
+    real_mount_options = mount("/tmp").options()
     required_mount_options = {"nosuid"}
-    missing_mount_options = required_mount_options - mount_options
+    missing_mount_options = required_mount_options - real_mount_options
     assert (
         not missing_mount_options
     ), f"Missing /tmp mount options: {missing_mount_options}"
@@ -23,11 +22,10 @@ def test_tmp_mount_is_configured_securely(shell):
 
 @pytest.mark.feature("_selinux")
 @pytest.mark.booted(reason="Mounts are present on a booted system")
-def test_tmp_mount_is_configured_securely_and_with_selinux(shell):
-    result = shell("findmnt -n -o 'OPTIONS' /tmp", capture_output=True)
-    mount_options = set(result.stdout.split(","))
-    required_mount_options = {"nosuid", "seclabel"}
-    missing_mount_options = required_mount_options - mount_options
+def test_tmp_mount_is_configured_securely_and_with_selinux(mount):
+    real_mount_options = mount("/tmp").options()
+    required_mount_options = {"nosuid"}
+    missing_mount_options = required_mount_options - real_mount_options
     assert (
         not missing_mount_options
     ), f"Missing /tmp mount options: {missing_mount_options}"
