@@ -64,13 +64,6 @@ class Dpkg:
         with open("/var/lib/dpkg/arch") as f:
             return list(filter(None, f.read().split("\n")))
 
-    def package_files_checksums(self, package: str) -> dict:
-        return {
-            f"/{path}": md5
-            for line in open(f"/var/lib/dpkg/info/{package}.md5sums")
-            for md5, path in [line.strip().split()]
-        }
-
 
 @pytest.fixture
 def dpkg(shell=None) -> Dpkg:
