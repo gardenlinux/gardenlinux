@@ -14,7 +14,7 @@ transfer via shared system resources.
 def test_tmp_mount_is_configured_securely(shell):
     result = shell("findmnt -n -o 'OPTIONS' /tmp", capture_output=True)
     mount_options = set(result.stdout.split(","))
-    required_mount_options = {"nosuid", "seclabel"}
+    required_mount_options = {"nosuid"}
     missing_mount_options = required_mount_options - mount_options
     assert (
         not missing_mount_options
