@@ -6,7 +6,10 @@ FROM $snapshot AS snapshot
 FROM $base
 COPY --from=snapshot /etc/apt/sources.list /tmp/sources.list
 RUN grep '^deb ' /tmp/sources.list >> /etc/apt/sources.list && rm /tmp/sources.list
-RUN version="$(awk '$2 == "https://packages.gardenlinux.io/gardenlinux" { print $3 }' /etc/apt/sources.list)" && printf 'Package: *\nPin: release n=%s\nPin-Priority: 900\n' "$version" > /etc/apt/preferences.d/gardenlinux
+
+RUN version="$(awk '/^URIs:.*https:\/\/packages\.gardenlinux\.io\/gardenlinux/ { found=1 } found && /^Suites:/ { print $2; exit }' /etc/apt/sources.list.d/gardenlinux.sources)" && \
+    printf 'Package: *\nPin: release n=%s\nPin-Priority: 900\n' "$version" > /etc/apt/preferences.d/gardenlinux
+
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --install-recommends \
 	build-essential \
 	curl \
