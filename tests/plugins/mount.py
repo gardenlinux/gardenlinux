@@ -6,7 +6,7 @@ class Mount:
         self._shell = shell
         self._options = set()
 
-    def __call__(self, shell, path):
+    def __call__(self, path):
         self._path = path
 
     @property
