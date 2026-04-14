@@ -12,7 +12,7 @@ X11Forwarding no
 
 # Check permissions of configuration files related to SSH on login.
 
-# If this fails, the user won't be able to login.
+# If this fails, the user won’t be able to login.
 
 StrictModes yes
 
