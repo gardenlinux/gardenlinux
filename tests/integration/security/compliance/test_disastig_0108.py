@@ -1,3 +1,5 @@
+import pytest
+
 """
 Ref: SRG-OS-000278-GPOS-00108
 
@@ -6,6 +8,7 @@ integrity of audit tools.
 """
 
 
+@pytest.mark.booted(reason="Requires working networking")
 def test_auditd_is_not_tampered(dpkg_checksums, shell):
     """
     Note: hashlib is not used here because its md5 functionality
