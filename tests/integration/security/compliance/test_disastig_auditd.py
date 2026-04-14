@@ -534,23 +534,43 @@ def test_audit_timestamp_granularity(shell: ShellRunner):
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="requires audit subsystem running")
 @pytest.mark.root(reason="required to read audit logs")
-def test_audit_nonlocal_maintenance_sessions(audit_rule: AuditRule, shell: ShellRunner):
+def test_audit_nonlocal_maintenance_sessions_execve_rule(audit_rule: AuditRule):
     """
     As per DISA STIG compliance requirement, the operating system must audit all
     activities performed during nonlocal maintenance and diagnostic sessions.
-    This test verifies that command execution syscalls (execve and execveat) are
-    audited and that corresponding audit records are generated.
+    This test verifies that the execve syscall is configured to be audited.
     Ref: SRG-OS-000392-GPOS-00172
     """
-
     assert audit_rule(
         syscall="execve"
     ), "stigcompliance: execve syscall not audited for user activity"
 
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="requires audit subsystem running")
+@pytest.mark.root(reason="required to read audit logs")
+def test_audit_nonlocal_maintenance_sessions_execveat_rule(audit_rule: AuditRule):
+    """
+    As per DISA STIG compliance requirement, the operating system must audit all
+    activities performed during nonlocal maintenance and diagnostic sessions.
+    This test verifies that the execveat syscall is configured to be audited.
+    Ref: SRG-OS-000392-GPOS-00172
+    """
     assert audit_rule(
         syscall="execveat"
     ), "stigcompliance: execveat syscall not audited for user activity"
 
+
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="requires audit subsystem running")
+@pytest.mark.root(reason="required to read audit logs")
+def test_audit_nonlocal_maintenance_sessions_execve_records(shell: ShellRunner):
+    """
+    As per DISA STIG compliance requirement, the operating system must audit all
+    activities performed during nonlocal maintenance and diagnostic sessions.
+    This test verifies that EXECVE audit records are present in the audit log.
+    Ref: SRG-OS-000392-GPOS-00172
+    """
     result = shell("ausearch -ts recent", capture_output=True)
 
     assert (
