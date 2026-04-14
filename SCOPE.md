@@ -28,7 +28,6 @@ The scope of the Project includes the collaborative development, maintenance, an
 The Project explicitly does not aim to:
 
 - Provide or replace a general-purpose Linux distribution
-- Compete with or substitute enterprise Linux offerings
 - Support broad end-user, desktop, or workstation use cases
 - Enable or prioritize manual system administration workflows over automated management
 - Include components not required for its container-focused and cloud-native use cases
