@@ -11,7 +11,10 @@ class DpkgChecksums:
 
     def for_package(self, package_name, package_version="INSTALLED") -> dict:
         """
-        We cannot trust md5sums files stored in /var/lib/dpkg/info,
+        Note: hashlib is not used here because its md5 functionality
+              is not available with fips-enabled flavors.
+
+        Note: we cannot trust md5sums files stored in /var/lib/dpkg/info,
         so we do not use debsums and instead
         we are fetching md5sums control file from a package in an apt repository.
         """

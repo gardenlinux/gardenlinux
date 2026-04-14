@@ -10,10 +10,6 @@ integrity of audit tools.
 
 @pytest.mark.booted(reason="Requires working networking")
 def test_auditd_is_not_tampered(dpkg_checksums, shell):
-    """
-    Note: hashlib is not used here because its md5 functionality
-          is not available with fips-enabled flavors.
-    """
     checksums = dpkg_checksums.for_package("auditd")
     for bin in ["auditd", "auditctl", "augenrules", "aureport", "ausearch"]:
         ideal_checksum = checksums[f"/usr/sbin/{bin}"]
