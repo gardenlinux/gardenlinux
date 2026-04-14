@@ -14,7 +14,9 @@ transfer via shared system resources.
 def test_tmp_mount_is_configured_securely(mount):
     required_mount_options = {"nosuid"}
 
-    real_mount_options = mount("/tmp").options
+    m = mount("/tmp")
+    print(f"==========> {m=}")
+    real_mount_options = m.options
     missing_mount_options = required_mount_options - real_mount_options
 
     assert (
