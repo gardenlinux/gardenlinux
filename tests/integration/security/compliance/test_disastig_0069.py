@@ -8,7 +8,7 @@ transfer via shared system resources.
 """
 
 
-# temporary files
+# -- temporary files
 @pytest.mark.feature("not _selinux")
 @pytest.mark.booted(reason="Mounts are present on a booted system")
 def test_tmp_mount_is_configured_securely(mount):
@@ -55,16 +55,15 @@ def test_systemd_tmpfiles_configuration_is_sane(shell):
         ), f"{dir} should be correctly configured in systemd-tmpfiles, got '{config_found}'"
 
 
-# coredumps
+# -- coredumps
 @pytest.mark.feature("stig")
 def test_suid_binaries_cannot_create_coredumps(sysctl):
     sysctl.collect_sysctl_parameters()
     assert sysctl["fs.suid_dumpable"] == 0
 
 
-# memory
-# TODO: shouldn't ASLR be enabled for all flavors?
-@pytest.mark.feature("cloud or (openstack and metal)")
+# -- memory
+@pytest.mark.feature("stig")
 def test_kernel_randomizes_virtual_memory_addresses(sysctl):
     sysctl.collect_sysctl_parameters()
     assert sysctl["kernel.randomize_va_space"] == 2
