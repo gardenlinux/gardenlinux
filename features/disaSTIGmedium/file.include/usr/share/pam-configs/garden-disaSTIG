@@ -1,4 +1,4 @@
-Name: Garden Linux STIG compliance
+Name: Garden Linux disaSTIG compliance
 Default: yes
 Priority: 1
 Auth-Type: Primary

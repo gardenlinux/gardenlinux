@@ -1,7 +1,7 @@
 import pytest
 
 
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 def test_common_password_passwdqc_pam_faillock(pam_config):
     """
     Requirements of SRG-OS-000078-GPOS-00046, SRG-OS-000072-GPOS-00040

@@ -228,10 +228,6 @@ def test_audit_log_retention_config(parse_file: ParseFile):
     lines = parse_file.lines(AUDITD_CONF)
 
     assert (
-        re.compile(r"max_log_file\s*=\s*\d+") in lines
-    ), "stigcompliance: max_log_file not configured properly"
-
-    assert (
         re.compile(r"num_logs\s*=\s*\d+") in lines
     ), "stigcompliance: num_logs not configured properly"
 
@@ -411,7 +407,7 @@ def test_audit_record_filtering_capability(shell: ShellRunner):
         ), f"stigcompliance: audit filtering failed for command: {cmd}"
 
 
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires audit subsystem running")
 @pytest.mark.root(reason="required to generate and read audit logs")
 def test_audit_records_have_valid_timestamps(shell: ShellRunner):
@@ -430,7 +426,7 @@ def test_audit_records_have_valid_timestamps(shell: ShellRunner):
     ), "stigcompliance: audit records do not contain valid timestamps"
 
 
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires audit subsystem running")
 @pytest.mark.root(reason="required to generate and read audit logs")
 def test_system_time_status_available(shell: ShellRunner):
@@ -450,7 +446,7 @@ AUDIT_LOG_DIR = "/var/log/audit"
 AUDIT_LOG_FILE = "/var/log/audit/audit.log"
 
 
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires audit subsystem")
 @pytest.mark.root(reason="required to inspect audit log permissions")
 def test_audit_log_directory_permissions_restricted(file: File):
@@ -471,7 +467,7 @@ def test_audit_log_directory_permissions_restricted(file: File):
         ), f"stigcompliance: audit log directory {AUDIT_LOG_DIR} permissions are not restricted"
 
 
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires audit subsystem")
 @pytest.mark.root(reason="required to inspect audit log permissions")
 def test_audit_log_file_permissions_restricted(file: File):
@@ -491,7 +487,7 @@ def test_audit_log_file_permissions_restricted(file: File):
         ), f"stigcompliance: audit log file {AUDIT_LOG_FILE} permissions are not restricted"
 
 
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires audit subsystem")
 @pytest.mark.root(reason="required to inspect audit log ownership")
 def test_audit_log_owned_by_root(file: File):

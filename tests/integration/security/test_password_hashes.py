@@ -24,7 +24,7 @@ def test_password_entry_present(pam_config):
     ), f"Expected exactly one password entry, found {len(candidates)}: {candidates}"
 
 
-@pytest.mark.testcov(["GL-TESTCOV-stig-config-pam-garden-stig"])
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-pam-garden-disaSTIG"])
 @pytest.mark.security_id(325)
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-password"], indirect=["pam_config"]
