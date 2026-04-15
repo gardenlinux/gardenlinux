@@ -47,6 +47,14 @@ class DpkgChecksums:
 
 @pytest.fixture
 def dpkg_checksums(shell, kernel_module) -> DpkgChecksums:
+    # if some of the modules were already loaded before we've done anything here,
+    # do not attempt to unload them once the work is done
+    crypto_modules = ["crypto_user", "algif_hash", "af_alg"]
+    modules_to_cleanup = [
+        m for m in crypto_modules if not kernel_module.is_module_loaded(m)
+    ]
+
     yield DpkgChecksums(shell)
-    for crypto_module in ["crypto_user", "algif_hash", "af_alg"]:
-        kernel_module.unload_module(crypto_module)
+
+    for m in modules_to_cleanup:
+        kernel_module.unload_module(m)
