@@ -3,15 +3,14 @@ title: "OCI Platform"
 description: "Garden Linux OCI container images: building, publishing, and platform-specific configurations"
 category: "how-to"
 tags: ["how-to", "oci", "container", "platform"]
-migration_status: "adapt"
-migration_source: "01_developers/bare_container.md"
-migration_issue: ""
+migration_status: "new"
+migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4623"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
 migration_approved: false
 github_org: gardenlinux
 github_repo: gardenlinux
-github_source_path: docs/how-to/platform-specific/oci.md
-github_target_path: docs/how-to/platform-specific/oci.md
+github_source_path: docs/how-to/installation/container/oci.md
+github_target_path: docs/how-to/installation/container/oci.md
 ---
 
 # OCI Platform
@@ -32,7 +31,7 @@ For details on the build mechanism, see `features/container/README.md` and `feat
 
 For comprehensive documentation on using Garden Linux container images as base images in your own Containerfiles and Dockerfiles — including both full and bare (distroless-style) images — see the dedicated guide:
 
-**[Container Base Image](../container-base-image.md)**
+**[Container Base Image](/how-to/container-base-image.md)**
 
 This guide covers:
 
@@ -43,6 +42,4 @@ This guide covers:
 
 ## Further Reading
 
-- [Use Garden Linux as a Container Base Image](../container-base-image.md)
-- [Building Flavors Guide](../customization/building-flavors.md)
-- [Garden Linux Releases Reference](../../reference/releases/index.md)
+- [Use Garden Linux as a Container Base Image](/how-to/container-base-image.md)

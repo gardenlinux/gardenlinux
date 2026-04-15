@@ -3,9 +3,8 @@ title: "First Boot on Azure"
 description: "Step-by-step guide to deploying Garden Linux on Microsoft Azure"
 category: "tutorials"
 tags: ["tutorial", "azure", "cloud", "beginner"]
-migration_status: "new"
-migration_source: ""
-migration_issue: ""
+migration_status: "adapt"
+migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
 migration_approved: false
 github_org: gardenlinux
@@ -61,7 +60,7 @@ For a complete list of maintained releases and their support lifecycle, see the 
 
 #### Build Your Own Images
 
-To create custom Garden Linux images with additional features or configurations, see the [Building Flavors guide](../../how-to/customization/building-flavors.md).
+You can [Build your own Garden Linux Images](/how-to/building-images) or even [Create a custom Feature](/how-to/custom-feature).
 
 ### Step 2: Prepare Your Azure Environment
 
@@ -279,5 +278,4 @@ rm ${USER_DATA} ${KEY_NAME} ${KEY_NAME}.pub
 
 Now that you have a running Garden Linux instance on Azure, you can:
 
-- Explore [Azure platform-specific features and configurations](../../how-to/platform-specific/azure.md)
-- Discover how to [build custom Garden Linux images](../../how-to/customization/building-flavors.md) with additional features
+- Explore [Azure platform-specific features and configurations](../../how-to/installation/cloud/azure.md)

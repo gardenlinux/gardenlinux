@@ -1,17 +1,14 @@
 ---
 title: "AWS Platform Guide"
-github_target_path: "docs/how-to/platform-specific/aws.md"
 migration_status: "new"
-migration_source: ""
-migration_issue: ""
+migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4623"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
 migration_approved: false
 github_org: gardenlinux
 github_repo: gardenlinux
-github_source_path: docs/how-to/platform-specific/aws.md
+github_source_path: docs/how-to/installation/cloud/aws.md
+github_target_path: docs/how-to/installation/cloud/aws.md
 ---
-
-
 
 # Aws
 
