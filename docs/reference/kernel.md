@@ -1,8 +1,9 @@
 ---
-title: "Kernel"
+title: "Garden Linux Kernel"
+description: Why we build the kernel the way we build it
 migration_status: "adapt"
 migration_source: "00_introduction/kernel.md"
-migration_issue: ""
+migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4629"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
 migration_approved: false
 github_org: gardenlinux
@@ -88,7 +89,7 @@ Key components:
 - `prepare_source` — Merges Debian kernel packaging with upstream sources
 
 For details on building kernels, performing backports, and automated patch
-updates, see the [Kernel Builds how-to](../how-to/kernel-builds.md).
+updates, see the [Kernel Builds how-to](/reference/kernel-builds.md).
 
 ## Automated kernel updates
 
@@ -100,4 +101,4 @@ available.
 
 - [kernel.org LTS releases](https://www.kernel.org/category/releases.html)
 - [Debian kernel patches](https://salsa.debian.org/kernel-team/linux/-/tree/master/debian/patches)
-- [Kernel Builds how-to](../how-to/kernel-builds.md)
+- [Kernel Builds how-to](/reference/kernel-builds.md)

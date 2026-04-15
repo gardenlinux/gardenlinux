@@ -4,8 +4,7 @@ description: "Step-by-step guide to deploying Garden Linux on Lima"
 category: "tutorials"
 tags: ["tutorial", "lima", "virtualization", "beginner"]
 migration_status: "done"
-migration_source: "02_operators/lima-vm.md"
-migration_issue: ""
+migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
 migration_approved: false
 github_org: gardenlinux
@@ -95,7 +94,7 @@ For a complete list of maintained releases and their support lifecycle, see the 
 
 #### Build Your Own Images
 
-To create custom Garden Linux images with additional features or configurations, see the [Building Flavors guide](../../how-to/customization/building-flavors.md).
+You can [Build your own Garden Linux Images](/how-to/building-images) or even [Create a custom Feature](/how-to/custom-feature).
 
 ### Step 2: Connect to Your Instance
 
@@ -155,6 +154,5 @@ limactl delete gardenlinux
 
 Now that you have a running Garden Linux instance on Lima, you can:
 
-- Explore [Lima platform-specific features and configurations](../../how-to/platform-specific/lima.md)
-- Discover how to [build custom Garden Linux images](../../how-to/customization/building-flavors.md) with additional features
+- Explore [Lima platform-specific features and configurations](../../how-to/installation/local/lima.md)
 - Browse [sample Lima manifests](https://github.com/gardenlinux/gardenlinux/tree/main/features/lima/samples) for provisioning scripts (rootless Podman, containerd)

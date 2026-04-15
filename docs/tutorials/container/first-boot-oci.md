@@ -4,8 +4,7 @@ description: "Step-by-step guide to running Garden Linux as an OCI container ima
 category: "tutorials"
 tags: ["tutorial", "oci", "container", "podman", "docker", "beginner"]
 migration_status: "adapt"
-migration_source: "01_developers/bare_container.md"
-migration_issue: ""
+migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
 migration_approved: false
 github_org: gardenlinux
@@ -89,7 +88,7 @@ For a complete list of maintained releases and their support lifecycle, see the 
 
 #### Build Your Own Images
 
-To create custom Garden Linux images with additional features or configurations, see the [Building Flavors guide](../../how-to/customization/building-flavors.md).
+You can [Build your own Garden Linux Images](/how-to/building-images) or even [Create a custom Feature](/how-to/custom-feature).
 
 ### Step 2: Pull the Image
 
@@ -187,6 +186,5 @@ podman rmi "${GL_IMAGE}"
 
 Now that you have a running Garden Linux container, you can:
 
-- Explore [OCI platform-specific features and configurations](../../how-to/platform-specific/oci.md)
-- Discover how to [build custom Garden Linux images](../../how-to/customization/building-flavors.md) with additional features
+- Explore [OCI platform-specific features and configurations](../../how-to/installation/container/oci.md)
 - Use Garden Linux as a [base image](../../how-to/container-base-image.md) in your own Containerfile or Dockerfile
