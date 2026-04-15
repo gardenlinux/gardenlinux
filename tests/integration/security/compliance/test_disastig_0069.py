@@ -1,4 +1,5 @@
 import pytest
+from plugins.parse import Lines
 
 """
 Ref: SRG-OS-000138-GPOS-00069
@@ -45,25 +46,19 @@ def test_temp_directores_are_world_writable_and_have_sticky_bit_set(file):
 def test_systemd_tmpfiles_configuration_is_sane(shell):
     result = shell("systemd-tmpfiles --cat-config", capture_output=True)
     for dir in ["/tmp", "/var/tmp"]:
-        config_found = [
-            line
-            for line in result.stdout.split("\n")
-            if line.startswith(f"q {dir} 1777 root root")
-        ]
+        lines = Lines(result.stdout, comment_char="#")
         assert (
-            len(config_found) == 1
-        ), f"{dir} should be correctly configured in systemd-tmpfiles, got '{config_found}'"
+            f"q {dir} 1777 root root" in lines
+        ), f"{dir} should be correctly configured in systemd-tmpfiles"
 
 
 # -- coredumps
 @pytest.mark.feature("stig")
 def test_suid_binaries_cannot_create_coredumps(sysctl):
-    sysctl.collect_sysctl_parameters()
     assert sysctl["fs.suid_dumpable"] == 0
 
 
 # -- memory
 @pytest.mark.feature("stig")
 def test_kernel_randomizes_virtual_memory_addresses(sysctl):
-    sysctl.collect_sysctl_parameters()
     assert sysctl["kernel.randomize_va_space"] == 2
