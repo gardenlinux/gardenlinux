@@ -38,7 +38,7 @@ def test_audit_log_directory_protected(file):
     )
 
 
-@pytest.mark.feature("stig or cis")
+@pytest.mark.feature("disaSTIG or cis")
 @pytest.mark.booted(reason="audit protection requires booted system")
 @pytest.mark.root(reason="required to inspect audit log ownership")
 def test_audit_log_files_protected(file):

@@ -12,7 +12,7 @@ documented and validated mission requirements.
 """
 
 
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 def test_terminate_ssh_session_after_inactivity_period(parse_file):
     config = parse_file.parse("/etc/ssh/sshd_config", format="spacedelim")
     assert config["ClientAliveInterval"] == "600"

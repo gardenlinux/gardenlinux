@@ -4,29 +4,29 @@ from plugins.kernel_module import KernelModule
 from plugins.parse_file import ParseFile
 
 # =============================================================================
-# stig Feature - Security Technical Implementation Guide
+# disaSTIG Feature - Security Technical Implementation Guide
 # =============================================================================
 
 
 @pytest.mark.testcov(
     [
-        "GL-TESTCOV-stig-config-audit-auditd-conf",
-        "GL-TESTCOV-stig-config-audit-rules-d-30-stig-rules",
+        "GL-TESTCOV-disaSTIGlow-config-audit-auditd-conf",
+        "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-30-disaSTIG-rules",
     ]
 )
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 def test_stig_audit_configs_exist(file: File):
     """Test that STIG audit configurations exist"""
     configs = [
         "/etc/audit/auditd.conf",
-        "/etc/audit/rules.d/30-stig.rules",
+        "/etc/audit/rules.d/30-disaSTIG.rules",
     ]
     missing = [cfg for cfg in configs if not file.is_regular_file(cfg)]
     assert not missing, f"Missing STIG audit configs: {', '.join(missing)}"
 
 
-@pytest.mark.testcov(["GL-TESTCOV-stig-config-audit-auditd-conf"])
-@pytest.mark.feature("stig")
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGlow-config-audit-auditd-conf"])
+@pytest.mark.feature("disaSTIGlow")
 def test_stig_audit_auditd_conf_content(parse_file: ParseFile):
     """Test that STIG audit auditd.conf content exists"""
     lines = parse_file.lines("/etc/audit/auditd.conf")
@@ -41,11 +41,11 @@ def test_stig_audit_auditd_conf_content(parse_file: ParseFile):
     ), "auditd.conf should contain the correct content"
 
 
-@pytest.mark.testcov(["GL-TESTCOV-stig-config-audit-rules-d-stig-rules"])
-@pytest.mark.feature("stig")
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-disaSTIG-rules"])
+@pytest.mark.feature("disaSTIGmedium")
 def test_stig_audit_rules_d_stig_rules_content(parse_file: ParseFile):
-    """Test that STIG audit rules.d/30-stig.rules content exists"""
-    lines = parse_file.lines("/etc/audit/rules.d/30-stig.rules")
+    """Test that STIG audit rules.d/30-disaSTIG.rules content exists"""
+    lines = parse_file.lines("/etc/audit/rules.d/30-disaSTIG.rules")
     assert lines == [
         "-a always,exit -F path=/usr/bin/ssh-agent -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-ssh",
         "-a always,exit -F path=/usr/lib/openssh/ssh-keysign -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-ssh",
@@ -91,15 +91,15 @@ def test_stig_audit_rules_d_stig_rules_content(parse_file: ParseFile):
     ]
 
 
-@pytest.mark.testcov(["GL-TESTCOV-stig-config-kernel-cmdline-audit"])
-@pytest.mark.feature("stig")
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-kernel-cmdline-audit"])
+@pytest.mark.feature("disaSTIGmedium")
 def test_stig_kernel_cmdline_audit_exists(file: File):
     """Test that STIG audit kernel cmdline config exists"""
     assert file.is_regular_file("/etc/kernel/cmdline.d/90-audit.cfg")
 
 
-@pytest.mark.testcov(["GL-TESTCOV-stig-config-kernel-cmdline-audit"])
-@pytest.mark.feature("stig")
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-kernel-cmdline-audit"])
+@pytest.mark.feature("disaSTIGmedium")
 def test_stig_kernel_cmdline_audit_content(parse_file: ParseFile):
     """Test that STIG audit kernel cmdline config content exists"""
     lines = parse_file.lines("/etc/kernel/cmdline.d/90-audit.cfg")
@@ -108,15 +108,15 @@ def test_stig_kernel_cmdline_audit_content(parse_file: ParseFile):
     ), "kernel cmdline audit configuration should contain the correct content"
 
 
-@pytest.mark.testcov(["GL-TESTCOV-stig-config-modprobe-usb-disable"])
-@pytest.mark.feature("stig")
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-modprobe-usb-disable"])
+@pytest.mark.feature("disaSTIGmedium")
 def test_stig_usb_disabled(file: File):
     """Test that USB is disabled via modprobe"""
     assert file.is_regular_file("/etc/modprobe.d/disabled_usb.conf")
 
 
-@pytest.mark.testcov(["GL-TESTCOV-stig-config-modprobe-usb-disable"])
-@pytest.mark.feature("stig")
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-modprobe-usb-disable"])
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="Modules can only be loaded on booted system")
 def test_stig_modprobe_disable_modules_not_loaded(kernel_module: KernelModule):
     """Test that disabled modules are not loaded"""
@@ -133,12 +133,12 @@ def test_stig_modprobe_disable_modules_not_loaded(kernel_module: KernelModule):
 
 @pytest.mark.testcov(
     [
-        "GL-TESTCOV-stig-config-security-faillock",
-        "GL-TESTCOV-stig-config-security-limits",
-        "GL-TESTCOV-stig-config-security-pwquality",
+        "GL-TESTCOV-disaSTIGlow-config-security-faillock",
+        "GL-TESTCOV-disaSTIGlow-config-security-limits",
+        "GL-TESTCOV-disaSTIGlow-config-security-pwquality",
     ]
 )
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGlow")
 def test_stig_security_configs_exist(file: File):
     """Test that STIG security configurations exist"""
     configs = [
@@ -150,8 +150,8 @@ def test_stig_security_configs_exist(file: File):
     assert not missing, f"Missing STIG security configs: {', '.join(missing)}"
 
 
-@pytest.mark.testcov(["GL-TESTCOV-stig-config-security-faillock"])
-@pytest.mark.feature("stig")
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGlow-config-security-faillock"])
+@pytest.mark.feature("disaSTIGlow")
 def test_stig_security_faillock_content(parse_file: ParseFile):
     """Test that STIG security faillock configuration content exists"""
     lines = parse_file.lines("/etc/security/faillock.conf")
@@ -170,15 +170,15 @@ def test_stig_security_faillock_content(parse_file: ParseFile):
     ), "faillock configuration should contain the correct content"
 
 
-@pytest.mark.testcov(["GL-TESTCOV-stig-config-apt-vendor-ubuntu"])
-@pytest.mark.feature("stig")
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-apt-vendor-ubuntu"])
+@pytest.mark.feature("disaSTIGmedium")
 def test_stig_apt_vendor_ubuntu_exists(file: File):
     """Test that STIG APT vendor config exists"""
     assert file.exists("/etc/apt/apt.conf.d/01-vendor-ubuntu")
 
 
-@pytest.mark.testcov(["GL-TESTCOV-stig-config-apt-vendor-ubuntu"])
-@pytest.mark.feature("stig")
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-apt-vendor-ubuntu"])
+@pytest.mark.feature("disaSTIGmedium")
 def test_stig_apt_vendor_ubuntu_content(parse_file: ParseFile):
     """Test that STIG APT vendor config content exists"""
     lines = parse_file.lines("/etc/apt/apt.conf.d/01-vendor-ubuntu")
@@ -187,15 +187,15 @@ def test_stig_apt_vendor_ubuntu_content(parse_file: ParseFile):
     ), "APT vendor config should contain the correct content"
 
 
-@pytest.mark.testcov(["GL-TESTCOV-stig-config-rsyslog-default"])
-@pytest.mark.feature("stig")
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-rsyslog-default"])
+@pytest.mark.feature("disaSTIGmedium")
 def test_stig_rsyslog_default_exists(file: File):
     """Test that STIG rsyslog default config exists"""
     assert file.is_regular_file("/etc/rsyslog.d/50-default.conf")
 
 
-@pytest.mark.testcov(["GL-TESTCOV-stig-config-rsyslog-default"])
-@pytest.mark.feature("stig")
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-rsyslog-default"])
+@pytest.mark.feature("disaSTIGmedium")
 def test_stig_rsyslog_default_content(parse_file: ParseFile):
     """Test that STIG rsyslog default config content exists"""
     lines = parse_file.lines("/etc/rsyslog.d/50-default.conf")
