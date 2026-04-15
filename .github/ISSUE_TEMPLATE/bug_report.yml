@@ -10,7 +10,7 @@ body:
       value: >
         **NOTE**: Please only use this form to report _reproducible bugs_ in Garden Linux.
         If you have any questions or are looking for assistance,
-        please refer to [our documentation](https://gardenlinux-docs.netlify.app/)
+        please refer to [our documentation](https://www.gardenlinux.org/)
   - type: input
     attributes:
       label: Garden Linux Version
