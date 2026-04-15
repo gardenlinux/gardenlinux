@@ -12,9 +12,9 @@ tags:
     "base-image",
     "bare-container",
   ]
-migration_status: "new"
+migration_status: "adapt"
 migration_source: "01_developers/bare_container.md"
-migration_issue: ""
+migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4626"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
 migration_approved: false
 github_org: gardenlinux
@@ -258,7 +258,6 @@ This shows which directories consume the most space, helping identify unnecessar
 
 ## Further Reading
 
-- [Building Flavors Guide](customization/building-flavors.md) — Build custom Garden Linux images from source
-- [OCI Platform-Specific Features](platform-specific/oci.md) — OCI image build process and platform configurations
-- [Garden Linux Releases Reference](../reference/releases/index.md) — Maintained releases and support lifecycle
+- [OCI Platform-Specific Features](installation/container/oci.md) — OCI image build process and platform configurations
+- [Garden Linux Releases Reference](/reference/releases/index.md) — Maintained releases and support lifecycle
 - [unbase_oci GitHub Repository](https://github.com/gardenlinux/unbase_oci) — Tool for creating bare container images

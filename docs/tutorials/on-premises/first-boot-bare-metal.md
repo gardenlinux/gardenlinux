@@ -3,9 +3,8 @@ title: "First Boot on Bare Metal"
 description: "Step-by-step guide to deploying Garden Linux on bare metal servers using dd"
 category: "tutorials"
 tags: ["tutorial", "bare-metal", "on-premises", "beginner"]
-migration_status: "new"
-migration_source: ""
-migration_issue: ""
+migration_status: "done"
+migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
 migration_approved: false
 github_org: gardenlinux
@@ -81,7 +80,7 @@ For a complete list of maintained releases and their support lifecycle, see the 
 
 #### Build Your Own Images
 
-To create custom Garden Linux images with additional features or configurations, see the [Building Flavors guide](../../how-to/customization/building-flavors.md).
+You can [Build your own Garden Linux Images](/how-to/building-images) or even [Create a custom Feature](/how-to/custom-feature).
 
 ### Step 2: Boot the Live System
 
@@ -261,7 +260,7 @@ For automated fleet provisioning, Garden Linux supports network boot using iPXE 
 - Network configuration
 - Custom service deployment
 
-See the [PXE Boot guide](../../how-to/installation/pxe-boot.md) and [bare-metal platform-specific configuration](../../how-to/platform-specific/bare-metal.md) for details.
+See the [PXE Boot guide](../../how-to/installation/on-premises/pxe-boot.md) and [bare-metal platform-specific configuration](../../how-to/installation/on-premises/bare-metal.md) for details.
 
 ### ironcore.dev — NeoNephos Projects
 
@@ -276,5 +275,4 @@ For large-scale bare-metal lifecycle management, consider the [IronCore Project]
 
 Now that you have Garden Linux running on bare metal, you can:
 
-- Explore [bare-metal platform-specific features and configurations](../../how-to/platform-specific/bare-metal.md)
-- Discover how to [build custom Garden Linux images](../../how-to/customization/building-flavors.md) with additional features
+- Explore [bare-metal platform-specific features and configurations](../../how-to/installation/on-premises/bare-metal.md)
