@@ -15,7 +15,7 @@ integrity of audit tools.
 def test_auditd_is_not_tampered(dpkg_checksums, shell):
     """
     On a FIPS-enabled system MD5 algos are not available
-    both for a python distribution used for testing and for a cli md5sum.
+    both for a python distribution used for testing and for a cli tool md5sum.
     md5 module in perl works though because it switches to a pure-perl
     algo implementation if its binary version fails to load.
     see: https://perldoc.perl.org/Digest::MD5.txt
