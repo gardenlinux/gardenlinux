@@ -48,4 +48,5 @@ class DpkgChecksums:
 @pytest.fixture
 def dpkg_checksums(shell, kernel_module) -> DpkgChecksums:
     yield DpkgChecksums(shell)
-    kernel_module.unload_module("crypto_user")
+    for crypto_module in ["crypto_user", "af_alg", "algif_hash"]:
+        kernel_module.unload_module(crypto_module)
