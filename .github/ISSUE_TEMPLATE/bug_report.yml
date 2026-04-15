@@ -21,7 +21,7 @@ body:
       required: true
   - type: input
     attributes:
-      label: Used Flavour
+      label: Used Flavor
       description: >
         Which Flavor or Feature Set does your image use?
     validations:
