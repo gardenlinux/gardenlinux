@@ -3,6 +3,8 @@ title: "First Boot on AWS"
 description: "Step-by-step guide to deploying Garden Linux on Amazon Web Services"
 category: "tutorials"
 tags: ["tutorial", "aws", "cloud", "beginner"]
+related_topics:
+  - /how-to/installation/cloud/aws.md
 migration_status: "adapt"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
@@ -290,8 +292,6 @@ aws ec2 delete-vpc \
 rm ${USER_DATA} ${KEY_NAME} ${KEY_NAME}.pub
 ```
 
-## Next Steps
+## Related Topics
 
-Now that you have a running Garden Linux instance on AWS, you can:
-
-- Explore [AWS platform-specific features and configurations](../../how-to/installation/cloud/aws.md)
+<RelatedTopics />
