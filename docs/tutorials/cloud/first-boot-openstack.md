@@ -3,6 +3,8 @@ title: "First Boot on OpenStack"
 description: "Step-by-step guide to deploying Garden Linux on OpenStack"
 category: "tutorials"
 tags: ["tutorial", "openstack", "cloud", "beginner"]
+related_topics:
+  - /how-to/installation/cloud/openstack.md
 migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
@@ -288,8 +290,6 @@ openstack image delete gardenlinux-tutorial
 rm ${USER_DATA} ${KEY_NAME} ${KEY_NAME}.pub ${GL_QCOW2} ${GL_TAR_XZ}
 ```
 
-## Next Steps
+## Related Topics
 
-Now that you have a running Garden Linux instance on OpenStack, you can:
-
-- Explore [OpenStack platform-specific features and configurations](../../how-to/installation/cloud/openstack.md)
+<RelatedTopics />

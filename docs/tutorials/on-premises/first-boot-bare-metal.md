@@ -3,6 +3,8 @@ title: "First Boot on Bare Metal"
 description: "Step-by-step guide to deploying Garden Linux on bare metal servers using dd"
 category: "tutorials"
 tags: ["tutorial", "bare-metal", "on-premises", "beginner"]
+related_topics:
+  - /how-to/installation/on-premises/bare-metal.md
 migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
@@ -271,8 +273,6 @@ For large-scale bare-metal lifecycle management, consider the [IronCore Project]
 - Hardware inventory and monitoring
 - Fleet-wide orchestration
 
-## Next Steps
+## Related Topics
 
-Now that you have Garden Linux running on bare metal, you can:
-
-- Explore [bare-metal platform-specific features and configurations](../../how-to/installation/on-premises/bare-metal.md)
+<RelatedTopics />

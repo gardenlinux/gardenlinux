@@ -3,6 +3,8 @@ First Boot on Lima](./local/first-boot-lima.md)itle: "First Boot on KVM"
 description: "Step-by-step guide to deploying Garden Linux on QEMU/KVM"
 category: "tutorials"
 tags: ["tutorial", "kvm", "qemu", "virtualization", "beginner"]
+related_topics:
+  - /how-to/installation/local/lima.md
 migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
@@ -302,8 +304,6 @@ rm -f "$FW_CFG_SCRIPT" "$UEFI_VARS_TMP" "$GL_IMAGE"
 rm -rf "$SSH_KEY_DIR"
 ```
 
-## Next Steps
+## Related Topics
 
-Now that you have a running Garden Linux instance on KVM, you can:
-
-- Explore [KVM platform-specific features and configurations](../../how-to/installation/local/kvm.md)
+<RelatedTopics />
