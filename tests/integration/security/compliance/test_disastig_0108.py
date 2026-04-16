@@ -11,6 +11,9 @@ integrity of audit tools.
 
 
 def file_checksum(filepath):
+    """
+    usedforsecurity=False is needed to run in a FIPS environment
+    """
     with open(filepath, "rb") as f:
         return hashlib.md5(f.read(), usedforsecurity=False).hexdigest()
 
@@ -23,8 +26,9 @@ def test_auditd_is_not_tampered(dpkg, dpkg_checksums, shell):
     if not dpkg.package_is_installed("auditd"):
         return
 
-    checksums = dpkg_checksums.for_package("auditd")
+    ideal_checksums = dpkg_checksums.for_package("auditd")
     for bin in ["auditd", "auditctl", "augenrules", "aureport", "ausearch"]:
-        assert checksums[f"/usr/sbin/{bin}"] == file_checksum(
-            "/usr/sbin/{bin}"
+        bin_path = f"/usr/sbin/{bin}"
+        assert ideal_checksums[bin_path] == file_checksum(
+            bin_path
         ), f"checksum of /usr/sbin/{bin} does not match the one from the corresponding deb package"
