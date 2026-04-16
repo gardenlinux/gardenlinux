@@ -8,6 +8,26 @@ import pytest
 
 class DpkgChecksums:
     def __init__(self, shell):
+        """
+        This plugin can be used to compare recorded checksums of files in a deb
+        package to checksums of the actual files on disk in order to check if
+        package contents was tampered.
+
+        How to use:
+        -----------
+
+        1. pass the dpkg_checksums fixture to your unit test
+        def test_something(dpkg_checksums):
+
+        2. collect md5sums for a package you're interested in:
+        ideal_checksums = dpkg_checksums.for_package("somepackage")
+
+        3. ideal_checksums is a dict with file paths from the package as keys
+
+        4. you can compare a checksum from ideal_checksums to a checksum of a
+        file on a disk:
+        dpkg_checksums.is_matching_with_installed(ideal_checksums, "/path/to/file/from/the/package"
+        """
         self._shell = shell
 
     def for_package(self, package_name, package_version="INSTALLED") -> dict:
@@ -58,14 +78,4 @@ class DpkgChecksums:
 
 @pytest.fixture
 def dpkg_checksums(shell, kernel_module):
-    # if some of the modules were already loaded before we've done anything here,
-    # do not attempt to unload them once the work is done
-    # crypto_modules = ["crypto_user", "algif_hash", "af_alg"]
-    # modules_to_cleanup = [
-    #     m for m in crypto_modules if not kernel_module.is_module_loaded(m)
-    # ]
-
-    yield DpkgChecksums(shell)
-
-    # for m in modules_to_cleanup:
-    #     kernel_module.unload_module(m)
+    return DpkgChecksums(shell)

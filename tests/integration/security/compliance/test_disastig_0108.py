@@ -9,9 +9,6 @@ integrity of audit tools.
 
 
 @pytest.mark.booted(reason="Requires working networking")
-# @pytest.mark.root(
-#     reason="Unloading crypto modules in dpkg_checksums plugin requires elevated permissions"
-# )
 def test_auditd_is_not_tampered(dpkg, dpkg_checksums, shell):
     if not dpkg.package_is_installed("auditd"):
         return
