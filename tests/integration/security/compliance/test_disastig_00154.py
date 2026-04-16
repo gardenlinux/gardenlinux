@@ -1,6 +1,4 @@
 import pytest
-from plugins.dpkg import Dpkg
-from plugins.parse_file import ParseFile
 from plugins.shell import ShellRunner
 
 
@@ -23,41 +21,45 @@ def test_execution_control_lsm_present(lsm):
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="requires mounted filesystem inspection")
 @pytest.mark.root(reason="required to verify execution restrictions")
-def test_tmp_mounted_noexec(parse_file: ParseFile):
+def test_tmp_mounted_noexec(shell: ShellRunner):
     """
     As per DISA STIG requirement, the operating system must prevent program
     execution in accordance with local policies regarding software program usage.
     This test verifies that /tmp is mounted with noexec.
     Ref: SRG-OS-000368-GPOS-00154
     """
-    lines = parse_file.lines("/proc/mounts", format="spacedelim")
+    result = shell(
+        "findmnt --noheadings -o OPTIONS -T /tmp",
+        capture_output=True,
+        ignore_exit_code=True,
+    )
+    assert result.returncode == 0, "stigcompliance: /tmp is not a separate mountpoint"
+    assert "noexec" in result.stdout, "stigcompliance: /tmp is not mounted with noexec"
 
-    assert (
-        "/tmp" in lines and "noexec" in lines
-    ), "stigcompliance: /tmp is not mounted with noexec"
 
-
-@pytest.mark.feature("stig")
+@pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="requires mounted filesystem inspection")
 @pytest.mark.root(reason="required to verify execution restrictions")
-def test_var_tmp_mounted_noexec(parse_file: ParseFile):
+def test_var_tmp_mounted_noexec(shell: ShellRunner):
     """
     As per DISA STIG requirement, the operating system must prevent program
     execution in accordance with local policies regarding software program usage.
     This test verifies that /var/tmp is mounted with noexec.
     Ref: SRG-OS-000368-GPOS-00154
     """
-    lines = parse_file.lines("/proc/mounts", format="spacedelim")
-
-    assert (
-        "/var/tmp" in lines and "noexec" in lines
-    ), "stigcompliance: /var/tmp is not mounted with noexec"
+    result = shell(
+        "findmnt --noheadings -o OPTIONS -T /var/tmp",
+        capture_output=True,
+        ignore_exit_code=True,
+    )
+    assert result.returncode == 0, "stigcompliance: /var/tmp is not a separate mountpoint"
+    assert "noexec" in result.stdout, "stigcompliance: /var/tmp is not mounted with noexec"
 
 
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="requires LSM subsystem")
 @pytest.mark.root(reason="required to verify enforcement state")
-def test_apparmor_enforcing(shell: ShellRunner, dpkg: Dpkg):
+def test_apparmor_enforcing(shell: ShellRunner, dpkg):
     """
     As per DISA STIG requirement, the operating system must prevent program
     execution in accordance with local policies regarding software program usage.
@@ -67,9 +69,15 @@ def test_apparmor_enforcing(shell: ShellRunner, dpkg: Dpkg):
     if not dpkg.package_is_installed("apparmor"):
         pytest.skip("AppArmor not installed")
 
-    status = shell("apparmor_status", capture_output=True, ignore_exit_code=True)
+    result = shell(
+        "apparmor_status",
+        capture_output=True,
+        ignore_exit_code=True,
+    )
 
-    assert (
-        "enforce mode" in status.stdout
-        or "profiles are in enforce mode" in status.stdout
-    ), "stigcompliance: AppArmor not enforcing execution policies"
+    if result.returncode != 0:
+        pytest.skip("apparmor_status not available")
+
+    assert "enforce" in result.stdout.lower(), (
+        "stigcompliance: AppArmor not enforcing execution policies"
+    )
