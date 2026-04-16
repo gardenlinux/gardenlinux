@@ -3,6 +3,9 @@ title: "First Boot as OCI Image"
 description: "Step-by-step guide to running Garden Linux as an OCI container image"
 category: "tutorials"
 tags: ["tutorial", "oci", "container", "podman", "docker", "beginner"]
+related_topics:
+  - /how-to/installation/container/oci.md
+  - /how-to/container-base-image.md
 migration_status: "adapt"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
@@ -182,9 +185,6 @@ exit
 podman rmi "${GL_IMAGE}"
 ```
 
-## Next Steps
+## Related Topics
 
-Now that you have a running Garden Linux container, you can:
-
-- Explore [OCI platform-specific features and configurations](../../how-to/installation/container/oci.md)
-- Use Garden Linux as a [base image](../../how-to/container-base-image.md) in your own Containerfile or Dockerfile
+<RelatedTopics />

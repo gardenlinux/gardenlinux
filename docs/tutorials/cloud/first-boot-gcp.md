@@ -3,6 +3,8 @@ title: "First Boot on GCP"
 description: "Step-by-step guide to deploying Garden Linux on Google Cloud Platform"
 category: "tutorials"
 tags: ["tutorial", "gcp", "cloud", "beginner"]
+related_topics:
+  - /how-to/installation/cloud/gcp.md
 migration_status: "adapt"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
@@ -237,8 +239,6 @@ gcloud compute networks delete ${NETWORK_NAME} --quiet
 rm ${USER_DATA} ${KEY_NAME} ${KEY_NAME}.pub
 ```
 
-## Next Steps
+## Related Topics
 
-Now that you have a running Garden Linux instance on GCP, you can:
-
-- Explore [GCP platform-specific features and configurations](../../how-to/installation/cloud/gcp.md)
+<RelatedTopics />

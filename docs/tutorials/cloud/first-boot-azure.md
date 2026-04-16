@@ -3,6 +3,8 @@ title: "First Boot on Azure"
 description: "Step-by-step guide to deploying Garden Linux on Microsoft Azure"
 category: "tutorials"
 tags: ["tutorial", "azure", "cloud", "beginner"]
+related_topics:
+  - /how-to/installation/cloud/azure.md
 migration_status: "adapt"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
@@ -274,8 +276,6 @@ az group delete \
 rm ${USER_DATA} ${KEY_NAME} ${KEY_NAME}.pub
 ```
 
-## Next Steps
+## Related Topics
 
-Now that you have a running Garden Linux instance on Azure, you can:
-
-- Explore [Azure platform-specific features and configurations](../../how-to/installation/cloud/azure.md)
+<RelatedTopics />

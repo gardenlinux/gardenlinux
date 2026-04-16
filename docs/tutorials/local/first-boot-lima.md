@@ -3,6 +3,8 @@ title: "First Boot on Lima"
 description: "Step-by-step guide to deploying Garden Linux on Lima"
 category: "tutorials"
 tags: ["tutorial", "lima", "virtualization", "beginner"]
+related_topics:
+  - /how-to/installation/local/lima.md
 migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
@@ -150,9 +152,6 @@ limactl stop gardenlinux
 limactl delete gardenlinux
 ```
 
-## Next Steps
+## Related Topics
 
-Now that you have a running Garden Linux instance on Lima, you can:
-
-- Explore [Lima platform-specific features and configurations](../../how-to/installation/local/lima.md)
-- Browse [sample Lima manifests](https://github.com/gardenlinux/gardenlinux/tree/main/features/lima/samples) for provisioning scripts (rootless Podman, containerd)
+<RelatedTopics />
