@@ -19,6 +19,7 @@ from plugins.shell import ShellRunner
 # _fips Feature
 # =============================================================================
 
+
 @pytest.mark.feature("_fips")
 def test_that_md5_is_disabled_in_openssl_via_haslib():
     """
