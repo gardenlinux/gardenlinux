@@ -430,6 +430,24 @@ def test_kernel_hmac_file_is_present(file: File, kernel_versions: KernelVersions
     assert file.is_regular_file(f"/boot/.vmlinuz-{running_kernel.version}.hmac")
 
 
+def test_kernel_configs_btrfs_is_disabled(
+    parse_file: ParseFile, kernel_configs: KernelConfigs
+):
+    """
+    Based on our issue regarding xxhash64, we need to disable BTRFS within the kernel, since it uses
+    not approved algortiehm. This test ensure that BTRFS is disabled.
+
+    While this requierment stems from FIPS, BTRFS should be disabled everywhere.
+
+    See: https://github.com/gardenlinux/security/issues/405
+    """
+    for config in kernel_configs.get_installed():
+        parsed_config = parse_file.parse(config.path, format="keyval")
+        assert (
+            "CONFIG_BTRFS_FS" not in parsed_config.keys()
+        ), f"CONFIG_BTRFS is set in {config.path}"
+
+
 # TODO: check why this does not work on arm64
 @pytest.mark.testcov(["GL-TESTCOV-_fips-config-kernel-hmac"])
 @pytest.mark.feature("_fips")
