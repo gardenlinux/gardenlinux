@@ -345,9 +345,6 @@ def test_libgcrypt_configs_FIPS_vendor_is_set():
     libgcrypt.gcry_get_config.argtypes = [c_int, c_char_p]
 
     config = libgcrypt.gcry_get_config(0, None)
-    if not config:
-        assert False, "Can't load configuration from libgcrypt via gcry_get_config"
-
     found = [entry for entry in config.decode().splitlines() if "fips-mode" in entry]
     assert (
         found
