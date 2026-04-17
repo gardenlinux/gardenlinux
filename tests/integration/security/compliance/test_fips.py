@@ -3,7 +3,7 @@ import hmac
 import os
 from ctypes import CDLL, c_int, c_void_p
 from ctypes.util import find_library
-from hashlib import _hashlib # pyright: ignore
+from hashlib import _hashlib  # pyright: ignore
 from hashlib import md5 as MD5
 from hashlib import sha256 as SHA256
 from platform import machine as arch
