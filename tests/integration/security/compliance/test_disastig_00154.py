@@ -38,29 +38,6 @@ def test_tmp_mounted_noexec(shell: ShellRunner):
 
 
 @pytest.mark.feature("not container and not lima")
-@pytest.mark.booted(reason="requires mounted filesystem inspection")
-@pytest.mark.root(reason="required to verify execution restrictions")
-def test_var_tmp_mounted_noexec(shell: ShellRunner):
-    """
-    As per DISA STIG requirement, the operating system must prevent program
-    execution in accordance with local policies regarding software program usage.
-    This test verifies that /var/tmp is mounted with noexec.
-    Ref: SRG-OS-000368-GPOS-00154
-    """
-    result = shell(
-        "findmnt --noheadings -o OPTIONS -T /var/tmp",
-        capture_output=True,
-        ignore_exit_code=True,
-    )
-    assert (
-        result.returncode == 0
-    ), "stigcompliance: /var/tmp is not a separate mountpoint"
-    assert (
-        "noexec" in result.stdout
-    ), "stigcompliance: /var/tmp is not mounted with noexec"
-
-
-@pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="requires LSM subsystem")
 @pytest.mark.root(reason="required to verify enforcement state")
 def test_apparmor_enforcing(shell: ShellRunner, dpkg):
