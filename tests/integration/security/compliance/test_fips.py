@@ -3,6 +3,8 @@ import hmac
 import os
 from ctypes import CDLL, c_int, c_void_p
 from ctypes.util import find_library
+from hashlib import _hashlib # pyright: ignore
+from hashlib import md5 as MD5
 from hashlib import sha256 as SHA256
 from platform import machine as arch
 from typing import List
@@ -27,13 +29,7 @@ def test_that_md5_is_disabled_in_openssl_via_haslib():
     We try to load the MD5 constructor to see if OpenSSL disallows the usage of MD5.
     Fails when we have a vaild MD5 object in a Security senstive context.
     """
-    try:
-        MD5()
-    except hashlib._hashlib.UnsupportedDigestmodError:
-        assert True
-        return
-
-    assert False, "MD5 can be loaded!"
+    pytest.raises(_hashlib.UnsupportedDigestmodError, MD5)
 
 
 @pytest.mark.testcov(
