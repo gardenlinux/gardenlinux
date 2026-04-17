@@ -19,6 +19,21 @@ from plugins.shell import ShellRunner
 # _fips Feature
 # =============================================================================
 
+@pytest.mark.feature("_fips")
+def test_that_md5_is_disabled_in_openssl_via_haslib():
+    """
+    Python's hashlib requires the systems OpenSSL to compute hash function.
+    We try to load the MD5 constructor to see if OpenSSL disallows the usage of MD5.
+    Fails when we have a vaild MD5 object in a Security senstive context.
+    """
+    try:
+        MD5()
+    except hashlib._hashlib.UnsupportedDigestmodError:
+        assert True
+        return
+
+    assert False, "MD5 can be loaded!"
+
 
 @pytest.mark.testcov(
     [
