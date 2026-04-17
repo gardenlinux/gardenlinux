@@ -346,9 +346,8 @@ def test_libgcrypt_configs_FIPS_vendor_is_set():
 
     config = libgcrypt.gcry_get_config(0, None)
     found = [entry for entry in config.decode().splitlines() if "fips-mode" in entry]
-    assert (
-        found
-    ), "fips-mode:y::SAP SE Garden Linux nightly Libgcrypt Cryptographic Module:"
+    assert "fips-mode:y::SAP SE Garden Linux nightly Libgcrypt Cryptographic Module:" in found,
+    "Can't detect the correct FIPS-Module name in libgcrypt"
 
 
 @pytest.mark.testcov(
