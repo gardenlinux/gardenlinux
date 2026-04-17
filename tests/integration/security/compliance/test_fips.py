@@ -339,17 +339,19 @@ def test_libgcrypt_configs_FIPS_vendor_is_set():
     shared_lib_name = find_library("gcrypt")
     libgcrypt = CDLL(shared_lib_name)
 
+    # Define the expected return value and define the types that will be handled over as function
+    # parameter.
     libgcrypt.gcry_get_config.restype = c_char_p
     libgcrypt.gcry_get_config.argtypes = [c_int, c_char_p]
 
     config = libgcrypt.gcry_get_config(0, None)
-
     if not config:
         assert False, "Can't load configuration from libgcrypt via gcry_get_config"
 
-    for entry in config.decode().splitlines():
-        if "fips-mode" in entry:
-            assert "fips-mode:y::SAP SE Garden Linux nightly Libgcrypt Cryptographic Module:"
+    found = [entry for entry in config.decode().splitlines() if "fips-mode" in entry]
+    assert (
+        found
+    ), "fips-mode:y::SAP SE Garden Linux nightly Libgcrypt Cryptographic Module:"
 
 
 @pytest.mark.testcov(
