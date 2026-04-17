@@ -52,8 +52,12 @@ def test_var_tmp_mounted_noexec(shell: ShellRunner):
         capture_output=True,
         ignore_exit_code=True,
     )
-    assert result.returncode == 0, "stigcompliance: /var/tmp is not a separate mountpoint"
-    assert "noexec" in result.stdout, "stigcompliance: /var/tmp is not mounted with noexec"
+    assert (
+        result.returncode == 0
+    ), "stigcompliance: /var/tmp is not a separate mountpoint"
+    assert (
+        "noexec" in result.stdout
+    ), "stigcompliance: /var/tmp is not mounted with noexec"
 
 
 @pytest.mark.feature("not container and not lima")
@@ -78,6 +82,6 @@ def test_apparmor_enforcing(shell: ShellRunner, dpkg):
     if result.returncode != 0:
         pytest.skip("apparmor_status not available")
 
-    assert "enforce" in result.stdout.lower(), (
-        "stigcompliance: AppArmor not enforcing execution policies"
-    )
+    assert (
+        "enforce" in result.stdout.lower()
+    ), "stigcompliance: AppArmor not enforcing execution policies"
