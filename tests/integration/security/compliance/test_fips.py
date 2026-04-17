@@ -429,10 +429,10 @@ def test_kernel_configs_btrfs_is_disabled(
         ), f"CONFIG_BTRFS is set in {config.path}"
 
 
-# TODO: check why this does not work on arm64
+# TODO: check why this does not work on arm64, when build crossplatfrom.
+# When run podman on x86_64 and you try to build this via podman for arm64 it will fail.
 @pytest.mark.testcov(["GL-TESTCOV-_fips-config-kernel-hmac"])
 @pytest.mark.feature("_fips")
-@pytest.mark.arch("not arm64")
 @pytest.mark.booted(reason="Requires running system")
 def test_kernel_hmac_file_is_correct(
     shell: ShellRunner, kernel_versions: KernelVersions
