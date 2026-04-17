@@ -1,7 +1,7 @@
 import configparser
 import hmac
 import os
-from ctypes import CDLL, c_int, c_void_p
+from ctypes import CDLL, c_char_p, c_int, c_void_p
 from ctypes.util import find_library
 from hashlib import sha256 as SHA256
 from platform import machine as arch
@@ -319,6 +319,37 @@ def test_libgcrypt_is_in_fips_mode():
     assert libgcrypt.gcry_control(
         c_int(GCRYCTL_FIPS_MODE_P), c_int(1)
     ), "Error libgcrypt can't be started in FIPS mode."
+
+
+@pytest.mark.feature("_fips")
+def test_libgcrypt_configs_FIPS_vendor_is_set():
+    """
+    This will check if libgcrypt has set the FIPS-Mode.
+
+    For this it uses the gcry_get_config() function is use.
+    https://www.gnupg.org/documentation/manuals/gcrypt/Config-reporting.html
+
+    The function will return a string containing the configuration.
+
+    It should look like as follows:
+      - SAP SE Garden Linux [RELEASE] Libcgrypt Cryptographic Module
+
+    See also: https://github.com/gardenlinux/security/issues/368
+    """
+    shared_lib_name = find_library("gcrypt")
+    libgcrypt = CDLL(shared_lib_name)
+
+    libgcrypt.gcry_get_config.restype = c_char_p
+    libgcrypt.gcry_get_config.argtypes = [c_int, c_char_p]
+
+    config = libgcrypt.gcry_get_config(0, None)
+
+    if not config:
+        assert False, "Can't load configuration from libgcrypt via gcry_get_config"
+
+    for entry in config.decode().splitlines():
+        if "fips-mode" in entry:
+            assert "fips-mode:y::SAP SE Garden Linux nightly Libgcrypt Cryptographic Module:"
 
 
 @pytest.mark.testcov(
