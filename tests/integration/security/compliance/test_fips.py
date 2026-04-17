@@ -412,9 +412,9 @@ def test_kernel_configs_btrfs_is_disabled(
     """
     for config in kernel_configs.get_installed():
         parsed_config = parse_file.parse(config.path, format="keyval")
-        assert "CONFIG_BTRFS_FS" not in parsed_config.keys(), f"CONFIG_BTRFS is set in {config.path}"
-
-
+        assert (
+            "CONFIG_BTRFS_FS" not in parsed_config.keys()
+        ), f"CONFIG_BTRFS is set in {config.path}"
 
 
 # TODO: check why this does not work on arm64
