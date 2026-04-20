@@ -18,6 +18,7 @@ def test_audit_reporting_tools_installed():
 
 
 @pytest.mark.root("audit reporting requires root privileges")
+@pytest.mark.booted(reason="Need auditd running")
 def test_audit_reporting_execution(shell):
     result = shell("aureport --summary", capture_output=True)
 
