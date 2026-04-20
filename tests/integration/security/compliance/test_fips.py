@@ -433,6 +433,7 @@ def test_kernel_configs_btrfs_is_disabled(
 # When run podman on x86_64 and you try to build this via podman for arm64 it will fail.
 @pytest.mark.testcov(["GL-TESTCOV-_fips-config-kernel-hmac"])
 @pytest.mark.feature("_fips")
+@pytest.mark.arch("not _usi")
 @pytest.mark.booted(reason="Requires running system")
 def test_kernel_hmac_file_is_correct(
     shell: ShellRunner, kernel_versions: KernelVersions
