@@ -1,3 +1,5 @@
+import pytest
+
 """
 Ref: SRG-OS-000775-GPOS-00230
 
@@ -6,6 +8,7 @@ anchors in trust stores or certificate stores managed by the organization.
 """
 
 
+@pytest.mark.feature("sap")
 def test_validate_fingerprint_of_SAP_CA_certificate(shell):
     cert_path = "/etc/ssl/certs/SAP_Global_Root_CA.pem"
     result = shell(
