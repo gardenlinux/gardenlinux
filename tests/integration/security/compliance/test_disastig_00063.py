@@ -10,6 +10,7 @@ supports on-demand reporting requirements.
 """
 
 
+@pytest.mark.booted(reason="Audit tools are not installed in chroot environment")
 def test_audit_reporting_tools_installed():
     tools = ["aureport", "ausearch"]
     for tool in tools:
