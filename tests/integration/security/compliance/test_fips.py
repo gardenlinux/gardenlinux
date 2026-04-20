@@ -3,6 +3,8 @@ import hmac
 import os
 from ctypes import CDLL, c_int, c_void_p
 from ctypes.util import find_library
+from hashlib import _hashlib  # pyright: ignore
+from hashlib import md5 as MD5
 from hashlib import sha256 as SHA256
 from platform import machine as arch
 from typing import List
@@ -18,6 +20,16 @@ from plugins.shell import ShellRunner
 # =============================================================================
 # _fips Feature
 # =============================================================================
+
+
+@pytest.mark.feature("_fips")
+def test_that_md5_is_disabled_in_openssl_via_haslib():
+    """
+    Python's hashlib requires the systems OpenSSL to compute hash function.
+    We try to load the MD5 constructor to see if OpenSSL disallows the usage of MD5.
+    Fails when we have a vaild MD5 object in a Security senstive context.
+    """
+    pytest.raises(_hashlib.UnsupportedDigestmodError, MD5)
 
 
 @pytest.mark.testcov(
@@ -397,6 +409,24 @@ def test_kernel_hmac_file_is_present(file: File, kernel_versions: KernelVersions
     """
     running_kernel = kernel_versions.get_running()
     assert file.is_regular_file(f"/boot/.vmlinuz-{running_kernel.version}.hmac")
+
+
+def test_kernel_configs_btrfs_is_disabled(
+    parse_file: ParseFile, kernel_configs: KernelConfigs
+):
+    """
+    Based on our issue regarding xxhash64, we need to disable BTRFS within the kernel, since it uses
+    not approved algortiehm. This test ensure that BTRFS is disabled.
+
+    While this requierment stems from FIPS, BTRFS should be disabled everywhere.
+
+    See: https://github.com/gardenlinux/security/issues/405
+    """
+    for config in kernel_configs.get_installed():
+        parsed_config = parse_file.parse(config.path, format="keyval")
+        assert (
+            "CONFIG_BTRFS_FS" not in parsed_config.keys()
+        ), f"CONFIG_BTRFS is set in {config.path}"
 
 
 # TODO: check why this does not work on arm64
