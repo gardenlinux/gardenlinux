@@ -305,8 +305,11 @@ def test_openssl_FIPS_vendor_is_set(shell):
     """
     This validates that we have the FIPS provider loadable AND that the vendor name is set.
     """
-    GARDENLINUX_FIPS_NAME = 'SAP SE Garden Linux nightly OpenSSL Cryptographic Module FIPS Provider for OpenSSL'
-    assert GARDENLINUX_FIPS_NAME in shell("openssl list -providers", capture_output=True).stdout
+    GARDENLINUX_FIPS_NAME = "SAP SE Garden Linux nightly OpenSSL Cryptographic Module FIPS Provider for OpenSSL"
+    assert (
+        GARDENLINUX_FIPS_NAME
+        in shell("openssl list -providers", capture_output=True).stdout
+    ), "FIPS Vendor Name for OpenSSL is incorrect!"
 
 
 @pytest.mark.feature("_fips")
