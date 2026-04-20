@@ -1,0 +1,26 @@
+import shutil
+
+import pytest
+
+"""
+Ref: SRG-OS-000122-GPOS-00063
+
+Verify the operating system provides an audit reduction capability that
+supports on-demand reporting requirements.
+"""
+
+
+def test_audit_reporting_tools_installed():
+    tools = ["aureport", "ausearch"]
+    for tool in tools:
+        path = shutil.which(tool)
+        assert path is not None, f"'{tool}' audit reporting utility is not installed"
+
+
+@pytest.mark.root("audit reporting requires root privileges")
+def test_audit_reporting_execution(shell):
+    result = shell("aureport --summary", capture_output=True)
+
+    assert (
+        "Summary" in result.stdout
+    ), f"'aureport' executed but returned an unexpected result: {result.stdout}"
