@@ -2,6 +2,11 @@
 title: "Release Lifecycle"
 description: "Garden Linux release lifecycle phases: standard maintenance, extended maintenance, and end of support."
 order: 1
+related_topics:
+  - /reference/releases/release-lifecycle
+  - /reference/releases/maintained-releases
+  - /reference/releases/archived-releases
+  - /reference/releases/release-notes/
 migration_status: "done"
 migration_source: "00_introduction/release.md"
 github_org: gardenlinux
@@ -82,8 +87,6 @@ To ensure common understanding, the key terms used throughout this document are 
 - **Extended maintenance**: The six-month window following the end of standard maintenance
 - **End of maintenance**: The date on which the extended maintenance ends and the release enters an unsupported state
 
-## Further Reading
+## Related Topics
 
-- [Maintained Releases](maintained-releases.md) — Currently supported Garden Linux releases
-- [Archived Releases](archived-releases.md) — Releases past end of maintenance
-- [Release Notes](release-notes/) — Detailed release-specific notes
+<RelatedTopics />
