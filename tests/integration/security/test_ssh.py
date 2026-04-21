@@ -66,7 +66,9 @@ FIPS_REASON = "FIPS uses different values for the KEX and Cipher."
 @pytest.mark.parametrize("sshd_config_item", required_sshd_config)
 @pytest.mark.feature("not _fips", reason=FIPS_REASON)
 @pytest.mark.feature("not cis", reason="CIS has specific KEX and MACs")
-@pytest.mark.feature("not disaSTIGmedium", reason="disaSTIGmedium has specific KEX, Ciphers and MACs")
+@pytest.mark.feature(
+    "not disaSTIGmedium", reason="disaSTIGmedium has specific KEX, Ciphers and MACs"
+)
 def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
     actual_value = sshd.get_config_section(sshd_config_item)
     expected_value = required_sshd_config[sshd_config_item]
