@@ -1,0 +1,18 @@
+markers:
+  "etc/audit/rules.d/30-disaSTIG.rules":
+  - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-disaSTIG-rules"
+  - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-30-disaSTIG-rules"
+  "etc/apt/apt.conf.d/01-vendor-ubuntu":
+  - "GL-TESTCOV-disaSTIGmedium-config-apt-vendor-ubuntu"
+  "etc/kernel/cmdline.d/90-audit.cfg":
+  - "GL-TESTCOV-disaSTIGmedium-config-kernel-cmdline-audit"
+  "etc/rsyslog.d/50-default.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-rsyslog-default"
+  "etc/security/pwquality.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-security-pwquality"
+  "etc/modprobe.d/disabled_usb.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-modprobe-usb-disable"
+  "etc/sysctl.d/99-disaSTIG.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-sysctl-disaSTIG"
+  "usr/share/pam-configs/garden-disaSTIG":
+  - "GL-TESTCOV-disaSTIGmedium-config-pam-garden-disaSTIG"
