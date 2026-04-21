@@ -2,6 +2,11 @@
 title: "Release Notes"
 description: "Garden Linux release notes organized by version."
 order: 4
+related_topics:
+  - /reference/releases/release-lifecycle
+  - /reference/releases/maintained-releases
+  - /reference/releases/archived-releases
+  - /reference/releases/release-notes/
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/releases/release-notes/index.md
@@ -14,8 +19,6 @@ Garden Linux release notes sourced from GitHub. Select a version below to view i
 
 <SectionIndex />
 
-## Further Reading
+## Related Topics
 
-- [Release Lifecycle](../release-lifecycle.md) — Understanding Garden Linux release phases
-- [Maintained Releases](../maintained-releases.md) — Currently supported releases
-- [Archived Releases](../archived-releases.md) — Past releases
+<RelatedTopics />
