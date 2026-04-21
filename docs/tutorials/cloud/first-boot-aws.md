@@ -42,6 +42,10 @@ You'll deploy a Garden Linux instance on AWS EC2 with a basic networking setup (
 
 Garden Linux provides pre-built AMIs for multiple AWS regions. Start by selecting an appropriate image for your deployment.
 
+:::warning
+Publishing [Official released Garden Linux images in cloud provider marketplaces](https://github.com/gardenlinux/gardenlinux/issues/4592) is currently worked on. Until this is ready - if you notice not having access to the [Official Images](#official-images) - proceed with [Uploading pre-built images](#uploading-pre-built-images).
+:::
+
 #### Official Images
 
 Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
@@ -59,6 +63,111 @@ AMI_ID="ami-0f502b80bb47d34b3"
 :::tip
 For a complete list of maintained releases and their support lifecycle, see the [releases reference](../../reference/releases/index.md).
 :::
+
+#### Uploading pre-built images
+
+Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
+
+In the "Published Images" section on the release page, find the image for your desired [flavor](../../explanation/flavors-and-features.md) and [architecture](../../reference/glossary.md#architecture). The default production flavor is `aws-gardener_prod-amd64`. You can directly download it there.
+
+To download it by script, look in the "Assets" section on the release page, and find the `.tar.xz` archive for the `aws-gardener_prod-amd64` [flavor](../../explanation/flavors-and-features.md). Download and extract the `.raw` image, then upload it to AWS:
+
+##### Download the image
+
+```bash
+GL_VERSION="2150.0.0"
+GL_COMMIT="eb8696b9"
+GL_ARCH="amd64"
+GL_ASSET="aws-gardener_prod-${GL_ARCH}-${GL_VERSION}-${GL_COMMIT}"
+GL_RAW="${GL_ASSET}.raw"
+GL_TAR_XZ="${GL_ASSET}.tar.xz"
+
+# Download and extract the image
+curl -L -o "${GL_TAR_XZ}" \
+  "https://github.com/gardenlinux/gardenlinux/releases/download/${GL_VERSION}/${GL_TAR_XZ}"
+
+tar -xf "${GL_TAR_XZ}" "./${GL_RAW}"
+```
+
+:::tip
+Set `GL_ARCH` to `arm64` if you would like to download/upload the arm version.
+
+```bash
+GL_ARCH="arm64"
+```
+
+:::
+
+:::tip
+For a complete list of maintained releases and their support lifecycle, see the [releases reference](../../reference/releases/index.md).
+:::
+
+##### Upload the image to AWS
+
+###### Create a S3 Bucket
+
+Create a S3 Bucket that holds the Garden Linux image for the AMI snapshot import:
+
+```bash
+AWS_REGION="eu-central-1"
+BUCKET="gl-tutorial-${RANDOM}"
+
+aws s3api create-bucket \
+    --bucket ${BUCKET} \
+    --create-bucket-configuration LocationConstraint=${AWS_REGION} \
+    --acl private
+```
+
+###### Import the image as snapshot
+
+Copy the image to S3 and import it as a snapshot:
+
+```bash
+aws s3 cp ${GL_RAW} s3://${BUCKET}/${GL_RAW}
+aws ec2 import-snapshot \
+    --region ${AWS_REGION} \
+    --description "Garden Linux Tutorial" \
+    --disk-container "Format=raw,UserBucket={S3Bucket=$BUCKET,S3Key=$GL_RAW}"
+```
+
+Query the import task until it is finished:
+
+```bash
+while true; do
+  status=$(aws ec2 describe-import-snapshot-tasks \
+    --query "ImportSnapshotTasks[?SnapshotTaskDetail.UserBucket.S3Bucket=='$BUCKET' && SnapshotTaskDetail.UserBucket.S3Key=='$GL_RAW'].SnapshotTaskDetail.Status" \
+    --output text)
+
+  echo "Current status: ${status}"
+
+  if [ "$status" = "completed" ]; then
+    echo "Import snapshot task completed."
+    break
+  fi
+
+  sleep 10
+done
+
+SNAPSHOT_ID=$(aws ec2 describe-import-snapshot-tasks \
+    --query "ImportSnapshotTasks[?SnapshotTaskDetail.UserBucket.S3Bucket=='$BUCKET' && SnapshotTaskDetail.UserBucket.S3Key=='$GL_RAW'].SnapshotTaskDetail.SnapshotId" \
+    --output text | awk '{print $1}')
+```
+
+###### Register the image as AMI
+
+Register the imported snapshot as an AMI:
+
+```bash
+AMI_ID=$(aws ec2 register-image \
+    --block-device-mappings "DeviceName=/dev/xvda,VirtualName=gardenlinux,Ebs={DeleteOnTermination=true,SnapshotId=$SNAPSHOT_ID,VolumeSize=20,VolumeType=gp2}" \
+    --root-device-name /dev/xvda \
+    --virtualization-type hvm \
+    --architecture x86_64 \
+    --ena-support \
+    --name gardenlinux-tutorial \
+    --query 'ImageId' \
+    --output text)
+```
 
 #### Build Your Own Images
 
@@ -85,7 +194,7 @@ VPC_ID=$(aws ec2 create-vpc \
 Create a subnet within the VPC where your instance will be placed:
 
 ```bash
-SUBNET_CIDR="10.10.0.0/22"
+SUBNET_CIDR="10.1.0.0/22"
 AZ=$(aws ec2 describe-availability-zones \
     --query 'AvailabilityZones[].ZoneName' \
     --filter "Name=state,Values=available" \
@@ -288,10 +397,18 @@ aws ec2 delete-subnet \
 aws ec2 delete-vpc \
     --vpc-id ${VPC_ID}
 
+# Delete the AMI (if uploaded)
+test -n ${SNAPSHOT_ID} && aws ec2 deregister-image --image-id ${AMI_ID}
+
+
+# Delete the import snapshot (if uploaded)
+test -n ${SNAPSHOT_ID} && aws ec2 delete-snapshot --snapshot-id ${SNAPSHOT_ID}
+
+# Delete the S3 Bucket
+test -n ${BUCKET} && aws s3 rb s3://${BUCKET} --force
+
 # Remove local files
 rm ${USER_DATA} ${KEY_NAME} ${KEY_NAME}.pub
 ```
-
-## Related Topics
 
 <RelatedTopics />

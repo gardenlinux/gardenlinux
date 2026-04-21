@@ -43,11 +43,17 @@ You'll deploy a Garden Linux instance on GCP Compute Engine with a basic network
 
 Garden Linux provides pre-built images for GCP in the shared Garden Linux GCP project. Start by selecting an appropriate image for your deployment.
 
+:::warning
+Publishing [Official released Garden Linux images in cloud provider marketplaces](https://github.com/gardenlinux/gardenlinux/issues/4592) is currently worked on. Until this is ready - if you notice not having access to the [Official Images](#official-images) - proceed with [Uploading pre-built images](#uploading-pre-built-images).
+:::
+
 #### Official Images
 
 Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
 
 In the "Published Images" section on the release page, find the GCP image ID for your desired [flavor](../../explanation/flavors-and-features.md), [architecture](../../reference/glossary.md), and region. The default production flavor is `gcp-gardener_prod-amd64`.
+
+![GitHub release page showing published images table with image information](../assets/first-boot-gcp-image.png)
 
 Garden Linux publishes images to a shared GCP project. The image follows this format:
 
@@ -61,6 +67,78 @@ IMAGE_NAME="projects/${GL_GCP_PROJECT}/global/images/gardenlinux-gcp-gardener_pr
 :::tip
 For a complete list of maintained releases and their support lifecycle, see the [releases reference](../../reference/releases/index.md).
 :::
+
+#### Uploading pre-built images
+
+Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
+
+In the "Published Images" section on the release page, find the image for your desired [flavor](../../explanation/flavors-and-features.md) and [architecture](../../reference/glossary.md#architecture). The default production flavor is `gcp-gardener_prod-amd64`. You can directly download it there.
+
+To download it by script, look in the "Assets" section on the release page, and find the `.tar.xz` archive for the `gcp-gardener_prod-amd64` [flavor](../../explanation/flavors-and-features.md). Download and extract the `.raw` image, then upload it to AWS:
+
+##### Download the image
+
+```bash
+GL_VERSION="2150.0.0"
+GL_COMMIT="eb8696b9"
+GL_ARCH="amd64"
+GL_ASSET="gcp-gardener_prod-${GL_ARCH}-${GL_VERSION}-${GL_COMMIT}"
+GL_GCPIMAGE="${GL_ASSET}.gcpimage.tar.gz"
+GL_TAR_XZ="${GL_ASSET}.tar.xz"
+
+# Download and extract the image
+curl -L -o "${GL_TAR_XZ}" \
+  "https://github.com/gardenlinux/gardenlinux/releases/download/${GL_VERSION}/${GL_TAR_XZ}"
+
+tar -xf "${GL_TAR_XZ}" "./${GL_GCPIMAGE}"
+```
+
+:::tip
+Set `GL_ARCH` to `arm64` if you would like to download/upload the arm version.
+
+```bash
+GL_ARCH="arm64"
+```
+
+:::
+
+:::tip
+For a complete list of maintained releases and their support lifecycle, see the [releases reference](../../reference/releases/index.md).
+:::
+
+##### Upload the image to GCP
+
+Please [Create a Resource Group](#create-a-resource-group) first.
+
+###### Create a Cloud Storage Bucket
+
+Create a Cloud Storage Bucket that holds the Garden Linux image:
+
+```bash
+BUCKET="gl-tutorial"
+GCP_REGION="europe-west4"
+
+gcloud storage buckets create gs://${BUCKET} --location=${GCP_REGION}
+```
+
+###### Upload the image
+
+Upload the image to the bucket:
+
+```bash
+gsutil cp ${GL_GCPIMAGE} gs://${BUCKET}
+```
+
+###### Register the image
+
+Register the uploaded image:
+
+```bash
+IMAGE_NAME="gl-tutorial"
+gcloud compute images create ${IMAGE_NAME} \
+ --source-uri=gs://${BUCKET}/${GL_GCPIMAGE} \
+ --guest-os-features=VIRTIO_SCSI_MULTIQUEUE
+```
 
 #### Build Your Own Images
 
@@ -234,6 +312,9 @@ gcloud compute networks subnets delete ${SUBNET_NAME} \
 
 # Delete the VPC network
 gcloud compute networks delete ${NETWORK_NAME} --quiet
+
+# Delete all storage objects and Bucket (if it exists)
+test -n ${BUCKET} && gcloud storage rm --recursive gs://${BUCKET} --quiet
 
 # Remove local files
 rm ${USER_DATA} ${KEY_NAME} ${KEY_NAME}.pub
