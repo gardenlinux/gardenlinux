@@ -207,7 +207,6 @@ def test_audit_event_contains_audit_processing_failures(parse_file: ParseFile):
     ), "stigcompliance: audit records do not indicate alerting or detection of audit processing failures"
 
 
-
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.root(reason="required to read audit configuration")
 def test_audit_log_retention_config(parse_file: ParseFile):
@@ -545,6 +544,8 @@ def test_invalid_input_handling_is_audited(shell: ShellRunner):
     stdout = result.stdout
 
     assert (
-        "success=no" in stdout or "res=failed" in stdout or "invalid" in stdout.lower()
+        "success=no" in stdout
+        or "res=failed" in stdout
+        or "invalid" in stdout.lower()
         or re.search(r"\bEPERM\b|\bEACCES\b|\bERROR\b", stdout) is not None
     ), "stigcompliance: audit records do not contain evidence of handling invalid inputs"
