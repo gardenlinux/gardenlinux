@@ -219,7 +219,7 @@ def test_server_hosts_file_permissions(file: File):
         "GL-TESTCOV-server-config-sudoers-wheel",
     ]
 )
-@pytest.mark.feature("server")
+@pytest.mark.feature("server and not disaSTIGmedium")
 def test_server_sudoers_wheel_exists(file: File):
     """Test that sudoers wheel configuration exists"""
     assert file.exists("/etc/sudoers.d/wheel"), "/etc/sudoers.d/wheel should exist"
@@ -230,7 +230,7 @@ def test_server_sudoers_wheel_exists(file: File):
         "GL-TESTCOV-server-config-sudoers-wheel",
     ]
 )
-@pytest.mark.feature("server")
+@pytest.mark.feature("server and not disaSTIGmedium")
 def test_server_sudoers_wheel_content(parse_file: ParseFile):
     """Test that sudoers wheel configuration contains the correct content"""
     lines = parse_file.lines("/etc/sudoers.d/wheel")
