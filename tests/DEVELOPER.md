@@ -511,7 +511,8 @@ def test_correct_ntp_on_aws(timedatectl: TimeDateCtl):
 # Hypervisor specific tests
 @pytest.mark.hypervisor("amazon", reason="Relies on AWS specific services")
 @pytest.mark.hypervisor("microsoft", reason="Relies on Azure specific services")
-@pytest.mark.hypervisor("google", reason="Relies with Google Cloud specific metadata")
+@pytest.mark.hypervisor("google", reason="Relies on Google Cloud specific metadata")
+@pytest.mark.hypervisor("gdch", reason="Relies on Google Distributed Cloud Host specific hypervisor")
 @pytest.mark.hypervisor("qemu", reason="Test asserts the presence of a service which is usually running on a real hypervisor")
 
 # Other platform-specific tests
