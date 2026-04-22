@@ -196,17 +196,17 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
       - if: ${{ github.ref_name == 'main' }}
         name: Create GLRD nightly release
-        uses: gardenlinux/glrd@30fcac2ec9ad6cee873fcc503f0ca11022a4609e # v4.1.0
+        uses: gardenlinux/glrd@6e72fbe36f4e4e96f8b5e338d24ee13b817392d6 # v4.2.0
         with:
           cmd: glrd-manage --s3-update --create nightly --version "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}"
       - if: ${{ github.ref_name != 'main' }}
         name: Create GLRD minor release
-        uses: gardenlinux/glrd@30fcac2ec9ad6cee873fcc503f0ca11022a4609e # v4.1.0
+        uses: gardenlinux/glrd@6e72fbe36f4e4e96f8b5e338d24ee13b817392d6 # v4.2.0
         with:
           cmd: glrd-manage --s3-update --create minor --version "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}"
       - name: Get latest GL nightly
         id: gl_version_nightly
-        uses: gardenlinux/glrd@30fcac2ec9ad6cee873fcc503f0ca11022a4609e # v4.1.0
+        uses: gardenlinux/glrd@6e72fbe36f4e4e96f8b5e338d24ee13b817392d6 # v4.2.0
         with:
           cmd: glrd --type nightly --latest
   publish_retry:
