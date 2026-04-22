@@ -12,14 +12,14 @@ github_repo: gardenlinux
 github_source_path: docs/how-to/installation/post-install.md
 github_target_path: docs/how-to/installation/post-install.md
 related_topics:
-    - /how-to/installation/index.md
-    - /tutorials/on-premises/first-boot-bare-metal.md
-    - /tutorials/local/first-boot-kvm.md
-    - /tutorials/local/first-boot-lima.md
-    - /tutorials/cloud/first-boot-aws.md
-    - /tutorials/cloud/first-boot-azure.md
-    - /tutorials/cloud/first-boot-gcp.md
-    - /tutorials/cloud/first-boot-openstack.md
+  - /how-to/installation/index.md
+  - /tutorials/on-premises/first-boot-bare-metal.md
+  - /tutorials/local/first-boot-kvm.md
+  - /tutorials/local/first-boot-lima.md
+  - /tutorials/cloud/first-boot-aws.md
+  - /tutorials/cloud/first-boot-azure.md
+  - /tutorials/cloud/first-boot-gcp.md
+  - /tutorials/cloud/first-boot-openstack.md
 ---
 
 ## Creating A User
@@ -41,10 +41,10 @@ Manual user creation can be necessary, if:
 For cloud deployments, users are automatically provisioned via cloud-init. See
 the platform specific tutorials:
 
-- [First Boot on AWS](/docs/tutorials/cloud/first-boot-aws.md)
-- [First Boot on Azure](/docs/tutorials/cloud/first-boot-azure.md)
-- [First Boot on GCP](/docs/tutorials/cloud/first-boot-gcp.md)
-- [First Boot on OpenStack](/docs/tutorials/cloud/first-boot-openstack.md)
+- [First Boot on AWS](/tutorials/cloud/first-boot-aws.md)
+- [First Boot on Azure](/tutorials/cloud/first-boot-azure.md)
+- [First Boot on GCP](/tutorials/cloud/first-boot-gcp.md)
+- [First Boot on OpenStack](/tutorials/cloud/first-boot-openstack.md)
 
 ### Method 1: `chroot` (For Bare Metal / Offline Deployments)
 
@@ -83,7 +83,7 @@ reboot
 
 For a complete walkthrough and to learn what else you can do with a local
 installation, see the
-[First Boot on Bare Metal](/docs/tutorials/on-premises/first-boot-bare-metal.md)
+[First Boot on Bare Metal](/tutorials/on-premises/first-boot-bare-metal.md)
 guide.
 
 ### Method 2: `fw_cfg` script (KVM/QEMU)
@@ -119,7 +119,7 @@ qemu-system-x86_64 ... \
 ```
 
 For a complete walkthrough and more information about setting up Garden Linux on
-KVM see [First Boot on KVM](/docs/tutorials/local/first-boot-kvm.md).
+KVM see [First Boot on KVM](/tutorials/local/first-boot-kvm.md).
 
 ### Method 3: cloud-init user-data (Cloud Platforms)
 
