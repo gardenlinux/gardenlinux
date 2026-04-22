@@ -23,7 +23,7 @@ jobs:
         run: podman run -i ghcr.io/gardenlinux/cpe:latest -p "${{ inputs.version }}" | tail -n1 > gardenlinux-cpe.json
 
       - name: Upload asset to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: "${{ inputs.version }}"
           files: gardenlinux-cpe.json 
