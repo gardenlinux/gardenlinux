@@ -87,10 +87,10 @@ def extract_info(release, version_short: str) -> Dict[str, str]:
 
     patterns = {
         "x86_64": re.compile(
-            rf"cpython-{re.escape(version_short)}\.[0-9]+.*x86_64-unknown-linux-gnu.*install_only\.tar\.gz$"
+            rf"cpython-{re.escape(version_short)}\.[0-9]+.*x86_64-unknown-linux-gnu-install_only\.tar\.gz$"
         ),
         "aarch64": re.compile(
-            rf"cpython-{re.escape(version_short)}\.[0-9]+.*aarch64-unknown-linux-gnu.*install_only\.tar\.gz$"
+            rf"cpython-{re.escape(version_short)}\.[0-9]+.*aarch64-unknown-linux-gnu-install_only\.tar\.gz$"
         ),
     }
     assets = {}
