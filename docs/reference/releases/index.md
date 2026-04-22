@@ -7,8 +7,8 @@ related_topics:
   - /reference/releases/maintained-releases
   - /reference/releases/archived-releases
   - /reference/releases/release-notes/
-migration_status: "new"
-migration_source: ""
+migration_status: "done"
+migration_issue: https://github.com/gardenlinux/gardenlinux/issues/4594
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
 github_org: gardenlinux
 github_repo: gardenlinux

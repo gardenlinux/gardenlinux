@@ -5,7 +5,7 @@ category: "tutorials"
 tags: ["tutorial", "azure", "cloud", "beginner"]
 related_topics:
   - /how-to/installation/cloud/azure.md
-migration_status: "adapt"
+migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
 migration_approved: false

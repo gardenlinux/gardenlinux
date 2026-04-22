@@ -6,7 +6,7 @@ tags: ["tutorial", "oci", "container", "podman", "docker", "beginner"]
 related_topics:
   - /how-to/installation/container/oci.md
   - /how-to/container-base-image.md
-migration_status: "adapt"
+migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
 migration_approved: false
