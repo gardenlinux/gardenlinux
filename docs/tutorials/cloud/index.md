@@ -2,9 +2,8 @@
 title: Cloud Tutorials
 description: Deploy Garden Linux to cloud providers
 order: 2
-migration_status: "new"
-migration_source: ""
-migration_issue: ""
+migration_status: "done"
+migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
 migration_approved: false
 github_org: gardenlinux
