@@ -8,6 +8,7 @@ related_topics:
   - /reference/releases/release-notes/
 order: 3
 migration_status: "done"
+migration_issue: https://github.com/gardenlinux/gardenlinux/issues/4594
 migration_source: "00_introduction/release.md"
 github_org: gardenlinux
 github_repo: gardenlinux
