@@ -1,3 +1,5 @@
+import pytest
+
 """
 Ref: SRG-OS-000480-GPOS-00229
 
@@ -6,6 +8,7 @@ the system.
 """
 
 
+@pytest.mark.booted(reason="Requires functioning systemd")
 def test_systemd_getty_autologin_is_not_enabled(systemd):
     for i in range(7):
         props = systemd.get_unit_properties(f"getty@tty{i}")
