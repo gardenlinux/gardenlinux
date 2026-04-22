@@ -68,7 +68,7 @@ jobs:
           export_environment_variables: true
       - name: Set GCP environment
         if: ${{ contains(matrix.workspace, '-gcp-') }}
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             // tf provider vars
@@ -84,7 +84,7 @@ jobs:
           aws-region: ${{ secrets.aws_region }}
           output-credentials: true
       - name: Set AWS environment
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             // tf provider auth
@@ -106,7 +106,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Set Azure environment
         if: ${{ contains(matrix.workspace, '-azure-') }}
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             // tf provider auth
@@ -128,13 +128,13 @@ jobs:
           role-session-expiration: 21600
       - name: "Set Alicloud platform-test environment"
         if: ${{ startsWith(inputs.flavor, 'ali-') }}
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             // tf provider vars
             core.exportVariable("ALIBABA_CLOUD_REGION", "${{ secrets.alibaba_cloud_region }}");
       - name: Set additional OpenTofu variables
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const tfEncryption = Buffer.from("${{ secrets.TF_ENCRYPTION }}", 'base64').toString('utf-8');
@@ -212,7 +212,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Retry failed cleanup
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
