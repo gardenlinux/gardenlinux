@@ -1,3 +1,11 @@
+---
+title: "Feature: khost"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/khost/README.md
+github_target_path: docs/reference/features/khost.md
+---
+
 ## Feature: khost
 ### Description
 <website-feature>

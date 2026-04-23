@@ -1,3 +1,11 @@
+---
+title: "Feature: multipath"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/multipath/README.md
+github_target_path: docs/reference/features/multipath.md
+---
+
 ## Feature: aide
 ### Description
 <website-feature>

@@ -1,3 +1,11 @@
+---
+title: "Feature: _debug"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/_debug/README.md
+github_target_path: docs/reference/features/_debug.md
+---
+
 ## Feature _debug
 
 ### Description

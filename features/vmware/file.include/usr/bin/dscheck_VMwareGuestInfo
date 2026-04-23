@@ -19,7 +19,7 @@
 #
 # This file provides cloud-init's ds-identify program a shell type that
 # can be resolved with "type dscheck_VMwareGuestInfo" and used to validate
-# where a datasource is installed and useable.
+# where a datasource is installed and usable.
 #
 # Cloud-init's ds-identify program in /usr/lib/cloud-init includes functions
 # to determine whether or not datasources can be used. Because the program

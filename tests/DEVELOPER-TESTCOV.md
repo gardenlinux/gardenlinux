@@ -394,7 +394,7 @@ Markers use two distinct patterns to indicate negation, each with a specific sem
 
 > [!NOTE]
 > If a package in `pkg.include` installs an important service, it makes sense to add a `$service-$unit-enable` marker.
-> Currently there is no "more elegant" way as we do not explicitelly enable services. This is just the [debian way of doing things](https://manpages.debian.org/testing/debhelper/dh_systemd_enable.1.en.html).
+> Currently there is no "more elegant" way as we do not explicitly enable services. This is just the [debian way of doing things](https://manpages.debian.org/testing/debhelper/dh_systemd_enable.1.en.html).
 
 **Why:**
 

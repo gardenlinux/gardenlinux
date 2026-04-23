@@ -1,3 +1,11 @@
+---
+title: "Feature: server"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/server/README.md
+github_target_path: docs/reference/features/server.md
+---
+
 ## Feature: server
 ### Description
 <website-feature>

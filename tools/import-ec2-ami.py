@@ -225,7 +225,7 @@ class Ec2ImageImport:
         else:
             logger.debug(f"Bucket is in chosen region {self.region}")
 
-        logger.debug("Checking whether image has already been uplodaded...")
+        logger.debug("Checking whether image has already been uploaded...")
 
         image_available = False
         try:
@@ -521,14 +521,14 @@ class Ec2ImageImport:
             "--profile_name",
             type=str,
             default=None,
-            help="the name of the AWS profie to use (equivalent to AWS_PROFILE_NAME environment variable"
+            help="the name of the AWS profile to use (equivalent to AWS_PROFILE_NAME environment variable"
         )
         parser.add_argument(
             "--architecture",
             type=str,
             default='x86_64',
             choices=['x86_64', 'arm64'],
-            help="the name of the AWS profie to use (equivalent to AWS_PROFILE_NAME environment variable"        
+            help="the name of the AWS profile to use (equivalent to AWS_PROFILE_NAME environment variable"        
         )
         parser.add_argument(
             "--debug",

@@ -126,7 +126,7 @@ if [ "$use_kms" = 1 ]; then
 	done
 fi
 
-# Default values which can be overriden via 'build.config' file
+# Default values which can be overridden via 'build.config' file
 tempfs_size=2G
 
 if [[ -f "$PWD"/build.config ]]; then
@@ -163,7 +163,7 @@ if [ "$container_engine" = "docker" ] \
 	apparmor_profile=builder
 fi
 
-# Apply apparmor profile if seleceted
+# Apply apparmor profile if selected
 if [ "$apparmor_profile" ]; then
 	replaced=false
 	for i in "${!container_run_opts[@]}"; do

@@ -1,3 +1,11 @@
+---
+title: "Feature: _pxe"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/_pxe/README.md
+github_target_path: docs/reference/features/_pxe.md
+---
+
 ## Feature: _pxe
 ### Description
 <website-feature>

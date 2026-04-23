@@ -1,3 +1,11 @@
+---
+title: "Feature: gardener"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/gardener/README.md
+github_target_path: docs/reference/features/gardener.md
+---
+
 ## Feature: gardener
 ### Description
 The gardener feature adjusts Garden Linux to fulfil the [gardener.cloud](https://gardener.cloud) requirements.

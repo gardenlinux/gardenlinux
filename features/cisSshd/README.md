@@ -1,3 +1,11 @@
+---
+title: "Feature: cisSshd"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/cisSshd/README.md
+github_target_path: docs/reference/features/cisSshd.md
+---
+
 ## Feature: cisSshd
 ### Description
 <website-feature>

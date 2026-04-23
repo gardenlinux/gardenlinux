@@ -1,3 +1,11 @@
+---
+title: "Feature: pythonDev"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/pythonDev/README.md
+github_target_path: docs/reference/features/pythonDev.md
+---
+
 ## Feature: pythonDev
 ### Description
 <website-feature>

@@ -1,3 +1,11 @@
+---
+title: "Feature: vhost"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/vhost/README.md
+github_target_path: docs/reference/features/vhost.md
+---
+
 ## Feature: vhost
 ### Description
 <website-feature>
