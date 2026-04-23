@@ -24,6 +24,8 @@ def test_audit_reporting_tools_installed():
 # @pytest.mark.booted(reason="Need auditd running")
 def test_audit_reporting_execution(shell):
     result = shell("aureport --summary", capture_output=True)
+    print(f"{result.stdout}")
+    print(f"{result.stderr}")
 
     assert (
         "Summary" in result.stdout
