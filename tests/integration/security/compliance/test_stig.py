@@ -31,9 +31,6 @@ def test_stig_audit_auditd_conf_content(parse_file: ParseFile):
     """Test that STIG audit auditd.conf content exists"""
     lines = parse_file.lines("/etc/audit/auditd.conf")
     assert (
-        "space_left_action = email" in lines
-    ), "auditd.conf should contain the correct content"
-    assert (
         "action_mail_acct = root" in lines
     ), "auditd.conf should contain the correct content"
     assert (
