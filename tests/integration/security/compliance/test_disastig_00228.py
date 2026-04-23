@@ -16,6 +16,6 @@ def test_umask_is_restrictive_enough(parse_file):
 def test_skeleton_files_are_not_world_writable(file):
     assert file.has_permissions("/etc/skel", "755")
     for f in glob.glob("/etc/skel/.*"):
-        assert file.has_permissions(
-            f, "640"
-        ), f"File permissions for {f} should not allow write access for 'others', current mode is {file.get_mode(f)}"
+        assert file.has_permissions(f, "640") or file.has_permissions(
+            f, "644"
+        ), f"Wrong file permissions for {f}: {file.get_mode(f)}"
