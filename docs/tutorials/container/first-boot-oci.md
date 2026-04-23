@@ -2,10 +2,11 @@
 title: "First Boot as OCI Image"
 description: "Step-by-step guide to running Garden Linux as an OCI container image"
 category: "tutorials"
-tags: ["tutorial", "oci", "container", "podman", "docker", "beginner"]
 related_topics:
-  - /how-to/installation/container/oci.md
-  - /how-to/container-base-image.md
+  - /explanation/container-base-image.md
+  - /how-to/container-base-image/bare.md
+  - /how-to/container-base-image/full.md
+  - /reference/container-images.md
 migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"

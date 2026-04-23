@@ -19,7 +19,7 @@ github_target_path: docs/explanation/container-base-image.md
 
 # Container Base Image
 
-Garden Linux provides two families of [Open Container Initiative (OCI)](reference/glossary.html#oci-oci-image-format) container images designed for different use cases in containerized environments. Understanding the differences between these image types helps you select the most appropriate foundation for your applications based on your requirements for functionality, size, and security.
+Garden Linux provides two families of [Open Container Initiative (OCI)](/reference/glossary.html#oci-oci-image-format) container images designed for different use cases in containerized environments. Understanding the differences between these image types helps you select the most appropriate foundation for your applications based on your requirements for functionality, size, and security.
 
 ## Full Container Images
 
@@ -89,7 +89,7 @@ When using Garden Linux container base images:
 - Regularly update to newer image versions to include security patches
 - Consider your deployment context: development vs. production environments may warrant different image choices
 - Consult the [Container Images reference](/reference/container-images.md) for specific image variants and tags
-- Refer to the [how-to guides](/how-to/container-base-image/) for detailed usage examples
+- Refer to the [how-to guides](/how-to/container-base-image/index.md) for detailed usage examples
 
 By understanding the conceptual differences between Garden Linux's container image offerings, you can make informed decisions that optimize your containerized applications for size, security, and operational efficiency.
 

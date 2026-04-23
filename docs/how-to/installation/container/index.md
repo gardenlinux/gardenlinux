@@ -1,6 +1,11 @@
 ---
 title: "Container Installation"
-migration_status: "new"
+related_topics:
+  - /explanation/container-base-image.md
+  - /how-to/container-base-image/bare.md
+  - /how-to/container-base-image/full.md
+  - /reference/container-images.md
+migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4623"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
 migration_approved: false
@@ -12,4 +17,6 @@ github_target_path: docs/how-to/installation/container/index.md
 
 # Container Installation
 
-<SectionIndex />
+## Related Topics
+
+<RelatedTopics />
