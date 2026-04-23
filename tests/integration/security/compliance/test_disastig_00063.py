@@ -18,7 +18,9 @@ def test_audit_reporting_tools_installed():
         assert path is not None, f"'{tool}' audit reporting utility is not installed"
 
 
-# @pytest.mark.root("Audit reporting requires root privileges")
+@pytest.mark.root(
+    "Audit reporting requires root privileges to open /var/log/audit/audit.log"
+)
 # @pytest.mark.booted(reason="Need auditd running")
 def test_audit_reporting_execution(shell):
     result = shell("aureport --summary", capture_output=True)
