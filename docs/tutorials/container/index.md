@@ -2,6 +2,11 @@
 title: Container Tutorials
 description: Run Garden Linux as a container
 order: 3
+related_topics:
+  - /explanation/container-base-image.md
+  - /how-to/container-base-image/bare.md
+  - /how-to/container-base-image/full.md
+  - /reference/container-images.md
 migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"

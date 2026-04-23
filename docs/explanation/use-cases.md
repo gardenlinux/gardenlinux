@@ -114,10 +114,10 @@ Kubernetes clusters in public or private clouds.
 Garden Linux produces two families of Open Container Initiative (OCI) container
 images:
 
-- [**Full images**](/how-to/container-base-image#full-container-base-image) —
+- [**Full images**](/how-to/container-base-image/full.md) —
   Complete Debian-based environment with `apt`, systemd, and common utilities.
   Suitable for applications that need a package manager or extensive tooling.
-- [**Bare images**](/how-to/container-base-image#bare-container-images) —
+- [**Bare images**](/how-to/container-base-image/bare.md) —
   Distroless-style images with only the runtime and its dependencies. Variants
   include `bare-libc` (C/C++), `bare-python` (Python), `bare-nodejs` (Node.js),
   and `bare-sapmachine` (Java/SAP). These images have a minimal footprint and
