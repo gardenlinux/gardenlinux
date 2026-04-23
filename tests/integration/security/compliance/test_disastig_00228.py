@@ -13,8 +13,11 @@ def test_umask_is_restrictive_enough(parse_file):
     assert config["UMASK"] == "027"
 
 
-def test_skeleton_files_are_not_world_writable(file):
+def test_skeleton_directory_is_not_world_writable(file):
     assert file.has_permissions("/etc/skel", "755")
+
+
+def test_skeleton_files_are_not_world_writable(file):
     for f in glob.glob("/etc/skel/.*"):
         assert file.has_permissions(f, "640") or file.has_permissions(
             f, "644"
