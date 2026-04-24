@@ -1,136 +1,136 @@
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238256
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/ssh-agent -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-ssh
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238257
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/lib/openssh/ssh-keysign -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-ssh
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238284
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/chacl -F perm=x -F auid>=1000 -F auid!=-1 -k perm_chng
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238285
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -w /var/log/tallylog -p wa -k logins
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238286
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -w /var/log/faillog -p wa -k logins
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238287
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -w /var/log/lastlog -p wa -k logins
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238280
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/newgrp -F perm=x -F auid>=1000 -F auid!=-1 -k priv_cmd
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238281
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/chcon -F perm=x -F auid>=1000 -F auid!=-1 -k perm_chng
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238283
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/setfacl -F perm=x -F auid>=1000 -F auid!=-1 -k perm_chng
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238288
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/passwd -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-passwd
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238289
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 # REMOVED (binary often missing in minimal OS)
 #-a always,exit -F path=/sbin/unix_update -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-unix-update
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238297
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F arch=b64 -S delete_module -F auid>=1000 -F auid!=-1 -k module_chng
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238295
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F arch=b64 -S init_module,finit_module -F auid>=1000 -F auid!=-1 -k module_chng
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238294
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/sbin/pam_timestamp_check -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-pam_timestamp_check
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238293
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/crontab -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-crontab
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238292
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/sbin/usermod -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-usermod
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238291
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/chage -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-chage
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238290
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/gpasswd -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-gpasswd
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238238
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
 -w /etc/passwd -p wa -k usergroup_modification
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238239
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
 -w /etc/group -p wa -k usergroup_modification
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238320
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000477-GPOS-00222/
 -w /usr/sbin/fdisk -p x -k fdisk
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238240
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
 -w /etc/shadow -p wa -k usergroup_modification
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238241
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
 -w /etc/gshadow -p wa -k usergroup_modification
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238242
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
 -w /etc/security/opasswd -p wa -k usergroup_modification
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238310
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000468-GPOS-00212/
 # Note: rmdir syscall does not exist on arm64; unlinkat covers directory removal
 -a always,exit -F arch=b64 -S unlink,unlinkat,rename,renameat -F auid>=1000 -F auid!=-1 -k delete
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238316
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000472-GPOS-00217/
 -w /var/run/utmp -p wa -k logins
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238317
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000472-GPOS-00217/
 -w /var/log/btmp -p wa -k logins
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238315
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000472-GPOS-00217/
 -w /var/log/wtmp -p wa -k logins
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238318
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000477-GPOS-00222/
 -w /sbin/modprobe -p x -k modules
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238319
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000477-GPOS-00222/
 -w /bin/kmod -p x -k modules
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238253
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/chfn -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-chfn
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238252
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/bin/su -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-priv_change
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238255
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 # REMOVED: mount/umount binary-path rules covered by SAP 70-privileged-special.rules (mount/umount2 syscall audit)
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238254
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 # REMOVED: mount/umount binary-path rules covered by SAP 70-privileged-special.rules (mount/umount2 syscall audit)
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238258
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F arch=b64 -S setxattr,fsetxattr,lsetxattr,removexattr,fremovexattr,lremovexattr -F auid>=1000 -F auid!=-1 -k perm_mod
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238304
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000326-GPOS-00126/
 # REMOVED: execve uid!=euid covered by SAP 70-privilege-escalation.rules (execve euid=0 audit)
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238309
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000392-GPOS-00172/
 -w /var/log/sudo.log -p wa -k maintenance
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238264
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 # Note: fchown/lchown do not exist as separate syscalls on arm64; covered by chown/fchownat
 -a always,exit -F arch=b64 -S chown,fchownat -F auid>=1000 -F auid!=-1 -k perm_chng
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238268
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 # Note: fchmod does not exist as a separate syscall on arm64; covered by chmod/fchmodat
 -a always,exit -F arch=b64 -S chmod,fchmodat -F auid>=1000 -F auid!=-1 -k perm_chng
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238279
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/chsh -F perm=x -F auid>=1000 -F auid!=-1 -k priv_cmd
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238278
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/sudoedit -F perm=x -F auid>=1000 -F auid!=-1 -k priv_cmd
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238271
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 # Note: open and creat syscalls do not exist on arm64; use openat/openat2 instead
 -a always,exit -F arch=b64 -S openat,truncate,ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=-1 -k perm_access
 -a always,exit -F arch=b64 -S openat,truncate,ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=-1 -k perm_access
 
-# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238277
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/sudo -F perm=x -F auid>=1000 -F auid!=-1 -k priv_cmd
 
 # Ref: SRG-OS-000239-GPOS-00089
