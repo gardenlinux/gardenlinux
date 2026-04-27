@@ -13,6 +13,6 @@ def test_password_encryption_method_is_sha512(parse_file: ParseFile):
     Ref: SRG-OS-000120-GPOS-00061
     """
     config = parse_file.parse("/etc/login.defs", format="spacedelim")
-    assert config["ENCRYPT_METHOD"] == "SHA512", (
-        "stigcompliance: ENCRYPT_METHOD in /etc/login.defs must be SHA512"
-    )
+    assert (
+        config["ENCRYPT_METHOD"] == "SHA512"
+    ), "stigcompliance: ENCRYPT_METHOD in /etc/login.defs must be SHA512"
