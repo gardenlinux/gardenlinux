@@ -1,7 +1,7 @@
 import pytest
 
 
-@pytest.mark.feature("disaSTIGmedium")
+@pytest.mark.feature("_selinux")
 @pytest.mark.booted(reason="requires booted system to verify LSM enforcement")
 @pytest.mark.root(reason="requires access to system security configuration")
 def test_selinux_is_active_lsm(lsm):
