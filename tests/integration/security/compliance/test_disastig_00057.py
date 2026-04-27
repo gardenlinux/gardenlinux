@@ -1,7 +1,7 @@
 import pytest
 
 
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires sshd effective configuration")
 @pytest.mark.root(reason="required to inspect ssh configuration")
 def test_sshd_client_alive_interval_configured(sshd):
@@ -18,7 +18,7 @@ def test_sshd_client_alive_interval_configured(sshd):
     ), f"stigcompliance: ClientAliveInterval must be set between 1 and 900, got: {interval}"
 
 
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires systemd service state")
 @pytest.mark.root(reason="required to inspect ssh service")
 def test_sshd_service_active(systemd):
