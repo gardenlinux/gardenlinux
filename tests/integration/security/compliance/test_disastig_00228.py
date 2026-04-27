@@ -16,8 +16,8 @@ def test_umask_is_restrictive_enough(parse_file: ParseFile):
     """
     config = parse_file.parse("/etc/login.defs", format="spacedelim")
     assert (
-        config["UMASK"] == "027"
-    ), "stigcompliance: UMASK in /etc/login.defs must be 027"
+        config["UMASK"] == "077"
+    ), "stigcompliance: UMASK in /etc/login.defs must be 077"
 
 
 @pytest.mark.feature("disaSTIGmedium")
