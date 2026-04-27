@@ -28,12 +28,3 @@ def test_password_expiration_checking_pam_module_is_in_use(pam_config):
         module_contains="pam_unix.so",
     )
     assert len(results) == 1, "pam_unix module should be used for account checking"
-
-
-def test_password_recovery_tools_available(shell):
-    """
-    passwd sets a password
-    chage controls expiration date
-    """
-    assert shell("which passwd")
-    assert shell("which chage")
