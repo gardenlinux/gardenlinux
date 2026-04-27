@@ -1,2 +1,5 @@
 description: "DISA STIG Compliance - CAT III (Low Severity)"
 type: element
+features:
+  depends:
+    - disaSTIGmedium
