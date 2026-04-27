@@ -22,7 +22,6 @@ def test_no_duplicate_uids_in_passwd(passwd_entries: list[Passwd]):
         else:
             seen[entry.uid] = entry.name
 
-    assert not duplicates, (
-        "stigcompliance: duplicate UIDs found in /etc/passwd:\n"
-        + "\n".join(duplicates)
-    )
+    assert (
+        not duplicates
+    ), "stigcompliance: duplicate UIDs found in /etc/passwd:\n" + "\n".join(duplicates)
