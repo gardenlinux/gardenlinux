@@ -13,6 +13,6 @@ def test_aslr_is_fully_enabled(sysctl: Sysctl):
     This test verifies that kernel.randomize_va_space is set to 2 (full ASLR).
     Ref: SRG-OS-000433-GPOS-00193
     """
-    assert sysctl["kernel.randomize_va_space"] == 2, (
-        "stigcompliance: kernel.randomize_va_space must be 2 (full ASLR)"
-    )
+    assert (
+        sysctl["kernel.randomize_va_space"] == 2
+    ), "stigcompliance: kernel.randomize_va_space must be 2 (full ASLR)"
