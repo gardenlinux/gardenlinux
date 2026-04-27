@@ -15,9 +15,9 @@ def test_umask_is_restrictive_enough(parse_file: ParseFile):
     Ref: SRG-OS-000480-GPOS-00228
     """
     config = parse_file.parse("/etc/login.defs", format="spacedelim")
-    assert config["UMASK"] == "027", (
-        "stigcompliance: UMASK in /etc/login.defs must be 027"
-    )
+    assert (
+        config["UMASK"] == "027"
+    ), "stigcompliance: UMASK in /etc/login.defs must be 027"
 
 
 @pytest.mark.feature("disaSTIGmedium")
@@ -30,9 +30,9 @@ def test_skeleton_directory_is_not_world_writable(file: File):
     This test verifies that the skeleton directory /etc/skel is not world-writable.
     Ref: SRG-OS-000480-GPOS-00228
     """
-    assert file.has_permissions("/etc/skel", "755"), (
-        f"stigcompliance: /etc/skel must have permissions 755, got {file.get_mode('/etc/skel')}"
-    )
+    assert file.has_permissions(
+        "/etc/skel", "755"
+    ), f"stigcompliance: /etc/skel must have permissions 755, got {file.get_mode('/etc/skel')}"
 
 
 @pytest.mark.feature("disaSTIGmedium")
@@ -50,6 +50,6 @@ def test_skeleton_files_are_not_world_writable(file: File, find: Find):
     find.pattern = ".*"
 
     for f in find:
-        assert file.has_permissions(f, "640") or file.has_permissions(f, "644"), (
-            f"stigcompliance: wrong file permissions for {f}: {file.get_mode(f)}"
-        )
+        assert file.has_permissions(f, "640") or file.has_permissions(
+            f, "644"
+        ), f"stigcompliance: wrong file permissions for {f}: {file.get_mode(f)}"
