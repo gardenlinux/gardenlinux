@@ -2,7 +2,7 @@ import pytest
 from plugins.sysctl import Sysctl
 
 
-@pytest.mark.feature("disaSTIGmedium")
+@pytest.mark.feature("disaSTIGmedium and cloud")
 @pytest.mark.booted(reason="requires access to /proc/sys at runtime")
 @pytest.mark.root(reason="requires access to kernel parameters")
 def test_aslr_is_fully_enabled(sysctl: Sysctl):
