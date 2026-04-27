@@ -26,9 +26,9 @@ def test_sudoers_no_nopasswd(find: Find, parse_file: ParseFile):
         lines = parse_file.lines(path, ignore_missing=True)
         if not lines:
             continue
-        assert nopasswd_pattern not in lines, (
-            f"stigcompliance: NOPASSWD found in sudoers file {path}"
-        )
-        assert noauthenticate_pattern not in lines, (
-            f"stigcompliance: !authenticate found in sudoers file {path}"
-        )
+        assert (
+            nopasswd_pattern not in lines
+        ), f"stigcompliance: NOPASSWD found in sudoers file {path}"
+        assert (
+            noauthenticate_pattern not in lines
+        ), f"stigcompliance: !authenticate found in sudoers file {path}"
