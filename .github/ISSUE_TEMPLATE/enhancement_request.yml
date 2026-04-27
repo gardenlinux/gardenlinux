@@ -1,0 +1,51 @@
+---
+name: Enhancement Request
+description: Suggest an Enhancement to Garden Linux.
+title: "[ER] "
+labels: ["kind/enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        You would like to improve something? Let us know!
+  - type: input
+    attributes:
+      label: Garden Linux Version
+      description: What version of garden linux are you working with?
+      placeholder: 2150.1.0
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Enhancement Type
+      multiple: true
+      options:
+        - New Feature
+        - Change of Process
+        - Documentation Improvement
+        - Accessibility Improvement
+        - Maintenance Improvement
+        - Other / Not listed
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Proposal
+      description: >
+        Describe your idea in detail. Please include any specific requirements
+        for your plan to work and teh supposed benefit your improvement will bring.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Motivation for Improvement
+      description: >
+        What motivated you to suggest this improvement?
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/gardenlinux/gardenlinux?tab=coc-ov-file#sap-open-source-code-of-conduct).
+      options:
+        - label: I confirm that I read and agree to this project's Code of Conduct.
+          required: true
