@@ -1,8 +1,10 @@
 import configparser
 import hmac
 import os
-from ctypes import CDLL, c_int, c_void_p
+from ctypes import CDLL, c_char_p, c_int, c_void_p
 from ctypes.util import find_library
+from hashlib import _hashlib  # pyright: ignore
+from hashlib import md5 as MD5
 from hashlib import sha256 as SHA256
 from platform import machine as arch
 from typing import List
@@ -18,6 +20,16 @@ from plugins.shell import ShellRunner
 # =============================================================================
 # _fips Feature
 # =============================================================================
+
+
+@pytest.mark.feature("_fips")
+def test_that_md5_is_disabled_in_openssl_via_haslib():
+    """
+    Python's hashlib requires the systems OpenSSL to compute hash function.
+    We try to load the MD5 constructor to see if OpenSSL disallows the usage of MD5.
+    Fails when we have a vaild MD5 object in a Security senstive context.
+    """
+    pytest.raises(_hashlib.UnsupportedDigestmodError, MD5)
 
 
 @pytest.mark.testcov(
@@ -289,6 +301,18 @@ def test_libssl_is_in_fips_mode():
 
 
 @pytest.mark.feature("_fips")
+def test_openssl_FIPS_vendor_is_set(shell):
+    """
+    This validates that we have the FIPS provider loadable AND that the vendor name is set.
+    """
+    GARDENLINUX_FIPS_NAME = "SAP SE Garden Linux nightly OpenSSL Cryptographic Module FIPS Provider for OpenSSL"
+    assert (
+        GARDENLINUX_FIPS_NAME
+        in shell("openssl list -providers", capture_output=True).stdout
+    ), "FIPS Vendor Name for OpenSSL is incorrect!"
+
+
+@pytest.mark.feature("_fips")
 def test_libgcrypt_is_in_fips_mode():
     """
      This will check if libgcrypt is in FIPS mode. There is no other way to call libgcrypt from
@@ -319,6 +343,37 @@ def test_libgcrypt_is_in_fips_mode():
     assert libgcrypt.gcry_control(
         c_int(GCRYCTL_FIPS_MODE_P), c_int(1)
     ), "Error libgcrypt can't be started in FIPS mode."
+
+
+@pytest.mark.feature("_fips")
+def test_libgcrypt_configs_FIPS_vendor_is_set():
+    """
+    This will check if libgcrypt has set the FIPS-Mode.
+
+    For this it uses the gcry_get_config() function is use.
+    https://www.gnupg.org/documentation/manuals/gcrypt/Config-reporting.html
+
+    The function will return a string containing the configuration.
+
+    It should look like as follows:
+      - SAP SE Garden Linux [RELEASE] Libcgrypt Cryptographic Module
+
+    See also: https://github.com/gardenlinux/security/issues/368
+    """
+    shared_lib_name = find_library("gcrypt")
+    libgcrypt = CDLL(shared_lib_name)
+
+    # Define the expected return value and define the types that will be handled over as function
+    # parameter.
+    libgcrypt.gcry_get_config.restype = c_char_p
+    libgcrypt.gcry_get_config.argtypes = [c_int, c_char_p]
+
+    config = libgcrypt.gcry_get_config(0, None)
+    found = [entry for entry in config.decode().splitlines() if "fips-mode" in entry]
+    assert (
+        "fips-mode:y::SAP SE Garden Linux nightly Libgcrypt Cryptographic Module:"
+        in found
+    ), "Can't detect the correct FIPS-Module name in libgcrypt"
 
 
 @pytest.mark.testcov(
@@ -399,10 +454,28 @@ def test_kernel_hmac_file_is_present(file: File, kernel_versions: KernelVersions
     assert file.is_regular_file(f"/boot/.vmlinuz-{running_kernel.version}.hmac")
 
 
-# TODO: check why this does not work on arm64
+def test_kernel_configs_btrfs_is_disabled(
+    parse_file: ParseFile, kernel_configs: KernelConfigs
+):
+    """
+    Based on our issue regarding xxhash64, we need to disable BTRFS within the kernel, since it uses
+    not approved algortiehm. This test ensure that BTRFS is disabled.
+
+    While this requierment stems from FIPS, BTRFS should be disabled everywhere.
+
+    See: https://github.com/gardenlinux/security/issues/405
+    """
+    for config in kernel_configs.get_installed():
+        parsed_config = parse_file.parse(config.path, format="keyval")
+        assert (
+            "CONFIG_BTRFS_FS" not in parsed_config.keys()
+        ), f"CONFIG_BTRFS is set in {config.path}"
+
+
+# TODO: check why this does not work on arm64, when build crossplatfrom.
+# When run podman on x86_64 and you try to build this via podman for arm64 it will fail.
 @pytest.mark.testcov(["GL-TESTCOV-_fips-config-kernel-hmac"])
-@pytest.mark.feature("_fips")
-@pytest.mark.arch("not arm64")
+@pytest.mark.feature("_fips and not _usi")
 @pytest.mark.booted(reason="Requires running system")
 def test_kernel_hmac_file_is_correct(
     shell: ShellRunner, kernel_versions: KernelVersions
