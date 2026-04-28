@@ -1,0 +1,156 @@
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/bin/ssh-agent -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-ssh
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/lib/openssh/ssh-keysign -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-ssh
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/bin/chacl -F perm=x -F auid>=1000 -F auid!=-1 -k perm_chng
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-w /var/log/tallylog -p wa -k logins
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-w /var/log/faillog -p wa -k logins
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-w /var/log/lastlog -p wa -k logins
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/bin/newgrp -F perm=x -F auid>=1000 -F auid!=-1 -k priv_cmd
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/bin/chcon -F perm=x -F auid>=1000 -F auid!=-1 -k perm_chng
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/bin/setfacl -F perm=x -F auid>=1000 -F auid!=-1 -k perm_chng
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/bin/passwd -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-passwd
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+# REMOVED (binary often missing in minimal OS)
+#-a always,exit -F path=/sbin/unix_update -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-unix-update
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F arch=b64 -S delete_module -F auid>=1000 -F auid!=-1 -k module_chng
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F arch=b64 -S init_module,finit_module -F auid>=1000 -F auid!=-1 -k module_chng
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/sbin/pam_timestamp_check -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-pam_timestamp_check
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/bin/crontab -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-crontab
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/sbin/usermod -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-usermod
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/bin/chage -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-chage
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/bin/gpasswd -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-gpasswd
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
+-w /etc/passwd -p wa -k usergroup_modification
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
+-w /etc/group -p wa -k usergroup_modification
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000477-GPOS-00222/
+-w /usr/sbin/fdisk -p x -k fdisk
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
+-w /etc/shadow -p wa -k usergroup_modification
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
+-w /etc/gshadow -p wa -k usergroup_modification
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
+-w /etc/security/opasswd -p wa -k usergroup_modification
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000468-GPOS-00212/
+# Note: rmdir syscall does not exist on arm64; unlinkat covers directory removal
+-a always,exit -F arch=b64 -S unlink,unlinkat,rename,renameat -F auid>=1000 -F auid!=-1 -k delete
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000472-GPOS-00217/
+-w /var/run/utmp -p wa -k logins
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000472-GPOS-00217/
+-w /var/log/btmp -p wa -k logins
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000472-GPOS-00217/
+-w /var/log/wtmp -p wa -k logins
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000477-GPOS-00222/
+-w /sbin/modprobe -p x -k modules
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000477-GPOS-00222/
+-w /bin/kmod -p x -k modules
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/bin/chfn -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-chfn
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/bin/su -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-priv_change
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+# REMOVED: mount/umount binary-path rules covered by SAP 70-privileged-special.rules (mount/umount2 syscall audit)
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+# REMOVED: mount/umount binary-path rules covered by SAP 70-privileged-special.rules (mount/umount2 syscall audit)
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F arch=b64 -S setxattr,fsetxattr,lsetxattr,removexattr,fremovexattr,lremovexattr -F auid>=1000 -F auid!=-1 -k perm_mod
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000326-GPOS-00126/
+# REMOVED: execve uid!=euid covered by SAP 70-privilege-escalation.rules (execve euid=0 audit)
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000392-GPOS-00172/
+-w /var/log/sudo.log -p wa -k maintenance
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+# Note: fchown/lchown do not exist as separate syscalls on arm64; covered by chown/fchownat
+-a always,exit -F arch=b64 -S chown,fchownat -F auid>=1000 -F auid!=-1 -k perm_chng
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+# Note: fchmod does not exist as a separate syscall on arm64; covered by chmod/fchmodat
+-a always,exit -F arch=b64 -S chmod,fchmodat -F auid>=1000 -F auid!=-1 -k perm_chng
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/bin/chsh -F perm=x -F auid>=1000 -F auid!=-1 -k priv_cmd
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/bin/sudoedit -F perm=x -F auid>=1000 -F auid!=-1 -k priv_cmd
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+# Note: open and creat syscalls do not exist on arm64; use openat/openat2 instead
+-a always,exit -F arch=b64 -S openat,truncate,ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=-1 -k perm_access
+-a always,exit -F arch=b64 -S openat,truncate,ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=-1 -k perm_access
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
+-a always,exit -F path=/usr/bin/sudo -F perm=x -F auid>=1000 -F auid!=-1 -k priv_cmd
+
+# Ref: SRG-OS-000239-GPOS-00089
+-a always,exit -F arch=b64 -S execve -F auid>=1000 -F auid!=-1 -k account_mod
+-w /usr/sbin/visudo -p x -k privileged-usermgmt
+-w /usr/sbin/chgpasswd -p x -k privileged-usermgmt
+-w /usr/sbin/chpasswd -p x -k privileged-usermgmt
+-w /usr/sbin/groupadd -p x -k privileged-usermgmt
+-w /usr/sbin/groupdel -p x -k privileged-usermgmt
+-w /usr/sbin/groupmod -p x -k privileged-usermgmt
+-w /usr/sbin/grpconv -p x -k privileged-usermgmt
+-w /usr/sbin/grpunconv -p x -k privileged-usermgmt
+-w /usr/sbin/newusers -p x -k privileged-usermgmt
+-w /usr/sbin/pwconv -p x -k privileged-usermgmt
+-w /usr/sbin/pwunconv -p x -k privileged-usermgmt
+-w /usr/sbin/shadowconfig -p x -k privileged-usermgmt
+-w /usr/sbin/useradd -p x -k privileged-usermgmt
+-w /usr/sbin/userdel -p x -k privileged-usermgmt
+-w /usr/sbin/vipw -p x -k privileged-usermgmt
+-w /usr/sbin/vigr -p x -k privileged-usermgmt
+
+# Ref: SRG-OS-000392-GPOS-00172
+-a always,exit -F arch=b64 -S execve,execveat -F auid>=1000 -F auid!=-1 -k exec
