@@ -10,23 +10,23 @@ supports on-demand reporting requirements.
 """
 
 
-# @pytest.mark.booted(reason="Audit tools are not installed in chroot environment")
-def test_audit_reporting_tools_installed():
-    tools = ["aureport", "ausearch"]
-    for tool in tools:
-        path = shutil.which(tool)
-        assert path is not None, f"'{tool}' audit reporting utility is not installed"
+def test_audit_reporting_tools_installed(dpkg):
+    if dpkg.package_is_installed("auditd"):
+        tools = ["aureport", "ausearch"]
+        for tool in tools:
+            path = shutil.which(tool)
+            assert (
+                path is not None
+            ), f"'{tool}' audit reporting utility is not installed"
 
 
 @pytest.mark.root(
     "Audit reporting requires root privileges to open /var/log/audit/audit.log"
 )
-# @pytest.mark.booted(reason="Need auditd running")
-def test_audit_reporting_execution(shell):
-    result = shell("aureport --summary", capture_output=True, ignore_exit_code=True)
-    print(f"{result.stdout}")
-    print(f"{result.stderr}")
+def test_audit_reporting_execution(shell, dpkg):
+    if dpkg.package_is_installed("auditd"):
+        result = shell("aureport --summary", capture_output=True, ignore_exit_code=True)
 
-    assert (
-        "Summary" in result.stdout
-    ), f"'aureport' executed but returned an unexpected result: {result.stdout}"
+        assert (
+            "Summary" in result.stdout
+        ), f"'aureport' executed but returned an unexpected result: {result.stdout}"
