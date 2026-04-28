@@ -28,7 +28,7 @@ def test__fwcfg_qemu_fw_cfg_script_service_enabled(systemd: Systemd):
 
 
 @pytest.mark.testcov(["GL-TESTCOV-_fwcfg-service-qemu-fw_cfg-script-enable"])
-@pytest.mark.feature("_fwcfg")
+@pytest.mark.feature("_fwcfg and not disaSTIGmedium")
 @pytest.mark.booted(reason="Requires systemd")
 @pytest.mark.hypervisor("qemu", reason="qemu-fw_cfg-script only works on Qemu")
 def test__fwcfg_qemu_fw_cfg_script_service_active(systemd: Systemd):
