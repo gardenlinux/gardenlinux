@@ -29,10 +29,10 @@ def test_dmesg_server_sysctl_restrictions_on_accessing_dmesg(parse_file):
     assert config["kernel.dmesg_restrict"] == "1"
 
 
-@pytest.mark.testcov(["GL-TESTCOV-stig-config-sysctl-stig"])
-@pytest.mark.feature("stig")
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGlow-config-sysctl-disaSTIG"])
+@pytest.mark.feature("disaSTIGlow")
 def test_dmesg_stig_sysctl_restrictions_on_accessing_dmesg(parse_file):
-    file_path = "/etc/sysctl.d/99-stig.conf"
+    file_path = "/etc/sysctl.d/99-disaSTIG.conf"
     config = parse_file.parse(file_path, format="keyval")
     assert config["kernel.dmesg_restrict"] == "1"
 
@@ -99,16 +99,16 @@ def test_dmesg_server_call_by_unprivileged_user_forbidden(shell):
 
 
 # =============================================================================
-# stig Feature - dmesg
+# disaSTIG Feature - dmesg
 # =============================================================================
 
 
 @pytest.mark.testcov(
     [
-        "GL-TESTCOV-stig-config-sysctl-stig",
+        "GL-TESTCOV-disaSTIGmedium-config-sysctl-disaSTIG",
     ]
 )
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="sysctl needs a booted system")
 def test_dmesg_stig_restrictions_sysctl_runtime(sysctl):
     assert sysctl["kernel.dmesg_restrict"] == 1
@@ -116,10 +116,10 @@ def test_dmesg_stig_restrictions_sysctl_runtime(sysctl):
 
 @pytest.mark.testcov(
     [
-        "GL-TESTCOV-stig-config-sysctl-stig",
+        "GL-TESTCOV-disaSTIGmedium-config-sysctl-disaSTIG",
     ]
 )
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="needs a booted system with dmesg restrictions loaded")
 def test_dmesg_stig_call_by_unprivileged_user_forbidden(shell):
     res = shell("dmesg", capture_output=True, ignore_exit_code=True)
