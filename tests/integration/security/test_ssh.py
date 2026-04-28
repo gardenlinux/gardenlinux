@@ -66,6 +66,9 @@ FIPS_REASON = "FIPS uses different values for the KEX and Cipher."
 @pytest.mark.parametrize("sshd_config_item", required_sshd_config)
 @pytest.mark.feature("not _fips", reason=FIPS_REASON)
 @pytest.mark.feature("not cis", reason="CIS has specific KEX and MACs")
+@pytest.mark.feature(
+    "not disaSTIGmedium", reason="disaSTIGmedium has specific KEX, Ciphers and MACs"
+)
 def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
     actual_value = sshd.get_config_section(sshd_config_item)
     expected_value = required_sshd_config[sshd_config_item]
@@ -94,7 +97,7 @@ def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
 
 
 @pytest.mark.feature(
-    "ssh and not (ali or aws or azure or openstack)",
+    "ssh and not (ali or aws or azure or openstack) and not disaSTIGmedium",
     reason="We want no authorized_keys for unmanaged users",
 )
 def test_users_have_no_authorized_keys(expected_users, file: File):
@@ -248,7 +251,7 @@ def test_ssh_client_config_content(parse_file: ParseFile):
         "GL-TESTCOV-ssh-config-sudoers-wheel-permissions",
     ]
 )
-@pytest.mark.feature("ssh")
+@pytest.mark.feature("ssh and not disaSTIGmedium")
 def test_ssh_sudoers_wheel_permissions(file: File):
     """Test that sudoers wheel file has correct permissions"""
     assert file.has_mode(
