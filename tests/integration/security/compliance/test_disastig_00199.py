@@ -8,22 +8,26 @@ functions.
 """
 
 
+@pytest.mark.booted("Needs working systemd")
 def test_auditd_service_active(systemd, dpkg):
     if dpkg.package_is_installed("auditd"):
         assert systemd.is_active("auditd")
 
 
+@pytest.mark.booted("Needs working systemd")
 def test_systemd_configured_to_restart_auditd_service(systemd, dpkg):
     if dpkg.package_is_installed("auditd"):
         assert systemd.get_unit_properties("auditd")["Restart"] != "no"
 
 
 @pytest.mark.feature("firewall")
+@pytest.mark.booted("Needs working systemd")
 def test_firewall_service_active(systemd):
     assert systemd.is_active("nftables")
 
 
 @pytest.mark.feature("firewall")
+@pytest.mark.booted("Needs working systemd")
 def test_systemd_configured_to_restart_firewall_service(systemd):
     assert systemd.get_unit_properties("nftables")["Restart"] != "no"
 
