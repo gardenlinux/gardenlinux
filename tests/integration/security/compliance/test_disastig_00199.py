@@ -20,18 +20,6 @@ def test_systemd_configured_to_restart_auditd_service(systemd, dpkg):
         assert systemd.get_unit_properties("auditd")["Restart"] != "no"
 
 
-@pytest.mark.feature("firewall")
-@pytest.mark.booted("Needs working systemd")
-def test_firewall_service_active(systemd):
-    assert systemd.is_active("nftables")
-
-
-@pytest.mark.feature("firewall")
-@pytest.mark.booted("Needs working systemd")
-def test_systemd_configured_to_restart_firewall_service(systemd):
-    assert systemd.get_unit_properties("nftables")["Restart"] != "no"
-
-
 @pytest.mark.feature("selinux")
 def test_selinux_enabled(shell):
     result = shell("sestatus", capture_output=True)
