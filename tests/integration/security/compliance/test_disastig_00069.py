@@ -53,12 +53,12 @@ def test_systemd_tmpfiles_configuration_is_sane(shell):
 
 
 # -- coredumps
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 def test_suid_binaries_cannot_create_coredumps(sysctl):
     assert sysctl["fs.suid_dumpable"] == 0
 
 
 # -- memory
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 def test_kernel_randomizes_virtual_memory_addresses(sysctl):
     assert sysctl["kernel.randomize_va_space"] == 2
