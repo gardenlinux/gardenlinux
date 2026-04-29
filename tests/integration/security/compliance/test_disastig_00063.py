@@ -11,7 +11,7 @@ supports on-demand reporting requirements.
 
 
 @pytest.mark.feature("log")
-def test_audit_reporting_tools_installed(dpkg):
+def test_audit_reporting_tools_installed():
     tools = ["aureport", "ausearch"]
     for tool in tools:
         path = shutil.which(tool)
@@ -22,7 +22,7 @@ def test_audit_reporting_tools_installed(dpkg):
 @pytest.mark.root(
     "Audit reporting requires root privileges to open /var/log/audit/audit.log"
 )
-def test_audit_reporting_execution(shell, dpkg):
+def test_audit_reporting_execution(shell):
     result = shell("aureport --summary", capture_output=True, ignore_exit_code=True)
 
     assert (
