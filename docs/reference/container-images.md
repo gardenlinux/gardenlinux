@@ -1,6 +1,6 @@
 ---
-title: "Container Images"
-description: "Complete table of Garden Linux OCI Container Images"
+title: Container Images
+description: Complete table of Garden Linux OCI Container Images
 related_topics:
   - /how-to/container-base-image/bare.md
   - /how-to/container-base-image/full.md

@@ -1,6 +1,7 @@
 ---
 title: "Container Base Image"
 description: "Understanding Garden Linux full and bare (distroless-style) OCI container images"
+order: 130
 related_topics:
   - /explanation/container-base-image.md
   - /how-to/container-base-image/bare.md
