@@ -40,7 +40,7 @@ Individual software packages are built and versioned in `package-*` repositories
 **Documentation**:
 
 - **Explanation**: [Garden Linux Packaging](/explanation/packaging) - This document explains how Garden Linux packages are built using the tools in the `package-build` repository and how they fit into the broader packaging ecosystem.
-- **How-To**: [Packaging](/how-to/packaging) - Overview how to use the Garden Linux Package Build System
+- **How-To**: [Packaging](/how-to/packaging/) - Overview how to use the Garden Linux Package Build System
 
 ## 2. APT Repository Releases
 

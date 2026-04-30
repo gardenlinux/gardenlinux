@@ -11,7 +11,7 @@ tags:
   - "bare-metal"
 related_topics:
   - /explanation/architecture
-  - /explanation/flavors-and-features
+  - /explanation/flavors
   - /how-to/building-images
   - /reference/releases/release-lifecycle
   - /reference/flavor-matrix
@@ -144,15 +144,16 @@ Garden Linux serves well as host for virtualized environments by support running
 workloads in KVM/libvirt. Garden Linux ships with the
 [`vhost`](/reference/features/vhost) feature pre-configured:
 
-This use case applies to all platforms. Choose this when operating KVM/libvirt
-hypervisors in public or private clouds.
+-
+- This use case applies to all platforms. Choose this when operating KVM/libvirt
+  hypervisors in public or private clouds.
 
-**Features:** [`vhost`](/reference/features/vhost)
+  **Features:** [`vhost`](/reference/features/vhost)
 
-**Platforms:** [`aws`](/reference/features/aws),
-[`azure`](/reference/features/azure), [`gcp`](/reference/features/gcp),
-[`openstack`](/reference/features/openstack),
-[`baremetal`](/reference/features/baremetal)
+  **Platforms:** [`aws`](/reference/features/aws),
+  [`azure`](/reference/features/azure), [`gcp`](/reference/features/gcp),
+  [`openstack`](/reference/features/openstack),
+  [`baremetal`](/reference/features/baremetal)
 
 ## Supported Deployment Environments
 
@@ -183,7 +184,7 @@ rapid iteration and reproducibility are priorities.
 
 ## Common Flavors
 
-The following table lists commonly used Garden Linux flavors. For the complete
+The following table lists commonly used Garden Linux [flavors](/explanation/flavors). For the complete
 matrix including all variants (FIPS, USI, Trusted Boot, architectures), see
 [Flavor Matrix](../reference/flavor-matrix.md).
 

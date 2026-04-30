@@ -14,7 +14,7 @@ github_target_path: "docs/how-to/building-images.md"
 
 The build system utilizes the [gardenlinux/builder](https://github.com/gardenlinux/builder) to create customized Linux distributions.
 
-[gardenlinux/gardenlinux](https://github.com/gardenlinux/gardenlinux) is maintained by the Garden Linux team, highlighting specialized [features](../explanation/flavors-and-features.md#features) available for other projects.
+[gardenlinux/gardenlinux](https://github.com/gardenlinux/gardenlinux) is maintained by the Garden Linux team, highlighting specialized [features](../explanation/flavors.md#features) available for other projects.
 
 ## Build Requirements
 

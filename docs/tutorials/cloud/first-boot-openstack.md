@@ -35,7 +35,7 @@ Before starting, you'll need:
 
 ## What You'll Build
 
-You'll upload a Garden Linux image to your OpenStack Glance service, deploy an instance with a basic networking setup (network, subnet, router, security group, and floating IP), configure SSH access, and verify the installation. The tutorial uses the `gardener_prod` [flavor](../../explanation/flavors-and-features.md), which is optimized for production workloads.
+You'll upload a Garden Linux image to your OpenStack Glance service, deploy an instance with a basic networking setup (network, subnet, router, security group, and floating IP), configure SSH access, and verify the installation. The tutorial uses the `gardener_prod` [flavor](../../explanation/flavors.md), which is optimized for production workloads.
 
 ## Steps
 
@@ -47,9 +47,9 @@ Garden Linux provides pre-built images for OpenStack. Start by downloading and u
 
 Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
 
-In the "Published Images" section on the release page, find the image for your desired [flavor](../../explanation/flavors-and-features.md) and [architecture](../../reference/glossary.md#architecture). The default production flavor is `openstack-gardener_prod-amd64`. You can directly download it there.
+In the "Published Images" section on the release page, find the image for your desired [flavor](../../explanation/flavors.md) and [architecture](../../reference/glossary.md#architecture). The default production flavor is `openstack-gardener_prod-amd64`. You can directly download it there.
 
-To download it by script, look in the "Assets" section on the release page, and find the `.tar.xz` archive for the `openstack-gardener_prod-amd64` [flavor](../../explanation/flavors-and-features.md). Download and extract the `.qcow2` image, then upload it to your OpenStack Glance service:
+To download it by script, look in the "Assets" section on the release page, and find the `.tar.xz` archive for the `openstack-gardener_prod-amd64` [flavor](../../explanation/flavors.md). Download and extract the `.qcow2` image, then upload it to your OpenStack Glance service:
 
 ```bash
 GL_VERSION="2150.0.0"
