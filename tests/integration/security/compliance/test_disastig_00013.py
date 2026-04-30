@@ -13,6 +13,18 @@ def test_sshguard_is_enabled(systemd):
     """
     sshguard blocks and logs IP addresses that brute-force ssh access
     """
+    assert systemd.is_enabled("sshguard")
+
+
+@pytest.mark.booted(reason="requires running sshguard")
+@pytest.mark.feature("ssh")
+@pytest.mark.hypervisor(
+    "not qemu", reason="a started sshguard prevents running the testsuite"
+)
+def test_sshguard_is_active(systemd):
+    """
+    sshguard blocks and logs IP addresses that brute-force ssh access
+    """
     assert systemd.is_active("sshguard")
 
 

@@ -6,7 +6,25 @@ FROM $snapshot AS snapshot
 FROM $base
 COPY --from=snapshot /etc/apt/sources.list /tmp/sources.list
 RUN grep '^deb ' /tmp/sources.list >> /etc/apt/sources.list && rm /tmp/sources.list
-RUN version="$(awk '$2 == "https://packages.gardenlinux.io/gardenlinux" { print $3 }' /etc/apt/sources.list)" && printf 'Package: *\nPin: release n=%s\nPin-Priority: 900\n' "$version" > /etc/apt/preferences.d/gardenlinux
+
+RUN version="$(awk ' \
+    /^$/ { \
+        if (found && suite) { print suite; exit } \
+        found=0; suite="" \
+    } \
+    /^URIs:.*https:\/\/packages\.gardenlinux\.io\/gardenlinux/ { found=1 } \
+    /^Suites:/ { suite=$2 } \
+    END { \
+        if (found && suite) { print suite } \
+    } \
+' /etc/apt/sources.list.d/gardenlinux.sources)" && \
+    if [ -z "$version" ]; then \
+        echo "Error: Could not determine Garden Linux version from sources"; \
+        exit 1; \
+    fi && \
+    printf 'Package: *\nPin: release n=%s\nPin-Priority: 900\n' "$version" > /etc/apt/preferences.d/gardenlinux
+
+
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --install-recommends \
 	build-essential \
 	curl \

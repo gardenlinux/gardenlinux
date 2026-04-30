@@ -7,6 +7,7 @@ from typing import Tuple
 import pytest
 
 from .modify import allow_system_modifications
+from .parse import Parse
 from .shell import ShellRunner
 
 
@@ -266,6 +267,19 @@ class Systemd:
         )
         elapsed = time.time() - start_time
         return SystemRunningState(result.stdout.strip(), result.returncode, elapsed)
+
+    def get_unit_properties(self, service_name) -> dict:
+        result = self._shell(
+            cmd=f"systemctl show {service_name}.service",
+            capture_output=True,
+        )
+        return Parse.from_str(result.stdout).parse("keyval", forbid_duplicates=False)
+
+    def get_config(self, config_path) -> dict:
+        result = self._shell(
+            f"systemd-analyze cat-config {config_path}", capture_output=True
+        )
+        return Parse.from_str(result.stdout).parse("keyval", forbid_duplicates=False)
 
 
 @pytest.fixture

@@ -32,7 +32,7 @@ jobs:
           is_latest="${{ inputs.is_latest }}"
 
           version_major=$(echo $version | cut -d'.' -f 1)
-          version_patch=$(echo $version | cut -d'.' -f 2)
+          version_patch=$(echo $version | cut -d'.' -f 3)
 
           container=ghcr.io/${{ github.repository }}
 

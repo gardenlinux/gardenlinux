@@ -842,6 +842,9 @@ def test_ssh_sshguard_service_enabled(systemd: Systemd):
 @pytest.mark.testcov(["GL-TESTCOV-ssh-service-sshguard-enable"])
 @pytest.mark.feature("ssh")
 @pytest.mark.booted(reason="Requires systemd")
+@pytest.mark.hypervisor(
+    "not qemu", reason="a started sshguard prevents running the testsuite"
+)
 def test_ssh_sshguard_service_active(systemd: Systemd):
     """Test that sshguard.service is active"""
     assert systemd.is_active("sshguard.service")

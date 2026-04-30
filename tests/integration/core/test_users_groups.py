@@ -21,6 +21,7 @@ def test_service_accounts_have_nologin_shell(regular_user_uid_range):
             continue
         assert entry.pw_shell in [
             "/usr/sbin/nologin",
+            "/sbin/nologin",
             "/bin/false",
         ], f"User {entry.pw_name} has unexpected shell: {entry.pw_shell}"
 

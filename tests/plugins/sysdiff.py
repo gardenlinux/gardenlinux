@@ -13,9 +13,11 @@ import difflib
 import gzip
 import hashlib
 import json
+import logging
 import os
 import re
 import shutil
+import time
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from fnmatch import fnmatch
@@ -32,6 +34,8 @@ from .kernel_versions import KernelVersions
 from .shell import ShellRunner
 from .sysctl import Sysctl, SysctlParam
 from .systemd import Systemd, SystemdUnit
+
+logger = logging.getLogger(__name__)
 
 STATE_DIR = "/tmp/sysdiff"
 
@@ -65,7 +69,20 @@ IGNORED_SYSTEMD_PATTERNS = [
     "user-runtime-dir@*.service",
     "user@*.service",
     "user-*.slice",
+    # runs periodically
+    "gce-workload-cert-refresh.service",
+    "gce-workload-cert-refresh.timer",
 ]
+
+# Units to wait for before taking a snapshot (unit_name: expected_sub_state)
+# This prevents race conditions where socket-activated services are still settling
+WAIT_FOR_SETTLED_UNITS = {
+    "libvirtd.socket": "listening",
+    "libvirtd-ro.socket": "listening",
+    "libvirtd-tcp.socket": "listening",
+    "libvirtd-admin.socket": "listening",
+}
+
 IGNORED_KERNEL_MODULES = []
 IGNORED_SYSCTL_PARAMS = {
     # File system dynamic parameters
@@ -173,7 +190,7 @@ class FileCollector:
                         existing_paths.append(path)
                         seen.add(path)
                 except Exception as e:
-                    print(f"Error normalizing paths: {e}")
+                    logger.error(f"Error normalizing paths: {e}")
 
         return existing_paths
 
@@ -190,7 +207,7 @@ class FileCollector:
                     if line and not line.startswith("#"):
                         patterns.append(line)
         except Exception as e:
-            print(f"Error loading ignore patterns from {ignore_file}: {e}")
+            logger.error(f"Error loading ignore patterns from {ignore_file}: {e}")
 
         return patterns
 
@@ -218,7 +235,7 @@ class FileCollector:
         try:
             root_dev = os.stat(root).st_dev
         except (OSError, IOError) as e:
-            print(f"Warning: Cannot access {root}: {e}")
+            logger.warning(f"Warning: Cannot access {root}: {e}")
             return
 
         for dirpath, dirnames, filenames in os.walk(
@@ -247,7 +264,7 @@ class FileCollector:
         try:
             if not os.path.exists(filepath):
                 if verbose:
-                    print(f"Warning: File not found: {filepath}")
+                    logger.warning(f"Warning: File not found: {filepath}")
                 return None
         except (OSError, IOError):
             # If we can't even check existence, skip silently
@@ -266,11 +283,11 @@ class FileCollector:
         except FileNotFoundError:
             # This shouldn't happen after the exists check, but handle it gracefully
             if verbose:
-                print(f"Warning: File disappeared: {filepath}")
+                logger.warning(f"Warning: File disappeared: {filepath}")
             return None
         except (OSError, IOError, PermissionError) as e:
             # Less common errors - always warn
-            print(f"Warning: Cannot read {filepath}: {e}")
+            logger.warning(f"Warning: Cannot read {filepath}: {e}")
             return None
 
     def collect_file_hashes(
@@ -306,7 +323,7 @@ class FileCollector:
                     files_in_path = list(self._walk_files_recursive(path))
                     all_files.extend(files_in_path)
                 except Exception as e:
-                    print(f"Warning: Error scanning {path}: {e}")
+                    logger.warning(f"Warning: Error scanning {path}: {e}")
                     continue
 
             filtered_files = [
@@ -321,7 +338,7 @@ class FileCollector:
                     file_hashes[filepath] = hash_value
 
         except Exception as e:
-            print(f"Error collecting file hashes: {e}")
+            logger.error(f"Error collecting file hashes: {e}")
 
         return file_hashes
 
@@ -332,6 +349,58 @@ class SnapshotManager:
     def __init__(self, state_dir: Path | None = None):
         self.state_dir = state_dir or Path(STATE_DIR)
         self.state_dir.mkdir(parents=True, exist_ok=True)
+
+    def _wait_for_units_settled(
+        self,
+        systemd: Systemd,
+        max_wait_seconds: int = 120,
+        poll_interval: float = 0.5,
+    ) -> None:
+        """
+        Wait for configured units to reach their expected sub-states.
+
+        This prevents race conditions when taking snapshots while socket-activated
+        services like libvirtd are still settling into their stable state.
+
+        Args:
+            systemd: Systemd instance for checking unit states
+            max_wait_seconds: Maximum time to wait for units to settle
+            poll_interval: Time between polls in seconds
+        """
+        if not WAIT_FOR_SETTLED_UNITS:
+            return
+
+        start_time = time.time()
+        units_to_check = set(WAIT_FOR_SETTLED_UNITS.keys())
+
+        while units_to_check and (time.time() - start_time) < max_wait_seconds:
+            current_units = systemd.list_units()
+            unit_states = {unit.unit: unit.sub for unit in current_units}
+
+            settled_units = set()
+            for unit_name in units_to_check:
+                expected_sub = WAIT_FOR_SETTLED_UNITS[unit_name]
+                current_sub = unit_states.get(unit_name)
+
+                logger.debug(
+                    f"Debug: Unit {unit_name} current state: {current_sub}, expected: {expected_sub}"
+                )
+
+                if current_sub == expected_sub:
+                    settled_units.add(unit_name)
+
+            units_to_check -= settled_units
+
+            if units_to_check:
+                time.sleep(poll_interval)
+
+        # Log if any units didn't settle (but don't fail the snapshot)
+        if units_to_check:
+            elapsed = time.time() - start_time
+            logger.warning(
+                f"Warning: Units did not settle within {max_wait_seconds}s (elapsed: {elapsed:.1f}s): "
+                f"{', '.join(units_to_check)}"
+            )
 
     def create_snapshot(
         self,
@@ -371,8 +440,14 @@ class SnapshotManager:
         sysctl_collector = Sysctl(shell)
         kernel_versions = KernelVersions()
         kernel_module = KernelModule(Find(), shell, kernel_versions)
-
         packages = dpkg.collect_installed_packages().packages
+
+        # Make sure no systemd services and sockets are still transitioning
+        systemd_wait = systemd.wait_is_system_running()
+        logger.debug(
+            f"Systemd settle returned state {systemd_wait.state} and took {systemd_wait.elapsed_time:.1f}s to complete"
+        )
+        self._wait_for_units_settled(systemd)
 
         systemd_units = systemd.list_units()
 
