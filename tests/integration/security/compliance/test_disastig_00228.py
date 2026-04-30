@@ -5,7 +5,6 @@ from plugins.parse_file import ParseFile
 
 
 @pytest.mark.feature("disaSTIGmedium")
-@pytest.mark.root(reason="requires access to /etc/login.defs")
 def test_umask_is_restrictive_enough(parse_file: ParseFile):
     """
     As per DISA STIG compliance requirements, the operating system must define default
@@ -21,7 +20,6 @@ def test_umask_is_restrictive_enough(parse_file: ParseFile):
 
 
 @pytest.mark.feature("disaSTIGmedium")
-@pytest.mark.root(reason="requires access to /etc/skel")
 def test_skeleton_directory_is_not_world_writable(file: File):
     """
     As per DISA STIG compliance requirements, the operating system must define default
@@ -36,7 +34,6 @@ def test_skeleton_directory_is_not_world_writable(file: File):
 
 
 @pytest.mark.feature("disaSTIGmedium")
-@pytest.mark.root(reason="requires access to /etc/skel")
 def test_skeleton_files_are_not_world_writable(file: File, find: Find):
     """
     As per DISA STIG compliance requirements, the operating system must define default
