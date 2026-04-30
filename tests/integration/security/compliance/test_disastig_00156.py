@@ -25,9 +25,8 @@ def test_sudoers_no_nopasswd(find: Find, parse_file: ParseFile):
         lines = parse_file.lines(path, ignore_missing=True)
         if not lines:
             continue
-        assert (
-            nopasswd_pattern not in lines
-        ), f"stigcompliance: NOPASSWD found in sudoers file {path}"
+        matches = nopasswd_pattern.findall(lines.content)
+        assert not matches, f"stigcompliance: NOPASSWD found in sudoers file {path}"
 
 
 @pytest.mark.feature("disaSTIGmedium")
@@ -50,6 +49,5 @@ def test_sudoers_no_authenticate_bypass(find: Find, parse_file: ParseFile):
         lines = parse_file.lines(path, ignore_missing=True)
         if not lines:
             continue
-        assert (
-            noauthenticate_pattern not in lines
-        ), f"stigcompliance: !authenticate found in sudoers file {path}"
+        matches = noauthenticate_pattern.findall(lines.content)
+        assert not matches, f"stigcompliance: !authenticate found in sudoers file {path}"
