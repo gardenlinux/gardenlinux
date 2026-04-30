@@ -57,7 +57,7 @@ A feature is not just a package list, but a complete configuration unit that may
 For example, the `gardener` feature doesn't just install `containerd` it also configures systemd services and includes other features as `log` to set up logging.
 
 :::tip
-A complete list of features can be seen in the [Features Reference](/reference/features).
+A complete list of features can be seen in the [Features Reference](/reference/features/).
 :::
 
 ### Target Abstraction

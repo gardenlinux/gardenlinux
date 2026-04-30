@@ -114,7 +114,7 @@ Flavors with `publish: false` are still available as GitHub workflow artifacts f
 
 ## Feature List
 
-A complete list of all available features can be looked up in the [Features Reference](/reference/features)
+A complete list of all available features can be looked up in the [Features Reference](/reference/features/)
 
 ## gl-flavors-parse Tool
 
