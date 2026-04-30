@@ -1,45 +1,50 @@
-# Garden Linux Setting ID Marker Guide
-
+---
+title: "Test Coverage Markers"
+description: "Guide to test coverage markers for establishing traceability between features and tests"
+related_topics:
+  - /contributing/testing.md
+  - /explanation/testing/test-framework-architecture.md
+  - /explanation/testing/test-organization.md
+  - /how-to/testing/run-tests.md
+  - /how-to/testing/setup-test-environment.md
+  - /how-to/testing/debug-tests.md
+  - /how-to/testing/test-in-cloud.md
+  - /reference/testing/developing-tests.md
+  - /reference/testing/test-coverage-markers.md
+  - /reference/testing/test-cli.md
+order: 2
+migration_status: "done"
+migration_issue: https://github.com/gardenlinux/gardenlinux/issues/4748
+migration_source: "tests/DEVELOPER-TESTCOV.md"
+migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: docs/reference/testing/test-coverage-markers.md
+github_target_path: "docs/reference/testing/test-coverage-markers.md"
 ---
 
-## Table of Contents
+# Test Coverage Markers
 
-1. [Overview](#overview)
-2. [Coverage.py and Test Coverage Analysis](#coveragepy-and-test-coverage-analysis)
-3. [Marker Schema](#marker-schema)
-4. [Category Reference](#category-reference)
-5. [Special Patterns](#special-patterns)
-6. [When to Create Markers](#when-to-create-markers)
-7. [Where to Place Markers](#where-to-place-markers)
-
----
-
-## Overview
-
-This guide explains how to create and use test coverage markers for establishing traceability between Garden Linux features and tests. The following sections detail the tooling, marker syntax, categories and placement guidelines.
-
----
+This guide explains how to create and use test coverage markers for establishing traceability between Garden Linux features and tests, as defined in [ADR-0032](../../adr/0032-static-feature-test-coverage-analysis.md). The following sections detail the tooling, marker syntax, categories and placement guidelines.
 
 ## Coverage.py and Test Coverage Analysis
 
-**Tool Location:** [`tests/util/coverage.py`](../tests/util/coverage.py)
+**Tool Location:** [`tests/util/coverage.py`](https://github.com/gardenlinux/gardenlinux/tree/main/tests/util/coverage.py)
 
 ### What is coverage.py?
 
-`coverage.py` is a static analysis tool that generates coverage reports for Garden Linux by analyzing the relationship between **test coverage markers** (`GL-TESTCOV-*`) next to a feature's setting and their corresponding test cases. Unlike traditional code coverage tools that require test execution, this tool performs **static analysis** to determine which features have test coverage.
+`coverage.py` is a static analysis tool that generates coverage reports for Garden Linux, implementing [ADR-0032](../../adr/0032-static-feature-test-coverage-analysis.md), by analyzing the relationship between **test coverage markers** (`GL-TESTCOV-*`) next to a feature's setting and their corresponding test cases. Unlike traditional code coverage tools that require test execution, this tool performs **static analysis** to determine which features have test coverage.
 
 These markers follow a specific format (`GL-TESTCOV-$feature-$category-$description` - see [Marker Schema](#marker-schema) for details) that enables automated parsing and analysis. The tool scans both feature definitions and test files to establish traceability between what's configured and what's tested.
 
 ### Key Capabilities
 
 1. **Static Coverage Analysis**
-
    - Analyzes test coverage markers in features without running tests
    - Scans test files for `@pytest.mark.testcov()` decorators
    - Generates coverage reports showing which features are tested
 
 2. **Coverage Reporting**
-
    - Lists all test coverage markers defined in features
    - Shows which test coverage markers have corresponding tests
    - Identifies untested features and gaps in test coverage
@@ -139,14 +144,12 @@ _fips:
 ### Integration with Development Workflow
 
 1. **During Feature Development**
-
    - Add test coverage markers to new features (see [When to Create Markers](#when-to-create-markers) for guidelines)
    - Place markers appropriately using inline comments or split ID files (see [Where to Place Markers](#where-to-place-markers))
    - Use coverage.py to verify markers are correctly formatted and follow the [Marker Schema](#marker-schema)
    - Identify which tests need to be created
 
 2. **During Test Development**
-
    - Check coverage reports to find untested features
    - Write tests with appropriate `@pytest.mark.testcov()` decorators (see [Tests](#tests))
    - Ensure test coverage markers match the exact settings from features
@@ -157,8 +160,6 @@ _fips:
    - Enforce minimum coverage thresholds
    - Block PRs that reduce test coverage
    - Generate audit reports for compliance tracking
-
----
 
 ## Marker Schema
 
@@ -184,8 +185,6 @@ GL-TESTCOV-base-config-no-hostname
 GL-TESTCOV-server-service-systemd-timesyncd-enable
 GL-TESTCOV-cisOS-config-crontab-permissions
 ```
-
----
 
 ## Category Reference
 
@@ -289,8 +288,6 @@ Garden Linux uses **four main categories** for tes coverage markers:
 - `GL-TESTCOV-aws-script-clocksource-setup` - AWS clocksource setup script
 - `GL-TESTCOV-cloud-script-profile-autologout` - Auto-logout profile script
 
----
-
 ## Special Patterns
 
 ### Overview: `-no-` vs `-disable`
@@ -308,8 +305,6 @@ Markers use two distinct patterns to indicate negation, each with a specific sem
 2. **Different Security Guarantees**: Absence is stronger than deactivation
 3. **Different Reversibility**: Removed items need reinstallation, disabled items can be re-enabled
 4. **Clear Intent**: Makes it obvious whether something is missing or just turned off
-
----
 
 ### The `-no-` Pattern (Absence/Removal)
 
@@ -337,8 +332,6 @@ Markers use two distinct patterns to indicate negation, each with a specific sem
 - ✅ Ensure security-sensitive files are actually removed
 - ✅ Confirm features are not present (stronger guarantee than disabled)
 
----
-
 ### The `-disable` Pattern (Deactivation)
 
 **Meaning:** Indicates something **exists but is turned off** or **deactivated**
@@ -362,8 +355,6 @@ Markers use two distinct patterns to indicate negation, each with a specific sem
 - ✅ Verify services are in correct disabled state
 - ✅ Ensure features are turned off in configuration
 - ✅ Confirm functionality is deactivated (but can be re-enabled if needed)
-
----
 
 ## When to Create Markers
 
@@ -392,15 +383,16 @@ Markers use two distinct patterns to indicate negation, each with a specific sem
 - Packages in `pkg.exclude`
 - Package availability checks
 
-> [!NOTE]
-> If a package in `pkg.include` installs an important service, it makes sense to add a `$service-$unit-enable` marker.
-> Currently there is no "more elegant" way as we do not explicitly enable services. This is just the [debian way of doing things](https://manpages.debian.org/testing/debhelper/dh_systemd_enable.1.en.html).
+:::note
+If a package in `pkg.include` installs an important service, it makes sense to add a `$service-$unit-enable` marker. Currently there is no "more elegant" way as we do not explicitly enable services. This is the [Debian way of doing things](https://manpages.debian.org/testing/debhelper/dh_systemd_enable.1.en.html).
+:::
 
 **Why:**
 
 - Package installation failures cause the **build to fail** - already validated
 - If a package is missing, dependent configurations won't work (redundant testing)
 - Testing `dpkg -l | grep package` adds no value
+- As discussed in [ADR-0013](../../adr/0013-discontinue-packages-musthave-tests.md), testing for package presence adds no value as version-independent testing should focus on functionality, not package lists
 
 **Build-Time Operations:**
 
@@ -409,8 +401,6 @@ Markers use two distinct patterns to indicate negation, each with a specific sem
 - Archive extraction during build
 
 **Why:** These are build-time operations that cannot fail silently - build failures catch them.
-
----
 
 ## Where to Place Markers
 
@@ -465,6 +455,7 @@ fi
 **Why:** Markers should not appear in the final image files
 
 **Files:**
+
 - `file.include.ids.yaml` - for files in `file.include/` directory
 - `initrd.include.ids.yaml` - for files in `initrd.include/` directory
 
@@ -479,7 +470,8 @@ testcov:
     - GL-TESTCOV-$feature-$category-$description2
 ```
 
-**Important:** 
+**Important:**
+
 - Paths must NOT have a leading slash
 - Paths must be quoted strings
 
@@ -539,11 +531,13 @@ def test_cron_permissions(client):
         assert result.stdout.strip() == "700"
 ```
 
----
+## Related Architecture Decisions
 
-**For more information:**
+The test coverage marker system is based on:
 
-- [ADR 0031 - Static Feature/Test Coverage Analysis](docs/architecture/decisions/0031-static-feature-test-coverage-analysis.md)
-- [Coverage Reporting Tool](tests/util/coverage.py)
-- [Test Framework Documentation](tests/README.md)
+- [ADR-0032: Static Coverage Analysis](../../adr/0032-static-feature-test-coverage-analysis.md) - Primary decision for marker system
+- [ADR-0013: Discontinue Musthave Tests](../../adr/0013-discontinue-packages-musthave-tests.md) - Version-independent testing approach
 
+## Related Topics
+
+<RelatedTopics />

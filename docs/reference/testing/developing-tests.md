@@ -1,18 +1,30 @@
-# Garden Linux Tests - Developer Guide
+---
+title: "Developing Tests"
+description: "Comprehensive guidelines for developing and maintaining tests in the Garden Linux test framework"
+related_topics:
+  - /contributing/testing.md
+  - /explanation/testing/test-framework-architecture.md
+  - /explanation/testing/test-organization.md
+  - /how-to/testing/run-tests.md
+  - /how-to/testing/setup-test-environment.md
+  - /how-to/testing/debug-tests.md
+  - /how-to/testing/test-in-cloud.md
+  - /reference/testing/developing-tests.md
+  - /reference/testing/test-coverage-markers.md
+  - /reference/testing/test-cli.md
+order: 1
+migration_status: "done"
+migration_issue: https://github.com/gardenlinux/gardenlinux/issues/4748
+migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: docs/reference/testing/developing-tests.md
+github_target_path: "docs/reference/testing/developing-tests.md"
+---
+
+# Developing Tests
 
 This document provides comprehensive guidelines for developing and maintaining tests in the Garden Linux test framework.
-
-## Table of Contents
-
-- [Test Development Principles](#test-development-principles)
-- [Framework Structure](#framework-structure)
-- [Test Organization and Naming](#test-organization-and-naming)
-- [Test Writing Best Practices](#test-writing-best-practices)
-- [Markers and Test Configuration](#markers-and-test-configuration)
-- [Debugging Tests](#debugging-tests)
-- [Python Best Practices](#python-best-practices)
-- [External Dependencies](#external-dependencies)
-- [Resources](#resources)
 
 ## Test Development Principles
 
@@ -34,10 +46,10 @@ The following principles guide all test development in Garden Linux:
 
 #### 3. Be very strict about declaring if they mutate system state
 
-- Use appropriate markers (`@pytest.mark.modify`, `@pytest.mark.root`) to declare system modifications
+- Use appropriate markers (`@pytest.mark.modify`, `@pytest.mark.root`) to declare system modifications, as per [ADR-0007](../../adr/0007-non-invasive-read-only-testing.md)
 - Document (`reason=`) why system modifications are necessary
 - Ensure tests clean up after themselves.
-  - If new functionality is added, check if `tests/plugins/sysdiff.py` collects modifications.
+  - If new functionality is added, check if `tests/plugins/sysdiff.py` collects modifications, as specified in [ADR-0022](../../adr/0022-test-ng-system-state-diffing.md).
 
 #### 4. Only run as root when needed
 
@@ -52,7 +64,7 @@ The following principles guide all test development in Garden Linux:
 - Whenever possible, design your tests so that they work across _all_ supported environments and platforms. Only exclude an environment or platform if there’s a strong, well-documented reason to do so.
 - If possible, still add a minimal test for excluded platforms
 - Document (`reason=`) why a test must run (or be excluded) in certain environments or platforms
-- For a list of all available test environments (like chroot, QEMU, cloud, and OCI), see [Test Environment Details](../README.md#test-environment-details).
+- For a list of all available test environments (like chroot, QEMU, cloud, and OCI), see [Test Environment Details](../../../how-to/testing/run-tests.md#test-environments).
 
 #### 6. Use abstractions judiciously to hide implementation details
 
@@ -61,7 +73,7 @@ The following principles guide all test development in Garden Linux:
 - Keep test logic visible and maintain Arrange-Act-Assert structure
 - Avoid over-abstraction that requires reading multiple plugins to understand a test
 
-##### Parser plugins ([ADR-0026](../docs/architecture/decisions/0026-test-ng-when-to-parsers.md))
+##### Parser plugins ([ADR-0026](../../adr/0026-test-ng-when-to-parsers.md))
 
 - Use the default parsing plugins ([`parse`](plugins/parse.py), [`parse_file`](plugins/parse_file.py)) for files and command output to keep comment handling, format support, and errors consistent
 - Skip ad-hoc parsing (`Path.read_text()`, direct `json.loads()`, regex scraping) when a parser plugin covers the case
@@ -70,13 +82,13 @@ The following principles guide all test development in Garden Linux:
 
 #### 7. Be mindful about external dependencies
 
-- Prefer Python standard library over third-party packages
+- Prefer Python standard library over third-party packages, following [ADR-0016](../../adr/0016-minimal-host-dependencies-for-test-ng.md)
 - Only add PyPI dependencies when there's clear benefit
 - Document why external dependencies are necessary
 
 #### 8. Handlers must restore system state in teardown phase
 
-- Handlers (yield fixtures) that modify system state must restore the original state after tests complete
+- Handlers (yield fixtures) that modify system state must restore the original state after tests complete, as required by [ADR-0007](../../adr/0007-non-invasive-read-only-testing.md)
 - This cleanup is only required when tests run with `--allow-system-modifications` and are marked with `@pytest.mark.modify`
 - The pattern is: save initial state → yield to test → restore initial state in teardown
 - Handlers must track what they changed and reverse those changes in reverse order
@@ -85,7 +97,7 @@ The following principles guide all test development in Garden Linux:
 
 #### 9. Use Test Coverage Markers
 
-- [Test Coverage Markers](./DEVELOPER-TESTCOV.md) need to be added to features and tests to assure a high test coverage.
+- [Test Coverage Markers](test-coverage-markers.md) need to be added to features and tests to assure a high test coverage.
 
 ## Framework Structure
 
@@ -163,8 +175,9 @@ Test files follow the pattern `test_*.py` and should be named based on the funct
 - `test_ssh.py` (in `security/`) - SSH configuration and security
 - `test_fips.py` (in `security/compliance/`) - FIPS compliance tests
 
-> [!NOTE]
-> Tests are not strictly tied to features in the `features` folder anymore. Have a look at `@pytest.mark.feature()` if you need a test condition related to a feature.
+:::info
+Tests are not strictly tied to features in the `features` folder anymore. Have a look at `@pytest.mark.feature()` if you need a test condition related to a feature.
+:::
 
 ### Test Function Naming and Comments
 
@@ -305,8 +318,9 @@ def test_machine_id_is_initialized(parse_file):
 
 ### Handlers for Setup/Teardown
 
-> [!IMPORTANT]
-> Handlers that modify system state must restore the original state in the teardown phase. See [Core Principle 8](#8-handlers-must-restore-system-state-in-teardown-phase) above for detailed requirements and examples.
+:::warning
+Handlers that modify system state must restore the original state in the teardown phase. See [Core Principle 8](#_8-handlers-must-restore-system-state-in-teardown-phase) above for detailed requirements and examples.
+:::
 
 Use handlers (yield fixtures) for managing test state and cleanup:
 
@@ -568,7 +582,7 @@ def test_weird_cases(input_val, expected):
 
 ### Test Coverage Markers
 
-Please have a look at the [Test Coverage Documentation](./DEVELOPER-TESTCOV.md)
+Please have a look at the [Test Coverage Documentation](test-coverage-markers.md)
 
 ### Missing Markers (TODO)
 
@@ -610,8 +624,9 @@ def test_example(systemd: Systemd):
 - Avoid excessive logging in tight loops or frequently-called functions
 - Use appropriate log levels: `logger.debug()` for detailed info, `logger.info()` for important milestones
 
-> [!NOTE]
-> Have a look at the [user documentation](README.md#debugging-tests) if you want to know how to view those debug logs when running tests.
+:::info
+Have a look at the [user documentation](README.md#debugging-tests) if you want to know how to view those debug logs when running tests.
+:::
 
 ### Debugging Tests in a Booted VM
 
@@ -708,8 +723,9 @@ We highly suggest you configure your IDE or text editor to automatically apply f
 4. Use docstrings to summarize functions and classes. The extent of which depends on the size, scope and complexity of the function or class.
 5. Initialize all variables with a sensible default value instead of using `None` (unless the value and its type hint explicitly make it noneable)
 
-> [!TIP]
-> Run `make -f tests/dev.makefile format` locally before committing
+:::tip
+Run `make -f tests/dev.makefile format` locally before committing
+:::
 
 ### Error Handling
 
@@ -781,9 +797,24 @@ When adding new dependencies:
 3. **Consider alternatives** - Are there lighter alternatives?
 4. **Update requirements.txt** - Pin package versions in `tests/util/requirements.txt`
 
-## Resources
+## Related Architecture Decisions
+
+Key decisions that guide test development:
+
+- [ADR-0006: New Test Framework](../../adr/0006-new-test-framework-in-place-self-contained-test-execution.md) - Self-contained execution model
+- [ADR-0007: Non-Invasive Testing](../../adr/0007-non-invasive-read-only-testing.md) - Read-only testing principles
+- [ADR-0008: Unified Test Logic](../../adr/0008-unified-and-declarative-test-logic.md) - Declarative test patterns
+- [ADR-0013: Discontinue Musthave Tests](../../adr/0013-discontinue-packages-musthave-tests.md) - Version-independent testing
+- [ADR-0016: Minimal Host Dependencies](../../adr/0016-minimal-host-dependencies-for-test-ng.md) - Dependency management
+- [ADR-0022: System State Diffing](../../adr/0022-test-ng-system-state-diffing.md) - Detecting modifications
+- [ADR-0026: Parser Plugins](../../adr/0026-test-ng-when-to-parsers.md) - Parsing guidelines
+
+## Related Resources
 
 - [PEP 8 – Style Guide for Python Code](https://peps.python.org/pep-0008/)
 - [Pytest Documentation](https://docs.pytest.org/)
 - [Python Testing Best Practices](https://docs.python.org/3/library/unittest.html)
-- [Garden Linux Tests README](./README.md) - For usage and running tests
+
+## Related Topics
+
+<RelatedTopics />
