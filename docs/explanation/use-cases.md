@@ -1,6 +1,7 @@
 ---
 title: "Use Cases"
 description: "When and why to choose Garden Linux for your workload"
+order: 9
 category: "explanation"
 tags:
   - "use-cases"

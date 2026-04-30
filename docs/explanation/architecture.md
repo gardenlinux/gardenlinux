@@ -1,5 +1,7 @@
 ---
 title: "Architecture"
+description: 1524-Meters View of Garden Linux
+order: 10
 github_target_path: "docs/explanation/architecture.md"
 migration_status: "new"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4632"
@@ -11,5 +13,3 @@ github_source_path: docs/explanation/architecture.md
 ---
 
 # Architecture
-
-<!-- TODO: Merge from: 00_introduction/kernel.md, 00_introduction/package-pipeline.md -->
