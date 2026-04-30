@@ -1,3 +1,11 @@
+---
+title: "Feature: cloud"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/cloud/README.md
+github_target_path: docs/reference/features/cloud.md
+---
+
 ## Feature: cloud
 ### Description
 <website-feature>

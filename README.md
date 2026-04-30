@@ -53,7 +53,7 @@ The build system utilises the [gardenlinux/builder](https://github.com/gardenlin
 [gardenlinux/gardenlinux](https://github.com/gardenlinux/gardenlinux) is maintained by the Garden Linux team, highlighting specialized "features" available for other projects.
 
 > [!TIP]
-> For further information about the build process, and how to set it up on your machine, refer to [the _Build Image_ documentation page](docs/01_developers/build_image.md).
+> For further information about the build process, and how to set it up on your machine, refer to [the _Build Image_ documentation page](docs/how-to/building-images.md).
 
 > [!WARNING]
 > Be sure to provide enough memory (at least 8GiB) to your container runtime or the VM that hosts your container runtime (in Podman or Docker Desktop).
@@ -67,8 +67,8 @@ To initiate a build, use the command:
 Where:
 
 - `${platform}` denotes the desired platform (e.g., kvm, metal, aws). It should be the first part of the flavor that is built.
-- `${featureX}` represents one or more specific features from the `features/` folder. Features are appended and seperated by a hyphen `-` or (if the feature starts with an underscore `_`) by an underscore.
-- `${arch}` optinally you can reference a certain architecture `amd64` or `arm64`. It should be the last part of the flavor that is built.
+- `${featureX}` represents one or more specific features from the `features/` folder. Features are appended and separated by a hyphen `-` or (if the feature starts with an underscore `_`) by an underscore.
+- `${arch}` optionally you can reference a certain architecture `amd64` or `arm64`. It should be the last part of the flavor that is built.
 
 You can combine multiple platforms and features as needed.
 
@@ -94,7 +94,7 @@ For more information about the release strategy and lifecycle, have a look at th
 ## Download Garden Linux Releases
 
 Images are published as:
-- GitHub Releses in https://github.com/gardenlinux/gardenlinux/releases
+- GitHub Releases in https://github.com/gardenlinux/gardenlinux/releases
 - GitHub Packages https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux
 
 ## Download Nightly Releases 

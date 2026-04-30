@@ -72,3 +72,4 @@ s3_downloads/
 COMMIT
 VERSION
 edk2/
+**/*-internal.md

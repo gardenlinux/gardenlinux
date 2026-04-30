@@ -1,3 +1,11 @@
+---
+title: "Feature: _slim"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/_slim/README.md
+github_target_path: docs/reference/features/_slim.md
+---
+
 ## Feature: _slim
 ### Description
 <website-feature>
