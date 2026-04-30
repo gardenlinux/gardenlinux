@@ -21,11 +21,5 @@ def test_systemd_configured_to_restart_auditd_service(systemd):
 
 
 @pytest.mark.feature("selinux")
-def test_selinux_enabled(shell):
-    result = shell("sestatus", capture_output=True)
-    status = [
-        line.split(":")[1].trim()
-        for line in result.stdout.splitlines()
-        if line.split(":")[0] == "SELinux status"
-    ]
-    assert status[0] == "enabled"
+def test_selinux_enabled(lsm):
+    assert "selinux" in lsm
