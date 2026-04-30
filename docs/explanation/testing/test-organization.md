@@ -42,7 +42,7 @@ tests/integration/
 
 ### Purpose of Categorization
 
-The purpose of categorizing tests is to improve maintainability and discoverability, following [ADR-0008](../reference/adr/0008-unified-and-declarative-test-logic.md). By grouping related tests together, developers can more easily:
+The purpose of categorizing tests is to improve maintainability and discoverability, following [ADR-0008](/reference/adr/0008-unified-and-declarative-test-logic.md). By grouping related tests together, developers can more easily:
 
 - Locate existing tests for a specific functional area
 - Understand the scope and coverage of the test suite
@@ -182,8 +182,8 @@ The goal is always to make tests easy to find and understand.
 
 Test organization is guided by:
 
-- [ADR-0008: Unified Test Logic](../reference/adr/0008-unified-and-declarative-test-logic.md) - Declarative test organization
-- [ADR-0010: Incremental Migration](../reference/adr/0010-incremental-migration-and-coexistence-of-tests.md) - Migration and coexistence strategy
+- [ADR-0008: Unified Test Logic](/reference/adr/0008-unified-and-declarative-test-logic.md) - Declarative test organization
+- [ADR-0010: Incremental Migration](/reference/adr/0010-incremental-migration-and-coexistence-of-tests.md) - Migration and coexistence strategy
 
 ## Related Topics
 

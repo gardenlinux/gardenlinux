@@ -34,7 +34,7 @@ Before starting, you'll need:
 
 ## What You'll Build
 
-You'll deploy a Garden Linux instance on Azure with a basic networking setup (resource group, virtual network, subnet, and network security group), configure SSH access, and verify the installation. The tutorial uses the `azure-gardener_prod` [flavor](../../explanation/flavors.md), which is optimized for gardener production workloads on Azure.
+You'll deploy a Garden Linux instance on Azure with a basic networking setup (resource group, virtual network, subnet, and network security group), configure SSH access, and verify the installation. The tutorial uses the `azure-gardener_prod` [flavor](../explanation/flavors.md), which is optimized for gardener production workloads on Azure.
 
 ## Steps
 
@@ -50,7 +50,7 @@ Publishing [Official released Garden Linux images in cloud provider marketplaces
 
 Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
 
-In the "Published Images" section on the release page, find the Community Gallery image ID for your desired [flavor](../../explanation/flavors.md), [architecture](../../reference/glossary.md), and Azure region. The default production flavor is `azure-gardener_prod-amd64`.
+In the "Published Images" section on the release page, find the Community Gallery image ID for your desired [flavor](../explanation/flavors.md), [architecture](../reference/glossary.md), and Azure region. The default production flavor is `azure-gardener_prod-amd64`.
 
 ![GitHub release page showing published images table with images for different generations (v1/v2) and regions](../assets/first-boot-azure-image.png)
 
@@ -63,16 +63,16 @@ IMAGE_URN="/CommunityGalleries/${GL_AZ_PROJECT}/Images/gardenlinux-nvme-gardener
 ```
 
 :::tip
-For a complete list of maintained releases and their support lifecycle, see the [releases reference](../../reference/releases/index.md).
+For a complete list of maintained releases and their support lifecycle, see the [releases reference](../reference/releases/index.md).
 :::
 
 #### Uploading pre-built images
 
 Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
 
-In the "Published Images" section on the release page, find the image for your desired [flavor](../../explanation/flavors.md) and [architecture](../../reference/glossary.md#architecture). The default production flavor is `azure-gardener_prod-amd64`. You can directly download it there.
+In the "Published Images" section on the release page, find the image for your desired [flavor](../explanation/flavors.md) and [architecture](../reference/glossary.md#architecture). The default production flavor is `azure-gardener_prod-amd64`. You can directly download it there.
 
-To download it by script, look in the "Assets" section on the release page, and find the `.tar.xz` archive for the `azure-gardener_prod-amd64` [flavor](../../explanation/flavors.md). Download and extract the `.raw` image, then upload it to AWS:
+To download it by script, look in the "Assets" section on the release page, and find the `.tar.xz` archive for the `azure-gardener_prod-amd64` [flavor](../explanation/flavors.md). Download and extract the `.raw` image, then upload it to AWS:
 
 ##### Download the image
 
@@ -101,7 +101,7 @@ GL_ARCH="arm64"
 :::
 
 :::tip
-For a complete list of maintained releases and their support lifecycle, see the [releases reference](../../reference/releases/index.md).
+For a complete list of maintained releases and their support lifecycle, see the [releases reference](../reference/releases/index.md).
 :::
 
 ##### Upload the image to Azure

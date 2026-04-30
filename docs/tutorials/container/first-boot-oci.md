@@ -87,7 +87,7 @@ GL_IMAGE="ghcr.io/gardenlinux/nightly:${GL_VERSION}"
 ```
 
 :::tip
-For a complete list of maintained releases and their support lifecycle, see the [releases reference](../../reference/releases/index.md).
+For a complete list of maintained releases and their support lifecycle, see the [releases reference](../reference/releases/index.md).
 :::
 
 #### Build Your Own Images
