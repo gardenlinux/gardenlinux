@@ -50,4 +50,6 @@ def test_sudoers_no_authenticate_bypass(find: Find, parse_file: ParseFile):
         if not lines:
             continue
         matches = noauthenticate_pattern.findall(lines.content)
-        assert not matches, f"stigcompliance: !authenticate found in sudoers file {path}"
+        assert (
+            not matches
+        ), f"stigcompliance: !authenticate found in sudoers file {path}"
