@@ -27,7 +27,7 @@ This guide explains how to install the prerequisites and dependencies needed to 
 
 ## Prerequisites
 
-Before running the test framework, install the following dependencies, as specified in [ADR-0016](../../../reference/adr/0016-minimal-host-dependencies-for-test-ng.md):
+Before running the test framework, install the following dependencies, as specified in [ADR-0016](../../reference/adr/0016-minimal-host-dependencies-for-test-ng.md):
 
 - `podman` - Container runtime
 - `make` - Build system

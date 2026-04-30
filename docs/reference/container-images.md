@@ -44,7 +44,7 @@ GL_IMAGE="ghcr.io/gardenlinux/nightly:latest"
 ```
 
 :::tip
-For a complete list of maintained releases and their support lifecycle, see the [releases reference](../reference/releases/index.md).
+For a complete list of maintained releases and their support lifecycle, see the [releases reference](/reference/releases/index.md).
 :::
 
 ## Bare Container Images

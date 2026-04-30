@@ -64,7 +64,7 @@ The following principles guide all test development in Garden Linux:
 - Whenever possible, design your tests so that they work across _all_ supported environments and platforms. Only exclude an environment or platform if there’s a strong, well-documented reason to do so.
 - If possible, still add a minimal test for excluded platforms
 - Document (`reason=`) why a test must run (or be excluded) in certain environments or platforms
-- For a list of all available test environments (like chroot, QEMU, cloud, and OCI), see [Test Environment Details](../../../how-to/testing/run-tests.md#test-environments).
+- For a list of all available test environments (like chroot, QEMU, cloud, and OCI), see [Test Environment Details](../../how-to/testing/run-tests.md#test-environments).
 
 #### 6. Use abstractions judiciously to hide implementation details
 

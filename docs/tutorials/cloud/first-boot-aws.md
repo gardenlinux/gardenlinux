@@ -17,7 +17,7 @@ github_target_path: "docs/tutorials/cloud/first-boot-aws.md"
 
 # First Boot on AWS
 
-Garden Linux is a minimal, security-hardened Linux distribution designed for cloud and container environments. This tutorial guides you through deploying your first Garden Linux instance on [AWS](../../reference/glossary.md#aws) EC2, from selecting an Amazon Machine Image (AMI) to connecting via SSH.
+Garden Linux is a minimal, security-hardened Linux distribution designed for cloud and container environments. This tutorial guides you through deploying your first Garden Linux instance on [AWS](../reference/glossary.md#aws) EC2, from selecting an Amazon Machine Image (AMI) to connecting via SSH.
 
 **Difficulty:** Beginner | **Time:** ~15 minutes
 
@@ -34,7 +34,7 @@ Before starting, you'll need:
 
 ## What You'll Build
 
-You'll deploy a Garden Linux instance on AWS EC2 with a basic networking setup (VPC, subnet, internet gateway, and security group), configure SSH access, and verify the installation. The tutorial uses the `aws-gardener_prod` [flavor](../../explanation/flavors.md), which is optimized for gardener production workloads on AWS.
+You'll deploy a Garden Linux instance on AWS EC2 with a basic networking setup (VPC, subnet, internet gateway, and security group), configure SSH access, and verify the installation. The tutorial uses the `aws-gardener_prod` [flavor](../explanation/flavors.md), which is optimized for gardener production workloads on AWS.
 
 ## Steps
 
@@ -50,7 +50,7 @@ Publishing [Official released Garden Linux images in cloud provider marketplaces
 
 Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
 
-In the "Published Images" section on the release page, find the AMI ID for your desired [flavor](../../explanation/flavors.md), [architecture](../../reference/glossary.md#architecture), and [region](../../reference/glossary.md#region). The default production flavor is `aws-gardener_prod-amd64`.
+In the "Published Images" section on the release page, find the AMI ID for your desired [flavor](../explanation/flavors.md), [architecture](../reference/glossary.md#architecture), and [region](../reference/glossary.md#region). The default production flavor is `aws-gardener_prod-amd64`.
 
 ![GitHub release page showing published images table with AMI IDs for different regions](../assets/first-boot-aws-image.png)
 
@@ -61,16 +61,16 @@ AMI_ID="ami-0f502b80bb47d34b3"
 ```
 
 :::tip
-For a complete list of maintained releases and their support lifecycle, see the [releases reference](../../reference/releases/index.md).
+For a complete list of maintained releases and their support lifecycle, see the [releases reference](../reference/releases/index.md).
 :::
 
 #### Uploading pre-built images
 
 Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
 
-In the "Published Images" section on the release page, find the image for your desired [flavor](../../explanation/flavors.md) and [architecture](../../reference/glossary.md#architecture). The default production flavor is `aws-gardener_prod-amd64`. You can directly download it there.
+In the "Published Images" section on the release page, find the image for your desired [flavor](../explanation/flavors.md) and [architecture](../reference/glossary.md#architecture). The default production flavor is `aws-gardener_prod-amd64`. You can directly download it there.
 
-To download it by script, look in the "Assets" section on the release page, and find the `.tar.xz` archive for the `aws-gardener_prod-amd64` [flavor](../../explanation/flavors.md). Download and extract the `.raw` image, then upload it to AWS:
+To download it by script, look in the "Assets" section on the release page, and find the `.tar.xz` archive for the `aws-gardener_prod-amd64` [flavor](../explanation/flavors.md). Download and extract the `.raw` image, then upload it to AWS:
 
 ##### Download the image
 
@@ -99,7 +99,7 @@ GL_ARCH="arm64"
 :::
 
 :::tip
-For a complete list of maintained releases and their support lifecycle, see the [releases reference](../../reference/releases/index.md).
+For a complete list of maintained releases and their support lifecycle, see the [releases reference](../reference/releases/index.md).
 :::
 
 ##### Upload the image to AWS

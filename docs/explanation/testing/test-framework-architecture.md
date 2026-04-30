@@ -28,7 +28,7 @@ This page explains the design and architecture of the Garden Linux test framewor
 
 ## Framework Components
 
-The Garden Linux test framework is built on pytest and uses a modular architecture with three main components, as defined in [ADR-0006](../reference/adr/0006-new-test-framework-in-place-self-contained-test-execution.md) and [ADR-0008](../reference/adr/0008-unified-and-declarative-test-logic.md):
+The Garden Linux test framework is built on pytest and uses a modular architecture with three main components, as defined in [ADR-0006](/reference/adr/0006-new-test-framework-in-place-self-contained-test-execution.md) and [ADR-0008](/reference/adr/0008-unified-and-declarative-test-logic.md):
 
 ### How Tests, Plugins, and Handlers Connect
 
@@ -126,7 +126,7 @@ These functions are building blocks for plugins and handlers, not directly acces
 
 ## Test Distribution System
 
-The test framework is automatically built and packaged when running tests. The build process creates a self-contained distribution, as specified in [ADR-0006](../reference/adr/0006-new-test-framework-in-place-self-contained-test-execution.md), that includes the Python runtime, test framework, and all dependencies.
+The test framework is automatically built and packaged when running tests. The build process creates a self-contained distribution, as specified in [ADR-0006](/reference/adr/0006-new-test-framework-in-place-self-contained-test-execution.md), that includes the Python runtime, test framework, and all dependencies.
 
 ### Build Components
 
@@ -201,26 +201,26 @@ The distribution approach ensures that:
 
 ## Design Principles
 
-The architecture follows these key principles, derived from [ADR-0006](../reference/adr/0006-new-test-framework-in-place-self-contained-test-execution.md), [ADR-0007](../reference/adr/0007-non-invasive-read-only-testing.md), and [ADR-0008](../reference/adr/0008-unified-and-declarative-test-logic.md):
+The architecture follows these key principles, derived from [ADR-0006](/reference/adr/0006-new-test-framework-in-place-self-contained-test-execution.md), [ADR-0007](/reference/adr/0007-non-invasive-read-only-testing.md), and [ADR-0008](/reference/adr/0008-unified-and-declarative-test-logic.md):
 
 1. **Separation of Concerns** - Tests contain assertions, plugins handle infrastructure, handlers manage state
 2. **Dependency Injection** - Pytest's fixture system provides clean dependency management
 3. **Self-Contained** - Distribution includes all dependencies (no host system requirements)
 4. **Environment Agnostic** - Same tests run in chroot, QEMU, cloud, and OCI environments
 5. **Extensible** - New plugins and handlers can be added without modifying the core framework
-   [text](../how-to/releases/index.md)
+   [text](/how-to/releases/index.md)
 
 ## Related Architecture Decisions
 
 The test framework architecture is based on several key decisions:
 
-- [ADR-0006: New Test Framework](../reference/adr/0006-new-test-framework-in-place-self-contained-test-execution.md) - In-place, self-contained test execution
-- [ADR-0007: Non-Invasive Testing](../reference/adr/0007-non-invasive-read-only-testing.md) - Read-only testing principles
-- [ADR-0008: Unified Test Logic](../reference/adr/0008-unified-and-declarative-test-logic.md) - Declarative test design
-- [ADR-0009: Flexible Distribution](../reference/adr/0009-flexible-distribution-and-reporting.md) - Distribution and reporting mechanisms
-- [ADR-0010: Incremental Migration](../reference/adr/0010-incremental-migration-and-coexistence-of-tests.md) - Migration strategy
-- [ADR-0016: Minimal Host Dependencies](../reference/adr/0016-minimal-host-dependencies-for-test-ng.md) - Reducing host requirements
-- [ADR-0022: System State Diffing](../reference/adr/0022-test-ng-system-state-diffing.md) - Detecting system modifications
+- [ADR-0006: New Test Framework](/reference/adr/0006-new-test-framework-in-place-self-contained-test-execution.md) - In-place, self-contained test execution
+- [ADR-0007: Non-Invasive Testing](/reference/adr/0007-non-invasive-read-only-testing.md) - Read-only testing principles
+- [ADR-0008: Unified Test Logic](/reference/adr/0008-unified-and-declarative-test-logic.md) - Declarative test design
+- [ADR-0009: Flexible Distribution](/reference/adr/0009-flexible-distribution-and-reporting.md) - Distribution and reporting mechanisms
+- [ADR-0010: Incremental Migration](/reference/adr/0010-incremental-migration-and-coexistence-of-tests.md) - Migration strategy
+- [ADR-0016: Minimal Host Dependencies](/reference/adr/0016-minimal-host-dependencies-for-test-ng.md) - Reducing host requirements
+- [ADR-0022: System State Diffing](/reference/adr/0022-test-ng-system-state-diffing.md) - Detecting system modifications
 
 ## Related Topics
 

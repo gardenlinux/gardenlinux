@@ -186,22 +186,22 @@ rapid iteration and reproducibility are priorities.
 
 The following table lists commonly used Garden Linux [flavors](/explanation/flavors). For the complete
 matrix including all variants (FIPS, USI, Trusted Boot, architectures), see
-[Flavor Matrix](../reference/flavor-matrix.md).
+[Flavor Matrix](/reference/flavor-matrix.md).
 
 | Flavor                                                                                   | Purpose                       | Key Features                     | Deployable In      |
 | ---------------------------------------------------------------------------------------- | ----------------------------- | -------------------------------- | ------------------ |
-| [`aws-gardener_prod`](../reference/flavor-matrix.md#aws-gardener_prod-amd64)             | Gardener nodes on AWS         | `gardener`, `_prod`, `aws`       | Cloud              |
-| [`azure-gardener_prod`](../reference/flavor-matrix.md#azure-gardener_prod-amd64)         | Gardener nodes on Azure       | `gardener`, `_prod`, `azure`     | Cloud              |
-| [`gcp-gardener_prod`](../reference/flavor-matrix.md#gcp-gardener_prod-amd64)             | Gardener nodes on GCP         | `gardener`, `_prod`, `gcp`       | Cloud              |
-| [`openstack-gardener_prod`](../reference/flavor-matrix.md#openstack-gardener_prod-amd64) | Gardener nodes on OpenStack   | `gardener`, `_prod`, `openstack` | Cloud / On-Prem    |
-| [`kvm-gardener_prod`](../reference/flavor-matrix.md#kvm-gardener_prod-amd64)             | Gardener nodes on KVM         | `gardener`, `_prod`, `kvm`       | Virtualization     |
-| [`baremetal-gardener_prod`](../reference/flavor-matrix.md#baremetal-gardener_prod-amd64) | Gardener on physical hardware | `gardener`, `_prod`, `baremetal` | On-Prem            |
-| [`baremetal-capi`](../reference/flavor-matrix.md#baremetal-capi-amd64)                   | IronCore / CAPI nodes         | `capi`, `baremetal`              | On-Prem (PXE)      |
-| [`container`](../reference/flavor-matrix.md#container-amd64)                             | Generic OCI container base    | `container`                      | All (build target) |
-| [`bare-libc`](../reference/flavor-matrix.md#bare-libc-amd64)                             | Minimal C/C++ runtime         | distroless libc only             | All (build target) |
-| [`bare-python`](../reference/flavor-matrix.md#bare-python-amd64)                         | Minimal Python runtime        | distroless Python                | All (build target) |
-| [`bare-nodejs`](../reference/flavor-matrix.md#bare-nodejs-amd64)                         | Minimal Node.js runtime       | distroless Node.js               | All (build target) |
-| [`bare-sapmachine`](../reference/flavor-matrix.md#bare-sapmachine-amd64)                 | Minimal Java/SAP runtime      | distroless SAPMachine JDK        | All (build target) |
+| [`aws-gardener_prod`](/reference/flavor-matrix.md#aws-gardener_prod-amd64)             | Gardener nodes on AWS         | `gardener`, `_prod`, `aws`       | Cloud              |
+| [`azure-gardener_prod`](/reference/flavor-matrix.md#azure-gardener_prod-amd64)         | Gardener nodes on Azure       | `gardener`, `_prod`, `azure`     | Cloud              |
+| [`gcp-gardener_prod`](/reference/flavor-matrix.md#gcp-gardener_prod-amd64)             | Gardener nodes on GCP         | `gardener`, `_prod`, `gcp`       | Cloud              |
+| [`openstack-gardener_prod`](/reference/flavor-matrix.md#openstack-gardener_prod-amd64) | Gardener nodes on OpenStack   | `gardener`, `_prod`, `openstack` | Cloud / On-Prem    |
+| [`kvm-gardener_prod`](/reference/flavor-matrix.md#kvm-gardener_prod-amd64)             | Gardener nodes on KVM         | `gardener`, `_prod`, `kvm`       | Virtualization     |
+| [`baremetal-gardener_prod`](/reference/flavor-matrix.md#baremetal-gardener_prod-amd64) | Gardener on physical hardware | `gardener`, `_prod`, `baremetal` | On-Prem            |
+| [`baremetal-capi`](/reference/flavor-matrix.md#baremetal-capi-amd64)                   | IronCore / CAPI nodes         | `capi`, `baremetal`              | On-Prem (PXE)      |
+| [`container`](/reference/flavor-matrix.md#container-amd64)                             | Generic OCI container base    | `container`                      | All (build target) |
+| [`bare-libc`](/reference/flavor-matrix.md#bare-libc-amd64)                             | Minimal C/C++ runtime         | distroless libc only             | All (build target) |
+| [`bare-python`](/reference/flavor-matrix.md#bare-python-amd64)                         | Minimal Python runtime        | distroless Python                | All (build target) |
+| [`bare-nodejs`](/reference/flavor-matrix.md#bare-nodejs-amd64)                         | Minimal Node.js runtime       | distroless Node.js               | All (build target) |
+| [`bare-sapmachine`](/reference/flavor-matrix.md#bare-sapmachine-amd64)                 | Minimal Java/SAP runtime      | distroless SAPMachine JDK        | All (build target) |
 
 ## Related Topics
 
