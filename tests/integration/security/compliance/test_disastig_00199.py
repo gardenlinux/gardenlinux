@@ -20,6 +20,6 @@ def test_systemd_configured_to_restart_auditd_service(systemd):
     assert systemd.get_unit_properties("auditd")["Restart"] != "no"
 
 
-@pytest.mark.feature("selinux")
+@pytest.mark.feature("_selinux")
 def test_selinux_enabled(lsm):
     assert "selinux" in lsm
