@@ -23,3 +23,19 @@ markers:
   - "GL-TESTCOV-checkbox-config-checkbox-units-manifest"
   "usr/share/checkbox-provider-base/units/gardenlinux/test-plan.pxu":
   - "GL-TESTCOV-checkbox-config-checkbox-test-plan"
+  "usr/lib/checkbox-provider-base/bin/storage_check.sh":
+  - "GL-TESTCOV-checkbox-script-storage_check"
+  "usr/lib/checkbox-provider-base/bin/network_check.sh":
+  - "GL-TESTCOV-checkbox-script-network_check"
+  "usr/lib/checkbox-provider-base/bin/cpu_check.sh":
+  - "GL-TESTCOV-checkbox-script-cpu_check"
+  "usr/lib/checkbox-provider-base/bin/memory_check.sh":
+  - "GL-TESTCOV-checkbox-script-memory_check"
+  "usr/lib/checkbox-provider-base/bin/usb_check.sh":
+  - "GL-TESTCOV-checkbox-script-usb_check"
+  "usr/lib/checkbox-provider-base/bin/ipmi_check.sh":
+  - "GL-TESTCOV-checkbox-script-ipmi_check"
+  "usr/lib/checkbox-provider-base/bin/bios_info_check.sh":
+  - "GL-TESTCOV-checkbox-script-bios_info_check"
+  "usr/lib/checkbox-provider-base/bin/stress_check.sh":
+  - "GL-TESTCOV-checkbox-script-stress_check"

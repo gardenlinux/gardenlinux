@@ -1,6 +1,6 @@
 id: gardenlinux-test
 unit: test plan
-_name: 1877 Garden Linux HW Test
+_name: Garden Linux HW Test (Latest)
 _description: Custom tests for testing Garden Linux
 include:
 nested_part:
@@ -12,6 +12,22 @@ nested_part:
     virtualization_disabled_output_attachment
     tpm_enabled_check
     tpm_enabled_check_attachment
+    storage_check
+    storage_check_attachment
+    network_check
+    network_check_attachment
+    cpu_check
+    cpu_check_attachment
+    memory_check
+    memory_check_attachment
+    usb_check
+    usb_check_attachment
+    ipmi_check
+    ipmi_check_attachment
+    bios_info_check
+    bios_info_check_attachment
+    stress_check
+    stress_check_attachment
 
 id: dmesg_output
 unit: test plan
@@ -69,3 +85,115 @@ _name: tpm_enabled_check_attachment
 _description: attachment for tpm check
 include:
     ccloud/tpm_enabled_check_attachment    		certification-status=non-blocker
+
+id: storage_check
+unit: test plan
+_name: storage_check
+_description: check for storage device detection, SMART health and read throughput
+include:
+    ccloud/storage_check              certification-status=non-blocker
+
+id: storage_check_attachment
+unit: test plan
+_name: storage_check_attachment
+_description: attachment for storage check
+include:
+    ccloud/storage_check_attachment   certification-status=non-blocker
+
+id: network_check
+unit: test plan
+_name: network_check
+_description: check for network interface detection and link state
+include:
+    ccloud/network_check              certification-status=non-blocker
+
+id: network_check_attachment
+unit: test plan
+_name: network_check_attachment
+_description: attachment for network check
+include:
+    ccloud/network_check_attachment   certification-status=non-blocker
+
+id: cpu_check
+unit: test plan
+_name: cpu_check
+_description: check CPU core count, flags and topology
+include:
+    ccloud/cpu_check                  certification-status=non-blocker
+
+id: cpu_check_attachment
+unit: test plan
+_name: cpu_check_attachment
+_description: attachment for CPU check
+include:
+    ccloud/cpu_check_attachment       certification-status=non-blocker
+
+id: memory_check
+unit: test plan
+_name: memory_check
+_description: check total RAM, ECC support and basic memory test
+include:
+    ccloud/memory_check               certification-status=non-blocker
+
+id: memory_check_attachment
+unit: test plan
+_name: memory_check_attachment
+_description: attachment for memory check
+include:
+    ccloud/memory_check_attachment    certification-status=non-blocker
+
+id: usb_check
+unit: test plan
+_name: usb_check
+_description: check USB controller detection and device enumeration
+include:
+    ccloud/usb_check                  certification-status=non-blocker
+
+id: usb_check_attachment
+unit: test plan
+_name: usb_check_attachment
+_description: attachment for USB check
+include:
+    ccloud/usb_check_attachment       certification-status=non-blocker
+
+id: ipmi_check
+unit: test plan
+_name: ipmi_check
+_description: check IPMI/BMC interface detection and sensor availability
+include:
+    ccloud/ipmi_check                 certification-status=non-blocker
+
+id: ipmi_check_attachment
+unit: test plan
+_name: ipmi_check_attachment
+_description: attachment for IPMI check
+include:
+    ccloud/ipmi_check_attachment      certification-status=non-blocker
+
+id: bios_info_check
+unit: test plan
+_name: bios_info_check
+_description: check firmware version, BIOS date and DMI/SMBIOS info
+include:
+    ccloud/bios_info_check            certification-status=non-blocker
+
+id: bios_info_check_attachment
+unit: test plan
+_name: bios_info_check_attachment
+_description: attachment for BIOS/firmware info check
+include:
+    ccloud/bios_info_check_attachment certification-status=non-blocker
+
+id: stress_check
+unit: test plan
+_name: stress_check
+_description: CPU, memory and disk I/O longevity stress tests
+include:
+    ccloud/stress_check               certification-status=non-blocker
+
+id: stress_check_attachment
+unit: test plan
+_name: stress_check_attachment
+_description: attachment for stress test output
+include:
+    ccloud/stress_check_attachment    certification-status=non-blocker
