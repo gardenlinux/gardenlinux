@@ -1,5 +1,13 @@
 import pytest
 
+"""
+Ref: SRG-OS-000096-GPOS-00050
+
+Verify the operating system is configured to prohibit or restrict the use of
+functions, ports, protocols, and/or services, as defined in the PPSM CAL and
+vulnerability assessments.
+"""
+
 ALLOWED_PORTS = {22, 53}
 
 FORBIDDEN_SERVICES = [
@@ -18,13 +26,6 @@ FORBIDDEN_SERVICES = [
 @pytest.mark.root(reason="requires audit operations")
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_ports_protocols_and_services_restricted(shell, systemd):
-    """
-    As per DISA STIG compliance requirements, its needed to verify
-    the operating system is configured to prohibit or restrict the
-    use of functions, ports, protocols, and/or servicesto
-    verify that only approved ports and services are active.
-    Ref: SRG-OS-000096-GPOS-00050
-    """
     result = shell("ss -tuln", capture_output=True)
     assert result.returncode == 0, "stigcompliance: failed to list listening ports"
 
