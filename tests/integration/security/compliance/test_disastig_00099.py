@@ -20,12 +20,6 @@ AUDIT_TOOL_PATHS = [
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_audit_tools_parent_dirs_not_writable(file):
-    """
-    As per DISA STIG requirement, the operating system must protect audit tools
-    from unauthorized deletion.
-    This test verifies that audit tool deletion is restricted via filesystem
-    permissions by ensuring parent directories are not writable by group or others.
-    """
     checked = set()
     for path in AUDIT_TOOL_PATHS:
         if not file.exists(path):
