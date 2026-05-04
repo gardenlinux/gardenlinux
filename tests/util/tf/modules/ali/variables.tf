@@ -33,7 +33,7 @@ variable "user_data_script_path" {
 variable "instance_type_amd64" {
   description = "Default instance type for amd64"
   type        = string
-  default     = "ecs.t6-c1m2.large"
+  default     = "ecs.u2a-c1m2.large"
 }
 
 variable "instance_type_arm64" {
