@@ -1,7 +1,7 @@
 name: Cloud Test Cleanup
 on:
   schedule:
-    - cron: "0 4 * * *" # Run daily at 4 AM UTC
+    - cron: "0 2 * * *" # Run daily at 2 AM UTC
   # manual trigger
   workflow_dispatch:
 jobs:

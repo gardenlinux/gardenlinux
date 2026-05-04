@@ -4,7 +4,7 @@ concurrency:
   cancel-in-progress: true
 on:
   schedule:
-    - cron: '0 6 * * *'
+    - cron: '0 4 * * *'
 jobs:
   build:
     name: Build
