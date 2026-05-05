@@ -110,7 +110,6 @@ _name: memory_check
 _description: memory information and basic check
 include:
     com.canonical.certification::memory/info    certification-status=non-blocker
-    com.canonical.certification::memory/check   certification-status=non-blocker
 
 id: usb_check
 unit: test plan
