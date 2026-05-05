@@ -47,7 +47,7 @@ Both include the required tools and network support.
 
 ## What You'll Build
 
-You'll write a Garden Linux `.raw` disk image to your server's boot drive using `dd` from a live system, configure SSH access for remote administration, and boot into the installed system. The tutorial uses the `baremetal-gardener_prod` [flavor](../explanation/flavors.md), which includes the standard kernel and physical hardware support required for bare metal deployment.
+You'll write a Garden Linux `.raw` disk image to your server's boot drive using `dd` from a live system, configure SSH access for remote administration, and boot into the installed system. The tutorial uses the `baremetal-gardener_prod` [flavor](/explanation/flavors), which includes the standard kernel and physical hardware support required for bare metal deployment.
 
 ## Steps
 
@@ -77,7 +77,7 @@ tar -xf "${GL_TAR_XZ}" "${GL_RAW}"
 ```
 
 :::tip
-For a complete list of maintained releases and their support lifecycle, see the [releases reference](../reference/releases/index.md).
+For a complete list of maintained releases and their support lifecycle, see the [releases reference](/reference/releases/).
 :::
 
 #### Build Your Own Images
@@ -262,7 +262,7 @@ For automated fleet provisioning, Garden Linux supports network boot using iPXE 
 - Network configuration
 - Custom service deployment
 
-See the [PXE Boot guide](../how-to/installation/on-premises/pxe-boot.md) and [bare-metal platform-specific configuration](../how-to/installation/on-premises/bare-metal.md) for details.
+See the [PXE Boot guide](/how-to/installation/on-premises/pxe-boot) and [bare-metal platform-specific configuration](/how-to/installation/on-premises/bare-metal) for details.
 
 ### ironcore.dev — NeoNephos Projects
 

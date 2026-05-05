@@ -25,7 +25,7 @@ github_target_path: "docs/reference/testing/test-coverage-markers.md"
 
 # Test Coverage Markers
 
-This guide explains how to create and use test coverage markers for establishing traceability between Garden Linux features and tests, as defined in [ADR-0032](../../adr/0032-static-feature-test-coverage-analysis.md). The following sections detail the tooling, marker syntax, categories and placement guidelines.
+This guide explains how to create and use test coverage markers for establishing traceability between Garden Linux features and tests, as defined in [ADR-0032](/reference/adr/0032-static-feature-test-coverage-analysis). The following sections detail the tooling, marker syntax, categories and placement guidelines.
 
 ## Coverage.py and Test Coverage Analysis
 
@@ -33,7 +33,7 @@ This guide explains how to create and use test coverage markers for establishing
 
 ### What is coverage.py?
 
-`coverage.py` is a static analysis tool that generates coverage reports for Garden Linux, implementing [ADR-0032](../../adr/0032-static-feature-test-coverage-analysis.md), by analyzing the relationship between **test coverage markers** (`GL-TESTCOV-*`) next to a feature's setting and their corresponding test cases. Unlike traditional code coverage tools that require test execution, this tool performs **static analysis** to determine which features have test coverage.
+`coverage.py` is a static analysis tool that generates coverage reports for Garden Linux, implementing [ADR-0032](/reference/adr/0032-static-feature-test-coverage-analysis), by analyzing the relationship between **test coverage markers** (`GL-TESTCOV-*`) next to a feature's setting and their corresponding test cases. Unlike traditional code coverage tools that require test execution, this tool performs **static analysis** to determine which features have test coverage.
 
 These markers follow a specific format (`GL-TESTCOV-$feature-$category-$description` - see [Marker Schema](#marker-schema) for details) that enables automated parsing and analysis. The tool scans both feature definitions and test files to establish traceability between what's configured and what's tested.
 
@@ -392,7 +392,7 @@ If a package in `pkg.include` installs an important service, it makes sense to a
 - Package installation failures cause the **build to fail** - already validated
 - If a package is missing, dependent configurations won't work (redundant testing)
 - Testing `dpkg -l | grep package` adds no value
-- As discussed in [ADR-0013](../../adr/0013-discontinue-packages-musthave-tests.md), testing for package presence adds no value as version-independent testing should focus on functionality, not package lists
+- As discussed in [ADR-0013](/reference/adr/0013-discontinue-packages-musthave-tests), testing for package presence adds no value as version-independent testing should focus on functionality, not package lists
 
 **Build-Time Operations:**
 
@@ -535,8 +535,8 @@ def test_cron_permissions(client):
 
 The test coverage marker system is based on:
 
-- [ADR-0032: Static Coverage Analysis](../../adr/0032-static-feature-test-coverage-analysis.md) - Primary decision for marker system
-- [ADR-0013: Discontinue Musthave Tests](../../adr/0013-discontinue-packages-musthave-tests.md) - Version-independent testing approach
+- [ADR-0032: Static Coverage Analysis](/reference/adr/0032-static-feature-test-coverage-analysis) - Primary decision for marker system
+- [ADR-0013: Discontinue Musthave Tests](/reference/adr/0013-discontinue-packages-musthave-tests) - Version-independent testing approach
 
 ## Related Topics
 
