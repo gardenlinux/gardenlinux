@@ -3,6 +3,14 @@
 DETAILS_FILE=$(mktemp /tmp/ipmi_check_XXXX.txt)
 ipmi_ok="no"
 
+# Skip IPMI check on virtual machines — no BMC present
+if systemd-detect-virt --quiet 2>/dev/null; then
+    virt=$(systemd-detect-virt 2>/dev/null || echo "unknown")
+    echo "SKIP: Running in virtualized environment ($virt) — IPMI/BMC not applicable" | tee -a "$DETAILS_FILE"
+    echo "ATTACHMENT: $DETAILS_FILE"
+    exit 0
+fi
+
 echo "===== Loading IPMI kernel modules =====" >> "$DETAILS_FILE"
 for mod in ipmi_si ipmi_devintf ipmi_msghandler; do
     if modprobe "$mod" 2>/dev/null; then
