@@ -46,10 +46,10 @@ The following principles guide all test development in Garden Linux:
 
 #### 3. Be very strict about declaring if they mutate system state
 
-- Use appropriate markers (`@pytest.mark.modify`, `@pytest.mark.root`) to declare system modifications, as per [ADR-0007](../../adr/0007-non-invasive-read-only-testing.md)
+- Use appropriate markers (`@pytest.mark.modify`, `@pytest.mark.root`) to declare system modifications, as per [ADR-0007](/reference/adr/0007-non-invasive-read-only-testing)
 - Document (`reason=`) why system modifications are necessary
 - Ensure tests clean up after themselves.
-  - If new functionality is added, check if `tests/plugins/sysdiff.py` collects modifications, as specified in [ADR-0022](../../adr/0022-test-ng-system-state-diffing.md).
+  - If new functionality is added, check if `tests/plugins/sysdiff.py` collects modifications, as specified in [ADR-0022](/reference/adr/0022-test-ng-system-state-diffing).
 
 #### 4. Only run as root when needed
 
@@ -64,7 +64,7 @@ The following principles guide all test development in Garden Linux:
 - Whenever possible, design your tests so that they work across _all_ supported environments and platforms. Only exclude an environment or platform if there’s a strong, well-documented reason to do so.
 - If possible, still add a minimal test for excluded platforms
 - Document (`reason=`) why a test must run (or be excluded) in certain environments or platforms
-- For a list of all available test environments (like chroot, QEMU, cloud, and OCI), see [Test Environment Details](../../how-to/testing/run-tests.md#test-environments).
+- For a list of all available test environments (like chroot, QEMU, cloud, and OCI), see [Test Environment Details](/how-to/testing/run-tests#test-environments).
 
 #### 6. Use abstractions judiciously to hide implementation details
 
@@ -73,22 +73,22 @@ The following principles guide all test development in Garden Linux:
 - Keep test logic visible and maintain Arrange-Act-Assert structure
 - Avoid over-abstraction that requires reading multiple plugins to understand a test
 
-##### Parser plugins ([ADR-0026](../../adr/0026-test-ng-when-to-parsers.md))
+##### Parser plugins ([ADR-0026](/reference/adr/0026-test-ng-when-to-parsers))
 
-- Use the default parsing plugins ([`parse`](plugins/parse.py), [`parse_file`](plugins/parse_file.py)) for files and command output to keep comment handling, format support, and errors consistent
+- Use the default parsing plugins ([`parse`](https://github.com/gardenlinux/gardenlinux/blob/main/tests/plugins/parse.py), [`parse_file`](https://github.com/gardenlinux/gardenlinux/blob/main/tests/plugins/parse_file.py)) for files and command output to keep comment handling, format support, and errors consistent
 - Skip ad-hoc parsing (`Path.read_text()`, direct `json.loads()`, regex scraping) when a parser plugin covers the case
 - Add a domain-specific parser plugin when parsing repeats, needs special handling beyond the defaults, or clearly improves readability/maintainability
 - For examples, see [Parsing Plugins](#parsing-plugins)
 
 #### 7. Be mindful about external dependencies
 
-- Prefer Python standard library over third-party packages, following [ADR-0016](../../adr/0016-minimal-host-dependencies-for-test-ng.md)
+- Prefer Python standard library over third-party packages, following [ADR-0016](/reference/adr/0016-minimal-host-dependencies-for-test-ng)
 - Only add PyPI dependencies when there's clear benefit
 - Document why external dependencies are necessary
 
 #### 8. Handlers must restore system state in teardown phase
 
-- Handlers (yield fixtures) that modify system state must restore the original state after tests complete, as required by [ADR-0007](../../adr/0007-non-invasive-read-only-testing.md)
+- Handlers (yield fixtures) that modify system state must restore the original state after tests complete, as required by [ADR-0007](/reference/adr/0007-non-invasive-read-only-testing)
 - This cleanup is only required when tests run with `--allow-system-modifications` and are marked with `@pytest.mark.modify`
 - The pattern is: save initial state → yield to test → restore initial state in teardown
 - Handlers must track what they changed and reverse those changes in reverse order
@@ -626,7 +626,7 @@ def test_example(systemd: Systemd):
 - Use appropriate log levels: `logger.debug()` for detailed info, `logger.info()` for important milestones
 
 :::info
-Have a look at the [user documentation](README.md#debugging-tests) if you want to know how to view those debug logs when running tests.
+Have a look at the [debug tests guide](/how-to/testing/debug-tests#debug-logs) if you want to know how to view those debug logs when running tests.
 :::
 
 ### Debugging Tests in a Booted VM
@@ -802,13 +802,13 @@ When adding new dependencies:
 
 Key decisions that guide test development:
 
-- [ADR-0006: New Test Framework](../../adr/0006-new-test-framework-in-place-self-contained-test-execution.md) - Self-contained execution model
-- [ADR-0007: Non-Invasive Testing](../../adr/0007-non-invasive-read-only-testing.md) - Read-only testing principles
-- [ADR-0008: Unified Test Logic](../../adr/0008-unified-and-declarative-test-logic.md) - Declarative test patterns
-- [ADR-0013: Discontinue Musthave Tests](../../adr/0013-discontinue-packages-musthave-tests.md) - Version-independent testing
-- [ADR-0016: Minimal Host Dependencies](../../adr/0016-minimal-host-dependencies-for-test-ng.md) - Dependency management
-- [ADR-0022: System State Diffing](../../adr/0022-test-ng-system-state-diffing.md) - Detecting modifications
-- [ADR-0026: Parser Plugins](../../adr/0026-test-ng-when-to-parsers.md) - Parsing guidelines
+- [ADR-0006: New Test Framework](/reference/adr/0006-new-test-framework-in-place-self-contained-test-execution) - Self-contained execution model
+- [ADR-0007: Non-Invasive Testing](/reference/adr/0007-non-invasive-read-only-testing) - Read-only testing principles
+- [ADR-0008: Unified Test Logic](/reference/adr/0008-unified-and-declarative-test-logic) - Declarative test patterns
+- [ADR-0013: Discontinue Musthave Tests](/reference/adr/0013-discontinue-packages-musthave-tests) - Version-independent testing
+- [ADR-0016: Minimal Host Dependencies](/reference/adr/0016-minimal-host-dependencies-for-test-ng) - Dependency management
+- [ADR-0022: System State Diffing](/reference/adr/0022-test-ng-system-state-diffing) - Detecting modifications
+- [ADR-0026: Parser Plugins](/reference/adr/0026-test-ng-when-to-parsers) - Parsing guidelines
 
 ## Related Resources
 

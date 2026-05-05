@@ -61,7 +61,7 @@ Tests need to implement debug output. Results may vary depending on the test.
 
 ### Debug Output in Tests
 
-For information on adding debug output to tests, see [Developing Tests](../reference/testing/developing-tests.md#debugging-tests).
+For information on adding debug output to tests, see [Developing Tests](/reference/testing/developing-tests#debugging-tests).
 
 ## Login Scripts
 

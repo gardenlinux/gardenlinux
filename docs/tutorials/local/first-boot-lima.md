@@ -91,7 +91,7 @@ cat gardenlinux-manifest.yaml | limactl start --name gardenlinux -
 :::
 
 :::tip
-For a complete list of maintained releases and their support lifecycle, see the [releases reference](../reference/releases/index.md).
+For a complete list of maintained releases and their support lifecycle, see the [releases reference](/reference/releases/).
 :::
 
 #### Build Your Own Images
