@@ -27,7 +27,7 @@ resource "alicloud_instance" "instance" {
   vswitch_id                 = alicloud_vswitch.subnet.id
   internet_max_bandwidth_out = 1
 
-  system_disk_category    = "cloud_auto"
+  system_disk_category    = "cloud_essd"
   system_disk_name        = local.image_name
   system_disk_size        = 20
   system_disk_description = local.image_name
@@ -39,7 +39,7 @@ resource "alicloud_instance" "instance" {
 
   data_disks {
     size = 20
-    category = "cloud_auto"
+    category = "cloud_essd"
     delete_with_instance = true
     snapshot_id = data.alicloud_ecs_snapshots.image_test.snapshots.0.id
   }
