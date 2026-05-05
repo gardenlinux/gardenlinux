@@ -4,10 +4,5 @@ checkbox-provider-base
 python3-urwid
 python3-pip
 nginx
-smartmontools
-hdparm
 ipmitool
 dmidecode
-usbutils
-ethtool
-pciutils

@@ -1,7 +1,7 @@
 id: gardenlinux-test
 unit: test plan
 _name: Garden Linux HW Test (Latest)
-_description: Custom tests for testing Garden Linux
+_description: Hardware validation tests for Garden Linux ccloud delivery to HW vendors
 include:
 nested_part:
     dmesg_output
@@ -13,187 +13,145 @@ nested_part:
     tpm_enabled_check
     tpm_enabled_check_attachment
     storage_check
-    storage_check_attachment
     network_check
-    network_check_attachment
     cpu_check
-    cpu_check_attachment
     memory_check
-    memory_check_attachment
     usb_check
-    usb_check_attachment
     ipmi_check
     ipmi_check_attachment
     bios_info_check
     bios_info_check_attachment
     stress_check
-    stress_check_attachment
 
 id: dmesg_output
 unit: test plan
 _name: dmesg output
 _description: dmesg output sorted by severity
 include:
-    ccloud/dmesg_output       		certification-status=non-blocker
+    ccloud/dmesg_output                 certification-status=non-blocker
 
 id: dmesg_output_attachment
 unit: test plan
 _name: dmesg attachment
 _description: attachment for dmesg
 include:
-    ccloud/dmesg_output_attachment	certification-status=non-blocker
+    ccloud/dmesg_output_attachment      certification-status=non-blocker
 
 id: hw_encrypt_enabled_check
 unit: test plan
 _name: hw_encrypt_enabled_check
 _description: encrypt enabled check
 include:
-    ccloud/hw_encrypt_enabled_check	certification-status=non-blocker
-
+    ccloud/hw_encrypt_enabled_check     certification-status=non-blocker
 
 id: hw_encrypt_enabled_check_output
 unit: test plan
 _name: hw_encrypt_enabled_check_output
 _description: encrypt enabled check attachment
 include:
-    ccloud/hw_encrypt_enabled_check_output	certification-status=non-blocker
+    ccloud/hw_encrypt_enabled_check_output  certification-status=non-blocker
 
 id: virtualization_disabled_output
 unit: test plan
 _name: virtualization_disabled_output
 _description: check for virtualization disabled
 include:
-    ccloud/virtualization_disabled_output       		certification-status=non-blocker
+    ccloud/virtualization_disabled_output   certification-status=non-blocker
 
 id: virtualization_disabled_output_attachment
 unit: test plan
 _name: virtualization_disabled_output_attachment
 _description: attachment for virtualization disabled check
 include:
-    ccloud/virtualization_disabled_output_attachment    		certification-status=non-blocker
+    ccloud/virtualization_disabled_output_attachment    certification-status=non-blocker
 
 id: tpm_enabled_check
 unit: test plan
 _name: tpm_enabled_check
-_description: check for tpm 
+_description: check for tpm
 include:
-    ccloud/tpm_enabled_check      		certification-status=non-blocker
+    ccloud/tpm_enabled_check            certification-status=non-blocker
 
 id: tpm_enabled_check_attachment
 unit: test plan
 _name: tpm_enabled_check_attachment
 _description: attachment for tpm check
 include:
-    ccloud/tpm_enabled_check_attachment    		certification-status=non-blocker
+    ccloud/tpm_enabled_check_attachment certification-status=non-blocker
 
 id: storage_check
 unit: test plan
 _name: storage_check
-_description: check for storage device detection, SMART health and read throughput
+_description: storage device detection, SMART health and read throughput
 include:
-    ccloud/storage_check              certification-status=non-blocker
-
-id: storage_check_attachment
-unit: test plan
-_name: storage_check_attachment
-_description: attachment for storage check
-include:
-    ccloud/storage_check_attachment   certification-status=non-blocker
+    com.canonical.certification::disk/detect        certification-status=non-blocker
+    com.canonical.certification::disk/smart_{name} certification-status=non-blocker
+    com.canonical.certification::disk/read_performance_{name}   certification-status=non-blocker
 
 id: network_check
 unit: test plan
 _name: network_check
-_description: check for network interface detection and link state
+_description: network interface detection, link state and basic connectivity
 include:
-    ccloud/network_check              certification-status=non-blocker
-
-id: network_check_attachment
-unit: test plan
-_name: network_check_attachment
-_description: attachment for network check
-include:
-    ccloud/network_check_attachment   certification-status=non-blocker
+    com.canonical.certification::networking/info_device{__index__}_{interface}  certification-status=non-blocker
+    com.canonical.certification::networking/gateway_ping    certification-status=non-blocker
 
 id: cpu_check
 unit: test plan
 _name: cpu_check
-_description: check CPU core count, flags and topology
+_description: CPU topology, frequency and flags
 include:
-    ccloud/cpu_check                  certification-status=non-blocker
-
-id: cpu_check_attachment
-unit: test plan
-_name: cpu_check_attachment
-_description: attachment for CPU check
-include:
-    ccloud/cpu_check_attachment       certification-status=non-blocker
+    com.canonical.certification::cpu/topology               certification-status=non-blocker
+    com.canonical.certification::cpu/cpufreq_test-server    certification-status=non-blocker
 
 id: memory_check
 unit: test plan
 _name: memory_check
-_description: check total RAM, ECC support and basic memory test
+_description: memory information and basic check
 include:
-    ccloud/memory_check               certification-status=non-blocker
-
-id: memory_check_attachment
-unit: test plan
-_name: memory_check_attachment
-_description: attachment for memory check
-include:
-    ccloud/memory_check_attachment    certification-status=non-blocker
+    com.canonical.certification::memory/info    certification-status=non-blocker
+    com.canonical.certification::memory/check   certification-status=non-blocker
 
 id: usb_check
 unit: test plan
 _name: usb_check
-_description: check USB controller detection and device enumeration
+_description: USB controller detection and device enumeration
 include:
-    ccloud/usb_check                  certification-status=non-blocker
-
-id: usb_check_attachment
-unit: test plan
-_name: usb_check_attachment
-_description: attachment for USB check
-include:
-    ccloud/usb_check_attachment       certification-status=non-blocker
+    com.canonical.certification::usb/detect         certification-status=non-blocker
+    com.canonical.certification::usb/storage-detect certification-status=non-blocker
 
 id: ipmi_check
 unit: test plan
 _name: ipmi_check
 _description: check IPMI/BMC interface detection and sensor availability
 include:
-    ccloud/ipmi_check                 certification-status=non-blocker
+    ccloud/ipmi_check                   certification-status=non-blocker
 
 id: ipmi_check_attachment
 unit: test plan
 _name: ipmi_check_attachment
 _description: attachment for IPMI check
 include:
-    ccloud/ipmi_check_attachment      certification-status=non-blocker
+    ccloud/ipmi_check_attachment        certification-status=non-blocker
 
 id: bios_info_check
 unit: test plan
 _name: bios_info_check
 _description: check firmware version, BIOS date and DMI/SMBIOS info
 include:
-    ccloud/bios_info_check            certification-status=non-blocker
+    ccloud/bios_info_check              certification-status=non-blocker
 
 id: bios_info_check_attachment
 unit: test plan
 _name: bios_info_check_attachment
 _description: attachment for BIOS/firmware info check
 include:
-    ccloud/bios_info_check_attachment certification-status=non-blocker
+    ccloud/bios_info_check_attachment   certification-status=non-blocker
 
 id: stress_check
 unit: test plan
 _name: stress_check
-_description: CPU, memory and disk I/O longevity stress tests
+_description: CPU and memory longevity stress tests
 include:
-    ccloud/stress_check               certification-status=non-blocker
-
-id: stress_check_attachment
-unit: test plan
-_name: stress_check_attachment
-_description: attachment for stress test output
-include:
-    ccloud/stress_check_attachment    certification-status=non-blocker
+    com.canonical.certification::stress/cpu_stress_ng_test  certification-status=non-blocker
+    com.canonical.certification::stress/memory_stress_ng    certification-status=non-blocker
