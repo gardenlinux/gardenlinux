@@ -12,4 +12,11 @@ github_target_path: docs/how-to/installation/cloud/azure.md
 
 # Azure
 
+## Post-Installation Steps
+
+After the installation is completed, you might want to follow one or more of these suggested
+post-installation steps to complete your cloud setup.
+
+- [Creating a User Account using `cloud-init`](/how-to/installation/post-install.md#method-3-cloud-init-user-data-cloud-platforms)
+
 <!-- TODO: Create new content -->

@@ -12,3 +12,11 @@ github_target_path: docs/how-to/installation/on-premises/pxe-boot.md
 ---
 
 # PXE Boot
+
+## Post-Installation Steps
+
+After this installation is completed, you might want to follow one or more of the following
+post-installation steps to complete your pxe-boot setup.
+
+- [Creating a User Using `chroot` on pxe-boot Deployments](/how-to/installation/post-install.md#method-1-chroot-for-bare-metal-offline-deployments)
+
