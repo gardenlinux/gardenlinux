@@ -22,7 +22,7 @@ done
 
 echo "" >> "$DETAILS_FILE"
 echo "===== IPMI device nodes =====" >> "$DETAILS_FILE"
-if ls /dev/ipmi* /dev/ipmi 2>/dev/null | head -5 >> "$DETAILS_FILE"; then
+if find /dev -maxdepth 1 -name 'ipmi*' 2>/dev/null | head -5 >> "$DETAILS_FILE" && [ -n "$(find /dev -maxdepth 1 -name 'ipmi*' 2>/dev/null)" ]; then
     ipmi_ok="yes"
     echo "IPMI device node found" >> "$DETAILS_FILE"
 else
