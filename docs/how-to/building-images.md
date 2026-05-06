@@ -93,6 +93,15 @@ If you have issues with running `./cert/build`, try running `./cert/build clean`
 
 By default, the command uses local files as the private key storage. However, you can configure it to use the AWS Key Management Service (KMS) key store by using the `--kms` flag. Note that valid AWS credentials need to be configured using the standard AWS environment variables.
 
+:::tip
+For conceptual background on these features, see [Boot Modes](/explanation/boot-modes)
+and [Secure Boot and Trusted Boot](/explanation/secure-boot).
+:::
+
 ## Troubleshooting
 
 If you encounter any issues during the build process, refer to the [Garden Linux builder's troubleshooting section](https://github.com/gardenlinux/builder#troubleshooting) for guidance.
+
+## Related Topics
+
+<RelatedTopics />
