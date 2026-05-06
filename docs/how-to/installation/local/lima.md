@@ -14,4 +14,12 @@ github_target_path: docs/how-to/installation/local/lima.md
 
 # Lima
 
+## Post-Installation Steps
+
+After the installation is completed, you might want to follow one of these post-installation steps
+to complete your kvm setup.
+
+- [Creating A User Using the `fwcfg`-script for LIMA Deployments](/how-to/installation/post-install.md#method-2-fwcfg-script-kvmqemu)
+
+
 <!-- TODO: Merge from: 02_operators/lima-vm.md, 02_operators/local-k8s-lima.md -->
