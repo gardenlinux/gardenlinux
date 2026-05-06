@@ -1,5 +1,5 @@
 ---
-title: "Azure"
+title: "Install on Azure"
 migration_status: "new"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4623"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"

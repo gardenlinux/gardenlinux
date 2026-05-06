@@ -1,5 +1,5 @@
 ---
-title: "Lima"
+title: "Install Locally Using Lima"
 description: "How to install Garden Linux on Lima"
 migration_status: "merge"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4623"
