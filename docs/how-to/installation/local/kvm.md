@@ -12,4 +12,12 @@ github_target_path: docs/how-to/installation/local/kvm.md
 
 # Kvm
 
+## Post-Installation Steps
+
+After the installation is completed, you might want to follow one of these post-installation steps
+to complete your kvm setup.
+
+- [Creating A User Using the `fwcfg`-script for KVM Deployments](/how-to/installation/post-install.md#method-2-fwcfg-script-kvmqemu)
+
+
 <!-- TODO: Create new content -->
