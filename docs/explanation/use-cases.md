@@ -2,16 +2,10 @@
 title: "Use Cases"
 description: "When and why to choose Garden Linux for your workload"
 order: 9
-category: "explanation"
-tags:
-  - "use-cases"
-  - "gardener"
-  - "containers"
-  - "kubernetes"
-  - "bare-metal"
 related_topics:
   - /explanation/architecture
   - /explanation/flavors
+  - /how-to/choosing-flavors
   - /how-to/building-images
   - /reference/releases/release-lifecycle
   - /reference/flavor-matrix
@@ -75,6 +69,26 @@ public or private clouds.
 [`openstack`](/reference/features/openstack),
 [`baremetal`](/reference/features/baremetal)
 
+#### Recommended Flavors
+
+| Platform                                     | Flavor                                                                                 | Key Features                                                                     | Architecture |
+| -------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------ |
+| [`aws`](/reference/features/aws)             | [`aws-gardener_prod`](/reference/flavor-matrix.md#aws-gardener_prod-amd64)             | [`gardener`](/reference/features/gardener), [`_prod`](/reference/features/_prod) | amd64, arm64 |
+| [`azure`](/reference/features/azure)         | [`azure-gardener_prod`](/reference/flavor-matrix.md#azure-gardener_prod-amd64)         | [`gardener`](/reference/features/gardener), [`_prod`](/reference/features/_prod) | amd64, arm64 |
+| [`gcp`](/reference/features/gcp)             | [`gcp-gardener_prod`](/reference/flavor-matrix.md#gcp-gardener_prod-amd64)             | [`gardener`](/reference/features/gardener), [`_prod`](/reference/features/_prod) | amd64, arm64 |
+| [`openstack`](/reference/features/openstack) | [`openstack-gardener_prod`](/reference/flavor-matrix.md#openstack-gardener_prod-amd64) | [`gardener`](/reference/features/gardener), [`_prod`](/reference/features/_prod) | amd64, arm64 |
+| [`kvm`](/reference/features/kvm)             | [`kvm-gardener_prod`](/reference/flavor-matrix.md#kvm-gardener_prod-amd64)             | [`gardener`](/reference/features/gardener), [`_prod`](/reference/features/_prod) | amd64, arm64 |
+| [`vmware`](/reference/features/vmware)       | [`vmware-gardener_prod`](/reference/flavor-matrix.md#vmware-gardener_prod-amd64)       | [`gardener`](/reference/features/gardener), [`_prod`](/reference/features/_prod) | amd64, arm64 |
+| [`baremetal`](/reference/features/baremetal) | [`baremetal-gardener_prod`](/reference/flavor-matrix.md#baremetal-gardener_prod-amd64) | [`gardener`](/reference/features/gardener), [`_prod`](/reference/features/_prod) | amd64, arm64 |
+
+:::tip
+For FIPS-compliant variants, see the [`_fips`](/reference/features/_fips)
+feature. For Trusted Boot variants, see
+[`_trustedboot`](/reference/features/_trustedboot) and [`_tpm2`](/reference/features/_tpm2)
+and the [Secure Boot and Trusted Boot](/explanation/secure-boot) explanation. The full list of published
+flavors is in the [Flavor Matrix](/reference/flavor-matrix).
+:::
+
 ### Bare-Metal Gardener Kubernetes Nodes via IronCore
 
 For organizations needing to run Gardener-managed Kubernetes on physical
@@ -93,6 +107,12 @@ infrastructure requests into bare-metal operations.
 **Platform:**
 [`baremetal`](/reference/features/baremetal)
 
+#### Recommended Flavors
+
+| Platform                                     | Flavor                                                               | Key Features                       | Architecture |
+| -------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------- | ------------ |
+| [`baremetal`](/reference/features/baremetal) | [`baremetal-capi`](/reference/flavor-matrix.md#baremetal-capi-amd64) | [`capi`](/reference/features/capi) | amd64, arm64 |
+
 ### Vanilla Kubernetes Nodes
 
 Garden Linux is also perfectly capable of running non-Gardener vanilla
@@ -109,6 +129,12 @@ Kubernetes clusters in public or private clouds.
 [`aws`](/reference/features/aws), [`azure`](/reference/features/azure),
 [`gcp`](/reference/features/gcp), [`openstack`](/reference/features/openstack),
 [`baremetal`](/reference/features/baremetal)
+
+#### Recommended Flavors
+
+The [`khost`](/reference/features/khost) feature is not published as a standalone [flavor](/explanation/flavors) in the default
+`flavors.yaml`. Build a custom flavor by combining [`khost`](/reference/features/khost) with your target
+platform. See [Building Images](/how-to/building-images) for instructions.
 
 ### Container Base Images
 
@@ -138,22 +164,37 @@ an auditable, minimal foundation.
 
 **Platform:** [`container`](/reference/features/container) (full images)
 
+#### Recommended Flavors
+
+| Type              | Flavor                                                                         | Description                          | Architecture |
+| ----------------- | ------------------------------------------------------------------------------ | ------------------------------------ | ------------ |
+| Full              | [`container`](/reference/flavor-matrix.md#container-amd64)                     | Complete Debian-based OCI base image | amd64, arm64 |
+| Full (Python dev) | [`container-pythonDev`](/reference/flavor-matrix.md#container-pythondev-amd64) | Full image with Python toolchain     | amd64, arm64 |
+| Bare (C/C++)      | [`bare-libc`](/reference/flavor-matrix.md#bare-libc-amd64)                     | Minimal C/C++ runtime (distroless)   | amd64, arm64 |
+| Bare (Python)     | [`bare-python`](/reference/flavor-matrix.md#bare-python-amd64)                 | Minimal Python runtime (distroless)  | amd64, arm64 |
+| Bare (Node.js)    | [`bare-nodejs`](/reference/flavor-matrix.md#bare-nodejs-amd64)                 | Minimal Node.js runtime (distroless) | amd64, arm64 |
+| Bare (Java/SAP)   | [`bare-sapmachine`](/reference/flavor-matrix.md#bare-sapmachine-amd64)         | Minimal SAPMachine JDK (distroless)  | amd64, arm64 |
+
 ### Virtualization Host
 
 Garden Linux serves well as host for virtualized environments by support running
 workloads in KVM/libvirt. Garden Linux ships with the
 [`vhost`](/reference/features/vhost) feature pre-configured:
 
--
-- This use case applies to all platforms. Choose this when operating KVM/libvirt
-  hypervisors in public or private clouds.
+- KVM kernel modules and libvirt are installed and enabled.
 
-  **Features:** [`vhost`](/reference/features/vhost)
+This use case applies to all platforms. Choose this when operating KVM/libvirt
+hypervisors in public or private clouds.
 
-  **Platforms:** [`aws`](/reference/features/aws),
-  [`azure`](/reference/features/azure), [`gcp`](/reference/features/gcp),
-  [`openstack`](/reference/features/openstack),
-  [`baremetal`](/reference/features/baremetal)
+**Features:** [`vhost`](/reference/features/vhost)
+
+**Platforms:** [`baremetal`](/reference/features/baremetal)
+
+#### Recommended Flavors
+
+| Platform                                     | Flavor                                                                 | Key Features                         | Architecture |
+| -------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------ | ------------ |
+| [`baremetal`](/reference/features/baremetal) | [`baremetal-vhost`](/reference/flavor-matrix.md#baremetal-vhost-amd64) | [`vhost`](/reference/features/vhost) | amd64, arm64 |
 
 ## Supported Deployment Environments
 
@@ -182,26 +223,12 @@ or use libvirt/KVM or Lima for local development on Linux and macOS. This
 environment is ideal for testing, CI pipelines, and developer workflows where
 rapid iteration and reproducibility are priorities.
 
-## Common Flavors
+## Flavor Selection Guide
 
-The following table lists commonly used Garden Linux [flavors](/explanation/flavors). For the complete
-matrix including all variants (FIPS, USI, Trusted Boot, architectures), see
-[Flavor Matrix](/reference/flavor-matrix.md).
-
-| Flavor                                                                                   | Purpose                       | Key Features                     | Deployable In      |
-| ---------------------------------------------------------------------------------------- | ----------------------------- | -------------------------------- | ------------------ |
-| [`aws-gardener_prod`](/reference/flavor-matrix.md#aws-gardener_prod-amd64)             | Gardener nodes on AWS         | `gardener`, `_prod`, `aws`       | Cloud              |
-| [`azure-gardener_prod`](/reference/flavor-matrix.md#azure-gardener_prod-amd64)         | Gardener nodes on Azure       | `gardener`, `_prod`, `azure`     | Cloud              |
-| [`gcp-gardener_prod`](/reference/flavor-matrix.md#gcp-gardener_prod-amd64)             | Gardener nodes on GCP         | `gardener`, `_prod`, `gcp`       | Cloud              |
-| [`openstack-gardener_prod`](/reference/flavor-matrix.md#openstack-gardener_prod-amd64) | Gardener nodes on OpenStack   | `gardener`, `_prod`, `openstack` | Cloud / On-Prem    |
-| [`kvm-gardener_prod`](/reference/flavor-matrix.md#kvm-gardener_prod-amd64)             | Gardener nodes on KVM         | `gardener`, `_prod`, `kvm`       | Virtualization     |
-| [`baremetal-gardener_prod`](/reference/flavor-matrix.md#baremetal-gardener_prod-amd64) | Gardener on physical hardware | `gardener`, `_prod`, `baremetal` | On-Prem            |
-| [`baremetal-capi`](/reference/flavor-matrix.md#baremetal-capi-amd64)                   | IronCore / CAPI nodes         | `capi`, `baremetal`              | On-Prem (PXE)      |
-| [`container`](/reference/flavor-matrix.md#container-amd64)                             | Generic OCI container base    | `container`                      | All (build target) |
-| [`bare-libc`](/reference/flavor-matrix.md#bare-libc-amd64)                             | Minimal C/C++ runtime         | distroless libc only             | All (build target) |
-| [`bare-python`](/reference/flavor-matrix.md#bare-python-amd64)                         | Minimal Python runtime        | distroless Python                | All (build target) |
-| [`bare-nodejs`](/reference/flavor-matrix.md#bare-nodejs-amd64)                         | Minimal Node.js runtime       | distroless Node.js               | All (build target) |
-| [`bare-sapmachine`](/reference/flavor-matrix.md#bare-sapmachine-amd64)                 | Minimal Java/SAP runtime      | distroless SAPMachine JDK        | All (build target) |
+For a step-by-step guide on choosing the right flavor, see
+[Choosing Flavors](/how-to/choosing-flavors). For the complete matrix of all
+flavors including FIPS, USI, and Trusted Boot variants, see the
+[Flavor Matrix](/reference/flavor-matrix).
 
 ## Related Topics
 
