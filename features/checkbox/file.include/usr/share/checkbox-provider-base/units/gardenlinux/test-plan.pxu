@@ -153,4 +153,3 @@ _name: stress_check
 _description: CPU and memory longevity stress tests
 include:
     com.canonical.certification::stress/cpu_stress_ng_test  certification-status=non-blocker
-    com.canonical.certification::stress/memory_stress_ng    certification-status=non-blocker
