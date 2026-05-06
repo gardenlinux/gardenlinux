@@ -1,5 +1,5 @@
 ---
-title: "Kvm"
+title: "Install Locally Using KVM"
 migration_status: "new"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4623"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
