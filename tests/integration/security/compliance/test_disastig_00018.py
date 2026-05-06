@@ -1,6 +1,7 @@
 import pytest
 
 """
+Ref: SRG-OS-000040-GPOS-00018
 
 Verify the operating system produces audit records containing information to
 establish the source of the events.
