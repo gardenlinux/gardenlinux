@@ -60,6 +60,12 @@ For example, the `gardener` feature doesn't just install `containerd` it also co
 A complete list of features can be seen in the [Features Reference](/reference/features/).
 :::
 
+:::tip
+For an explanation of how boot-related features interact, see
+[Boot Modes](/explanation/boot-modes) and
+[Secure Boot and Trusted Boot](/explanation/secure-boot).
+:::
+
 ### Target Abstraction
 
 Targets represent deployment platforms, but they're designed to minimize duplication. The `aws` target doesn't copy-paste all cloud-related configuration - it inherits base `cloud` configuration and adds AWS-specific elements like EC2 instance metadata handling and other AWS-specific settings-python`(Python),`bare-nodejs`(Node.js),
@@ -72,6 +78,15 @@ This hierarchical inheritance allows the flavor system to:
 - **Promote consistency** - Common cloud configurations are shared
 - **Reduce errors** - Changes to base cloud configuration propagate to all platforms
 - **Simplify maintenance** - Platform-specific issues are isolated
+
+:::info Single platform enforcement
+Each Garden Linux build enforces exactly one platform feature by default.
+Specifying zero or multiple platforms causes the build to fail, preventing
+silent misconfigurations where multiple platforms could produce unpublished or
+broken images. See
+[ADR 0020](/reference/adr/0020-enforce-single-platform-by-default-in-builder)
+for the rationale and the opt-in override flag.
+:::
 
 ## The Publication Pipeline
 
@@ -121,6 +136,17 @@ As flavors progress through the pipeline, they receive a canonical name (CNAME) 
 - **Traceability**: The CNAME contains all information needed to reproduce the build
 - **Automation**: CI/CD pipelines can programmatically reference specific image variants
 - **Distribution**: S3 paths and container tags are derived from the CNAME
+
+:::info Feature name concatenation in the CNAME
+Regular features are joined to the target and to each other with `-`. Features whose names begin with `_` are appended directly, without a preceding `-`.
+
+For example, `aws-gardener_prod_fips` is composed of:
+
+- `aws` — the target
+- `gardener` — joined with `-` → `aws-gardener`
+- `_prod` — appended directly (no `-`) → `aws-gardener_prod`
+- `_fips` — appended directly (no `-`) → `aws-gardener_prod_fips`
+  :::
 
 The CNAME system ensures that what was tested is exactly what gets deployed.
 

@@ -23,3 +23,8 @@ Each [feature](/reference/glossary.html#feature) name links to its detailed docu
 :::tip Data sourced from `flavors.yaml` and `features/*/README.md`
 :::
 
+:::tip Downloading images
+To download a pre-built image for a flavor listed here, see
+[Getting Images](/how-to/getting-images#official-images).
+:::
+
