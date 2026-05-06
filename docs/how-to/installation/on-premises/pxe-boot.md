@@ -1,5 +1,5 @@
 ---
-title: "PXE Boot"
+title: "Install Using PXE Boot"
 migration_status: "merge"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4623"
 migration_source: "02_operators/deployment/ipxe-install.md"

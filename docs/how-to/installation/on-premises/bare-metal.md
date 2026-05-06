@@ -1,5 +1,5 @@
 ---
-title: "Bare Metal"
+title: "Install Directly on Bare Metal"
 migration_status: "new"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4623"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
