@@ -9,7 +9,7 @@ related_topics:
   - /reference/releases/release-lifecycle.md
   - /reference/flavors.md
   - /how-to/releases/os-releases.md
-  - /explanation/apt-repos.md
+  - /explanation/repo-infrastructure.md
 migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4705"
 migration_stakeholder: "@tmangold, @yeoldegrove, @ByteOtter"
