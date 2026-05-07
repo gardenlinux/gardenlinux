@@ -10,6 +10,7 @@ related_topics:
   - /reference/flavors.md
   - /how-to/releases/os-releases.md
   - /explanation/repo-infrastructure.md
+  - /explanation/github-workflows.md
 migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4705"
 migration_stakeholder: "@tmangold, @yeoldegrove, @ByteOtter"
@@ -200,6 +201,8 @@ Key workflows in the pipeline:
 - **`manual_gh_release_page.yml`**: Creates the GitHub release with notes, metadata, and attached artifacts
 
 The pipeline ensures that only successfully tested artifacts reach distribution channels.
+
+For a detailed explanation of all CI/CD workflows and their interactions, see [GitHub Actions Workflows](/explanation/github-workflows.md).
 
 ## Artifact Flow
 

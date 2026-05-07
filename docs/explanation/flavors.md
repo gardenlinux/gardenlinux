@@ -7,6 +7,7 @@ related_topics:
   - /reference/flavors.md
   - /explanation/release-hierarchy.md
   - /reference/flavor-matrix.md
+  - /explanation/github-workflows.md
 migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4600"
 migration_stakeholder: "@tmangold, @yeoldegrove, @ByteOtter"
