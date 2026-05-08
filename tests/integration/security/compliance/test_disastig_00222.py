@@ -3,7 +3,7 @@ from plugins.audit import AuditRule
 from plugins.parse_file import ParseFile
 
 
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="audit subsystem required")
 @pytest.mark.root(reason="requires access to audit rules")
 def test_audit_kernel_module_rules_present(parse_file: ParseFile):

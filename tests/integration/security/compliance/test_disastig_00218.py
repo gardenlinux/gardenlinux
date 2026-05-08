@@ -21,7 +21,7 @@ def concurrent_login_environment(shell: ShellRunner):
     shell(f"rm -f {OUTPUT_FILE} {JOURNAL_FILE} {TIME_FILE}")
 
 
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires kernel logging")
 @pytest.mark.root(reason="required to generate audit events")
 def test_audit_concurrent_logins(shell: ShellRunner, concurrent_login_environment):
