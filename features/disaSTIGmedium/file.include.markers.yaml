@@ -14,3 +14,5 @@ markers:
   - "GL-TESTCOV-disaSTIGmedium-config-aide-silent-reports"
   "etc/systemd/system/audit-rules.service.d/override.conf":
   - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-service-override"
+  "etc/ssh/sshd_config.d/50-disaSTIG.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"
