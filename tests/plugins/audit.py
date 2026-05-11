@@ -173,7 +173,7 @@ def audit_rule():
     Examples:
 
     assert audit_rule(fs_watch_path="/etc/passwd", access_types="wa")
-    assert audit_rule(syscall="setcap", rule_fields=["auid>=1000", "auid!=1"])
+    assert audit_rule(syscall="setcap", rule_fields=["auid>=1000", "auid!=-1"])
     assert audit_rule(binary_call="/usr/bin/passwd")
     """
     return AuditRule()
