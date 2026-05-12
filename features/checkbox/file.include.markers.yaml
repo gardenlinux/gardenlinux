@@ -25,3 +25,7 @@ markers:
   - "GL-TESTCOV-checkbox-config-checkbox-units-manifest"
   "usr/share/checkbox-provider-base/units/gardenlinux/test-plan.pxu":
   - "GL-TESTCOV-checkbox-config-checkbox-test-plan"
+  "usr/lib/checkbox-provider-base/bin/ipmi_check.sh":
+  - "GL-TESTCOV-checkbox-script-ipmi_check"
+  "usr/lib/checkbox-provider-base/bin/bios_info_check.sh":
+  - "GL-TESTCOV-checkbox-script-bios_info_check"
