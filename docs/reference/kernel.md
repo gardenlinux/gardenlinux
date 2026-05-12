@@ -3,7 +3,7 @@ title: "Garden Linux Kernel"
 description: Why we build the kernel the way we build it
 related_topics:
   - /how-to/kernel-builds.md
-migration_status: "adapt"
+migration_status: "done"
 migration_source: "00_introduction/kernel.md"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4629"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
