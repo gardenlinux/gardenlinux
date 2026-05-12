@@ -1,3 +1,5 @@
+import pytest
+
 """
 Ref: SRG-OS-000312-GPOS-00124
 
@@ -7,5 +9,6 @@ components.
 """
 
 
+@pytest.mark.feature("not container")
 def test_sudo_installed(dpkg):
     assert dpkg.package_is_installed("sudo")
