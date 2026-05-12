@@ -1,9 +1,7 @@
 ---
 title: "Post Installation Steps"
 description: "Suggested First Steps after Installation"
-category: "ho-to"
-tags: ["how-to"]
-migration_status: "new"
+migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4623"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
 migration_approved: false
