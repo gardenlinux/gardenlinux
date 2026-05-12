@@ -1,11 +1,14 @@
 import pytest
 
+"""
+Ref: SRG-OS-000078-GPOS-00046
+
+Verify the operating system enforces a minimum 15-character password length.
+"""
+
 
 @pytest.mark.feature("stig")
 def test_common_password_passwdqc_pam_faillock(pam_config):
-    """
-    Requirements of SRG-OS-000078-GPOS-00046, SRG-OS-000072-GPOS-00040
-    """
     results = pam_config.find_entries(
         type_="password",
         control_contains="required",
