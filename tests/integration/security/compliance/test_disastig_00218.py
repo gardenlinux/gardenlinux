@@ -1,6 +1,13 @@
 import pytest
 from plugins.shell import ShellRunner
 
+"""
+Ref: SRG-OS-000472-GPOS-00218
+
+Verify the operating system generates audit records when concurrent logons to
+the same account occur from different sources. 
+"""
+
 TEST_USER = "audit_concurrent_user"
 OUTPUT_FILE = "/tmp/audit_output_gl.txt"
 JOURNAL_FILE = "/tmp/journal_output_gl.txt"
@@ -9,11 +16,6 @@ TIME_FILE = "/tmp/audit_start_time"
 
 @pytest.fixture
 def concurrent_login_environment(shell: ShellRunner):
-    """
-    As per DISA STIG compliance requirement, the operating system must generate audit
-    records when concurrent logons to the same account occur from different sources.
-    Ref: SRG-OS-000472-GPOS-00218
-    """
     shell(f"id {TEST_USER} || useradd -m {TEST_USER}")
     yield
     shell(f"pkill -u {TEST_USER}")
@@ -25,11 +27,6 @@ def concurrent_login_environment(shell: ShellRunner):
 @pytest.mark.booted(reason="requires kernel logging")
 @pytest.mark.root(reason="required to generate audit events")
 def test_audit_concurrent_logins(shell: ShellRunner, concurrent_login_environment):
-    """
-    As per DISA STIG compliance requirement, the operating system must generate audit
-    records when concurrent logons to the same account occur from different sources.
-    Ref: SRG-OS-000472-GPOS-00218
-    """
     shell(f"date '+%H:%M:%S' > {TIME_FILE}")
 
     shell(f"su - {TEST_USER} -c 'sleep 30' &")

@@ -1,20 +1,19 @@
 import pytest
 from plugins.dpkg import Dpkg
 
+"""
+Ref: SRG-OS-000393-GPOS-00173
+
+Verify the operating system implements cryptographic mechanisms to protect the
+integrity of nonlocal maintenance and diagnostic communications, when used for
+nonlocal maintenance sessions. 
+"""
+
 
 @pytest.mark.feature("stig")
 @pytest.mark.booted(reason="requires SSH runtime configuration")
 @pytest.mark.root(reason="requires access to SSH configuration")
 def test_ssh_strong_macs_present(sshd, dpkg: Dpkg):
-    """
-    As per DISA STIG compliance requirements, the operating system must implement
-    cryptographic mechanisms to protect the integrity of nonlocal maintenance and
-    diagnostic communications, when used for nonlocal maintenance sessions.
-    This test verifies that SSH is configured with strong MAC algorithms to ensure
-    integrity protection for remote sessions.
-    Ref: SRG-OS-000393-GPOS-00173
-    """
-
     macs = sshd.get_config_section("macs")
 
     if isinstance(macs, str):
@@ -40,15 +39,6 @@ def test_ssh_strong_macs_present(sshd, dpkg: Dpkg):
 @pytest.mark.booted(reason="requires SSH runtime configuration")
 @pytest.mark.root(reason="requires access to SSH configuration")
 def test_ssh_weak_macs_not_present(sshd):
-    """
-    As per DISA STIG compliance requirements, the operating system must implement
-    cryptographic mechanisms to protect the integrity of nonlocal maintenance and
-    diagnostic communications, when used for nonlocal maintenance sessions.
-    This test verifies that SSH is not configured with weak MAC algorithms that
-    would undermine integrity protection.
-    Ref: SRG-OS-000393-GPOS-00173
-    """
-
     macs = sshd.get_config_section("macs")
 
     if isinstance(macs, str):

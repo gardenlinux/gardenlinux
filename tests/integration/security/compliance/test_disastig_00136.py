@@ -1,18 +1,19 @@
 import pytest
 from plugins.shell import ShellRunner
 
+"""
+Ref: SRG-OS-000348-GPOS-00136
+
+Verify the operating system provides an audit reduction capability that
+supports on-demand audit review and analysis.
+"""
+
 
 @pytest.mark.security_id(1447)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_audit_reduction_capability(shell: ShellRunner):
-    """
-    As per DISA STIG requirement, this test verifies the operating system
-    provides an audit reduction capability.
-    Ref: SRG-OS-000348-GPOS-00136
-    """
-
     output = shell(
         cmd="ausearch -k ssh_login -ts recent | aureport --summary",
         capture_output=True,

@@ -1,5 +1,12 @@
 import pytest
 
+"""
+Ref: SRG-OS-000021-GPOS-00005
+
+Verify that the operating system enforces the limit of three consecutive
+invalid logon attempts by a user during a 15-minute time period.
+"""
+
 
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-auth"], indirect=["pam_config"]
