@@ -15,6 +15,8 @@ markers:
   - "GL-TESTCOV-checkbox-script-virtualization_disabled"
   "usr/local/bin/generate-report.sh":
   - "GL-TESTCOV-checkbox-script-generate-report"
+  "var/www/html/index.html":
+  - "GL-TESTCOV-checkbox-web-report-placeholder"
   "usr/share/checkbox-provider-base/units/gardenlinux/category.pxu":
   - "GL-TESTCOV-checkbox-config-checkbox-units-category"
   "usr/share/checkbox-provider-base/units/gardenlinux/jobs.pxu":

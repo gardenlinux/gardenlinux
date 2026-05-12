@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="10">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garden Linux HW Tests — Report Generation in Progress</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .card {
+      text-align: center;
+      padding: 3rem 4rem;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      max-width: 560px;
+      width: 90%;
+    }
+    .logo {
+      font-size: 3rem;
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #58a6ff;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      font-size: 0.95rem;
+      color: #8b949e;
+      margin-bottom: 2rem;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #30363d;
+      border-top-color: #58a6ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 2rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status {
+      font-size: 0.9rem;
+      color: #3fb950;
+      background: #0d1117;
+      border: 1px solid #238636;
+      border-radius: 6px;
+      padding: 0.6rem 1.2rem;
+      display: inline-block;
+      margin-bottom: 1.5rem;
+    }
+    .footer {
+      font-size: 0.8rem;
+      color #484f58;
+      margin-top: 1.5rem;
+    }
+    .refresh-note {
+      font-size: 0.8rem;
+      color: #6e7681;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">🌿</div>
+    <h1>Garden Linux HW Tests</h1>
+    <p class="subtitle">Hardware Validation Report</p>
+    <div class="spinner"></div>
+    <div class="status">&#9654; Tests running…</div>
+    <p class="refresh-note">This page refreshes automatically every 10 seconds.<br>
+    The report will appear here once all tests complete.</p>
+  </div>
+</body>
+</html>
