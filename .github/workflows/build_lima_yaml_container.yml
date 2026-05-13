@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * 0'
-      timzone: 'UTC'
+      timzone: 'Europe/Berlin'
 
 jobs:
   lima_manifest_container:

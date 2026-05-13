@@ -3,9 +3,9 @@ name: Test - Update Python Runtime
 on:
   workflow_dispatch:
   schedule:
-    # Run at 12:00 noon CEST (10:00 UTC)
-    - cron: "0 10 * * *"
-      timzone: "UTC"
+    # Run at 12:00 noon CEST
+    - cron: "0 12 * * *"
+      timzone: "Europe/Berlin"
 
 jobs:
   update:
