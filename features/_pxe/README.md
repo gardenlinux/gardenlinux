@@ -7,22 +7,39 @@ github_target_path: docs/reference/features/_pxe.md
 ---
 
 ## Feature: _pxe
+
 ### Description
 <website-feature>
-This flag feature creates an artifact for supporting PXE network boot of Garden Linux.
+Creates artifacts for PXE network boot of Garden Linux.
 </website-feature>
 
 ### Features
-This feature creates files meant to be booted via PXE network boot: `squashfs`, `kernel`, `initrd`, `initrd.unified` - initrd including squashfs, `boot.efi` - UKI.
+This feature creates PXE boot artifacts:
+- `root.squashfs` — Compressed root filesystem
+- `vmlinuz` — Linux kernel
+- `initrd` — Initial ramdisk
+- `cmdline` — Kernel command line parameters
 
-#### Hint
-Ignition Files can be used with PXE to inject information into the system at the first boot of Garden Linux. This includes creating users, groups, ssh keys, files, permissions and network configuration. This way machines can be defined in a declarative way.
+When combined with `_trustedboot` or `_unsigned` (USI builds):
+- `boot.efi` — Unified Kernel Image (UKI) for UEFI boot
 
-See also:
-- [iPXE Documentation @ ipxe.org](https://ipxe.org/docs)
-- [iPXE Script Examples @ ipxe.org](https://ipxe.org/scripting)
-- [Ignition Documentation @ fedoraproject.org](https://docs.fedoraproject.org/en-US/fedora-coreos/producing-ign/#_ignition_overview)
+### Boot Modes
 
+**Traditional PXE Boot:**
+- Uses separate kernel (`vmlinuz`) and initrd
+- Fetches `root.squashfs` over HTTP at boot time
+- Works with both BIOS and UEFI systems via iPXE
+
+**UKI PXE Boot (with `_trustedboot`):**
+- Uses single `boot.efi` (UKI) containing kernel, initrd, and cmdline
+- Fetches `root.squashfs` over HTTP at boot time
+- UEFI-only, supports Secure Boot when signed
+
+Includes:
+- [`_ignite`](/reference/features/_ignite) for Ignition-based first-boot configuration
+- [`_install`](/reference/features/_install) for disk installation capability
+
+For automatic installation on boot, combine with [`_autoinstall`](/reference/features/_autoinstall).
 
 ### Unit testing
 This feature does not support unit tests.
@@ -31,6 +48,6 @@ This feature does not support unit tests.
 |||
 |---|---|
 |type|flag|
-|artifact|`squashfs`, `vmlinuz`, `initrd`, `initrd.unified`, `boot.efi`|
-|included_features|`_ignite`|
+|artifact|`.pxe.tar.gz` (contains `vmlinuz`, `initrd`, `cmdline`, `root.squashfs`, and optionally `boot.efi` for USI builds)|
+|included_features|[`_ignite`](/reference/features/_ignite), [`_install`](/reference/features/_install)|
 |excluded_features|None|

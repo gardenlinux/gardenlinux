@@ -60,6 +60,11 @@ if [[ "$image" == *.pxe.tar.gz ]]; then
 	is_pxe_archive=1
 fi
 
+is_iso=0
+if [[ "$image" == *.iso ]]; then
+	is_iso=1
+fi
+
 is_openstack=0
 if [[ "$image" =~ ^.*openstack-.*$ ]]; then
 	is_openstack=1
@@ -71,6 +76,8 @@ test_args+=("--junit-xml=/dev/virtio-ports/test_junit")
 # Extract test artifact name from image filename
 if ((is_pxe_archive)); then
 	test_artifact="$(basename "$image" | sed 's/-[0-9].*\.pxe\.tar\.gz$//')"
+elif ((is_iso)); then
+	test_artifact="$(basename "$image" | sed 's/-[0-9].*\.iso$//')"
 else
 	test_artifact="$(basename "$image" | sed 's/-[0-9].*\.raw$//')"
 fi
@@ -84,20 +91,28 @@ test_args+=("--metadata" "Namespace" "$test_namespace")
 
 echo "📊  metadata: Artifact=$test_artifact, Type=$test_type, Namespace=$test_namespace"
 
-# arch, uefi, secureboot, tpm2 are set in $image.requirements
+# arch, uefi, secureboot, tpm2, autoinstall are set in $image.requirements
 if ((is_pxe_archive)); then
 	image_requirements=${image//.pxe.tar.gz/.requirements}
+elif ((is_iso)); then
+	image_requirements=${image//.iso/.requirements}
 else
 	image_requirements=${image//.raw/.requirements}
 fi
 # shellcheck source=/dev/null
 source "$image_requirements"
 
+[ -n "$autoinstall" ]
 [ -n "$arch" ]
 arch="$(map_arch "$arch")"
 [ -n "$uefi" ]
 [ -n "$secureboot" ]
 [ -n "$tpm2" ]
+
+# Convert string booleans to numeric for arithmetic context
+[ "$autoinstall" = "true" ] && autoinstall=1 || autoinstall=0
+
+echo "⚙️  autoinstall detection: autoinstall=$autoinstall, is_iso=$is_iso, is_pxe=$is_pxe_archive"
 
 tmpdir=
 
@@ -121,15 +136,21 @@ if ((is_pxe_archive)); then
 	mkdir -p "$pxe_extract_dir"
 	tar -xzf "$image" -C "$pxe_extract_dir"
 
-	# TODO: get UKI to work
-	# Verify required PXE components
-	# if [ -f "$pxe_extract_dir/boot.efi" ]; then
-	# 	# UKI case - boot.efi contains everything
-	# 	echo "✅ Found UKI (boot.efi), will boot via iPXE"
-	# 	required_files=("boot.efi")
-	# else
-	# Traditional case - require vmlinuz, initrd, root.squashfs
-	required_files=("vmlinuz" "initrd" "cmdline" "root.squashfs")
+	# Detect boot mode: UKI vs traditional
+	is_uki=0
+	if [ -f "$pxe_extract_dir/boot.efi" ]; then
+		is_uki=1
+		echo "✅ Found UKI (boot.efi), will use UEFI boot"
+	fi
+
+	# Determine required files based on boot mode
+	if ((is_uki)); then
+		required_files=("boot.efi" "root.squashfs")
+		# vmlinuz/initrd are optional for UKI mode but useful for debugging
+	else
+		required_files=("vmlinuz" "initrd" "cmdline" "root.squashfs")
+	fi
+
 	for file in "${required_files[@]}"; do
 		if [ ! -f "$pxe_extract_dir/$file" ]; then
 			echo "Error: Required PXE file '$file' not found in archive" >&2
@@ -137,7 +158,6 @@ if ((is_pxe_archive)); then
 		fi
 	done
 	echo "✅ PXE archive contains required files: ${required_files[*]}"
-	# fi
 fi
 
 echo "⚙️  preparing test VM"
@@ -149,11 +169,22 @@ if ((is_openstack)); then
 	echo "$metadata_server_pid" >"$tmpdir/metadata_server.pid"
 fi
 
+# Two-stage install setup complete
+
 if ((is_pxe_archive)); then
-	# For PXE testing, we'll use network boot instead of a disk image
-	# Create a small empty disk for the test framework
-	qemu-img create -q -f qcow2 "$tmpdir/disk.qcow" 1G
+	if ((autoinstall)); then
+		# For PXE with autoinstall, create a target disk for installation (same as ISO)
+		qemu-img create -q -f qcow2 "$tmpdir/disk.qcow" 4G
+		echo "⚙️  PXE archive with autoinstall, creating 4G target disk"
+	else
+		# For PXE live boot testing, create a small empty disk for the test framework
+		qemu-img create -q -f qcow2 "$tmpdir/disk.qcow" 1G
+	fi
 	echo "✅ PXE archive extracted, will use network boot"
+elif ((is_iso)); then
+	# For ISO testing, create a writable target disk for the installer (vda)
+	qemu-img create -q -f qcow2 "$tmpdir/disk.qcow" 4G
+	echo "⚙️  detected ISO image, preparing for CDROM boot testing"
 else
 	qemu-img create -q -f qcow2 -F raw -b "$(realpath -- "$image")" "$tmpdir/disk.qcow" 4G
 fi
@@ -163,17 +194,42 @@ if [ "$arch" = aarch64 ]; then
 	console_device="/dev/ttyAMA0"
 fi
 
-cat >"$tmpdir/fw_cfg-script.sh" <<EOF
+# Generate fw_cfg script header
+cat >"$tmpdir/fw_cfg-script.sh" <<'EOF'
 #!/usr/bin/env bash
 
-set -eufo pipefail
-
-# Send all output to console so it appears on
-# the QEMU serial output (and thus in logs).
-exec >$console_device
-exec 2>&1
+set -euf
+set -x
 EOF
 
+# Conditionally stop serial-getty BEFORE exec redirect (only when SSH is enabled)
+if ((ssh)); then
+	cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
+
+# Stop serial-getty to get exclusive access to serial console for test output
+# This allows our script output to reach QEMU's serial capture instead of being swallowed by getty
+systemctl stop serial-getty@ttyS0.service 2>/dev/null || true
+EOF
+fi
+
+# Continue with exec redirect and rest of script header
+cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
+
+# Redirect all output directly to serial console
+exec > /dev/ttyS0 2>&1
+
+echo "=== FW_CFG Script started at $(date) ==="
+echo "=== Script PID: $$ ==="
+echo "=== Current boot: $([ -f /.installed ] && echo 'INSTALLED SYSTEM' || echo 'LIVE SYSTEM') ==="
+
+# Set up error trap
+trap 'echo "❌ ERROR: Script failed at line $LINENO with exit code $?"' ERR
+EOF
+
+# Replace hardcoded console device with architecture-appropriate device
+sed -i "s|/dev/ttyS0|$console_device|g" "$tmpdir/fw_cfg-script.sh"
+
+# Set up SSH user
 if ((ssh)); then
 	ssh_private_key="$util_dir/../.ssh/id_ed25519_gl"
 	ssh_public_key="$ssh_private_key.pub"
@@ -183,9 +239,11 @@ if ((ssh)); then
 	fi
 	ssh_public_key=$(cat "$ssh_public_key")
 	ssh_user="gardenlinux"
+	# Ensure /home exists (live media squashfs may not have it, but tmpfs overlay is writable)
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
+mkdir -p /home
 systemctl enable --now ssh
-useradd -U -m -G wheel -s /bin/bash $ssh_user
+useradd -U -m -G wheel -s /bin/bash $ssh_user || true
 mkdir -p /home/$ssh_user/.ssh
 chmod 700 /home/$ssh_user/.ssh
 echo "$ssh_public_key" >> /home/$ssh_user/.ssh/authorized_keys
@@ -200,13 +258,51 @@ trap "poweroff -f > /dev/null 2>&1" EXIT
 EOF
 fi
 
-if ! ((skip_tests)); then
+# ISO autoinstall: let gl-autoinstall.service handle the installation
+# The fw_cfg script only needs to exit on first boot and run tests on second boot
+if ((autoinstall && is_iso)); then
 	cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
+# On ISO live system, let gl-autoinstall.service handle the install and kexec
+if ! [ -f /.installed ]; then
+	echo "=== FIRST BOOT: Waiting for gl-autoinstall.service to complete installation ==="
+	exit 0
+fi
+EOF
+fi
+
+# PXE autoinstall: let gl-autoinstall.service handle the installation
+# The fw_cfg script only needs to exit on first boot and run tests on second boot
+if ((autoinstall && is_pxe_archive)); then
+	cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
+# On PXE live system, let gl-autoinstall.service handle the install and kexec
+if ! [ -f /.installed ]; then
+	echo "=== FIRST BOOT: Waiting for gl-autoinstall.service to complete installation ==="
+	exit 0
+fi
+EOF
+fi
+
+if ! ((skip_tests)); then
+	if ((autoinstall)); then
+		# For autoinstall (ISO or PXE), only run tests on the installed system (stage 2)
+		cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
+if [ -f /.installed ] || ! mountpoint -q /run/rootfs 2>/dev/null; then
+	echo "=== SECOND BOOT: Preparing to run tests ===" | tee /dev/console
+	mkdir /run/gardenlinux-tests
+	mount -o ro /dev/disk/by-label/GL_TESTS /run/gardenlinux-tests
+	echo "=== Tests mounted, starting test execution ===" | tee /dev/console
+
+	cd /run/gardenlinux-tests
+EOF
+	else
+		# For non-autoinstall, run tests immediately
+		cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
 mkdir /run/gardenlinux-tests
 mount -o ro /dev/disk/by-label/GL_TESTS /run/gardenlinux-tests
 
 cd /run/gardenlinux-tests
 EOF
+	fi
 fi
 
 if [ "$arch" = x86_64 ]; then
@@ -247,8 +343,15 @@ if ! ((skip_tests)); then
 	fi
 
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
-./run_tests ${test_args[*]@Q} 2>&1
+PYTHONUNBUFFERED=1 ./run_tests ${test_args[*]@Q} 2>&1
 EOF
+
+	# Close the conditional block for autoinstall tests
+	if ((autoinstall)); then
+		cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
+fi
+EOF
+	fi
 fi
 
 qemu_opts=(
@@ -258,12 +361,18 @@ qemu_opts=(
 	-accel "$qemu_accel"
 	-display none
 	-serial stdio
-	-drive "if=virtio,format=qcow2,file=$tmpdir/disk.qcow"
 	-fw_cfg "name=opt/gardenlinux/config_script,file=$tmpdir/fw_cfg-script.sh"
 	-chardev "file,id=test_junit,path=$log_dir/$log_file_junit"
 	-device virtio-serial
 	-device "virtserialport,chardev=test_junit,name=test_junit"
 	-device "virtio-net-pci,netdev=net0"
+)
+
+# QEMU options are set up normally - two-stage logic is in the execution section
+
+# Add the main disk (boot disk for raw/PXE, install target vda for ISO)
+qemu_opts+=(
+	-drive "if=virtio,format=qcow2,file=$tmpdir/disk.qcow"
 )
 
 if ! ((skip_tests)); then
@@ -296,6 +405,15 @@ if ((is_pxe_archive)); then
 			-boot order=nc
 		)
 	fi
+elif ((is_iso)); then
+	# For ISO testing, boot from CDROM
+	# WORKAROUND: The dracut initrd in the ISO doesn't load ahci driver automatically
+	# Use SCSI CD-ROM attached to virtio-scsi controller for better compatibility
+	qemu_opts+=(
+		-device "virtio-scsi-pci,id=scsi"
+		-drive "id=cd0,if=none,format=raw,readonly=on,media=cdrom,file=$(realpath -- "$image")"
+		-device "scsi-cd,drive=cd0,bus=scsi.0"
+	)
 fi
 
 if [ "$uefi" = "true" ] || [ "$arch" = aarch64 ]; then
@@ -325,36 +443,60 @@ if ((is_pxe_archive)); then
 	http_dir="$tmpdir/http"
 	mkdir -p "$http_dir"
 
-	# TODO: get UKI to work
-	# Copy PXE files to HTTP directory
-	# if [ -f "$pxe_extract_dir/initrd.unified" ]; then
-	#	# UKI case - copy initrd.unified and vmlinuz
-	#	cp "$pxe_extract_dir/initrd.unified" "$http_dir/"
-	#	cp "$pxe_extract_dir/vmlinuz" "$http_dir/"
-	# else
-	# Traditional case - copy vmlinuz, initrd, root.squashfs
-	cp "$pxe_extract_dir/vmlinuz" "$http_dir/"
-	cp "$pxe_extract_dir/initrd" "$http_dir/"
+	# Always serve root.squashfs
 	cp "$pxe_extract_dir/root.squashfs" "$http_dir/"
-	# fi
 
-	# TODO: get UKI to work
-	# Create iPXE script for booting
-	# if [ -f "$pxe_extract_dir/initrd.unified" ]; then
-	# 	echo "✅ Found initrd.unified (UKI), will boot via iPXE"
-	# 	# Create iPXE script to boot boot.efi directly
-	# 	cat >"$http_dir/boot.ipxe" <<'EOF'
-	# #!ipxe
-	# dhcp
-	# set base-url http://10.0.2.2:8080
-	# kernel ${base-url}/vmlinuz gl.ovl=/:tmpfs gl.live=1 ip=dhcp console=ttyS0 console=tty0 earlyprintk=ttyS0 consoleblank=0
-	# initrd ${base-url}/initrd.unified
-	# boot
-	# EOF
-	# else
-	echo "✅ Using traditional vmlinuz/initrd boot via iPXE"
-	# Create iPXE script for traditional vmlinuz/initrd boot
-	cat >"$http_dir/boot.ipxe" <<EOF
+	if ((is_uki)); then
+		echo "✅ Setting up UKI boot"
+
+		# Copy UKI for UEFI boot
+		cp "$pxe_extract_dir/boot.efi" "$http_dir/"
+
+		if ((autoinstall)); then
+			# Serve ignition config
+			ignition_json_source="$util_dir/ignition.json"
+			if [ ! -f "$ignition_json_source" ]; then
+				echo "❌ Error: ignition.json not found at $ignition_json_source" >&2
+				exit 1
+			fi
+			cp "$ignition_json_source" "$http_dir/ignition.json"
+			echo "✅ Copied ignition.json for PXE installation"
+		fi
+
+		# Create iPXE script to chainload UKI
+		cat >"$http_dir/boot.ipxe" <<'EOF'
+#!ipxe
+dhcp
+set base-url http://10.0.2.2:8080
+chain ${base-url}/boot.efi
+EOF
+
+	else
+		echo "✅ Using traditional vmlinuz/initrd boot via iPXE"
+
+		# Copy traditional boot files
+		cp "$pxe_extract_dir/vmlinuz" "$http_dir/"
+		cp "$pxe_extract_dir/initrd" "$http_dir/"
+
+		if ((autoinstall)); then
+			ignition_json_source="$util_dir/ignition.json"
+			if [ ! -f "$ignition_json_source" ]; then
+				echo "❌ Error: ignition.json not found at $ignition_json_source" >&2
+				exit 1
+			fi
+			cp "$ignition_json_source" "$http_dir/ignition.json"
+			echo "✅ Copied ignition.json for PXE installation"
+
+			cat >"$http_dir/boot.ipxe" <<EOF
+#!ipxe
+dhcp
+set base-url http://10.0.2.2:8080
+kernel \${base-url}/vmlinuz $(cat "$pxe_extract_dir/cmdline") gl.url=http://10.0.2.2:8080/root.squashfs ignition.firstboot=1 ignition.config.url=http://10.0.2.2:8080/ignition.json ignition.platform.id=metal
+initrd \${base-url}/initrd
+boot
+EOF
+		else
+			cat >"$http_dir/boot.ipxe" <<EOF
 #!ipxe
 dhcp
 set base-url http://10.0.2.2:8080
@@ -362,14 +504,13 @@ kernel \${base-url}/vmlinuz $(cat "$pxe_extract_dir/cmdline") gl.url=http://10.0
 initrd \${base-url}/initrd
 boot
 EOF
-	# fi
+		fi
+	fi
 
-	# Start HTTP server for serving the files
+	# Start HTTP server for serving files
 	python3 -m http.server 8080 --directory "$http_dir" >/dev/null 2>&1 &
-	http_pid=$!
+	pxe_http_pid=$!
 
-	# Store HTTP server PID for cleanup
-	pxe_http_pid=$http_pid
 
 	if ((ssh)); then
 		qemu_opts+=(
