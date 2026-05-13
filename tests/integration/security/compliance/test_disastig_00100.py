@@ -53,6 +53,8 @@ def test_no_unsolicited_lib_path_for_ldconfig(ld_library_paths):
     assert not diff, f"unexpected shared libraries lookup paths configured: {diff}"
 
 
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-lib-permissions"])
+@pytest.mark.feature("disaSTIGmedium")
 def test_lib_directories_are_only_root_writable(ld_library_paths, file):
     for lib_path in ld_library_paths:
         if file.exists(lib_path):
@@ -60,6 +62,8 @@ def test_lib_directories_are_only_root_writable(ld_library_paths, file):
             assert file.has_permissions(lib_path, "rwxr-xr-x")
 
 
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-lib-permissions"])
+@pytest.mark.feature("disaSTIGmedium")
 def test_python_lib_directory_is_only_root_writable(file, dpkg):
     python_pkg = dpkg.collect_installed_packages().get_package("python3")
     if python_pkg:
