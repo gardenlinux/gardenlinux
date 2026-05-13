@@ -2,6 +2,8 @@ name: Cloud Test Cleanup
 on:
   schedule:
     - cron: "0 2 * * *" # Run daily at 2 AM UTC
+      timezone: "UTC"
+
   # manual trigger
   workflow_dispatch:
 jobs:
