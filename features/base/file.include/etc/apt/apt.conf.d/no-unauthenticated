@@ -1,0 +1,2 @@
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000366-GPOS-00153/
+APT::Get::AllowUnauthenticated "false";

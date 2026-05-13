@@ -11,6 +11,8 @@ markers:
   - "GL-TESTCOV-base-config-apt-no-recommends"
   "etc/apt/apt.conf.d/no-suggests":
   - "GL-TESTCOV-base-config-apt-no-suggests"
+  "etc/apt/apt.conf.d/no-unauthenticated":
+  - "GL-TESTCOV-base-config-apt-no-unauthenticated"
   "etc/apt/preferences.d/gardenlinux":
   - "GL-TESTCOV-base-config-apt-preferences-gardenlinux"
   "etc/dpkg/dpkg.cfg.d/forceold":
