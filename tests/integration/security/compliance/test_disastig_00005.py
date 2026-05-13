@@ -8,10 +8,11 @@ invalid logon attempts by a user during a 15-minute time period.
 """
 
 
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-pam-common-auth"])
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-auth"], indirect=["pam_config"]
 )
-@pytest.mark.feature("stig")
+@pytest.mark.feature("stig or disaSTIGmedium")
 def test_stig_common_auth_pam_faillock(pam_config):
 
     results = pam_config.find_entries(
