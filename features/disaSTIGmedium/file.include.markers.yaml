@@ -2,5 +2,9 @@ markers:
   "etc/audit/rules.d/30-disaSTIG.rules":
   - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-disaSTIG-rules"
   - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-30-disaSTIG-rules"
+  "etc/audit/rules.d/90-finalize.rules":
+  - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-90-finalize-rules"
   "etc/kernel/cmdline.d/90-audit.cfg":
   - "GL-TESTCOV-disaSTIGmedium-config-kernel-cmdline-audit"
+  "etc/systemd/system/audit-rules.service.d/override.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-service-override"
