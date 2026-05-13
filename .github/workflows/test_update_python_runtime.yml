@@ -5,6 +5,7 @@ on:
   schedule:
     # Run at 12:00 noon CEST (10:00 UTC)
     - cron: "0 10 * * *"
+      timzone: "UTC"
 
 jobs:
   update:
