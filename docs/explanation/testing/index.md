@@ -12,6 +12,7 @@ related_topics:
   - /reference/testing/developing-tests.md
   - /reference/testing/test-coverage-markers.md
   - /reference/testing/test-cli.md
+  - /explanation/github-workflows.md
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/explanation/testing/index.md
