@@ -10,7 +10,7 @@ unload, and restart actions, and also for all program initiations.
 """
 
 
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="audit subsystem required")
 @pytest.mark.root(reason="requires access to audit rules")
 def test_audit_kernel_module_rules_present(parse_file: ParseFile):
