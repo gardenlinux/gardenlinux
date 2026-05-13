@@ -1,5 +1,6 @@
 ---
 title: "Local Installation"
+order: 3
 related_topics:
   - /tutorials/local/index.md
   - /how-to/installation/post-install.md

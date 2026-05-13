@@ -1,0 +1,15 @@
+[Unit]
+Description=Garden Linux Auto-Install
+ConditionPathExists=/opt/install/install.sh
+ConditionPathExists=!/.installed
+After=default.target
+Requires=default.target
+
+[Service]
+Type=idle
+ExecStart=/usr/local/sbin/gl-autoinstall
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=default.target
