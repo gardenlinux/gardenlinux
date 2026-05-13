@@ -9,7 +9,7 @@ github_target_path: docs/reference/features/metal.md
 ## Feature: metal
 ### Description
 <website-feature>
-This platform feature creates an artifact for (bare) metal systems.
+This feature creates an artifact for (bare) metal systems.
 </website-feature>
 
 ### Features
