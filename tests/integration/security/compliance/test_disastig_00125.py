@@ -11,4 +11,4 @@ implemented security safeguards/countermeasures.
 
 @pytest.mark.feature("disaSTIGhigh")
 def test_ctrl_alt_del_burst_is_disabled(parse_file):
-    assert "CtrlAltDelBurstAction=none" in parse_file.lines("/etc/systemd/system.conf")
+    assert "CtrlAltDelBurstAction=none" in parse_file.parse("/etc/systemd/system.conf")
