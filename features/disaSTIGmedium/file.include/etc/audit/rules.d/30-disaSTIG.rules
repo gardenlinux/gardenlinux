@@ -17,7 +17,7 @@
 -w /var/log/lastlog -p wa -k logins
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/newgrp -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-cmd
+-a always,exit -F path=/usr/bin/newgrp -F perm=x -F auid>=1000 -F auid!=-1 -k newgrp
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/chcon -F perm=x -F auid>=1000 -F auid!=-1 -k perm-change
@@ -26,7 +26,7 @@
 -a always,exit -F path=/usr/bin/setfacl -F perm=x -F auid>=1000 -F auid!=-1 -k perm-change
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/passwd -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-passwd
+-a always,exit -F path=/usr/bin/passwd -F perm=x -F auid>=1000 -F auid!=-1 -k passwd
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -S delete_module -F auid>=1000 -F auid!=-1 -k kernel-module
@@ -41,31 +41,31 @@
 -a always,exit -F path=/usr/bin/crontab -F perm=x -F auid>=1000 -F auid!=-1 -k crontab
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/sbin/usermod -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-usermod
+-a always,exit -F path=/usr/sbin/usermod -F perm=x -F auid>=1000 -F auid!=-1 -k usermod
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/chage -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-chage
+-a always,exit -F path=/usr/bin/chage -F perm=x -F auid>=1000 -F auid!=-1 -k chage
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/gpasswd -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-gpasswd
+-a always,exit -F path=/usr/bin/gpasswd -F perm=x -F auid>=1000 -F auid!=-1 -k gpasswd
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
--w /etc/passwd -p wa -k usergroup_modification
+-w /etc/passwd -p wa -k usergroup-modification
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
--w /etc/group -p wa -k usergroup_modification
+-w /etc/group -p wa -k usergroup-modification
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000477-GPOS-00222/
 -w /usr/sbin/fdisk -p x -k fdisk
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
--w /etc/shadow -p wa -k usergroup_modification
+-w /etc/shadow -p wa -k usergroup-modification
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
--w /etc/gshadow -p wa -k usergroup_modification
+-w /etc/gshadow -p wa -k usergroup-modification
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
--w /etc/security/opasswd -p wa -k usergroup_modification
+-w /etc/security/opasswd -p wa -k usergroup-modification
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000468-GPOS-00212/
 # Note: rmdir syscall does not exist on arm64; unlinkat covers directory removal
@@ -107,10 +107,10 @@
 -a always,exit -S chmod,fchmodat -F auid>=1000 -F auid!=-1 -k perm-change
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/chsh -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-cmd
+-a always,exit -F path=/usr/bin/chsh -F perm=x -F auid>=1000 -F auid!=-1 -k chsh
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/sudoedit -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-cmd
+-a always,exit -F path=/usr/bin/sudoedit -F perm=x -F auid>=1000 -F auid!=-1 -k sudoedit
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 # Note: open and creat syscalls do not exist on arm64; use openat/openat2 instead
@@ -118,22 +118,22 @@
 -a always,exit -S openat,truncate,ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=-1 -k perm-access
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/sudo -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-cmd
+-a always,exit -F path=/usr/bin/sudo -F perm=x -F auid>=1000 -F auid!=-1 -k sudo
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000239-GPOS-00089/
--w /usr/sbin/visudo -p x -k privileged-usermgmt
--w /usr/sbin/chgpasswd -p x -k privileged-usermgmt
--w /usr/sbin/chpasswd -p x -k privileged-usermgmt
--w /usr/sbin/groupadd -p x -k privileged-usermgmt
--w /usr/sbin/groupdel -p x -k privileged-usermgmt
--w /usr/sbin/groupmod -p x -k privileged-usermgmt
--w /usr/sbin/grpconv -p x -k privileged-usermgmt
--w /usr/sbin/grpunconv -p x -k privileged-usermgmt
--w /usr/sbin/newusers -p x -k privileged-usermgmt
--w /usr/sbin/pwconv -p x -k privileged-usermgmt
--w /usr/sbin/pwunconv -p x -k privileged-usermgmt
--w /usr/sbin/shadowconfig -p x -k privileged-usermgmt
--w /usr/sbin/useradd -p x -k privileged-usermgmt
--w /usr/sbin/userdel -p x -k privileged-usermgmt
--w /usr/sbin/vipw -p x -k privileged-usermgmt
--w /usr/sbin/vigr -p x -k privileged-usermgmt
+-w /usr/sbin/visudo -p x -k usermgmt
+-w /usr/sbin/chgpasswd -p x -k usermgmt
+-w /usr/sbin/chpasswd -p x -k usermgmt
+-w /usr/sbin/groupadd -p x -k usermgmt
+-w /usr/sbin/groupdel -p x -k usermgmt
+-w /usr/sbin/groupmod -p x -k usermgmt
+-w /usr/sbin/grpconv -p x -k usermgmt
+-w /usr/sbin/grpunconv -p x -k usermgmt
+-w /usr/sbin/newusers -p x -k usermgmt
+-w /usr/sbin/pwconv -p x -k usermgmt
+-w /usr/sbin/pwunconv -p x -k usermgmt
+-w /usr/sbin/shadowconfig -p x -k usermgmt
+-w /usr/sbin/useradd -p x -k usermgmt
+-w /usr/sbin/userdel -p x -k usermgmt
+-w /usr/sbin/vipw -p x -k usermgmt
+-w /usr/sbin/vigr -p x -k usermgmt
