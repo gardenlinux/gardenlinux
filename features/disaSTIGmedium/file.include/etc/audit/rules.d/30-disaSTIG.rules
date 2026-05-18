@@ -87,13 +87,13 @@
 -w /bin/kmod -p x -k modules
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/chfn -F perm=x -F auid>=1000 -F auid!=-1 -k unprivileged-chfn
+-a always,exit -F path=/usr/bin/chfn -F perm=x -F auid>=1000 -F auid!=-1 -k chfn
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/bin/su -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-priv_change
+-a always,exit -F path=/bin/su -F perm=x -F auid>=1000 -F auid!=-1 -k priv-change
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -S setxattr,fsetxattr,lsetxattr,removexattr,fremovexattr,lremovexattr -F auid>=1000 -F auid!=-1 -k perm_mod
+-a always,exit -S setxattr,fsetxattr,lsetxattr,removexattr,fremovexattr,lremovexattr -F auid>=1000 -F auid!=-1 -k perm-mod
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000392-GPOS-00172/
 -w /var/log/sudo.log -p wa -k maintenance
@@ -114,8 +114,8 @@
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 # Note: open and creat syscalls do not exist on arm64; use openat/openat2 instead
--a always,exit -S openat,truncate,ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=-1 -k perm_access
--a always,exit -S openat,truncate,ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=-1 -k perm_access
+-a always,exit -S openat,truncate,ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=-1 -k perm-access
+-a always,exit -S openat,truncate,ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=-1 -k perm-access
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/sudo -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-cmd
