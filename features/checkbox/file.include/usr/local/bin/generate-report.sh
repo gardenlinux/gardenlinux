@@ -2,6 +2,7 @@
 
 mkdir -p /var/www/html/reports
 chmod 755 /var/www/html/reports
+mkdir -p /etc/xdg/autostart
 
 # Run checkbox and write report to reports/index.html
 # The root index.html placeholder (served by nginx) auto-refreshes until this appears
