@@ -6,5 +6,7 @@ markers:
   - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-90-finalize-rules"
   "etc/kernel/cmdline.d/90-audit.cfg":
   - "GL-TESTCOV-disaSTIGmedium-config-kernel-cmdline-audit"
+  "etc/sudoers.d/disaSTIG-sudo-log":
+  - "GL-TESTCOV-disaSTIGmedium-config-sudoers-sudo-log"
   "etc/systemd/system/audit-rules.service.d/override.conf":
   - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-service-override"
