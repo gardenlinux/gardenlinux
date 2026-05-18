@@ -17,7 +17,7 @@
 -w /var/log/lastlog -p wa -k logins
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/newgrp -F perm=x -F auid>=1000 -F auid!=-1 -k newgrp
+-a always,exit -F path=/usr/bin/newgrp -F perm=x -F auid>=1000 -F auid!=-1 -k suid-binary
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/chcon -F perm=x -F auid>=1000 -F auid!=-1 -k perm-change
@@ -44,10 +44,10 @@
 -a always,exit -F path=/usr/sbin/usermod -F perm=x -F auid>=1000 -F auid!=-1 -k usermod
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/chage -F perm=x -F auid>=1000 -F auid!=-1 -k chage
+-a always,exit -F path=/usr/bin/chage -F perm=x -F auid>=1000 -F auid!=-1 -k suid-binary
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/gpasswd -F perm=x -F auid>=1000 -F auid!=-1 -k gpasswd
+-a always,exit -F path=/usr/bin/gpasswd -F perm=x -F auid>=1000 -F auid!=-1 -k suid-binary
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
 -w /etc/passwd -p wa -k usergroup-modification
@@ -69,7 +69,7 @@
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000468-GPOS-00212/
 # Note: rmdir syscall does not exist on arm64; unlinkat covers directory removal
--a always,exit -S unlink,unlinkat,rename,renameat -F auid>=1000 -F auid!=-1 -k delete
+-a always,exit -S unlink,unlinkat,rename,renameat -F auid>=1000 -F auid!=-1 -k file-delete
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000472-GPOS-00217/
 -w /var/run/utmp -p wa -k logins
@@ -81,22 +81,22 @@
 -w /var/log/wtmp -p wa -k logins
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000477-GPOS-00222/
--w /sbin/modprobe -p x -k modules
+-w /sbin/modprobe -p x -k kernel-module
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000477-GPOS-00222/
--w /bin/kmod -p x -k modules
+-w /bin/kmod -p x -k kernel-module
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/chfn -F perm=x -F auid>=1000 -F auid!=-1 -k chfn
+-a always,exit -F path=/usr/bin/chfn -F perm=x -F auid>=1000 -F auid!=-1 -k suid-binary
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/bin/su -F perm=x -F auid>=1000 -F auid!=-1 -k priv-change
+-a always,exit -F path=/bin/su -F perm=x -F auid>=1000 -F auid!=-1 -k suid-binary
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -S setxattr,fsetxattr,lsetxattr,removexattr,fremovexattr,lremovexattr -F auid>=1000 -F auid!=-1 -k perm-mod
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000392-GPOS-00172/
--w /var/log/sudo.log -p wa -k maintenance
+-w /var/log/sudo.log -p wa -k sudo
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 # Note: fchown/lchown do not exist as separate syscalls on arm64; covered by chown/fchownat
@@ -107,15 +107,15 @@
 -a always,exit -S chmod,fchmodat -F auid>=1000 -F auid!=-1 -k perm-change
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/chsh -F perm=x -F auid>=1000 -F auid!=-1 -k chsh
+-a always,exit -F path=/usr/bin/chsh -F perm=x -F auid>=1000 -F auid!=-1 -k suid-binary
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/sudoedit -F perm=x -F auid>=1000 -F auid!=-1 -k sudoedit
+-a always,exit -F path=/usr/bin/sudoedit -F perm=x -F auid>=1000 -F auid!=-1 -k suid-binary
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 # Note: open and creat syscalls do not exist on arm64; use openat/openat2 instead
--a always,exit -S openat,truncate,ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=-1 -k perm-access
--a always,exit -S openat,truncate,ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=-1 -k perm-access
+-a always,exit -S openat,truncate,ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=-1 -k file-access
+-a always,exit -S openat,truncate,ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=-1 -k file-access
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/sudo -F perm=x -F auid>=1000 -F auid!=-1 -k sudo
