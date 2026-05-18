@@ -1,6 +1,4 @@
 markers:
-  "etc/checkbox/gardenlinux-launcher.conf":
-  - "GL-TESTCOV-checkbox-config-launcher"
   "etc/kernel/cmdline.iso":
   - "GL-TESTCOV-checkbox-config-kernel-cmdline-iso"
   "etc/systemd/journald.conf.d/10-logs.conf":

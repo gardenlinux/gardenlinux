@@ -5,6 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+Environment=XDG_SESSION_TYPE=mir
 ExecStart=/usr/local/bin/generate-report.sh
 
 [Install]
