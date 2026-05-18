@@ -121,7 +121,6 @@
 -a always,exit -F path=/usr/bin/sudo -F perm=x -F auid>=1000 -F auid!=-1 -k privileged-cmd
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000239-GPOS-00089/
--a always,exit -S execve -F auid>=1000 -F auid!=-1 -k account_mod
 -w /usr/sbin/visudo -p x -k privileged-usermgmt
 -w /usr/sbin/chgpasswd -p x -k privileged-usermgmt
 -w /usr/sbin/chpasswd -p x -k privileged-usermgmt
@@ -138,6 +137,3 @@
 -w /usr/sbin/userdel -p x -k privileged-usermgmt
 -w /usr/sbin/vipw -p x -k privileged-usermgmt
 -w /usr/sbin/vigr -p x -k privileged-usermgmt
-
-# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000392-GPOS-00172/
--a always,exit -S execve,execveat -F auid>=1000 -F auid!=-1 -k exec
