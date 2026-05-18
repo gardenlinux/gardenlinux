@@ -1,7 +1,7 @@
 id: gardenlinux-test
 unit: test plan
 _name: Garden Linux HW Test (Latest)
-_description: Hardware validation tests for Garden Linux ccloud delivery to HW vendors
+_description: Hardware validation tests for Garden Linux (CC)
 include:
 nested_part:
     dmesg_output
