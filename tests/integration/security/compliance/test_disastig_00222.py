@@ -2,18 +2,18 @@ import pytest
 from plugins.audit import AuditRule
 from plugins.parse_file import ParseFile
 
+"""
+Ref: SRG-OS-000477-GPOS-00222
 
-@pytest.mark.feature("stig")
+Verify the operating system generates audit records for all kernel module load,
+unload, and restart actions, and also for all program initiations.
+"""
+
+
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="audit subsystem required")
 @pytest.mark.root(reason="requires access to audit rules")
 def test_audit_kernel_module_rules_present(parse_file: ParseFile):
-    """
-    As per DISA STIG compliance requirements, the operating system must generate
-    audit records for all kernel module load, unload, and restart actions.
-    This test verifies that audit rules exist for kernel module operations.
-    Ref: SRG-OS-000477-GPOS-00222
-    """
-
     audit = AuditRule()
     rules = audit.rules
 
