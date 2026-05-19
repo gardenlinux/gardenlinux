@@ -1,0 +1,110 @@
+import pytest
+
+"""
+Coverage tests for disaSTIGmedium OS-level configuration markers that are not
+covered by dedicated per-rule test files.
+
+Refs:
+    SRG-OS-000373-GPOS-00156  (sudoers wheel)
+    SRG-OS-000480-GPOS-00228  (login.defs UMASK)
+    SRG-OS-000205-GPOS-00083  (var/log permissions)
+    SRG-OS-000109-GPOS-00056  (root locked)
+    SRG-OS-000120-GPOS-00061  (login.defs ENCRYPT_METHOD)
+    SRG-OS-000118-GPOS-00060  (useradd INACTIVE)
+    SRG-OS-000279-GPOS-00109  (terminal TMOUT)
+    SRG-OS-000142-GPOS-00071  (sysctl disaSTIG conf)
+"""
+
+SUDOERS_WHEEL = "/etc/sudoers.d/wheel"
+LOGIN_DEFS = "/etc/login.defs"
+VAR_LOG = "/var/log"
+USERADD_DEFAULTS = "/etc/default/useradd"
+TMOUT_PROFILE = "/etc/profile.d/99-terminal_tmout.sh"
+SYSCTL_DISASTIG = "/etc/sysctl.d/99-disaSTIG.conf"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-sudoers-wheel"])
+@pytest.mark.feature("disaSTIGmedium")
+def test_sudoers_wheel_file_exists(file):
+    """Verify /etc/sudoers.d/wheel exists (created/truncated by disaSTIGmedium)."""
+    assert file.exists(SUDOERS_WHEEL), f"stigcompliance: {SUDOERS_WHEEL} does not exist"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-sudoers-wheel"])
+@pytest.mark.feature("disaSTIGmedium")
+def test_sudoers_wheel_file_is_empty(file):
+    """Verify /etc/sudoers.d/wheel is empty (disaSTIGmedium truncates it with echo -n)."""
+    assert (
+        file.get_size(SUDOERS_WHEEL) == 0
+    ), f"stigcompliance: {SUDOERS_WHEEL} is not empty (size={file.get_size(SUDOERS_WHEEL)})"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-login-defs-umask"])
+@pytest.mark.feature("disaSTIGmedium")
+def test_login_defs_umask_is_077(parse_file):
+    """Verify UMASK in /etc/login.defs is set to 077 (SRG-OS-000480-GPOS-00228)."""
+    config = parse_file.parse(LOGIN_DEFS, format="spacedelim")
+    assert (
+        config["UMASK"] == "077"
+    ), f"stigcompliance: UMASK in {LOGIN_DEFS} is {config['UMASK']!r}, expected '077'"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-var-log-file-permissions"])
+@pytest.mark.feature("disaSTIGmedium")
+def test_var_log_has_755_permissions(file):
+    """Verify /var/log directory has permissions 755 (SRG-OS-000205-GPOS-00083)."""
+    assert file.has_permissions(
+        VAR_LOG, "rwxr-xr-x"
+    ), f"stigcompliance: {VAR_LOG} permissions are {file.get_mode(VAR_LOG)!r}, expected 0755"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-root-locked"])
+@pytest.mark.feature("disaSTIGmedium")
+@pytest.mark.root(reason="requires root to read shadow password status")
+def test_root_account_is_locked(shell):
+    """Verify root account is locked (field 2 of passwd --status output is 'L')."""
+    result = shell("passwd --status root", capture_output=True, ignore_exit_code=True)
+    fields = result.stdout.split()
+    assert (
+        len(fields) >= 2 and fields[1] == "L"
+    ), f"stigcompliance: root account is not locked (passwd --status output: {result.stdout!r})"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-login-defs-encrypt"])
+@pytest.mark.feature("disaSTIGmedium")
+def test_login_defs_encrypt_method_is_sha512(parse_file):
+    """Verify ENCRYPT_METHOD in /etc/login.defs is SHA512 (SRG-OS-000120-GPOS-00061)."""
+    config = parse_file.parse(LOGIN_DEFS, format="spacedelim")
+    assert config["ENCRYPT_METHOD"] == "SHA512", (
+        f"stigcompliance: ENCRYPT_METHOD in {LOGIN_DEFS} is "
+        f"{config['ENCRYPT_METHOD']!r}, expected 'SHA512'"
+    )
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-useradd-inactive"])
+@pytest.mark.feature("disaSTIGmedium")
+def test_useradd_inactive_is_35(parse_file):
+    """Verify INACTIVE in /etc/default/useradd is 35 (SRG-OS-000118-GPOS-00060)."""
+    config = parse_file.parse(USERADD_DEFAULTS, format="keyval")
+    assert (
+        config["INACTIVE"] == "35"
+    ), f"stigcompliance: INACTIVE in {USERADD_DEFAULTS} is {config['INACTIVE']!r}, expected '35'"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-profile-terminal-tmout"])
+@pytest.mark.feature("disaSTIGmedium")
+def test_terminal_tmout_profile_sets_tmout_900(parse_file):
+    """Verify /etc/profile.d/99-terminal_tmout.sh contains TMOUT=900 (SRG-OS-000279-GPOS-00109)."""
+    lines = parse_file.lines(TMOUT_PROFILE)
+    assert any(
+        "TMOUT=900" in line for line in lines
+    ), f"stigcompliance: {TMOUT_PROFILE} does not contain 'TMOUT=900'"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-sysctl-disaSTIG"])
+@pytest.mark.feature("disaSTIGmedium")
+def test_sysctl_disastig_conf_exists(file):
+    """Verify /etc/sysctl.d/99-disaSTIG.conf exists (SRG-OS-000142-GPOS-00071)."""
+    assert file.exists(
+        SYSCTL_DISASTIG
+    ), f"stigcompliance: {SYSCTL_DISASTIG} does not exist"
