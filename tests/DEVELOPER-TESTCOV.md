@@ -85,7 +85,7 @@ python tests/util/coverage.py
 
 ...
 Loading feature excludes...
-✓ Excluding 19 features: _bfpxe, _build, _curl, _debug, _dev, _initrdDebug, _nopkg, _oci, _readonly, _secureboot, bluefield, capi, cisPackages, container, firecracker, nodejs, python, sssd, stigDev
+✓ Excluding 19 features: _bfpxe, _build, _curl, _debug, _dev, _initrdDebug, _nopkg, _oci, _readonly, _secureboot, bluefield, capi, cisPackages, container, firecracker, nodejs, python, sssd, disaSTIGDev
 
 
 ================================================================================
