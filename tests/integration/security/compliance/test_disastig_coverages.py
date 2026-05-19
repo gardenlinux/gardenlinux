@@ -13,6 +13,7 @@ Refs:
     SRG-OS-000118-GPOS-00060  (useradd INACTIVE)
     SRG-OS-000279-GPOS-00109  (terminal TMOUT)
     SRG-OS-000142-GPOS-00071  (sysctl disaSTIG conf)
+    SRG-OS-000032-GPOS-00013  (rsyslog auth logging)
 """
 
 SUDOERS_WHEEL = "/etc/sudoers.d/wheel"
@@ -21,6 +22,7 @@ VAR_LOG = "/var/log"
 USERADD_DEFAULTS = "/etc/default/useradd"
 TMOUT_PROFILE = "/etc/profile.d/99-terminal_tmout.sh"
 SYSCTL_DISASTIG = "/etc/sysctl.d/99-disaSTIG.conf"
+RSYSLOG_DEFAULT = "/etc/rsyslog.d/50-default.conf"
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-sudoers-wheel"])
@@ -108,6 +110,16 @@ def test_sysctl_disastig_conf_exists(file):
     assert file.exists(
         SYSCTL_DISASTIG
     ), f"stigcompliance: {SYSCTL_DISASTIG} does not exist"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-rsyslog-default"])
+@pytest.mark.feature("disaSTIGmedium")
+def test_rsyslog_logs_auth_to_secure(parse_file):
+    """Verify auth/authpriv logging to /var/log/secure in rsyslog (SRG-OS-000032-GPOS-00013)."""
+    lines = parse_file.lines(RSYSLOG_DEFAULT)
+    assert any(
+        "auth" in line and "/var/log/secure" in line for line in lines
+    ), f"stigcompliance: {RSYSLOG_DEFAULT} does not route auth logs to /var/log/secure"
 
 
 # =============================================================================
