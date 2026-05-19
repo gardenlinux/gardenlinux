@@ -108,3 +108,70 @@ def test_sysctl_disastig_conf_exists(file):
     assert file.exists(
         SYSCTL_DISASTIG
     ), f"stigcompliance: {SYSCTL_DISASTIG} does not exist"
+
+
+# =============================================================================
+# disaSTIGlow markers
+# Refs:
+#   SRG-OS-000343-GPOS-00134  (auditd.conf)
+#   SRG-OS-000329-GPOS-00128  (faillock)
+#   SRG-OS-000027-GPOS-00008  (limits)
+#   SRG-OS-000070-GPOS-00038  (pwquality)
+#   SRG-OS-000138-GPOS-00069  (sysctl disaSTIGlow)
+# =============================================================================
+
+AUDITD_CONF = "/etc/audit/auditd.conf"
+FAILLOCK_CONF = "/etc/security/faillock.conf"
+LIMITS_CONF = "/etc/security/limits.conf"
+PWQUALITY_CONF = "/etc/security/pwquality.conf"
+SYSCTL_DISASTIG_LOW = "/etc/sysctl.d/99-disaSTIG.conf"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGlow-config-audit-auditd-conf"])
+@pytest.mark.feature("disaSTIGlow")
+def test_auditd_conf_disk_full_action_is_halt(parse_file):
+    """Verify disk_full_action=halt in auditd.conf (SRG-OS-000343-GPOS-00134)."""
+    config = parse_file.parse(AUDITD_CONF, format="keyval")
+    assert config["disk_full_action"] == "halt", (
+        f"stigcompliance: disk_full_action in {AUDITD_CONF} is "
+        f"{config['disk_full_action']!r}, expected 'halt'"
+    )
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGlow-config-security-faillock"])
+@pytest.mark.feature("disaSTIGlow")
+def test_faillock_deny_is_3(parse_file):
+    """Verify deny=3 in faillock.conf (SRG-OS-000329-GPOS-00128)."""
+    config = parse_file.parse(FAILLOCK_CONF, format="keyval")
+    assert (
+        config["deny"] == "3"
+    ), f"stigcompliance: deny in {FAILLOCK_CONF} is {config['deny']!r}, expected '3'"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGlow-config-security-limits"])
+@pytest.mark.feature("disaSTIGlow")
+def test_limits_conf_maxlogins_is_10(parse_file):
+    """Verify hard maxlogins 10 in limits.conf (SRG-OS-000027-GPOS-00008)."""
+    lines = parse_file.lines(LIMITS_CONF)
+    assert any(
+        "hard" in line and "maxlogins" in line and "10" in line for line in lines
+    ), f"stigcompliance: {LIMITS_CONF} does not contain 'hard maxlogins 10'"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGlow-config-security-pwquality"])
+@pytest.mark.feature("disaSTIGlow")
+def test_pwquality_conf_lcredit_is_minus_1(parse_file):
+    """Verify lcredit=-1 in pwquality.conf (SRG-OS-000070-GPOS-00038)."""
+    config = parse_file.parse(PWQUALITY_CONF, format="keyval")
+    assert (
+        config["lcredit"] == "-1"
+    ), f"stigcompliance: lcredit in {PWQUALITY_CONF} is {config['lcredit']!r}, expected '-1'"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGlow-config-sysctl-disaSTIG"])
+@pytest.mark.feature("disaSTIGlow")
+def test_sysctl_disastig_low_conf_exists(file):
+    """Verify /etc/sysctl.d/99-disaSTIG.conf exists for disaSTIGlow (SRG-OS-000138-GPOS-00069)."""
+    assert file.exists(
+        SYSCTL_DISASTIG_LOW
+    ), f"stigcompliance: {SYSCTL_DISASTIG_LOW} does not exist"
