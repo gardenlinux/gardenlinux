@@ -62,3 +62,12 @@ def test_suid_binaries_cannot_create_coredumps(sysctl):
 @pytest.mark.feature("disaSTIGmedium")
 def test_kernel_randomizes_virtual_memory_addresses(sysctl):
     assert sysctl["kernel.randomize_va_space"] == 2
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGlow-config-sysctl-disaSTIG"])
+@pytest.mark.feature("disaSTIGlow", reason="sysctl hardening config is deployed by disaSTIGlow")
+def test_sysctl_disastig_low_conf_exists(file) -> None:
+    """Verify /etc/sysctl.d/99-disaSTIG.conf exists for disaSTIGlow (SRG-OS-000138-GPOS-00069)."""
+    assert file.exists(
+        "/etc/sysctl.d/99-disaSTIG.conf"
+    ), "stigcompliance: /etc/sysctl.d/99-disaSTIG.conf does not exist"
