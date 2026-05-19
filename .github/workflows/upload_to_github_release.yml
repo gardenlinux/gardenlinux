@@ -96,7 +96,7 @@ jobs:
           mkdir -p "$CNAME"
 
           gunzip "$CNAME.tar.gz"
-          xz "$CNAME.tar"
+          xz -1 "$CNAME.tar"
           mv "$CNAME.tar.xz" "$CNAME/"
 
           tar -C "log" -cJf "$CNAME/$CNAME.logs.tar.xz" .
