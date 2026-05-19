@@ -24,6 +24,8 @@ markers:
   - "GL-TESTCOV-disaSTIGmedium-config-pam-common-password"
   "etc/security/pwquality.conf":
   - "GL-TESTCOV-disaSTIGmedium-config-security-pwquality"
+  "etc/security/faillock.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-security-faillock"
   "usr/share/pam-configs/garden-disaSTIG":
   - "GL-TESTCOV-disaSTIGmedium-config-pam-garden-disaSTIG"
   "etc/default/useradd":
