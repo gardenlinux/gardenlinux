@@ -9,6 +9,7 @@ successful/unsuccessful logon attempts occur.
 
 
 @pytest.mark.feature("log")
+@pytest.mark.booted(reason="Needs running auditd")
 @pytest.mark.root(reason="Needs access to audit logs")
 def test_audit_record_tools_for_logon_attempts_exist(file):
     assert file.exists("/usr/bin/aulast"), "aulast binary not found"
@@ -16,6 +17,7 @@ def test_audit_record_tools_for_logon_attempts_exist(file):
 
 
 @pytest.mark.feature("log")
+@pytest.mark.booted(reason="Needs running auditd")
 @pytest.mark.root(reason="Needs access to audit logs")
 def test_audit_record_tools_for_logon_attempts_function(shell):
     assert not shell("aulast --proof").returncode
