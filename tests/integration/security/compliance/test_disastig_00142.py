@@ -12,6 +12,7 @@ audit records when it provides a report generation capability.
 
 
 @pytest.mark.feature("log")
+@pytest.mark.booted(reason="Needs running auditd")
 @pytest.mark.root(reason="Needs to access root-owned audit.log")
 def test_audit_report_does_not_alter_original_audit_logs(shell, file):
     with TemporaryDirectory(prefix="pytest-disa-stig-") as tmpd:
