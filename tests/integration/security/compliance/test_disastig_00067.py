@@ -7,16 +7,6 @@ Ref: SRG-OS-000132-GPOS-00067
 
 Verify the operating system separates user functionality (including user
 interface services) from operating system management functionality.
-
-Ref: SRG-OS-000134-GPOS-00068
-
-Verify the operating system isolates security functions from nonsecurity
-functions.
-
-Ref: SRG-OS-000326-GPOS-00126
-
-Verify that the operating system prevents all software from executing at higher
-privilege levels than users executing the software.
 """
 
 SETUID_BINARIES_ALLOWLIST = {

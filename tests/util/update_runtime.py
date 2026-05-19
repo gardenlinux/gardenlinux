@@ -13,16 +13,17 @@ import os
 import re
 import sys
 import time
+from datetime import date, timedelta
 from pathlib import Path
-from typing import Dict
+from typing import Dict, NoReturn
 
-from github import Github
+from github import Auth, Github
 from github.GithubException import GithubException
 
 log = logging.getLogger(__name__)
 
 
-def error(msg: str) -> None:
+def error(msg: str) -> NoReturn:
     """Log error and exit."""
     log.error(msg)
     sys.exit(1)
@@ -47,18 +48,87 @@ def parse_env_file(env_file: Path) -> Dict[str, str]:
     return config
 
 
-def get_latest_release(github: Github, repo_owner: str, repo_name: str):
-    """Get the latest release from the repository."""
+def _release_has_assets(release, patterns: dict) -> bool:
+    """Return True if release has matching assets for all keys in patterns."""
+    found = set()
+    for asset in release.get_assets():
+        for arch, pattern in patterns.items():
+            if arch not in found and pattern.match(asset.name):
+                found.add(arch)
+                log.debug(f"  Found {arch} asset: {asset.name}")
+        if found == set(patterns):
+            return True
+    return False
+
+
+def find_release_for_version(
+    github: Github, repo_owner: str, repo_name: str, version_short: str
+):
+    """Find the most recent release that contains stable assets for version_short.
+
+    Avoids the unreliable /releases list endpoint by:
+    1. Fetching /releases/latest (single cheap request).
+    2. If that release has no matching assets, walk backwards day-by-day from
+       the latest tag date and probe /releases/tags/{YYYYMMDD} directly.
+    """
     start = time.time()
     log.debug(f"Getting repository {repo_owner}/{repo_name}...")
     repo = github.get_repo(f"{repo_owner}/{repo_name}")
     log.debug(f"Got repository in {time.time() - start:.2f}s")
 
-    start = time.time()
-    log.debug("Getting latest release...")
-    release = repo.get_latest_release()
-    log.debug(f"Got latest release {release.tag_name} in {time.time() - start:.2f}s")
-    return release
+    patterns = {
+        "x86_64": re.compile(
+            rf"cpython-{re.escape(version_short)}\.\d+\+\d+-x86_64-unknown-linux-gnu-install_only\.tar\.gz$"
+        ),
+        "aarch64": re.compile(
+            rf"cpython-{re.escape(version_short)}\.\d+\+\d+-aarch64-unknown-linux-gnu-install_only\.tar\.gz$"
+        ),
+    }
+
+    # Try the single /releases/latest endpoint first (cheap, no pagination).
+    log.debug("Trying latest release first...")
+    latest = repo.get_latest_release()
+    log.debug(f"Latest release is {latest.tag_name}")
+    if _release_has_assets(latest, patterns):
+        log.debug(f"Latest release {latest.tag_name} has all required assets")
+        return latest
+    log.debug(
+        f"Latest release {latest.tag_name} has no matching stable assets for Python {version_short}, "
+        "walking backwards by date..."
+    )
+
+    # Tags are YYYYMMDD dates. Walk backwards from the latest tag date,
+    # probing /releases/tags/{YYYYMMDD} — one targeted request per day,
+    # no list endpoint required.
+    latest_date_str = re.search(r"[0-9]{8}", latest.tag_name)
+    if not latest_date_str:
+        error(f"Cannot parse date from latest tag: {latest.tag_name}")
+    tag_date = date(
+        int(latest_date_str.group(0)[:4]),
+        int(latest_date_str.group(0)[4:6]),
+        int(latest_date_str.group(0)[6:8]),
+    )
+
+    max_lookback_days = 90
+    for i in range(1, max_lookback_days + 1):
+        tag_date -= timedelta(days=1)
+        tag = tag_date.strftime("%Y%m%d")
+        try:
+            release = repo.get_release(tag)
+        except GithubException as e:
+            if e.status == 404:
+                log.debug(f"  No release for tag {tag}, skipping")
+                continue
+            raise
+        log.debug(f"Checking release {tag}...")
+        if _release_has_assets(release, patterns):
+            log.debug(f"Release {tag} has all required assets")
+            return release
+
+    error(
+        f"No release with stable assets for Python {version_short} found "
+        f"in the {max_lookback_days} days before {latest.tag_name}"
+    )
 
 
 def get_checksum_from_digest(asset) -> str:
@@ -74,7 +144,7 @@ def get_checksum_from_digest(asset) -> str:
 def extract_info(release, version_short: str) -> Dict[str, str]:
     """Extract all release information needed for python.env.sh."""
     tag_name = release.tag_name
-    log.info(f"Checking release {tag_name} for Python {version_short}...")
+    log.info(f"Extracting info from release {tag_name} for Python {version_short}...")
 
     release_date_match = re.search(r"[0-9]{8}", tag_name)
     if not release_date_match:
@@ -87,10 +157,10 @@ def extract_info(release, version_short: str) -> Dict[str, str]:
 
     patterns = {
         "x86_64": re.compile(
-            rf"cpython-{re.escape(version_short)}\.[0-9]+.*x86_64-unknown-linux-gnu-install_only\.tar\.gz$"
+            rf"cpython-{re.escape(version_short)}\.\d+\+\d+-x86_64-unknown-linux-gnu-install_only\.tar\.gz$"
         ),
         "aarch64": re.compile(
-            rf"cpython-{re.escape(version_short)}\.[0-9]+.*aarch64-unknown-linux-gnu-install_only\.tar\.gz$"
+            rf"cpython-{re.escape(version_short)}\.\d+\+\d+-aarch64-unknown-linux-gnu-install_only\.tar\.gz$"
         ),
     }
     assets = {}
@@ -105,12 +175,11 @@ def extract_info(release, version_short: str) -> Dict[str, str]:
             log.debug("Found required assets, stopping iteration")
             break
 
-    if "x86_64" not in assets:
+    if "x86_64" not in assets or "aarch64" not in assets:
         error(
-            f"Latest release {tag_name} does not contain assets for Python version {version_short}"
+            f"Release {tag_name} does not contain all required assets for Python {version_short}"
         )
-    if "aarch64" not in assets:
-        error("Could not find aarch64 asset in release")
+        return {}  # Unreachable
 
     python_version_match = re.search(
         r"cpython-([0-9]+\.[0-9]+\.[0-9]+)\+", assets["x86_64"].name
@@ -212,11 +281,14 @@ def main():
         error("GH_TOKEN or GITHUB_TOKEN environment variable is required")
 
     try:
-        github = Github(token)
+        github = Github(auth=Auth.Token(token))
         log.info(f"Finding latest release matching Python {version_short}...")
 
-        release = get_latest_release(
-            github, config["PYTHON_REPO_OWNER"], config["PYTHON_REPO_NAME"]
+        release = find_release_for_version(
+            github,
+            config["PYTHON_REPO_OWNER"],
+            config["PYTHON_REPO_NAME"],
+            version_short,
         )
         new_values = extract_info(release, version_short)
 
