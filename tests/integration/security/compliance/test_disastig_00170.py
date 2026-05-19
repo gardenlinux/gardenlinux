@@ -8,6 +8,7 @@ new password upon account recovery for password-based authentication.
 """
 
 
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-pam-common-account"])
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-account"], indirect=["pam_config"]
 )
