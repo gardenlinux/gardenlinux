@@ -625,7 +625,7 @@ class TestJunitXmlReport:
     """Tests for generate_junit_xml_report function."""
 
     def test_xml_structure_is_valid(self):
-        """Should generate valid XML structure."""
+        """Should generate valid XML with a single testsuite and properties."""
         markers_by_feature = {"feature1": ["GL-TESTCOV-001"]}
         found_markers = {"GL-TESTCOV-001"}
         all_features = {"feature1"}
@@ -638,8 +638,21 @@ class TestJunitXmlReport:
         assert xml_root.get("name") == "marker Coverage"
         assert xml_root.get("timestamp") is not None
 
-    def test_includes_all_test_suites(self):
-        """Should include Feature Coverage, Duplicate Detection, and Orphaned IDs suites."""
+        # Should have exactly one testsuite
+        suites = list(xml_root)
+        assert len(suites) == 1
+        suite = suites[0]
+        assert suite.get("name") == "Coverage Report"
+        assert suite.get("time") == "0.0"
+
+        # Should have a <properties> element with Suite property
+        props_elem = suite.find("properties")
+        assert props_elem is not None
+        prop_list = props_elem.findall("property")
+        assert any(p.get("name") == "Suite" for p in prop_list)
+
+    def test_includes_all_sections_as_testcases(self):
+        """Should include feature, duplicate, and orphan testcases in single suite."""
         markers_by_feature = {"feature1": ["GL-TESTCOV-001"]}
         found_markers = {"GL-TESTCOV-001"}
         all_features = {"feature1"}
@@ -648,14 +661,21 @@ class TestJunitXmlReport:
             markers_by_feature, found_markers, all_features, {}, {}
         )
 
-        suites = list(xml_root)
-        assert len(suites) == 3
-        assert suites[0].get("name") == "Feature Coverage"
-        assert suites[1].get("name") == "Duplicate Detection"
-        assert suites[2].get("name") == "Orphaned IDs Detection"
+        suite = list(xml_root)[0]
+        testcases = suite.findall("testcase")
+
+        # Should have feature testcase(s) + no_duplicate_markers + no_orphaned_markers
+        classnames = [tc.get("classname") for tc in testcases]
+        assert "coverage.features" in classnames
+        assert "coverage.validation" in classnames
+
+        names = [tc.get("name") for tc in testcases]
+        assert "feature1" in names
+        assert "no_duplicate_markers" in names
+        assert "no_orphaned_markers" in names
 
     def test_handles_failures_correctly(self):
-        """Should mark failures for untested and duplicate IDs."""
+        """Should mark failures for untested markers in the single suite."""
         markers_by_feature = {"feature1": ["GL-TESTCOV-001", "GL-TESTCOV-002"]}
         found_markers = {"GL-TESTCOV-001"}  # GL-TESTCOV-002 is untested
         all_features = {"feature1"}
@@ -664,12 +684,17 @@ class TestJunitXmlReport:
             markers_by_feature, found_markers, all_features, {}, {}
         )
 
-        # Check Feature Coverage suite has failures
-        feature_suite = list(xml_root)[0]
-        assert int(feature_suite.get("failures", "0")) > 0
+        suite = list(xml_root)[0]
+        assert int(suite.get("failures", "0")) > 0
+
+        # The feature1 testcase should have a failure element
+        feature_tc = next(
+            tc for tc in suite.findall("testcase") if tc.get("name") == "feature1"
+        )
+        assert feature_tc.find("failure") is not None
 
     def test_reports_duplicates_in_xml(self):
-        """Should include duplicate detection failures in XML."""
+        """Should include duplicate detection failure testcase in XML."""
         markers_by_feature = {"feature1": ["GL-TESTCOV-001"]}
         found_markers = set()
         all_features = {"feature1"}
@@ -684,11 +709,18 @@ class TestJunitXmlReport:
             across_dupes,
         )
 
-        dup_suite = list(xml_root)[1]
-        assert int(dup_suite.get("failures", "0")) > 0
+        suite = list(xml_root)[0]
+        assert int(suite.get("failures", "0")) > 0
+
+        dup_tc = next(
+            tc
+            for tc in suite.findall("testcase")
+            if tc.get("name") == "no_duplicate_ids_within_feature1"
+        )
+        assert dup_tc.find("failure") is not None
 
     def test_reports_orphaned_ids(self):
-        """Should report orphaned IDs as failures."""
+        """Should report orphaned IDs as a failure testcase."""
         markers_by_feature = {"feature1": ["GL-TESTCOV-001"]}
         found_markers = {"GL-TESTCOV-001", "GL-TESTCOV-999"}  # 999 is orphaned
         all_features = {"feature1"}
@@ -697,8 +729,14 @@ class TestJunitXmlReport:
             markers_by_feature, found_markers, all_features, {}, {}
         )
 
-        orphaned_suite = list(xml_root)[2]
-        assert int(orphaned_suite.get("failures", "0")) == 1
+        suite = list(xml_root)[0]
+
+        orphaned_tc = next(
+            tc
+            for tc in suite.findall("testcase")
+            if tc.get("name") == "no_orphaned_markers"
+        )
+        assert orphaned_tc.find("failure") is not None
 
     @patch("pathlib.Path.mkdir")
     @patch("xml.etree.ElementTree.ElementTree.write")
