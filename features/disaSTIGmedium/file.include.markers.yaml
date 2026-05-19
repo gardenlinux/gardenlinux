@@ -1,0 +1,18 @@
+markers:
+  "etc/aide/aide.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-aide-audit-tools"
+  "etc/audit/rules.d/30-disaSTIG.rules":
+  - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-disaSTIG-rules"
+  - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-30-disaSTIG-rules"
+  "etc/audit/rules.d/90-finalize.rules":
+  - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-90-finalize-rules"
+  "etc/kernel/cmdline.d/90-audit.cfg":
+  - "GL-TESTCOV-disaSTIGmedium-config-kernel-cmdline-audit"
+  "etc/sudoers.d/disaSTIG-sudo-log":
+  - "GL-TESTCOV-disaSTIGmedium-config-sudoers-sudo-log"
+  "etc/default/aide":
+  - "GL-TESTCOV-disaSTIGmedium-config-aide-silent-reports"
+  "etc/systemd/system/audit-rules.service.d/override.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-service-override"
+  "etc/ssh/sshd_config.d/50-disaSTIG.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"
