@@ -1,18 +1,24 @@
 import pytest
-from plugins.parse_file import ParseFile
+
+"""
+Ref: SRG-OS-000120-GPOS-00061
+
+Verify the operating system uses SHA512 as the password hashing algorithm.
+Using a strong hashing algorithm protects stored credentials from offline
+dictionary attacks.
+"""
+
+LOGIN_DEFS = "/etc/login.defs"
 
 
-@pytest.mark.feature("disaSTIGmedium")
-@pytest.mark.root(reason="requires access to /etc/login.defs")
-def test_password_encryption_method_is_sha512(parse_file: ParseFile):
-    """
-    As per DISA STIG compliance requirements, the operating system must employ FIPS
-    140-2 approved cryptographic hashing algorithms for all stored passwords.
-    This test verifies that /etc/login.defs is configured to use SHA512 for password
-    encryption.
-    Ref: SRG-OS-000120-GPOS-00061
-    """
-    config = parse_file.parse("/etc/login.defs", format="spacedelim")
-    assert (
-        config["ENCRYPT_METHOD"] == "SHA512"
-    ), "stigcompliance: ENCRYPT_METHOD in /etc/login.defs must be SHA512"
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-login-defs-encrypt"])
+@pytest.mark.feature(
+    "disaSTIGmedium", reason="SHA512 password hashing is configured by disaSTIGmedium"
+)
+def test_login_defs_encrypt_method_is_sha512(parse_file) -> None:
+    """Verify ENCRYPT_METHOD in /etc/login.defs is SHA512 (SRG-OS-000120-GPOS-00061)."""
+    config = parse_file.parse(LOGIN_DEFS, format="spacedelim")
+    assert config["ENCRYPT_METHOD"] == "SHA512", (
+        f"stigcompliance: ENCRYPT_METHOD in {LOGIN_DEFS} is "
+        f"{config['ENCRYPT_METHOD']!r}, expected 'SHA512'"
+    )
