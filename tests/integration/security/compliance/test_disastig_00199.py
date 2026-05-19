@@ -26,9 +26,7 @@ def test_selinux_enabled(lsm):
 
 
 @pytest.mark.testcov(["GL-TESTCOV-aide-service-aide-init-enable"])
-@pytest.mark.feature(
-    "aide", reason="aide-init.service is enabled by the aide feature"
-)
+@pytest.mark.feature("aide", reason="aide-init.service is enabled by the aide feature")
 @pytest.mark.booted(reason="requires systemd to query unit enable state")
 def test_aide_init_service_is_enabled(systemd) -> None:
     assert systemd.is_enabled(
@@ -37,9 +35,7 @@ def test_aide_init_service_is_enabled(systemd) -> None:
 
 
 @pytest.mark.testcov(["GL-TESTCOV-aide-service-aide-check-timer-enable"])
-@pytest.mark.feature(
-    "aide", reason="aide-check.timer is enabled by the aide feature"
-)
+@pytest.mark.feature("aide", reason="aide-check.timer is enabled by the aide feature")
 @pytest.mark.booted(reason="requires systemd to query unit enable state")
 def test_aide_check_timer_is_enabled(systemd) -> None:
     assert systemd.is_enabled(
