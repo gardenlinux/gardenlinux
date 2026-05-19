@@ -26,3 +26,11 @@ markers:
   - "GL-TESTCOV-disaSTIGmedium-config-security-pwquality"
   "usr/share/pam-configs/garden-disaSTIG":
   - "GL-TESTCOV-disaSTIGmedium-config-pam-garden-disaSTIG"
+  "etc/default/useradd":
+  - "GL-TESTCOV-disaSTIGmedium-config-useradd-inactive"
+  "etc/profile.d/99-terminal_tmout.sh":
+  - "GL-TESTCOV-disaSTIGmedium-config-profile-terminal-tmout"
+  "etc/rsyslog.d/50-default.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-rsyslog-default"
+  "etc/sysctl.d/99-disaSTIG.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-sysctl-disaSTIG"
