@@ -14,6 +14,7 @@ Refs:
     SRG-OS-000279-GPOS-00109  (terminal TMOUT)
     SRG-OS-000142-GPOS-00071  (sysctl disaSTIG conf)
     SRG-OS-000032-GPOS-00013  (rsyslog auth logging)
+    SRG-OS-000445-GPOS-00199  (aide services enabled)
 """
 
 SUDOERS_WHEEL = "/etc/sudoers.d/wheel"
@@ -120,6 +121,26 @@ def test_rsyslog_logs_auth_to_secure(parse_file):
     assert any(
         "auth" in line and "/var/log/secure" in line for line in lines
     ), f"stigcompliance: {RSYSLOG_DEFAULT} does not route auth logs to /var/log/secure"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-service-aide-init-enable"])
+@pytest.mark.feature("disaSTIGmedium")
+@pytest.mark.booted(reason="requires systemd")
+def test_aide_init_service_is_enabled(systemd):
+    """Verify aide-init.service is enabled (SRG-OS-000445-GPOS-00199)."""
+    assert systemd.is_enabled(
+        "aide-init.service"
+    ), "stigcompliance: aide-init.service is not enabled"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-service-aide-check-timer-enable"])
+@pytest.mark.feature("disaSTIGmedium")
+@pytest.mark.booted(reason="requires systemd")
+def test_aide_check_timer_is_enabled(systemd):
+    """Verify aide-check.timer is enabled (SRG-OS-000445-GPOS-00199)."""
+    assert systemd.is_enabled(
+        "aide-check.timer"
+    ), "stigcompliance: aide-check.timer is not enabled"
 
 
 # =============================================================================
