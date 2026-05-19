@@ -6,13 +6,6 @@ Ref: SRG-OS-000355-GPOS-00143
 Verify the operating system, for networked systems, compares internal
 information system clocks at least every 24 hours with an authoritative time
 source.
-
-Ref: SRG-OS-000356-GPOS-00144
-
-Verify the operating system synchronizes internal information system clocks to
-the authoritative time source when the time difference is greater than one
-second.
-
 """
 
 
