@@ -39,7 +39,7 @@ resource "alicloud_instance" "instance" {
 
   data_disks {
     size = 20
-    category = "cloud_efficiency"
+    category = "cloud_auto"
     delete_with_instance = true
     snapshot_id = data.alicloud_ecs_snapshots.image_test.snapshots.0.id
   }
