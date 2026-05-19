@@ -7,6 +7,7 @@ Verify the operating system prevents the use of dictionary words for passwords.
 """
 
 
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-pam-common-password"])
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-password"], indirect=["pam_config"]
 )
