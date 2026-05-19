@@ -8,7 +8,5 @@ supports after-the-fact investigations of security incidents.
 """
 
 
-@pytest.mark.feature("log")
-def test_report_generation_capability(file):
-    assert file.exists("/usr/sbin/ausearch")
-    assert file.exists("/usr/sbin/aureport")
+def test_disastig_00140():
+    pytest.skip(reason="covered by test_disastig_00063.py")
