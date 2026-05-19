@@ -435,7 +435,7 @@ class File:
 
         return special | mode
 
-    def checksum(file_path):
+    def checksum(self, file_path):
         with open(file_path, "rb") as fd:
             md5sum = hashlib.md5(fd.read(), usedforsecurity=False).hexdigest()
         return md5sum
