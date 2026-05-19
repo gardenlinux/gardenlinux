@@ -18,9 +18,7 @@ AUDITD_CONF = "/etc/audit/auditd.conf"
 )
 @pytest.mark.booted(reason="requires systemd")
 def test_auditd_service_is_enabled(systemd) -> None:
-    assert systemd.is_enabled(
-        "auditd"
-    ), "stigcompliance: auditd.service is not enabled"
+    assert systemd.is_enabled("auditd"), "stigcompliance: auditd.service is not enabled"
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-audit-auditd-conf"])
