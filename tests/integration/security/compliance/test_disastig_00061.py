@@ -12,7 +12,9 @@ LOGIN_DEFS = "/etc/login.defs"
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-login-defs-encrypt"])
-@pytest.mark.feature("disaSTIGmedium", reason="SHA512 password hashing is configured by disaSTIGmedium")
+@pytest.mark.feature(
+    "disaSTIGmedium", reason="SHA512 password hashing is configured by disaSTIGmedium"
+)
 def test_login_defs_encrypt_method_is_sha512(parse_file) -> None:
     """Verify ENCRYPT_METHOD in /etc/login.defs is SHA512 (SRG-OS-000120-GPOS-00061)."""
     config = parse_file.parse(LOGIN_DEFS, format="spacedelim")

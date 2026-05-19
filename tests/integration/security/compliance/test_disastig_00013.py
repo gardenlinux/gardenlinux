@@ -52,7 +52,10 @@ def test_sshguard_can_log_to_journald_dev_log_is_managed_by_journald(file):
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-rsyslog-default"])
-@pytest.mark.feature("disaSTIGmedium", reason="auth log routing to /var/log/secure is configured by disaSTIGmedium")
+@pytest.mark.feature(
+    "disaSTIGmedium",
+    reason="auth log routing to /var/log/secure is configured by disaSTIGmedium",
+)
 def test_rsyslog_logs_auth_to_secure(parse_file) -> None:
     """Verify auth/authpriv logging to /var/log/secure in rsyslog (SRG-OS-000032-GPOS-00013)."""
     lines = parse_file.lines("/etc/rsyslog.d/50-default.conf")

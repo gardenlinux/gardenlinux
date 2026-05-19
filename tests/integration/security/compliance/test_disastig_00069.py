@@ -65,7 +65,9 @@ def test_kernel_randomizes_virtual_memory_addresses(sysctl):
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGlow-config-sysctl-disaSTIG"])
-@pytest.mark.feature("disaSTIGlow", reason="sysctl hardening config is deployed by disaSTIGlow")
+@pytest.mark.feature(
+    "disaSTIGlow", reason="sysctl hardening config is deployed by disaSTIGlow"
+)
 def test_sysctl_disastig_low_conf_exists(file) -> None:
     """Verify /etc/sysctl.d/99-disaSTIG.conf exists for disaSTIGlow (SRG-OS-000138-GPOS-00069)."""
     assert file.exists(

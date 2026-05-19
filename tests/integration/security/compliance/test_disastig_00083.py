@@ -11,7 +11,9 @@ VAR_LOG = "/var/log"
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-var-log-file-permissions"])
-@pytest.mark.feature("disaSTIGmedium", reason="log directory permissions are hardened by disaSTIGmedium")
+@pytest.mark.feature(
+    "disaSTIGmedium", reason="log directory permissions are hardened by disaSTIGmedium"
+)
 def test_var_log_has_755_permissions(file) -> None:
     """Verify /var/log directory has permissions 755 (SRG-OS-000205-GPOS-00083)."""
     assert file.has_permissions(

@@ -12,14 +12,18 @@ SUDOERS_WHEEL = "/etc/sudoers.d/wheel"
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-sudoers-wheel"])
-@pytest.mark.feature("disaSTIGmedium", reason="sudoers wheel truncation is applied by disaSTIGmedium")
+@pytest.mark.feature(
+    "disaSTIGmedium", reason="sudoers wheel truncation is applied by disaSTIGmedium"
+)
 def test_sudoers_wheel_file_exists(file) -> None:
     """Verify /etc/sudoers.d/wheel exists (created/truncated by disaSTIGmedium)."""
     assert file.exists(SUDOERS_WHEEL), f"stigcompliance: {SUDOERS_WHEEL} does not exist"
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-sudoers-wheel"])
-@pytest.mark.feature("disaSTIGmedium", reason="sudoers wheel truncation is applied by disaSTIGmedium")
+@pytest.mark.feature(
+    "disaSTIGmedium", reason="sudoers wheel truncation is applied by disaSTIGmedium"
+)
 def test_sudoers_wheel_file_is_empty(file) -> None:
     """Verify /etc/sudoers.d/wheel is empty (disaSTIGmedium truncates it with echo -n)."""
     assert (

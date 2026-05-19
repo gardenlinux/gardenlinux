@@ -12,7 +12,9 @@ LIMITS_CONF = "/etc/security/limits.conf"
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGlow-config-security-limits"])
-@pytest.mark.feature("disaSTIGlow", reason="maxlogins limit is configured by disaSTIGlow")
+@pytest.mark.feature(
+    "disaSTIGlow", reason="maxlogins limit is configured by disaSTIGlow"
+)
 def test_limits_conf_maxlogins_is_10(parse_file) -> None:
     """Verify hard maxlogins 10 in limits.conf (SRG-OS-000027-GPOS-00008)."""
     lines = parse_file.lines(LIMITS_CONF)

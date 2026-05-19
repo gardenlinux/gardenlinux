@@ -12,7 +12,9 @@ FAILLOCK_CONF = "/etc/security/faillock.conf"
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGlow-config-security-faillock"])
-@pytest.mark.feature("disaSTIGlow", reason="faillock deny threshold is configured by disaSTIGlow")
+@pytest.mark.feature(
+    "disaSTIGlow", reason="faillock deny threshold is configured by disaSTIGlow"
+)
 def test_faillock_deny_is_3(parse_file) -> None:
     """Verify deny=3 in faillock.conf (SRG-OS-000329-GPOS-00128)."""
     config = parse_file.parse(FAILLOCK_CONF, format="keyval")

@@ -12,7 +12,9 @@ AUDITD_CONF = "/etc/audit/auditd.conf"
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGlow-config-audit-auditd-conf"])
-@pytest.mark.feature("disaSTIGlow", reason="auditd disk_full_action is configured by disaSTIGlow")
+@pytest.mark.feature(
+    "disaSTIGlow", reason="auditd disk_full_action is configured by disaSTIGlow"
+)
 def test_auditd_conf_disk_full_action_is_halt(parse_file) -> None:
     """Verify disk_full_action=halt in auditd.conf (SRG-OS-000343-GPOS-00134)."""
     config = parse_file.parse(AUDITD_CONF, format="keyval")

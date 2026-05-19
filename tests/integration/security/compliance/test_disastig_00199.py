@@ -26,7 +26,9 @@ def test_selinux_enabled(lsm):
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-service-aide-init-enable"])
-@pytest.mark.feature("disaSTIGmedium", reason="aide-init.service is enabled by disaSTIGmedium")
+@pytest.mark.feature(
+    "disaSTIGmedium", reason="aide-init.service is enabled by disaSTIGmedium"
+)
 @pytest.mark.booted(reason="requires systemd to query unit enable state")
 def test_aide_init_service_is_enabled(systemd) -> None:
     """Verify aide-init.service is enabled (SRG-OS-000445-GPOS-00199)."""
@@ -36,7 +38,9 @@ def test_aide_init_service_is_enabled(systemd) -> None:
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-service-aide-check-timer-enable"])
-@pytest.mark.feature("disaSTIGmedium", reason="aide-check.timer is enabled by disaSTIGmedium")
+@pytest.mark.feature(
+    "disaSTIGmedium", reason="aide-check.timer is enabled by disaSTIGmedium"
+)
 @pytest.mark.booted(reason="requires systemd to query unit enable state")
 def test_aide_check_timer_is_enabled(systemd) -> None:
     """Verify aide-check.timer is enabled (SRG-OS-000445-GPOS-00199)."""
