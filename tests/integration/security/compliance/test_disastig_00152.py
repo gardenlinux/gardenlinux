@@ -9,7 +9,9 @@ restrict access associated with changes to the system.
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-disaSTIG-rules"])
-@pytest.mark.feature("disaSTIGmedium", reason="audit rules are configured by disaSTIGmedium")
+@pytest.mark.feature(
+    "disaSTIGmedium", reason="audit rules are configured by disaSTIGmedium"
+)
 @pytest.mark.booted(reason="requires audit subsystem running")
 @pytest.mark.root(reason="required to query audit logs")
 def test_enforcement_action_audited(audit_rule) -> None:
