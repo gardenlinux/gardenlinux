@@ -23,7 +23,7 @@ def test_ssh_kex_algorithms_are_strong(sshd: Sshd) -> None:
         "ecdh-sha2-nistp384",
         "ecdh-sha2-nistp521",
     }
-    kex = sshd.get_config_section("kexalgorithms")
+    kex = sshd.get_config_section("kexalgorithms") or ""
     if isinstance(kex, str):
         kex_list = [k.strip() for k in kex.split(",")]
     else:
