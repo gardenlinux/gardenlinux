@@ -35,7 +35,13 @@ Starting with the major version 2017 the versioning scheme has been changed to a
 semver compliant one comprised of a 3 numerical segment identifier
 (major.minor.patch). The "old" 2017.0 is now 2017.0.0
 
-# Documentation
+## Releases
+
+Find all information about our currently maintained and latest
+releases at our [Maintained Releases](https://gardenlinux-docs.netlify.app/reference/releases/maintained-releases.html)
+documentation page.
+
+## Documentation
 
 For [Tutorials](https://gardenlinux-docs.netlify.app/tutorials/),
 [How-Tos](https://gardenlinux-docs.netlify.app/how-to/) and
@@ -45,9 +51,9 @@ Gardenlinux, its structure and supporting tools, visit
 
 To jump directly into a fresh local Garden Linux VM, check out
 [this section](https://gardenlinux-docs.netlify.app/tutorials/local/) for first
-boot tutorials using KVM or LIME.
+boot tutorials using KVM or LIME with one of our currently supported [releases](https://gardenlinux-docs.netlify.app/reference/releases/maintained-releases.html).
 
-# Community
+## Community
 
 To stay up-to-date with recent news about Gardenlinux, subscribe to our mailing
 list:
@@ -63,7 +69,7 @@ For embargoed security related topics, this list is for you:
 
 https://lists.neonephos.org/g/gardenlinux-security-embargo
 
-# Contributing
+## Contributing
 
 We welcome your contributions to Gardenlinux or any supporting projects.
 
