@@ -1,3 +1,5 @@
+import pytest
+
 """
 Ref: SRG-OS-000184-GPOS-00078
 
@@ -6,6 +8,7 @@ fails, shutdown fails, or aborts fail.
 """
 
 
+@pytest.mark.feature("disaSTIGmedium")
 def test_kernel_dump_is_disabled():
     with open("/proc/sys/kernel/core_pattern") as fd:
         assert fd.read() == "|/bin/false"
