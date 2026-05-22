@@ -21,12 +21,16 @@ def pip_requests(shell: ShellRunner):
 
     os.mkdir(package_dir)
 
-    shell("/bin/pip3 install --break-system-packages --no-cache-dir --root-user-action=ignore requests")
+    shell(
+        "/bin/pip3 install --break-system-packages --no-cache-dir --root-user-action=ignore requests"
+    )
     shell("/bin/pip3 freeze >> /tmp/pip_freeze_after_install")
 
     yield package_dir
-    
-    shell("for dep in $(cat /tmp/pip_freeze_after_install); do grep -q $dep /tmp/pip_freeze_before_install || /bin/pip3 uninstall -y --break-system-packages $dep; done")
+
+    shell(
+        "for dep in $(cat /tmp/pip_freeze_after_install); do grep -q $dep /tmp/pip_freeze_before_install || /bin/pip3 uninstall -y --break-system-packages $dep; done"
+    )
     shell("rm /tmp/pip_freeze_before_install /tmp/pip_freeze_after_install")
     shutil.rmtree(package_dir)
     if restore_backup:
