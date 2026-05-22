@@ -17,3 +17,5 @@ markers:
   - "GL-TESTCOV-sap-config-tmpfiles-legacy"
   "usr/local/share/ca-certificates/SAP_Global_Root_CA.crt":
   - "GL-TESTCOV-sap-config-security-sap-global-root-ca"
+  "usr/local/share/ca-certificates/sap-cloud-root-ca.crt":
+  - "GL-TESTCOV-sap-config-security-sap-cloud-root-ca"
