@@ -33,8 +33,7 @@ Before starting, you'll need:
 - An SSH client on your local machine
 - `sudo` or appropriate permissions to access `/dev/kvm`
 
-:::tip
-Install QEMU and OVMF on Debian/Ubuntu-based systems:
+:::info Install QEMU and OVMF on Debian/Ubuntu-based systems:
 
 ```bash
 # For amd64 hosts
