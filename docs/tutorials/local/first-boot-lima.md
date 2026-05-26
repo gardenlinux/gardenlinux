@@ -33,8 +33,7 @@ Before starting, you'll need:
 - [Lima](https://lima-vm.io/) installed
 - [Podman](https://podman.io/) installed (for generating the Lima YAML manifest)
 
-:::tip
-Install Lima and Podman on Debian/Ubuntu-based systems:
+:::info Install Lima and Podman on Debian/Ubuntu-based systems:
 
 ```bash
 # Install Lima
@@ -44,7 +43,9 @@ sudo apt install lima
 sudo apt install podman
 ```
 
-On macOS, use [Homebrew](https://brew.sh/):
+:::
+
+:::info On macOS, use [Homebrew](https://brew.sh/):
 
 ```bash
 brew install lima podman
