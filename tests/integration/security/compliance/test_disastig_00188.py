@@ -13,7 +13,8 @@ safeguards, such as, at a minimum, a Protected Distribution System (PDS).
 """
 
 
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"])
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires sshd effective configuration")
 @pytest.mark.root(reason="required to inspect ssh cryptographic configuration")
 def test_ssh_ciphers_are_strong(sshd: Sshd):
@@ -24,7 +25,8 @@ def test_ssh_ciphers_are_strong(sshd: Sshd):
     ), "stigcompliance: weak cipher allowed in SSH configuration"
 
 
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"])
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires sshd effective configuration")
 @pytest.mark.root(reason="required to inspect ssh cryptographic configuration")
 def test_ssh_macs_are_strong(sshd: Sshd):
@@ -35,7 +37,8 @@ def test_ssh_macs_are_strong(sshd: Sshd):
     ), "stigcompliance: weak MAC allowed in SSH configuration"
 
 
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"])
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires sshd effective configuration")
 @pytest.mark.root(reason="required to inspect ssh cryptographic configuration")
 def test_ssh_kex_are_strong(sshd: Sshd):
