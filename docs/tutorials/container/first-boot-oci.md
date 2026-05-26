@@ -34,14 +34,15 @@ Before starting, you'll need:
 - A container runtime installed: [Podman](https://podman.io/docs/installation) or [Docker](https://docs.docker.com/get-docker/)
 - Internet access to pull images from the GitHub Container Registry (ghcr.io)
 
-:::tip
-Install Podman on Debian/Ubuntu-based systems:
+:::info Install Podman on Debian/Ubuntu-based systems:
 
 ```bash
 sudo apt install podman
 ```
 
-On macOS, use [Homebrew](https://brew.sh/):
+:::
+
+:::info On macOS, use [Homebrew](https://brew.sh/):
 
 ```bash
 brew install podman
