@@ -31,12 +31,12 @@ build your own.
 All Garden Linux [flavors](/explanation/flavors) are published as `.tar.xz`
 archives on the
 [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases).
-This is the primary and always-available method for obtaining images for all
+This is the primary method for obtaining images for all
 platforms, including cloud, virtualization, bare-metal, and local development.
 
 Each release contains:
 
-- Compressed disk images per platform (`.raw`, `.vhd`, `.qcow2`,
+- Compressed tarballs with platform-specific VM disk images (`.raw`, `.vhd`, `.qcow2`,
   `.gcpimage.tar.gz`)
 - A "Published Images" section listing cloud-native references (AMI IDs,
   Community Gallery URNs, GCP image names) where applicable
