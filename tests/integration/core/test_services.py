@@ -351,19 +351,19 @@ def test_firewall_nftables_service_active(systemd: Systemd):
 @pytest.mark.feature("gcp")
 @pytest.mark.booted(reason="Requires systemd")
 def test_gcp_google_guest_agent_service_enabled(systemd: Systemd):
-    """Test that google-guest-agent.service is enabled"""
-    assert systemd.is_enabled("google-guest-agent.service")
+    """Test that google-guest-agent-manager.service is enabled"""
+    assert systemd.is_enabled("google-guest-agent-manager.service")
 
 
 @pytest.mark.testcov(["GL-TESTCOV-gcp-service-google-guest-agent-enable"])
 @pytest.mark.feature("gcp")
 @pytest.mark.booted(reason="Requires systemd")
 @pytest.mark.hypervisor(
-    "not qemu", reason="google-guest-agent.service crashes if run in qemu"
+    "not qemu", reason="google-guest-agent-manager.service crashes if run in qemu"
 )
 def test_gcp_google_guest_agent_service_active(systemd: Systemd):
-    """Test that google-guest-agent.service is active"""
-    assert systemd.is_active("google-guest-agent.service")
+    """Test that google-guest-agent-manager.service is active"""
+    assert systemd.is_active("google-guest-agent-manager.service")
 
 
 @pytest.mark.testcov(["GL-TESTCOV-gcp-service-no-irqbalance"])
