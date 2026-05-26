@@ -363,7 +363,7 @@ def test_gcp_google_guest_agent_service_enabled(systemd: Systemd):
 )
 def test_gcp_google_guest_agent_service_active(systemd: Systemd):
     """Test that google-guest-agent.service is active"""
-    assert systemd.is_active("google-guest-agent.service")
+    assert systemd.is_active("google-guest-agent-manager.service")
 
 
 @pytest.mark.testcov(["GL-TESTCOV-gcp-service-no-irqbalance"])
