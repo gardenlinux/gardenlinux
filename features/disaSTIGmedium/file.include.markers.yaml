@@ -1,0 +1,36 @@
+markers:
+  "etc/aide/aide.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-aide-audit-tools"
+  "etc/audit/rules.d/30-disaSTIG.rules":
+  - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-disaSTIG-rules"
+  - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-30-disaSTIG-rules"
+  "etc/audit/rules.d/90-finalize.rules":
+  - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-90-finalize-rules"
+  "etc/kernel/cmdline.d/90-audit.cfg":
+  - "GL-TESTCOV-disaSTIGmedium-config-kernel-cmdline-audit"
+  "etc/sudoers.d/disaSTIG-sudo-log":
+  - "GL-TESTCOV-disaSTIGmedium-config-sudoers-sudo-log"
+  "etc/default/aide":
+  - "GL-TESTCOV-disaSTIGmedium-config-aide-silent-reports"
+  "etc/systemd/system/audit-rules.service.d/override.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-service-override"
+  "etc/ssh/sshd_config.d/50-disaSTIG.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"
+  "etc/pam.d/common-account":
+  - "GL-TESTCOV-disaSTIGmedium-config-pam-common-account"
+  "etc/pam.d/common-auth":
+  - "GL-TESTCOV-disaSTIGmedium-config-pam-common-auth"
+  "etc/pam.d/common-password":
+  - "GL-TESTCOV-disaSTIGmedium-config-pam-common-password"
+  "etc/security/pwquality.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-security-pwquality"
+  "usr/share/pam-configs/garden-disaSTIG":
+  - "GL-TESTCOV-disaSTIGmedium-config-pam-garden-disaSTIG"
+  "etc/default/useradd":
+  - "GL-TESTCOV-disaSTIGmedium-config-useradd-inactive"
+  "etc/profile.d/99-terminal_tmout.sh":
+  - "GL-TESTCOV-disaSTIGmedium-config-profile-terminal-tmout"
+  "etc/rsyslog.d/50-default.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-rsyslog-default"
+  "etc/sysctl.d/99-disaSTIG.conf":
+  - "GL-TESTCOV-disaSTIGmedium-config-sysctl-disaSTIG"
