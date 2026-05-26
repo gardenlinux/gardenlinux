@@ -102,17 +102,17 @@ def test_profile_autologout_openstack_metal(parse_file: ParseFile):
 
 
 # =============================================================================
-# stig Feature - Profile
+# disaSTIG Feature - Profile
 # =============================================================================
 
 
-# TODO: decide if "stig" feature shall get more setting/test
-@pytest.mark.feature("stig", reason="enabled in stig feature")
+# TODO: decide if "disaSTIGmedium" feature shall get more setting/test
+@pytest.mark.feature("disaSTIGmedium", reason="enabled in disaSTIGmedium feature")
 def test_profile_autologout_stig(parse_file: ParseFile):
     """Test that the autologout profile is set correctly."""
     file = "/etc/profile.d/99-terminal_tmout.sh"
     lines_list = [
-        "TMOUT=600",
+        "TMOUT=900",
         "readonly TMOUT",
         "export TMOUT",
     ]
@@ -123,14 +123,14 @@ def test_profile_autologout_stig(parse_file: ParseFile):
 
 
 # =============================================================================
-# stig Feature - Profile
+# disaSTIG Feature - Profile
 # =============================================================================
 
 TMOUT_FILE_STIG = "/etc/profile.d/99-terminal_tmout.sh"
 
 
 @pytest.mark.security_id(485)
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 def test_shell_tmout_file_exists_stig(file: File):
     """
     As per DISA STIG requirement, this test validates that the shell inactivity
@@ -143,7 +143,7 @@ def test_shell_tmout_file_exists_stig(file: File):
 
 
 @pytest.mark.security_id(485)
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 def test_shell_tmout_is_configured_stig(parse_file: ParseFile):
     """
     As per DISA STIG requirement, this test verifies that TMOUT variable is configured.
@@ -155,7 +155,7 @@ def test_shell_tmout_is_configured_stig(parse_file: ParseFile):
 
 
 @pytest.mark.security_id(485)
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 def test_shell_tmout_is_readonly_stig(parse_file: ParseFile):
     """
     As per DISA STIG requirement, this test verifies that TMOUT is marked ReadOnly.
@@ -167,7 +167,7 @@ def test_shell_tmout_is_readonly_stig(parse_file: ParseFile):
 
 
 @pytest.mark.security_id(485)
-@pytest.mark.feature("stig")
+@pytest.mark.feature("disaSTIGmedium")
 def test_shell_tmout_is_exported_stig(parse_file: ParseFile):
     """
     As per DISA STIG requirement, this test verifies that TMOUT is
