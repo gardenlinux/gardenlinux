@@ -7,12 +7,24 @@ on:
     branches:
       - main
     paths-ignore:
-      - "docs/**"
-      - "**/README.md"
+      - ".gitignore"
+      - ".github/docs*.yml"
+      - 'docs/**'
+      - 'features/*/README.md'
+      - 'features/*/info.yaml'
+      - 'flavors.yaml'
+      - 'CONTRIBUTING.md'
+      - 'SECURITY.md'
   pull_request:
     paths-ignore:
+      - ".gitignore"
+      - ".github/docs*.yml"
       - 'docs/**'
-      - '**/README.md'
+      - 'features/*/README.md'
+      - 'features/*/info.yaml'
+      - 'flavors.yaml'
+      - 'CONTRIBUTING.md'
+      - 'SECURITY.md'
 jobs:
   set_version:
     name: Set VERSION
