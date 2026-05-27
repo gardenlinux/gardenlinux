@@ -41,16 +41,18 @@ complete list of all published flavors, see the
 Determine which of the primary Garden Linux use cases matches your workload.
 Each use case maps to a specific feature set.
 
-| Use Case                                             | Key Features                                                                     | Go To                                                                                               |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Gardener-managed Kubernetes nodes                    | [`gardener`](/reference/features/gardener), [`_prod`](/reference/features/_prod) | [Gardener Kubernetes Nodes](/explanation/use-cases#gardener-kubernetes-nodes)                       |
-| Bare-metal Gardener nodes via IronCore (Cluster API) | [`capi`](/reference/features/capi)                                               | [Bare-Metal via IronCore](/explanation/use-cases#bare-metal-gardener-kubernetes-nodes-via-ironcore) |
-| Vanilla (non-Gardener) Kubernetes nodes              | [`khost`](/reference/features/khost)                                             | [Vanilla Kubernetes Nodes](/explanation/use-cases#vanilla-kubernetes-nodes)                         |
-| OCI container base image                             | [`container`](/reference/features/container) or `bare-*`                         | [Container Base Images](/explanation/use-cases#container-base-images)                               |
-| KVM/libvirt virtualization host                      | [`vhost`](/reference/features/vhost)                                             | [Virtualization Host](/explanation/use-cases#virtualization-host)                                   |
+| Use Case                                             | Description | Suitable Feature                                                                     | Go To                                                                                               |
+| ---------------------------------------------------- | --- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Gardener-managed Kubernetes nodes                    | Installs containerd for Gardener-managed Kubernetes; systemd unit disabled at build time and enabled by Gardener at runtime  | [`gardener`](/reference/features/gardener) | [Gardener Kubernetes Nodes](/explanation/use-cases#gardener-kubernetes-nodes)                       |
+| Bare-metal Gardener nodes via IronCore (Cluster API) | Cluster API support for bare-metal provisioning via IronCore       | [`capi`](/reference/features/capi)                                               | [Bare-Metal via IronCore](/explanation/use-cases#bare-metal-gardener-kubernetes-nodes-via-ironcore) |
+| Vanilla (non-Gardener) Kubernetes nodes              | Installs containerd for vanilla (non-Gardener) Kubernetes                                                                                             | [`khost`](/reference/features/khost)                                             | [Vanilla Kubernetes Nodes](/explanation/use-cases#vanilla-kubernetes-nodes)                         |
+| OCI container base image                             | Creates a tarball to use on all OCI Runtime Environments | [`container`](/reference/features/container) or `bare-*`                         | [Container Base Images](/explanation/use-cases#container-base-images)                               |
+| KVM/libvirt virtualization host                      | Installs KVM kernel modules and libvirt for use as a hypervisor host                                                                                                  | [`vhost`](/reference/features/vhost)                                             | [Virtualization Host](/explanation/use-cases#virtualization-host)                                   |
 
+:::tip
 If no existing use case matches, you can compose a custom flavor. See
 [Building Images](/how-to/building-images) for instructions.
+:::
 
 ## Step 2: Determine Your Target Platform
 
@@ -79,27 +81,29 @@ for the rationale and opt-in override.
 For the full list of platform targets and their YAML schema, see
 [Flavors Reference](/reference/flavors).
 
-## Step 3: Select Features
+## Step 3: Select additional Features
 
-Features extend the base platform with additional capabilities. The most common
-features are listed below.
+You can extend the use case and platform specific features with additional features. The most common features are listed below.
 
 | Feature                                            | Description                                                                                                                                                           |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`gardener`](/reference/features/gardener)         | Installs containerd for Gardener-managed Kubernetes; systemd unit disabled at build time and enabled by Gardener at runtime                                           |
 | [`_prod`](/reference/features/_prod)               | Production hardening: disables debug tooling and applies security defaults                                                                                            |
-| [`khost`](/reference/features/khost)               | Installs containerd for vanilla (non-Gardener) Kubernetes                                                                                                             |
-| [`vhost`](/reference/features/vhost)               | Installs KVM kernel modules and libvirt for use as a hypervisor host                                                                                                  |
-| [`capi`](/reference/features/capi)                 | Cluster API support for bare-metal provisioning via IronCore                                                                                                          |
 | [`_fips`](/reference/features/_fips)               | FIPS 140-2 compliant cryptography                                                                                                                                     |
+| [`_ephemeral`](/reference/features/_ephemeral)     | Provides an ephemeral encrypted `/var`
 | [`_usi`](/reference/features/_usi)                 | Boot using a UKI with embedded EROFS root disk                                                                                                                        |
-| [`_trustedboot`](/reference/features/_trustedboot) | [Trusted Boot](/explanation/secure-boot): validates the entire boot chain including the rootfs (requires [`_tpm2`](/reference/features/_tpm2) for persistent storage) |
+| [`_trustedboot`](/reference/features/_trustedboot) | [Trusted Boot](/explanation/secure-boot): validates the entire boot chain including the rootfs (includes [`_ephemeral`](/reference/features/_ephemeral) and [`_usi`](/reference/features/_usi), requires [`_tpm2`](/reference/features/_tpm2) for persistent `/var`) |
 | [`_tpm2`](/reference/features/_tpm2)               | TPM 2.0 sealed disk encryption for `/var`, bound to the Secure Boot certificate chain (see [Boot Modes: Mutable Data](/explanation/boot-modes#mutable-data-modes))    |
+
 
 ## Step 4: Look Up the Flavor Name
 
 Once you have a platform and feature set, look up the exact flavor name and
 confirm it is published.
+
+:::info How features are joined into a flavor name
+Garden Linux uses the [CNAME system](/explanation/flavors#the-cname-system) to
+construct canonical flavor names.
+:::
 
 - **Common flavors by use case:** The [Use Cases](/explanation/use-cases) page
   includes a "Recommended Flavors" table under each use case section.
@@ -107,27 +111,27 @@ confirm it is published.
   lists every flavor built from `flavors.yaml`, with their resolved feature
   dependencies, architectures, and publication status.
 
-:::info How features are joined into a flavor name
-Garden Linux uses the [CNAME system](/explanation/flavors#the-cname-system) to
-construct canonical flavor names.
+:::tip
+The [Flavor Matrix](/reference/flavor-matrix) gives you an overview of pre-built flavors and the exact recursive features they contain.
 :::
+
+:::tip
+If you do not find pre-built existing images for your use case, you can compose a custom flavor. See
+[Building Images](/how-to/building-images) for instructions.
+:::
+
 
 ## Example: Choosing a Gardener Flavor on AWS
 
-The following walkthrough illustrates all four steps for a common scenario.
+The following walkthrough illustrates all four steps for a common scenario, an AWS Gardener node.
 
-1. **Use case:** Gardener-managed Kubernetes worker nodes.
-2. **Platform:** [`aws`](/reference/features/aws).
-3. **Features:** [`gardener`](/reference/features/gardener) (required for Gardener integration) and [`_prod`](/reference/features/_prod)
-   (production hardening).
+1. **Use case feature:** [`gardener`](/reference/features/gardener) (Gardener-managed Kubernetes node)
+2. **Platform:** [`aws`](/reference/features/aws) (Amazon Web Services)
+3. **Features:**  [`_prod`](/reference/features/_prod) (production hardening)
 4. **Flavor name:** `aws-gardener_prod`
 
 To obtain the image for this [flavor](/explanation/flavors), see
 [Getting Images](/how-to/getting-images).
-
-:::tip
-The [Flavor Matrix](/reference/flavor-matrix) gives you an overview of pre-built flavors and the exact recursive features they contain.
-:::
 
 ## Related Topics
 
