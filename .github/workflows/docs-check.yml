@@ -21,149 +21,42 @@ on:
       - 'SECURITY.md'
 
 jobs:
-  aggregate:
-    name: Aggregate documentation
+  docs-checks:
+    uses: gardenlinux/docs-ng/.github/workflows/docs-checks.yml@main
+    with:
+      override-repo: gardenlinux
+      override-ref: ${{ github.head_ref || github.ref_name }}
+      override-commit: ${{ github.event.pull_request.head.sha || github.sha }}
+
+  notify-docs-ng:
+    name: Notify docs-ng
+    needs: [docs-checks]
     runs-on: ubuntu-24.04
+    if: success()
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          version: "10.28.0"
+          app-id: ${{ secrets.DOCS_BOT_APP_ID }}
+          private-key: ${{ secrets.DOCS_BOT_PRIVATE_KEY }}
+          repositories: docs-ng
 
-      - name: Setup Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+      - name: Send repository dispatch to docs-ng
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
-          node-version: "22"
-
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # pin@v6.2.0
-        with:
-          python-version: "3.13"
-
-      - name: Aggregate docs
-        run: make -C docs aggregate
-        env:
-          DOCS_NG_REF: main
-
-      - name: Upload aggregated build directory
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: docs-ng-build
-          path: .docs-ng-build/
-          retention-days: 1
-          if-no-files-found: error
-          include-hidden-files: true
-
-  linkcheck:
-    name: Link check
-    needs: aggregate
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Download docs-ng build
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: docs-ng-build
-          path: docs-ng-build
-
-      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
-        with:
-          version: "10.28.0"
-
-      - name: Setup Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: "22"
-          cache: "pnpm"
-          cache-dependency-path: docs-ng-build/pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install
-        working-directory: docs-ng-build
-
-      # installing lychee is way easier using the gh action below
-      # - name: Run link check
-      #   run: make linkcheck
-      #   working-directory: docs-ng-build
-
-      - name: Run link check
-        uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2.8.0
-        with:
-          args: docs/**/*.md --config lychee.toml --root-dir "$(pwd)/docs/"
-          workingDirectory: docs-ng-build
-
-  spelling:
-    name: Spelling check
-    needs: aggregate
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Download docs-ng build
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: docs-ng-build
-          path: docs-ng-build
-
-      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
-        with:
-          version: "10.28.0"
-
-      - name: Setup Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: "22"
-          cache: "pnpm"
-          cache-dependency-path: docs-ng-build/pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: |
-          pnpm install
-          pip install git+https://github.com/gardenlinux/glrd.git@v4.1.0
-          pip install git+https://github.com/gardenlinux/python-gardenlinux-lib.git@0.10.20
-          pip install -r requirements.txt
-        working-directory: docs-ng-build
-
-      - name: Run spelling check
-        run: make spelling
-        working-directory: docs-ng-build
-
-  woke:
-    name: Inclusive language check
-    needs: aggregate
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Download docs-ng build
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: docs-ng-build
-          path: docs-ng-build
-
-      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
-        with:
-          version: "10.28.0"
-
-      - name: Setup Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: "22"
-          cache: "pnpm"
-          cache-dependency-path: docs-ng-build/pnpm-lock.yaml
-
-      - name: Install Go (for woke)
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
-        with:
-          go-version: 'stable'
-          cache: false
-
-      - name: Install woke
-        run: go install github.com/get-woke/woke@latest
-
-      - name: Install dependencies
-        run: pnpm install
-        working-directory: docs-ng-build
-
-      - name: Run inclusive language check
-        run: |
-          export PATH=$PATH:$HOME/go/bin
-          make woke
-        working-directory: docs-ng-build
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            await github.rest.repos.createDispatchEvent({
+              owner: 'gardenlinux',
+              repo: 'docs-ng',
+              event_type: 'docs-pr',
+              client_payload: {
+                repo: 'gardenlinux',
+                pr_number: '${{ github.event.pull_request.number || '' }}',
+                commit_sha: '${{ github.event.pull_request.head.sha || github.sha }}',
+                ref: '${{ github.head_ref || github.ref_name }}',
+                event: '${{ github.event_name == 'push' && 'merged' || 'pr_success' }}'
+              }
+            });
+            core.info('Repository dispatch sent to docs-ng');
