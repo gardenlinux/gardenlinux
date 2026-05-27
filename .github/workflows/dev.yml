@@ -12,7 +12,6 @@ on:
       - 'docs/**'
       - 'features/*/README.md'
       - 'features/*/info.yaml'
-      - 'flavors.yaml'
       - 'CONTRIBUTING.md'
       - 'SECURITY.md'
   pull_request:
@@ -22,7 +21,6 @@ on:
       - 'docs/**'
       - 'features/*/README.md'
       - 'features/*/info.yaml'
-      - 'flavors.yaml'
       - 'CONTRIBUTING.md'
       - 'SECURITY.md'
 jobs:
