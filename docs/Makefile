@@ -126,7 +126,7 @@ dev:
 	cd "$(BUILD_DIR)" && pnpm run docs:dev
 
 # ---------------------------------------------------------------------------
-# Building the complete documenation
+# Building the complete documentation
 # ---------------------------------------------------------------------------
 
 build: aggregate
