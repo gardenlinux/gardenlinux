@@ -27,6 +27,11 @@ jobs:
     permissions:
       packages: write
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: true
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d64300c48bf9a0a262642b564c7aeea0b89be21f # pin@0.10.5
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
         with:
           pattern: kmodbuild-container-*
@@ -34,18 +39,14 @@ jobs:
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
       - name: Publish kernel module build dev container
+        env:
+          GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
         run: |
-          for oci_archive in *.oci; do
-            podman load -i ${oci_archive}
-            rm ${oci_archive}
-          done
+          gh-oci load-containers-from-directory --dir "."
+          rm *.oci
 
-          podman login -u token -p ${{ github.token }} ghcr.io
-
-          podman push ghcr.io/${{ github.repository }}/kmodbuild:amd64-$VERSION
-          podman push ghcr.io/${{ github.repository }}/kmodbuild:arm64-$VERSION
-
-          podman manifest create ghcr.io/${{ github.repository }}/kmodbuild:$VERSION
-          podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:$VERSION ghcr.io/${{ github.repository }}/kmodbuild:amd64-$VERSION
-          podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:$VERSION ghcr.io/${{ github.repository }}/kmodbuild:arm64-$VERSION
-          podman manifest push ghcr.io/${{ github.repository }}/kmodbuild:$VERSION
+          gl-oci push-container --container "ghcr.io/${{ github.repository }}/kmodbuild" --tag "amd64-$VERSION"
+          gl-oci add-container-to-index --index "ghcr.io/${{ github.repository }}/kmodbuild" --index-tag "$VERSION" --container "ghcr.io/${{ github.repository }}/kmodbuild" --tag "amd64-$VERSION"
+          gl-oci push-container --container "ghcr.io/${{ github.repository }}/kmodbuild" --tag "arm64-$VERSION"
+          gl-oci add-container-to-index --index "ghcr.io/${{ github.repository }}/kmodbuild" --index-tag "$VERSION" --container "ghcr.io/${{ github.repository }}/kmodbuild" --tag "arm64-$VERSION"
