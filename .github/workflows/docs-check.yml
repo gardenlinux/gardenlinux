@@ -35,12 +35,14 @@ jobs:
     name: Notify docs-ng
     needs: [docs-checks]
     runs-on: ubuntu-24.04
-    # Run after checks pass, OR immediately for merged PRs (skip checks on merge)
+    # Only notify for PR events (not push events which lack PR context)
+    # Run after checks pass for open PRs, OR immediately for merged PRs
     if: |
       always() &&
+      github.event_name == 'pull_request' &&
       (
-        (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) ||
-        (needs.docs-checks.result == 'success')
+        (github.event.action == 'closed' && github.event.pull_request.merged == true) ||
+        (github.event.action != 'closed' && needs.docs-checks.result == 'success')
       )
     steps:
       - name: Generate GitHub App token
@@ -56,22 +58,14 @@ jobs:
         with:
           github-token: ${{ steps.app-token.outputs.token }}
           script: |
-            const isMergedPR = context.eventName === 'pull_request' &&
-                               context.payload.action === 'closed' &&
+            const isMergedPR = context.payload.action === 'closed' &&
                                context.payload.pull_request.merged === true;
-            const isPush = context.eventName === 'push';
 
             // For merged PRs, use the base branch (the branch it was merged into)
-            // For push events, use the branch being pushed to
-            // For open PRs, use the head branch
-            let ref;
-            if (isMergedPR) {
-              ref = context.payload.pull_request.base.ref;
-            } else if (isPush) {
-              ref = context.ref.replace('refs/heads/', '');
-            } else {
-              ref = context.payload.pull_request?.head?.ref || context.ref;
-            }
+            // For open PRs, use the head branch (feature branch)
+            const ref = isMergedPR
+              ? context.payload.pull_request.base.ref
+              : context.payload.pull_request.head.ref;
 
             await github.rest.repos.createDispatchEvent({
               owner: 'gardenlinux',
@@ -79,12 +73,12 @@ jobs:
               event_type: 'docs-pr',
               client_payload: {
                 repo: 'gardenlinux',
-                pr_number: `${context.payload.pull_request?.number || ''}`,
+                pr_number: `${context.payload.pull_request.number}`,
                 commit_sha: isMergedPR
                   ? context.payload.pull_request.merge_commit_sha
-                  : (context.payload.pull_request?.head?.sha || context.sha),
+                  : context.payload.pull_request.head.sha,
                 ref: ref,
-                event: (isMergedPR || isPush) ? 'merged' : 'pr_success'
+                event: isMergedPR ? 'merged' : 'pr_success'
               }
             });
             core.info('Repository dispatch sent to docs-ng');
