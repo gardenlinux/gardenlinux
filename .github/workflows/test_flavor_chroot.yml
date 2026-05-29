@@ -32,7 +32,7 @@ jobs:
             VERSION
           key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
-      - name: Download test distribution artifact
+      - name: Download test distribution
         uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # pin@v5.0.4
         with:
           path: tests/.build
