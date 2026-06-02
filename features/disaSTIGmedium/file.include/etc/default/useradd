@@ -1,0 +1,8 @@
+# Default values for useradd(8)
+SHELL=/bin/bash
+GROUP=100
+HOME=/home
+INACTIVE=35
+EXPIRE=
+SKEL=/etc/skel
+CREATE_MAIL_SPOOL=no
