@@ -322,7 +322,7 @@ storage:
         inline: |
           label: gpt
           type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, name="EFI", size=510MiB
-          type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, name="ROOT"
+          type=4f68bce3-e8cd-4db1-96e7-fbcaf984b709, name="ROOT"
     - path: /opt/onmetal-install/target
       mode: 0755
       overwrite: true
@@ -332,6 +332,10 @@ storage:
 ```
 
 This configuration is used by the Garden Linux PXE installation script to partition the target disk.
+
+:::info
+The ROOT partition type uses the x86-64 root partition GUID (`4f68bce3-e8cd-4db1-96e7-fbcaf984b709`) from the [Discoverable Partitions Specification](https://uapi-group.org/specifications/specs/discoverable_partitions_specification/). For ARM64 systems, use `b921b045-1df0-41c3-af44-4c6f280d3fae`.
+:::
 
 ### Merge Multiple Configurations
 

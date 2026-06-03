@@ -22,13 +22,26 @@ The installation creates a GPT partition table with two partitions:
 
 | Partition | Type | Size | Format | Purpose |
 |-----------|------|------|--------|---------|
-| **EFI** | `C12A7328-F81F-11D2-BA4B-00A0C93EC93B` (ESP) | 510 MiB | FAT32 | Bootloader storage (Legacy: syslinux stages, UEFI: systemd-boot + UKI) |
-| **ROOT** | `0FC63DAF-8483-4772-8E79-3D69D8477DE4` (Linux filesystem) | Remaining space | ext4 | Garden Linux root filesystem |
+| **EFI** | `C12A7328-F81F-11D2-BA4B-00A0C93EC93B` (ESP) | 510 MiB | VFAT  | Bootloader storage (Legacy: syslinux stages, UEFI: systemd-boot + UKI) |
+| **ROOT** | Architecture-specific (see below) | Remaining space | ext4 | Garden Linux root filesystem |
 
 This layout supports both Legacy BIOS and UEFI firmware using the same partition structure. The EFI System Partition (ESP) is used by both firmware types:
 
 - **Legacy BIOS** — Stores syslinux bootloader stages (stage 2 and higher)
 - **UEFI** — Stores systemd-boot bootloader and kernel images
+
+### Root Partition Type GUIDs
+
+Garden Linux uses architecture-specific root partition GUIDs from the [Discoverable Partitions Specification](https://uapi-group.org/specifications/specs/discoverable_partitions_specification/). This enables automatic root partition discovery by systemd without requiring `root=` kernel parameters or `/etc/fstab` entries.
+
+| Architecture | Root Partition GUID |
+|--------------|---------------------|
+| x86-64 (amd64) | `4f68bce3-e8cd-4db1-96e7-fbcaf984b709` |
+| ARM64 (aarch64) | `b921b045-1df0-41c3-af44-4c6f280d3fae` |
+
+:::warning
+The generic Linux filesystem GUID (`0FC63DAF-8483-4772-8E79-3D69D8477DE4`) should not be used for root partitions as it disables automatic discovery features.
+:::
 
 ## Bootloader Installation
 
@@ -48,7 +61,7 @@ The syslinux bootloader configuration includes console output to both serial (`t
 
 For UEFI systems, the installer installs [systemd-boot](https://www.freedesktop.org/software/systemd/man/latest/systemd-boot.html):
 
-- **ISO installations** — Use Boot Loader Specification (BLS) entries in `/boot/loader/entries/`
+- **ISO installations** — Use Boot Loader Specification (BLS) entries in `/efi/loader/entries/`
 - **PXE installations** — Use Unified Kernel Images (UKI) which combine the EFI stub loader, kernel image, initramfs, and kernel command line into a single EFI PE executable
 
 UKI images can be signed for Secure Boot support.

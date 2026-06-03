@@ -9,7 +9,7 @@
         "path": "/opt/install/partitions",
         "contents": {
           "compression": "",
-          "source": "data:,label%3A%20gpt%0Atype%3DC12A7328-F81F-11D2-BA4B-00A0C93EC93B%2C%20name%3D%22EFI%22%2C%20size%3D510MiB%0Atype%3D0FC63DAF-8483-4772-8E79-3D69D8477DE4%2C%20name%3D%22ROOT%22%0A"
+          "source": "data:,label%3A%20gpt%0Atype%3DC12A7328-F81F-11D2-BA4B-00A0C93EC93B%2C%20name%3D%22EFI%22%2C%20size%3D510MiB%0Atype%3D4f68bce3-e8cd-4db1-96e7-fbcaf984b709%2C%20name%3D%22ROOT%22%0A"
         },
         "mode": 493
       },

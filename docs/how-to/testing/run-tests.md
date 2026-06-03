@@ -187,7 +187,7 @@ args:
   ]
 ```
 
-:::note
+:::info
 The `ghcr.io/gardenlinux/test:nightly` container is built and published daily to provide the most up-to-date variant of the test framework. Per-release variants will be available in future releases.
 :::
 

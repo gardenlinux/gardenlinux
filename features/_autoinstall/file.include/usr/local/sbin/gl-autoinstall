@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 set -e
 
-# Check kernel command line for target override (gl.install.target=/dev/sdX)
+targetDir="/tmp/install"
+
+# Check kernel command line for targetDisk override (gl.install.target=/dev/sdX)
 get_cmdline_target() {
-    local target
-    target=$(cat /proc/cmdline | tr ' ' '\n' | grep '^gl.install.target=' | cut -d= -f2-)
-    if [ -n "$target" ] && [ -b "$target" ]; then
-        echo "$target"
+    local targetDisk
+    targetDisk=$(cat /proc/cmdline | tr ' ' '\n' | grep '^gl.install.target=' | cut -d= -f2-)
+    if [ -n "$targetDisk" ] && [ -b "$targetDisk" ]; then
+        echo "$targetDisk"
         return 0
     fi
     return 1
@@ -17,22 +19,22 @@ get_cmdline_target() {
 find_target_disk() {
     for dev in /sys/block/*; do
         name=$(basename "$dev")
-        
+
         # Skip loop devices, CD-ROMs, and ram disks
         case "$name" in
             loop*|sr*|ram*|zram*) continue ;;
         esac
-        
+
         # Skip read-only devices
         if [ "$(cat "$dev/ro" 2>/dev/null)" = "1" ]; then
             continue
         fi
-        
+
         # Skip removable devices (USB, CD, etc)
         if [ "$(cat "$dev/removable" 2>/dev/null)" = "1" ]; then
             continue
         fi
-        
+
         echo "/dev/$name"
         return 0
     done
@@ -40,31 +42,17 @@ find_target_disk() {
 }
 
 # Try kernel command line first, then auto-detect
-target=$(get_cmdline_target || find_target_disk || true)
-if [ -z "$target" ]; then
+targetDisk=$(get_cmdline_target || find_target_disk || true)
+if [ -z "$targetDisk" ]; then
     echo "ERROR: No suitable block device found for installation"
     echo "Hint: Pass gl.install.target=/dev/sdX on kernel command line"
     exit 1
 fi
 
-echo "Auto-installing Garden Linux to $target..."
-export GL_INSTALL_TARGET="$target"
+echo "Auto-installing Garden Linux to $targetDisk..."
+export GL_INSTALL_TARGET="$targetDisk"
 /opt/install/install.sh
 
-# echo "Installation complete. Powering off..."
-# sync
-# systemctl poweroff
-
-echo "Installation completed successfully!"
-echo "Booting into installed system via kexec..."
-
-# Find the installed kernel version from the target system
-kernel=$(ls /opt/install/boot/vmlinuz-* 2>/dev/null | head -1 | sed 's/.*vmlinuz-//')
-if [ -z "$kernel" ]; then
-    echo "ERROR: Could not find installed kernel in /opt/install/boot/"
-    exit 1
-fi
-
-echo "Found kernel version: $kernel"
-kexec -l /opt/install/boot/vmlinuz-${kernel} --initrd=/opt/install/boot/initrd.img-${kernel} --command-line="root=LABEL=ROOT ro console=ttyS0 console=tty0"
-kexec -e
+echo "Installation complete. Shutting down for reboot..."
+sync
+systemctl poweroff
