@@ -35,11 +35,32 @@ When combined with `_trustedboot` or `_unsigned` (USI builds):
 - Fetches `root.squashfs` over HTTP at boot time
 - UEFI-only, supports Secure Boot when signed
 
+### Installation Support
+
+The `_pxe` feature provides ephemeral live boot by default. For disk installation capability, combine with:
+
+- [`_install`](/reference/features/_install) — For interactive installation (prompts for disk and password)
+- [`_autoinstall`](/reference/features/_autoinstall) — For automatic unattended installation (includes `_install`)
+
+**Live Boot Only (no installation):**
+```bash
+./build.sh metal_pxe
+```
+
+**Live Boot + Interactive Installation:**
+```bash
+# Add _install feature for interactive disk installation
+./build.sh metal_pxe_install
+```
+
+**Live Boot + Automatic Installation:**
+```bash
+# Add _autoinstall for unattended disk installation
+./build.sh metal_pxe_autoinstall
+```
+
 Includes:
 - [`_ignite`](/reference/features/_ignite) for Ignition-based first-boot configuration
-- [`_install`](/reference/features/_install) for disk installation capability
-
-For automatic installation on boot, combine with [`_autoinstall`](/reference/features/_autoinstall).
 
 ### Unit testing
 This feature does not support unit tests.
@@ -49,5 +70,5 @@ This feature does not support unit tests.
 |---|---|
 |type|flag|
 |artifact|`.pxe.tar.gz` (contains `vmlinuz`, `initrd`, `cmdline`, `root.squashfs`, and optionally `boot.efi` for USI builds)|
-|included_features|[`_ignite`](/reference/features/_ignite), [`_install`](/reference/features/_install)|
+|included_features|[`_ignite`](/reference/features/_ignite)|
 |excluded_features|None|

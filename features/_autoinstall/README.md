@@ -19,7 +19,7 @@ This feature adds automatic installation by:
 - Providing `/usr/local/sbin/gl-autoinstall` — Wrapper script that:
   - Auto-detects first suitable block device (or uses `gl.install.target` kernel parameter)
   - Calls [`_install`](/reference/features/_install)'s `/opt/install/install.sh`
-  - Uses kexec to boot into installed system
+  - Reboots into installed system
 
 Service conditions:
 - Runs only when `/opt/install/install.sh` exists
