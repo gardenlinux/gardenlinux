@@ -1,122 +1,34 @@
 #!/usr/bin/env bash
 
-set -eufo pipefail
+set -euo pipefail
 
-input="$1"
-output="$2"
+input="$(realpath -- "$1")"
+output="$(realpath -- "$2")"
+
+dir="$(mktemp -d)"
+pushd "$dir" > /dev/null
 
 export PATH="/builder/image.d:$PATH"
 
-rootfs="$(mktemp -d)"
-mount -t tmpfs -o size="${TEMPFS_SIZE:-4G}" tmpfs "$rootfs"
-tar --extract --xattrs --xattrs-include '*' --directory "$rootfs" < "$input"
+chroot_dir="$(mktemp -d)"
+mount -t tmpfs tmpfs "$chroot_dir"
+tar --extract --xattrs --xattrs-include '*' --directory "$chroot_dir" < "$input"
 
-# Detect kernel version (robust method from image.esp.tar)
-kernel="$(find "$rootfs/boot/" -name 'vmlinuz-*' -printf '%P\n' | sort -V | tail -n 1)"
+cp "$chroot_dir/boot/"vmlinuz* vmlinuz
+cp "$chroot_dir/boot/"initrd* initrd
 
-# Detect if this is a USI build (no traditional initrd in /boot)
-is_usi=0
-if ! ls "$rootfs/boot/"initrd* >/dev/null 2>&1; then
-	is_usi=1
-	echo "Detected USI build (no traditional initrd in /boot)"
-fi
+read -r _ cmdline < "$chroot_dir/etc/kernel/cmdline"
+echo "$cmdline" > cmdline
 
-# Create output directory for artifacts
-out_dir="$(mktemp -d)"
+mksquashfs "$chroot_dir" root.squashfs -noappend -comp xz -mkfs-time "$BUILDER_TIMESTAMP" -all-time "$BUILDER_TIMESTAMP"
 
-# Always copy kernel
-cp "$rootfs/boot/$kernel" "$out_dir/vmlinuz"
+sha256sum root.squashfs | head -c 64 > root.squashfs.sha256sum
+echo root.squashfs.sha256sum | cpio -H newc -o | xz --check=crc32 >> initrd
 
-if [ "$is_usi" -eq 0 ]; then
-	# Traditional PXE: copy existing initrd
-	cp "$rootfs/boot/"initrd* "$out_dir/initrd"
-else
-	# USI PXE: Generate initrd with dracut for network boot
-	echo "Generating network boot initrd with dracut for kernel ${kernel#vmlinuz-}"
-	
-	# Mount necessary filesystems for chroot (same pattern as image.esp.tar)
-	mount --rbind /proc "$rootfs/proc"
-	
-	# Minimal /dev setup (proven approach from image.esp.tar)
-	mount -t tmpfs -o mode=0755,size=4k tmpfs "$rootfs/dev"
-	for i in null zero random urandom; do
-		touch "$rootfs/dev/$i"
-		mount --bind "/dev/$i" "$rootfs/dev/$i"
-	done
-	cp --no-dereference /dev/{fd,stdin,stdout,stderr} "$rootfs/dev/"
-	
-	mount -t tmpfs -o size=1G tmpfs "$rootfs/tmp"
-	
-	# Copy initrd.include from features (same pattern as image.esp.tar)
-	mkdir "$rootfs/tmp/initrd.include"
-	IFS=',' read -r -a features <<< "$BUILDER_FEATURES"
-	for feature in "${features[@]}"; do
-		if [ -e "/builder/features/$feature/initrd.include" ]; then
-			cp -a "/builder/features/$feature/initrd.include/." "$rootfs/tmp/initrd.include"
-		fi
-	done
-	
-	# The gardenlinux-live module (from _pxe feature) handles:
-	# - HTTP fetch of squashfs via curl
-	# - OverlayFS setup for live boot
-	# - Network via systemd-networkd
-	# - Ignition support
-	chroot "$rootfs" dracut \
-		--no-hostonly \
-		--force \
-		--tmpdir /tmp \
-		--kver "${kernel#vmlinuz-}" \
-		--modules "bash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo dracut-systemd base fs-lib gardenlinux-live" \
-		--reproducible \
-		--include '/tmp/initrd.include' / \
-		/tmp/initrd
-	
-	cp "$rootfs/tmp/initrd" "$out_dir/initrd"
-	
-	# Unmount in reverse order (same pattern as image.esp.tar)
-	umount -l "$rootfs/proc"
-	umount -R "$rootfs/dev"
-	umount "$rootfs/tmp"
-fi
+umount "$chroot_dir"
+rmdir "$chroot_dir"
 
-# Read cmdline
-read -r _ cmdline < "$rootfs/etc/kernel/cmdline"
-echo "$cmdline" > "$out_dir/cmdline"
+tar --create --mtime="@$BUILDER_TIMESTAMP" --sort name --numeric-owner --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime vmlinuz initrd cmdline root.squashfs | gzip > "$output"
 
-# Create squashfs
-echo "Creating root.squashfs"
-mksquashfs "$rootfs" "$out_dir/root.squashfs" -noappend -comp xz -mkfs-time "$BUILDER_TIMESTAMP" -all-time "$BUILDER_TIMESTAMP"
-
-# Append squashfs checksum to initrd
-sha256sum "$out_dir/root.squashfs" | head -c 64 > "$out_dir/root.squashfs.sha256sum"
-echo root.squashfs.sha256sum | cpio -H newc -o -D "$out_dir" | xz --check=crc32 >> "$out_dir/initrd"
-
-# For USI builds, create UKI for PXE boot via pxe.config hooks
-if [ "$is_usi" -eq 1 ]; then
-	echo "Calling pxe.config hooks for UKI generation"
-	IFS=',' read -r -a features <<< "$BUILDER_FEATURES"
-	for feature in "${features[@]}"; do
-		if [ -e "/builder/features/$feature/pxe.config" ]; then
-			echo "Executing /builder/features/$feature/pxe.config"
-			"/builder/features/$feature/pxe.config" "$rootfs" "$out_dir" vmlinuz initrd "$cmdline"
-		fi
-	done
-fi
-
-umount "$rootfs"
-rmdir "$rootfs"
-
-# Create archive with all available files
-archive_files=(vmlinuz initrd cmdline root.squashfs)
-if [ -f "$out_dir/boot.efi" ]; then
-	archive_files+=(boot.efi)
-	echo "Including boot.efi (UKI) in archive"
-fi
-
-tar --create --mtime="@$BUILDER_TIMESTAMP" --sort name --numeric-owner \
-	--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
-	-C "$out_dir" "${archive_files[@]}" | gzip > "$output"
-
-rm -rf "$out_dir"
-
-sha256sum "$output"
+popd > /dev/null
+rm -rf "$dir"
