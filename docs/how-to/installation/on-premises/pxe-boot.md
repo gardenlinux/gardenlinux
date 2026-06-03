@@ -30,11 +30,11 @@ For non-network installations using bootable media, see [Install Using ISO](/how
 
 Garden Linux supports two PXE deployment modes:
 
-1. **PXE Live Boot** — Boot Garden Linux from the network and run entirely from RAM. The system is ephemeral and stateless; changes are lost on reboot. Useful for testing, diagnostics, or temporary workloads.
+1. **PXE Live Boot** — Boot Garden Linux from the network and run entirely from RAM. The system is ephemeral and stateless; changes are lost on reboot.
 
-2. **PXE Boot + Install** — Boot from the network, then automatically install to disk for persistent storage. First boot runs from RAM while installing to disk, then kexec transitions to the installed system. Subsequent boots load directly from disk.
+2. **PXE Boot + Install** — Boot from the network, then automatically install to disk for persistent storage. First boot runs from RAM while installing to disk, then reboots into the installed system. Subsequent boots load directly from disk.
 
-Both modes support Ignition for first-boot configuration (users, SSH keys, files, services).
+Both modes support [Ignition](/how-to/installation/ignition) for first-boot configuration (users, SSH keys, files, services).
 
 ### PXE Live Boot Workflow
 
@@ -48,7 +48,7 @@ Both modes support Ignition for first-boot configuration (users, SSH keys, files
 1. **Network boot via iPXE** — Same as live boot: fetch kernel, initrd, and squashfs over HTTP
 2. **Live system** — Garden Linux runs from OverlayFS temporarily
 3. **Ignition configuration** — Applies partition layout, target disk configuration, and merges the install configuration
-4. **Installation** — Copies the live system to disk, installs the bootloader, and kexec into the installed system
+4. **Installation** — Copies the live system to disk, installs the bootloader, and reboots into the installed system
 5. **Subsequent boots** — System boots directly from disk without PXE
 
 ### Boot + Install Flow Diagram
@@ -70,7 +70,7 @@ flowchart TD
     M --> N[install.service: Partition disk]
     N --> O[install.service: Copy rootfs to disk]
     O --> P[install.service: Install bootloader]
-    P --> Q[kexec into installed system]
+    P --> Q[Reboot into installed system]
     Q --> R[Garden Linux running from disk]
     R --> S[Subsequent boots: direct from disk]
 ```
@@ -92,7 +92,7 @@ Download iPXE binaries from <https://boot.ipxe.org>.
 
 ## Disk Layout and Bootloader
 
-The installation creates a GPT partition table with EFI (510 MiB, FAT32) and ROOT (remaining space, ext4) partitions. The bootloader is firmware-dependent: syslinux for Legacy BIOS, systemd-boot for UEFI.
+The installation creates a GPT partition table with EFI (510 MiB, VFAT) and ROOT (remaining space, ext4) partitions. The bootloader is firmware-dependent: syslinux for Legacy BIOS, systemd-boot for UEFI.
 
 For full details on the partition layout and bootloader configuration, see [Disk Layout and Bootloader](/how-to/installation/on-premises/disk-layout.md).
 
@@ -260,7 +260,7 @@ No Ignition configuration needed for installation - the system will automaticall
 - Partition and format the disk
 - Copy the system
 - Install bootloader
-- Use kexec to boot into the installed system
+- Reboot into the installed system
 
 ##### Approach 2: Ignition-Triggered Installation (Custom Configuration)
 
@@ -320,8 +320,12 @@ The built-in installer (`/opt/install/install.sh` from the `_install` feature) u
 ```
 label: gpt
 type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, name="EFI", size=510MiB
-type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, name="ROOT"
+type=4f68bce3-e8cd-4db1-96e7-fbcaf984b709, name="ROOT"
 ```
+
+:::note
+The ROOT partition uses the x86-64 root partition GUID from the [Discoverable Partitions Specification](https://uapi-group.org/specifications/specs/discoverable_partitions_specification/). For ARM64 systems, use `b921b045-1df0-41c3-af44-4c6f280d3fae`.
+:::
 
 **Default fstab** (`/opt/install/install.fstab`):
 ```
@@ -359,11 +363,7 @@ The `/opt/install/install.sh` script (provided by the `_install` feature) handle
 When using [`_autoinstall`](/reference/features/_autoinstall), an additional wrapper script (`/usr/local/sbin/gl-autoinstall`) is provided that:
 - Auto-detects the first suitable disk
 - Exports `GL_INSTALL_TARGET` and calls `install.sh`
-- Uses kexec to boot directly into the installed system
-
-:::info Why kexec?
-The `_autoinstall` feature uses `kexec` to transition directly from the live system to the installed system without a full hardware reboot. This allows the installed system to start immediately while still connected to the PXE network, which is beneficial when the system has not yet configured persistent network settings.
-:::
+- Reboots into the installed system
 
 #### Translate and Deploy
 
@@ -494,7 +494,7 @@ The system is now running in live mode. All changes are stored in tmpfs and will
 4. **Live system starts** — The initramfs downloads `root.squashfs` and mounts it as an OverlayFS
 5. **Ignition runs** — Fetches and applies the Ignition configuration (partition layout, target disk, merged install configuration)
 6. **Installation begins** — The `install.service` systemd unit partitions the disk, copies the live system to disk, and installs the bootloader
-7. **System transitions** — kexec switches into the installed system running from disk (no full reboot)
+7. **System transitions** — System reboots into the installed system running from disk
 8. **Subsequent boots** — System boots directly from disk without PXE
 
 The installation typically completes in 5-10 minutes depending on network speed and disk performance.
@@ -629,8 +629,8 @@ Then test the installation:
 
 The test framework automatically detects the [`_autoinstall`](/reference/features/_autoinstall) feature (via the `.requirements` file) and triggers a two-stage workflow:
 
-1. **Stage 1** — Boot via PXE, install to disk using `gl-autoinstall.service`, kexec into installed system
-2. **Stage 2** — Run tests on the installed system
+1. **Stage 1** — Boot via PXE, install to disk using `gl-autoinstall.service`, reboot
+2. **Stage 2** — Boot from installed disk, run tests on the installed system
 
 The test script automatically:
 
@@ -639,8 +639,9 @@ The test script automatically:
 3. Creates a 4G target disk for installation
 4. Sets up the HTTP server to serve PXE files
 5. Boots QEMU via network boot — `gl-autoinstall.service` runs and installs automatically
-6. Waits for kexec into the installed system
-7. Runs the test suite on the installed system
+6. Waits for installation to complete and system to power off
+7. Starts a second QEMU instance booting from the installed disk
+8. Runs the test suite on the installed system
 
 This workflow allows testing the complete PXE boot + installation process without requiring a full PXE infrastructure setup.
 

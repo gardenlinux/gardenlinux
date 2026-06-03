@@ -7,6 +7,7 @@ related_topics:
   - /reference/adr/0005-secure-boot-keys-glci
   - /how-to/secure-boot
   - /how-to/building-images
+  - /how-to/installation/on-premises/disk-layout
 migration_status: "done"
 migration_source: "docs/legacy/boot_modes.md"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4630"
@@ -47,12 +48,6 @@ These are USI images with all optional security features enabled. See
 Legacy boot mode uses a standard partition layout with a boot partition (used
 by both syslinux for BIOS boot and systemd-boot for UEFI boot) and an ext4
 root partition.
-
-```
-vda
-├─vda1   vfat  FAT32  EFI    28M    /efi
-└─vda2   ext4  1.0    ROOT   ~30G   /
-```
 
 The rootfs is fully mutable. Legacy mode does not attempt to provide any
 protection against offline attacks and does not support Secure Boot or

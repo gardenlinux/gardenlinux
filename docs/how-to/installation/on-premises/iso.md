@@ -33,10 +33,10 @@ Boot Garden Linux from ISO media (USB drive, CD-ROM, or virtual CD-ROM for VMs) 
 
 The ISO installation process boots Garden Linux as a live system from removable media, installs the system to a target disk, and reboots into the installed system. The workflow consists of:
 
-1. **Boot from ISO** — Firmware loads the bootloader from ISO media (UEFI: systemd-boot; Legacy BIOS: syslinux)
+1. **Boot from ISO** — Firmware loads the bootloader (isolinux) from ISO media
 2. **Live system** — Garden Linux runs from the ISO root filesystem with an OverlayFS tmpfs layer
 3. **Installation** — Either runs automatically ([`_autoinstall`](/reference/features/_autoinstall) feature) or is triggered manually by running [`/opt/install/install.sh`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_install/file.include/opt/install/install.sh) (provided by [`_install`](/reference/features/_install) feature, included in [`_iso`](/reference/features/_iso))
-4. **Disk install** — Partitions the target disk, copies the root filesystem to disk, and installs the bootloader
+4. **Disk install** — Partitions the target disk, copies the root filesystem to disk, and installs the bootloader (UEFI: systemd-boot; Legacy BIOS: syslinux)
 5. **Reboot** — System reboots into the installed system from disk
 
 ### Boot and Installation Flow
@@ -45,7 +45,7 @@ The ISO installation process boots Garden Linux as a live system from removable 
 flowchart TD
     Start[Power On] --> Firmware[Firmware: BIOS/UEFI]
     Firmware --> BootISO[Boot from ISO Media]
-    BootISO --> Bootloader[Bootloader: syslinux or systemd-boot]
+    BootISO --> Bootloader[Bootloader: isolinux]
     Bootloader --> LoadKernel[Load kernel + initrd]
     LoadKernel --> InitMount[Initramfs: Mount ISO]
     InitMount --> Overlay[Mount OverlayFS: ISO + tmpfs]
@@ -90,7 +90,7 @@ flowchart TD
 
 ## Disk Layout and Bootloader
 
-The installation creates a GPT partition table with EFI (510 MiB, FAT32) and ROOT (remaining space, ext4) partitions. The bootloader is firmware-dependent: syslinux for Legacy BIOS, systemd-boot for UEFI.
+The installation creates a GPT partition table with EFI (510 MiB, VFAT) and ROOT (remaining space, ext4) partitions. The bootloader is firmware-dependent: syslinux for Legacy BIOS, systemd-boot for UEFI.
 
 For full details on the partition layout and bootloader configuration, see [Disk Layout and Bootloader](/how-to/installation/on-premises/disk-layout.md).
 
@@ -176,7 +176,7 @@ Continue? (yes/no): yes
 The installation process:
 
 1. Creates a GPT partition table with EFI and ROOT partitions
-2. Formats partitions (FAT32 for EFI, ext4 for ROOT)
+2. Formats partitions (VFAT for EFI, ext4 for ROOT)
 3. Copies the live system's root filesystem to the ROOT partition
 4. Installs the bootloader (syslinux for BIOS, systemd-boot for UEFI)
 5. Prompts for reboot
@@ -268,7 +268,7 @@ For more post-installation configuration options, see the [Post-Install Configur
 ### Installation Fails or Errors
 
 - **Check disk space** — Ensure the target disk has at least 5 GiB of available space
-- **Verify filesystem support** — The installer requires ext4 and FAT32 filesystem support
+- **Verify filesystem support** — The installer requires ext4 and VFAT filesystem support
 - **Review installation logs** — After a failed installation, check journal logs:
   ```bash
   journalctl -u install.service
@@ -295,8 +295,8 @@ For more post-installation configuration options, see the [Post-Install Configur
 
 The Garden Linux test framework includes built-in support for testing ISO installations using QEMU. For ISO images with the [`_autoinstall`](/reference/features/_autoinstall) feature, the test framework automatically detects this capability (via the `.requirements` file) and triggers a two-stage process:
 
-1. **Stage 1** — Boot from ISO, install to disk automatically (via `gl-autoinstall.service`), kexec into installed system
-2. **Stage 2** — Run tests on the installed system
+1. **Stage 1** — Boot from ISO, install to disk automatically (via `gl-autoinstall.service`), reboot
+2. **Stage 2** — Boot from installed disk, run tests on the installed system
 
 ### Run Installation Tests
 
@@ -311,8 +311,9 @@ The test script automatically:
 1. Detects that the ISO has the [`_autoinstall`](/reference/features/_autoinstall) feature by reading the `.requirements` file
 2. Creates a virtual disk (`/dev/vda` in QEMU)
 3. Boots the ISO — the `gl-autoinstall.service` runs automatically and installs to `/dev/vda`
-4. Waits for installation to complete and kexec into the installed system
-5. Runs the test suite on the installed system
+4. Waits for installation to complete and system to power off
+5. Starts a second QEMU instance booting from the installed disk
+6. Runs the test suite on the installed system
 
 ## Reference
 

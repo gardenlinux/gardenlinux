@@ -9,7 +9,7 @@ github_target_path: docs/reference/features/baremetal.md
 ## Feature: metal
 ### Description
 <website-feature>
-This platform feature creates an artifact for (bare) metal systems. It is just a plaform wrapper for the [`metal`](/reference/features/metal) feature.
+This platform feature creates an artifact for (bare) metal systems. It is just a platform wrapper for the [`metal`](/reference/features/metal) feature.
 </website-feature>
 
 ### Features
