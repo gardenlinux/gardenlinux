@@ -41,7 +41,7 @@ You'll upload a Garden Linux image to your OpenStack Glance service, deploy an i
 
 ### Step 1: Choose an Image
 
-Garden Linux provides pre-built images for OpenStack. Start by downloading and uploading an appropriate image to your OpenStack environment.
+Garden Linux provides pre-built images for OpenStack. Unlike managed cloud marketplaces, OpenStack requires you to download and upload the image to your environment.
 
 :::tip
 For a comprehensive overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).

@@ -41,14 +41,17 @@ You'll deploy a Garden Linux instance on GCP Compute Engine with a basic network
 
 ### Step 1: Choose an Image
 
-Garden Linux provides pre-built images for GCP in the shared Garden Linux GCP project. Start by selecting an appropriate image for your deployment.
+Garden Linux provides pre-built images for GCP. You have two options for obtaining an image:
+
+1. **[Use an Official Image](#official-images)** - Reference a pre-published image from the shared Garden Linux GCP project (fastest method)
+2. **[Upload a Pre-built Image](#uploading-pre-built-images)** - Download from GitHub releases and upload to your GCP project
 
 :::tip
 For a comprehensive overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
 :::
 
 :::warning
-Publishing [Official released Garden Linux images in cloud provider marketplaces](https://github.com/gardenlinux/gardenlinux/issues/4592) is currently worked on. Until this is ready - if you notice not having access to the [Official Images](#official-images) - proceed with [Uploading pre-built images](#uploading-pre-built-images).
+Publishing [official Garden Linux images to cloud provider marketplaces](https://github.com/gardenlinux/gardenlinux/issues/4592) is in progress. If official images are not yet available in the shared GCP project, proceed with [Uploading pre-built images](#uploading-pre-built-images).
 :::
 
 #### Official Images
