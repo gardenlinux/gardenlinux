@@ -9,6 +9,12 @@ components.
 """
 
 
-@pytest.mark.feature("not container")
-def test_sudo_installed(dpkg):
-    assert dpkg.package_is_installed("sudo")
+@pytest.mark.feature("server or disaSTIGmedium")
+def test_sudo_installed(file):
+    assert file.is_executable("/usr/bin/sudo")
+
+
+@pytest.mark.feature("server or disaSTIGmedium")
+def test_sudo_has_wheel_group_enabled(parse_file):
+    lines = parse_file.lines("/etc/sudoers.d/wheel")
+    assert "%wheel" in lines
