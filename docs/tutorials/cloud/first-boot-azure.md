@@ -77,25 +77,27 @@ For a complete list of maintained releases and their support lifecycle, see the 
 
 Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
 
-In the "Published Images" section on the release page, find the image for your desired [flavor](/explanation/flavors) and [architecture](/reference/glossary#architecture). The default production flavor is `azure-gardener_prod-amd64`. You can directly download it there.
+In the "Published Images" section on the release page, find the image for your desired [flavor](/explanation/flavors) and [architecture](/reference/glossary#architecture). The default production flavor is `azure-gardener_prod-amd64`.
 
-To download it by script, look in the "Assets" section on the release page, and find the `.tar.xz` archive for the `azure-gardener_prod-amd64` [flavor](/explanation/flavors). Download and extract the `.raw` image, then upload it to AWS:
+##### Manual download
 
-##### Download the image
+Click the download link in the "Published Images" table to download the `.vhd` image file directly.
+
+##### Download by script
+
+The download URL follows a predictable pattern using the version and commit hash. You can find the commit hash in the flavor name shown in the "Published Images" table (e.g., `azure-gardener_prod-amd64-2150.0.0-eb8696b9` where `eb8696b9` is the commit).
 
 ```bash
 GL_VERSION="2150.0.0"
 GL_COMMIT="eb8696b9"
 GL_ARCH="amd64"
-GL_ASSET="azure-gardener_prod-${GL_ARCH}-${GL_VERSION}-${GL_COMMIT}"
+GL_FLAVOR="azure-gardener_prod"
+GL_ASSET="${GL_FLAVOR}-${GL_ARCH}-${GL_VERSION}-${GL_COMMIT}"
 GL_VHD="${GL_ASSET}.vhd"
-GL_TAR_XZ="${GL_ASSET}.tar.xz"
 
-# Download and extract the image
-curl -L -o "${GL_TAR_XZ}" \
-  "https://github.com/gardenlinux/gardenlinux/releases/download/${GL_VERSION}/${GL_TAR_XZ}"
-
-tar -xf "${GL_TAR_XZ}" "./${GL_VHD}"
+# Download the image
+curl -L -o "${GL_VHD}" \
+  "https://gardenlinux-github-releases.s3.amazonaws.com/objects/${GL_ASSET}/${GL_VHD}"
 ```
 
 :::tip
