@@ -188,7 +188,7 @@ FW_NAME="gardenlinux-allow-ssh"
 gcloud compute firewall-rules create ${FW_NAME} \
     --network=${NETWORK_NAME} \
  --allow=tcp:22 \
- --source-ranges=$(curl -s ifconfig.me)/32 \
+ --source-ranges=$(curl -s api.ipify.org)/32 \
  --target-tags=gardenlinux-tutorial
 ```
 

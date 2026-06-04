@@ -264,7 +264,7 @@ aws ec2 authorize-security-group-ingress \
     --group-id ${SECURITY_GROUP_ID} \
     --protocol tcp \
     --port 22 \
-    --cidr $(curl -s ifconfig.me)/32 \
+    --cidr $(curl -s api.ipify.org)/32 \
     --output text
 ```
 

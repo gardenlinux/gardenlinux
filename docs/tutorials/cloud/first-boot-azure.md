@@ -232,7 +232,7 @@ az network nsg rule create \
  --direction Inbound \
  --protocol Tcp \
  --destination-port-range 22 \
- --source-address-prefix $(curl -s ifconfig.me)/32
+ --source-address-prefix $(curl -s api.ipify.org)/32
 
 # Allow all traffic within the virtual network
 az network nsg rule create \

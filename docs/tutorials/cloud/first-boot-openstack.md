@@ -150,7 +150,7 @@ openstack security group create ${SG_NAME}
 openstack security group rule create ${SG_NAME} \
  --protocol tcp \
  --dst-port 22 \
- --remote-ip $(curl -s ifconfig.me)/32
+ --remote-ip $(curl -s api.ipify.org)/32
 ```
 
 #### Create a Floating IP Address
