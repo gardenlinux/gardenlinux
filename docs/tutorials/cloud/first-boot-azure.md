@@ -332,7 +332,7 @@ ssh -i ${KEY_NAME} azureuser@${PUBLIC_IP}
 ```
 
 :::tip
-Garden Linux uses `azureuser` as the default SSH username on Azure, consistent with Azure cloud-init conventions.
+Garden Linux uses `azureuser` as the default SSH username on Azure. This is different on other platforms. Have a look at the [default usernames per platform](/how-to/installation/cloud-init#default-usernames-per-platform).
 :::
 
 ### Step 6: Verify the Installation

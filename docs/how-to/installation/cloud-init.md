@@ -118,7 +118,7 @@ write_files:
     content: |
       [Match]
       Name=eth0
-      
+
       [Network]
       Address=192.168.1.100/24
       Gateway=192.168.1.1
@@ -179,12 +179,12 @@ write_files:
       Description=My Application Service
       After=network-online.target
       Wants=network-online.target
-      
+
       [Service]
       Type=simple
       ExecStart=/usr/local/bin/my-app
       Restart=on-failure
-      
+
       [Install]
       WantedBy=multi-user.target
     owner: root:root
@@ -248,17 +248,17 @@ write_files:
     content: |
       #!/usr/bin/env bash
       set -euo pipefail
-      
+
       # Create application directory
       mkdir -p /opt/myapp/data
-      
+
       # Write configuration
       cat > /opt/myapp/config.yaml <<EOF
       database:
         host: db.example.com
         port: 5432
       EOF
-      
+
       echo "Setup completed"
     owner: root:root
     permissions: '0755'
@@ -289,12 +289,12 @@ Garden Linux cloud images include a platform-specific default user:
 
 | Platform  | Default Username |
 | --------- | --------------- |
-| AWS       | ec2-user        |
+| AWS       | admin           |
 | Azure     | azureuser       |
 | GCP       | gardenlinux     |
 | OpenStack | admin           |
 
-These users are pre-configured with SSH key access via the cloud platform's metadata service. You only need to enable SSH to access them.
+These users are pre-configured with SSH key access via the cloud platform's metadata service or the User-Data. You only need to enable SSH to access them.
 
 ## Advanced Configuration
 

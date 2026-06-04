@@ -219,9 +219,8 @@ Wait a few moments for the instance to complete its startup script, then connect
 ```bash
 ssh -i ${KEY_NAME} admin@${FLOATING_IP}
 ```
-
 :::tip
-Garden Linux uses `admin` as the default SSH username on OpenStack, as configured by cloud-init.
+Garden Linux uses `admin` as the default SSH username on OpenStack. This is different on other platforms. Have a look at the [default usernames per platform](/how-to/installation/cloud-init#default-usernames-per-platform).
 :::
 
 ### Step 6: Verify the Installation

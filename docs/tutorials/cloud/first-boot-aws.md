@@ -318,11 +318,11 @@ INSTANCE_IP=$(aws ec2 describe-instances \
     --query 'Reservations[].Instances[].PublicIpAddress' \
     --output text)
 
-ssh -i ${KEY_NAME} ec2-user@${INSTANCE_IP}
+ssh -i ${KEY_NAME} admin@${INSTANCE_IP}
 ```
 
 :::tip
-Garden Linux uses `ec2-user` as the default SSH username on AWS, consistent with Amazon Linux conventions.
+Garden Linux uses `admin` as the default SSH username on AWS. This is different on other platforms. Have a look at the [default usernames per platform](/how-to/installation/cloud-init#default-usernames-per-platform).
 :::
 
 ### Step 6: Verify the Installation

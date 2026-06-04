@@ -213,7 +213,6 @@ Garden Linux disables SSH by default for security. You must explicitly enable it
 KEY_NAME="gardenlinux-tutorial-key"
 ssh-keygen -t ed25519 -f ${KEY_NAME} -N ""
 
-SSH_USER="gardenlinux"
 USER_DATA=user_data.sh
 cat >${USER_DATA} <<EOF
 #!/usr/bin/env bash
@@ -255,11 +254,11 @@ INSTANCE_IP=$(gcloud compute instances describe ${INSTANCE_NAME} \
     --zone=${GCP_ZONE} \
     --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
 
-ssh -i ${KEY_NAME} ${SSH_USER}@${INSTANCE_IP}
+ssh -i ${KEY_NAME} gardenlinux@${INSTANCE_IP}
 ```
 
 :::tip
-Garden Linux uses `gardenlinux` as the default SSH username on GCP, consistent with Google Guest Agent conventions.
+Garden Linux uses `gardenlinux` as the default SSH username on GCP. This is different on other platforms. Have a look at the [default usernames per platform](/how-to/installation/cloud-init#default-usernames-per-platform).
 :::
 
 ### Step 6: Verify the Installation
