@@ -256,7 +256,7 @@ ssh -i "${SSH_KEY_DIR}/id_ed25519" -p "${GL_SSH_PORT}" "${SSH_USER}"@localhost
 ```
 
 :::tip
-Garden Linux uses `gardenlinux` as the default SSH username for local and KVM deployments. This differs from cloud platforms like AWS, which use `ec2-user`.
+Garden Linux uses `gardenlinux` as the default SSH username for local and KVM deployments. This differs from cloud platforms like AWS. Have a look at the [default usernames per platform](/how-to/installation/cloud-init#default-usernames-per-platform).
 :::
 
 ### Step 6: Verify the Installation

@@ -41,14 +41,17 @@ You'll deploy a Garden Linux instance on GCP Compute Engine with a basic network
 
 ### Step 1: Choose an Image
 
-Garden Linux provides pre-built images for GCP in the shared Garden Linux GCP project. Start by selecting an appropriate image for your deployment.
+Garden Linux provides pre-built images for GCP. You have two options for obtaining an image:
+
+1. **[Use an Official Image](#official-images)** - Reference a pre-published image from the shared Garden Linux GCP project (fastest method)
+2. **[Upload a Pre-built Image](#uploading-pre-built-images)** - Download from GitHub releases and upload to your GCP project
 
 :::tip
 For a comprehensive overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
 :::
 
 :::warning
-Publishing [Official released Garden Linux images in cloud provider marketplaces](https://github.com/gardenlinux/gardenlinux/issues/4592) is currently worked on. Until this is ready - if you notice not having access to the [Official Images](#official-images) - proceed with [Uploading pre-built images](#uploading-pre-built-images).
+Publishing [official Garden Linux images to cloud provider marketplaces](https://github.com/gardenlinux/gardenlinux/issues/4592) is in progress. If official images are not yet available in the shared GCP project, proceed with [Uploading pre-built images](#uploading-pre-built-images).
 :::
 
 #### Official Images
@@ -76,25 +79,27 @@ For a complete list of maintained releases and their support lifecycle, see the 
 
 Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
 
-In the "Published Images" section on the release page, find the image for your desired [flavor](/explanation/flavors) and [architecture](/reference/glossary#architecture). The default production flavor is `gcp-gardener_prod-amd64`. You can directly download it there.
+In the "Published Images" section on the release page, find the image for your desired [flavor](/explanation/flavors) and [architecture](/reference/glossary#architecture). The default production flavor is `gcp-gardener_prod-amd64`.
 
-To download it by script, look in the "Assets" section on the release page, and find the `.tar.xz` archive for the `gcp-gardener_prod-amd64` [flavor](/explanation/flavors). Download and extract the `.raw` image, then upload it to AWS:
+##### Manual download
 
-##### Download the image
+Click the download link in the "Published Images" table to download the `.gcpimage.tar.gz` image file directly.
+
+##### Download by script
+
+The download URL follows a predictable pattern using the version and commit hash. You can find the commit hash in the flavor name shown in the "Published Images" table (e.g., `gcp-gardener_prod-amd64-2150.0.0-eb8696b9` where `eb8696b9` is the commit).
 
 ```bash
 GL_VERSION="2150.0.0"
 GL_COMMIT="eb8696b9"
 GL_ARCH="amd64"
-GL_ASSET="gcp-gardener_prod-${GL_ARCH}-${GL_VERSION}-${GL_COMMIT}"
+GL_FLAVOR="gcp-gardener_prod"
+GL_ASSET="${GL_FLAVOR}-${GL_ARCH}-${GL_VERSION}-${GL_COMMIT}"
 GL_GCPIMAGE="${GL_ASSET}.gcpimage.tar.gz"
-GL_TAR_XZ="${GL_ASSET}.tar.xz"
 
-# Download and extract the image
-curl -L -o "${GL_TAR_XZ}" \
-  "https://github.com/gardenlinux/gardenlinux/releases/download/${GL_VERSION}/${GL_TAR_XZ}"
-
-tar -xf "${GL_TAR_XZ}" "./${GL_GCPIMAGE}"
+# Download the image
+curl -L -o "${GL_GCPIMAGE}" \
+  "https://gardenlinux-github-releases.s3.amazonaws.com/objects/${GL_ASSET}/${GL_GCPIMAGE}"
 ```
 
 :::tip
@@ -183,7 +188,7 @@ FW_NAME="gardenlinux-allow-ssh"
 gcloud compute firewall-rules create ${FW_NAME} \
     --network=${NETWORK_NAME} \
  --allow=tcp:22 \
- --source-ranges=$(curl -s ifconfig.me)/32 \
+ --source-ranges=$(curl -s api.ipify.org)/32 \
  --target-tags=gardenlinux-tutorial
 ```
 
@@ -210,7 +215,6 @@ Garden Linux disables SSH by default for security. You must explicitly enable it
 KEY_NAME="gardenlinux-tutorial-key"
 ssh-keygen -t ed25519 -f ${KEY_NAME} -N ""
 
-SSH_USER="gardenlinux"
 USER_DATA=user_data.sh
 cat >${USER_DATA} <<EOF
 #!/usr/bin/env bash
@@ -252,11 +256,11 @@ INSTANCE_IP=$(gcloud compute instances describe ${INSTANCE_NAME} \
     --zone=${GCP_ZONE} \
     --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
 
-ssh -i ${KEY_NAME} ${SSH_USER}@${INSTANCE_IP}
+ssh -i ${KEY_NAME} gardenlinux@${INSTANCE_IP}
 ```
 
 :::tip
-Garden Linux uses `gardenlinux` as the default SSH username on GCP, consistent with Google Guest Agent conventions.
+Garden Linux uses `gardenlinux` as the default SSH username on GCP. This is different on other platforms. Have a look at the [default usernames per platform](/how-to/installation/cloud-init#default-usernames-per-platform).
 :::
 
 ### Step 6: Verify the Installation

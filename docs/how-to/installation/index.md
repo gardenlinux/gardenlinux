@@ -6,6 +6,8 @@ related_topics:
   - /tutorials/on-premises/index.md
   - /tutorials/container/index.md
   - /how-to/installation/post-install.md
+  - /how-to/installation/cloud-init.md
+  - /how-to/installation/ignition.md
 migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4623"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
@@ -45,6 +47,15 @@ For detailed step-by-step first-boot guides, see:
 :::
 
 After installation, review the [Post Installation Steps](/how-to/installation/post-install.md) for user creation, SSH setup, and other initial configuration tasks.
+
+## Provisioning and Configuration
+
+Automate first-boot system configuration using declarative provisioning tools:
+
+- **[Provision with cloud-init](/how-to/installation/cloud-init.md)** — Standard provisioning for cloud platforms (AWS, Azure, GCP, OpenStack)
+- **[Provision with Ignition](/how-to/installation/ignition.md)** — First-boot provisioning for bare-metal and PXE deployments
+
+These tools configure users, SSH keys, network settings, files, and systemd services automatically on first boot, eliminating manual post-installation steps.
 
 <SectionIndex />
 

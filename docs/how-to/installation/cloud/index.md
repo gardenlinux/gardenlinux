@@ -1,5 +1,6 @@
 ---
 title: "Cloud Installation"
+order: 1
 related_topics:
   - /tutorials/cloud/index.md
   - /how-to/installation/post-install.md

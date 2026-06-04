@@ -41,7 +41,7 @@ You'll upload a Garden Linux image to your OpenStack Glance service, deploy an i
 
 ### Step 1: Choose an Image
 
-Garden Linux provides pre-built images for OpenStack. Start by downloading and uploading an appropriate image to your OpenStack environment.
+Garden Linux provides pre-built images for OpenStack. Unlike managed cloud marketplaces, OpenStack requires you to download and upload the image to your environment.
 
 :::tip
 For a comprehensive overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
@@ -51,29 +51,33 @@ For a comprehensive overview of all image acquisition methods across platforms, 
 
 Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
 
-In the "Published Images" section on the release page, find the image for your desired [flavor](/explanation/flavors) and [architecture](/reference/glossary#architecture). The default production flavor is `openstack-gardener_prod-amd64`. You can directly download it there.
+In the "Published Images" section on the release page, find the image for your desired [flavor](/explanation/flavors) and [architecture](/reference/glossary#architecture). The default production flavor is `openstack-gardener_prod-amd64`.
 
-To download it by script, look in the "Assets" section on the release page, and find the `.tar.xz` archive for the `openstack-gardener_prod-amd64` [flavor](/explanation/flavors). Download and extract the `.qcow2` image, then upload it to your OpenStack Glance service:
+##### Manual download
+
+Click the download link in the "Published Images" table to download the `.raw` image file directly.
+
+##### Download by script
+
+The download URL follows a predictable pattern using the version and commit hash. You can find the commit hash in the flavor name shown in the "Published Images" table (e.g., `openstack-gardener_prod-amd64-2150.0.0-eb8696b9` where `eb8696b9` is the commit).
 
 ```bash
 GL_VERSION="2150.0.0"
 GL_COMMIT="eb8696b9"
 GL_ARCH="amd64"
-GL_ASSET="openstack-gardener_prod-${GL_ARCH}-${GL_VERSION}-${GL_COMMIT}"
-GL_QCOW2="${GL_ASSET}.qcow2"
-GL_TAR_XZ="${GL_ASSET}.tar.xz"
+GL_FLAVOR="openstack-gardener_prod"
+GL_ASSET="${GL_FLAVOR}-${GL_ARCH}-${GL_VERSION}-${GL_COMMIT}"
+GL_RAW="${GL_ASSET}.raw"
 
-# Download and extract the image
-curl -L -o "${GL_TAR_XZ}" \
-  "https://github.com/gardenlinux/gardenlinux/releases/download/${GL_VERSION}/${GL_TAR_XZ}"
-
-tar -xf "${GL_TAR_XZ}" "${GL_QCOW2}"
+# Download the image
+curl -L -o "${GL_RAW}" \
+  "https://gardenlinux-github-releases.s3.amazonaws.com/objects/${GL_ASSET}/${GL_RAW}"
 
 # Upload to Glance
 IMAGE_ID=$(openstack image create gardenlinux-tutorial \
-    --disk-format qcow2 \
+    --disk-format raw \
     --container-format bare \
-    --file ${GL_QCOW2} \
+    --file ${GL_RAW} \
     -f value -c id)
 ```
 
@@ -146,7 +150,7 @@ openstack security group create ${SG_NAME}
 openstack security group rule create ${SG_NAME} \
  --protocol tcp \
  --dst-port 22 \
- --remote-ip $(curl -s ifconfig.me)/32
+ --remote-ip $(curl -s api.ipify.org)/32
 ```
 
 #### Create a Floating IP Address
@@ -219,9 +223,8 @@ Wait a few moments for the instance to complete its startup script, then connect
 ```bash
 ssh -i ${KEY_NAME} admin@${FLOATING_IP}
 ```
-
 :::tip
-Garden Linux uses `admin` as the default SSH username on OpenStack, as configured by cloud-init.
+Garden Linux uses `admin` as the default SSH username on OpenStack. This is different on other platforms. Have a look at the [default usernames per platform](/how-to/installation/cloud-init#default-usernames-per-platform).
 :::
 
 ### Step 6: Verify the Installation
