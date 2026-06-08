@@ -1,6 +1,7 @@
 ---
 title: "Post Installation Steps"
 description: "Suggested First Steps after Installation"
+order: 7
 migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4623"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
@@ -11,6 +12,9 @@ github_source_path: docs/how-to/installation/post-install.md
 github_target_path: docs/how-to/installation/post-install.md
 related_topics:
   - /how-to/installation/index.md
+  - /how-to/installation/cloud-init.md
+  - /how-to/installation/ignition.md
+  - /how-to/installation/on-premises/pxe-boot.md
   - /tutorials/on-premises/first-boot-bare-metal.md
   - /tutorials/local/first-boot-kvm.md
   - /tutorials/local/first-boot-lima.md
@@ -22,22 +26,32 @@ related_topics:
 
 ## Creating A User
 
-Garden Linux installations, do not create a default user on installation. This
-is due to the specific use cases it was designed for not requiring a user.
+Garden Linux installations do not create a default user on installation. This is due to the specific use cases it was designed for not requiring a user.
 
-If you would still like to create a new user account for you to use, follow the
-instructions below.
+:::tip Automate Provisioning
+For automated user creation and system configuration, use:
+- **[cloud-init](/how-to/installation/cloud-init.md)** for cloud platforms (AWS, Azure, GCP, OpenStack)
+- **[Ignition](/how-to/installation/ignition.md)** for bare-metal and PXE deployments
+
+These tools configure users, SSH keys, files, and services on first boot without manual intervention.
+:::
+
+If you would still like to create a new user account manually, follow the instructions below.
 
 ### When Is Manual User Creation Required?
 
-Manual user creation can be necessary, if:
+Manual user creation is necessary when automated provisioning tools are unavailable:
 
-- Deploying on **bare metal** without PXE/Ignition support
-- Running on **KVM/QEMU** without cloud-init (e.g for testing)
-- Any environment where cloud-init or similar provisioning is unavailable
+- Deploying on **bare metal** without [PXE/Ignition](/how-to/installation/on-premises/pxe-boot.md) support
+- Running on **KVM/QEMU** without cloud-init (e.g., for testing)
+- Any environment where [cloud-init](/how-to/installation/cloud-init.md) or [Ignition](/how-to/installation/ignition.md) provisioning is unavailable
 
-For cloud deployments, users are automatically provisioned via cloud-init. See
-the platform specific tutorials:
+For automated provisioning:
+
+- **Cloud platforms** — Use [cloud-init](/how-to/installation/cloud-init.md) (see platform-specific tutorials below)
+- **PXE/bare-metal** — Use [Ignition](/how-to/installation/ignition.md) with [PXE boot](/how-to/installation/on-premises/pxe-boot.md)
+
+Platform-specific tutorials:
 
 - [First Boot on AWS](/tutorials/cloud/first-boot-aws.md)
 - [First Boot on Azure](/tutorials/cloud/first-boot-azure.md)
@@ -121,8 +135,7 @@ KVM see [First Boot on KVM](/tutorials/local/first-boot-kvm.md).
 
 ### Method 3: cloud-init user-data (Cloud Platforms)
 
-On cloud platforms with cloud-init support, users are typically pre-configured.
-You only need to enable SSH to access them:
+On cloud platforms with cloud-init support, users are typically pre-configured. You only need to enable SSH to access them:
 
 ```bash
 cat > user_data.sh <<EOF
@@ -131,16 +144,9 @@ systemctl enable --now ssh
 EOF
 ```
 
-#### Default Usernames per Platform
+For complete cloud-init provisioning examples including custom user creation, package installation, and file configuration, see the [Provision with cloud-init](/how-to/installation/cloud-init.md) guide.
 
-The default usernames vary by platform:
-
-| Platform  | DefaultUsername |
-| --------- | --------------- |
-| AWS       | ec2-user        |
-| Azure     | azureuser       |
-| GCP       | gardenlinux     |
-| OpenStack | admin           |
+For default usernames per platform, see [Provision with cloud-init — Default Usernames](/how-to/installation/cloud-init.md#default-usernames-per-platform).
 
 ### The Wheel Group
 

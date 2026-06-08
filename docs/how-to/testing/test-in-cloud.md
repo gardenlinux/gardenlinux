@@ -71,7 +71,7 @@ aws configure
 aws sts get-caller-identity
 ```
 
-:::note
+:::info
 For AWS, you can also use Single Sign-On (SSO) authentication if your organization supports it.
 :::
 
@@ -90,7 +90,7 @@ az login
 az account show
 ```
 
-:::note
+:::info
 The subscription ID can be found in the Azure portal under Subscriptions.
 :::
 
@@ -112,7 +112,7 @@ gcloud auth application-default login
 gcloud auth list
 ```
 
-:::note
+:::info
 The Project ID can be found in the Google Cloud portal under Project info.
 :::
 
@@ -126,7 +126,7 @@ Configure OpenStack authentication:
 export OS_CLOUD=gardenlinux-test
 ```
 
-:::note
+:::info
 You can download the `clouds.yaml` from your OpenStack dashboard.
 :::
 
@@ -140,7 +140,7 @@ Specify the cloud provider (aws, gcp, azure, ali, openstack).
 ./test --cloud aws .build/image.raw
 ```
 
-:::note
+:::info
 QEMU VM testing ignores this flag.
 :::
 
@@ -185,7 +185,7 @@ Only run `tofu plan` for cloud setups (shows what resources would be created wit
 ./test --cloud aws --cloud-plan .build/image.raw
 ```
 
-:::note
+:::info
 QEMU VM testing ignores this flag.
 :::
 

@@ -39,10 +39,10 @@ Before starting, you'll need:
 ```bash
 sudo apt install podman
 ```
+:::
 
 :::
 
-:::info On macOS, use [Homebrew](https://brew.sh/):
 
 ```bash
 brew install podman

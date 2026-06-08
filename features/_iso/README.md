@@ -7,14 +7,22 @@ github_target_path: docs/reference/features/_iso.md
 ---
 
 ## Feature: _iso
+
 ### Description
 <website-feature>
-
-This feature flag creates an `.iso` artifact of Garden Linux.
+Creates a bootable `.iso` artifact for use on physical hardware, virtual machines, or USB media.
 </website-feature>
 
 ### Features
-This feature simply creates a bootable `.iso` image as an additional artifact.
+This feature creates a hybrid bootable ISO with:
+- UEFI boot support (systemd-boot with UKI)
+- Legacy BIOS boot support (syslinux/isolinux)
+- Live root filesystem (squashfs in `/live/squashfs.img`)
+- Auto-login as root on console
+
+Includes [`_install`](/reference/features/_install) for disk installation capability.
+
+For automatic installation on boot, combine with [`_autoinstall`](/reference/features/_autoinstall).
 
 ### Unit testing
 This feature does not support unit tests.
@@ -23,6 +31,6 @@ This feature does not support unit tests.
 |||
 |---|---|
 |type|flag|
-|artifact|None|
-|included_features|None|
-|excluded_features|None|
+|artifact|`.iso`|
+|included_features|[`_install`](/reference/features/_install)|
+|excluded_features|[`_selinux`](/reference/features/_selinux)|

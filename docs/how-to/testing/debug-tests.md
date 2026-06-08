@@ -158,7 +158,7 @@ With specific tests:
 
 Stop watch mode at any time with `Ctrl+C`.
 
-:::note
+:::info
 `--dev` is shorthand for `--ssh --skip-cleanup --skip-tests --watch`.
 :::
 
@@ -196,7 +196,7 @@ With specific tests:
 
 Stop watch mode at any time with `Ctrl+C`.
 
-:::note
+:::info
 `--dev` is shorthand for `--skip-cleanup --skip-tests --watch` in cloud mode.
 :::
 
