@@ -9,6 +9,9 @@ Verify the operating system enforces a minimum 15-character password length.
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-pam-common-password"])
 @pytest.mark.feature("disaSTIGmedium")
+@pytest.mark.parametrize(
+    "pam_config", ["/etc/pam.d/common-password"], indirect=["pam_config"]
+)
 def test_common_password_passwdqc_pam_faillock(pam_config):
     results = pam_config.find_entries(
         type_="password",
