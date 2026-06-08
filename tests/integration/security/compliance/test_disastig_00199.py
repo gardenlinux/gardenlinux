@@ -7,6 +7,17 @@ Verify the operating system verifies correct operation of all security
 functions.
 """
 
+AIDE_CONF = "/etc/aide/aide.conf"
+AIDE_TOOLS = [
+    "/sbin/auditctl",
+    "/sbin/auditd",
+    "/sbin/ausearch",
+    "/sbin/aureport",
+    "/sbin/autrace",
+    "/sbin/audispd",
+    "/sbin/augenrules",
+]
+
 
 @pytest.mark.feature("log")
 @pytest.mark.booted("Needs working systemd")
@@ -25,25 +36,47 @@ def test_selinux_enabled(lsm):
     assert "selinux" in lsm
 
 
-@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-service-aide-init-enable"])
-@pytest.mark.feature(
-    "disaSTIGmedium", reason="aide-init.service is enabled by disaSTIGmedium"
-)
+@pytest.mark.testcov(["GL-TESTCOV-aide-service-aide-init-enable"])
+@pytest.mark.feature("aide", reason="aide-init.service is enabled by the aide feature")
 @pytest.mark.booted(reason="requires systemd to query unit enable state")
 def test_aide_init_service_is_enabled(systemd) -> None:
-    """Verify aide-init.service is enabled (SRG-OS-000445-GPOS-00199)."""
     assert systemd.is_enabled(
         "aide-init.service"
     ), "stigcompliance: aide-init.service is not enabled"
 
 
-@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-service-aide-check-timer-enable"])
-@pytest.mark.feature(
-    "disaSTIGmedium", reason="aide-check.timer is enabled by disaSTIGmedium"
-)
+@pytest.mark.testcov(["GL-TESTCOV-aide-service-aide-check-timer-enable"])
+@pytest.mark.feature("aide", reason="aide-check.timer is enabled by the aide feature")
 @pytest.mark.booted(reason="requires systemd to query unit enable state")
 def test_aide_check_timer_is_enabled(systemd) -> None:
-    """Verify aide-check.timer is enabled (SRG-OS-000445-GPOS-00199)."""
     assert systemd.is_enabled(
         "aide-check.timer"
     ), "stigcompliance: aide-check.timer is not enabled"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-aide-audit-tools"])
+@pytest.mark.feature(
+    "disaSTIGmedium", reason="AIDE monitors audit tools as configured by disaSTIGmedium"
+)
+def test_aide_conf_monitors_audit_tools(parse_file) -> None:
+    lines = parse_file.lines(AIDE_CONF)
+    missing = [
+        tool
+        for tool in AIDE_TOOLS
+        if not any(line.startswith(tool) and "sha512" in line for line in lines)
+    ]
+    assert (
+        not missing
+    ), f"stigcompliance: AIDE does not monitor these tools with sha512 in {AIDE_CONF}: {missing}"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-aide-silent-reports"])
+@pytest.mark.feature(
+    "disaSTIGmedium", reason="AIDE SILENTREPORTS is configured by disaSTIGmedium"
+)
+def test_aide_default_silentreports_is_no(parse_file) -> None:
+    config = parse_file.parse("/etc/default/aide", format="keyval")
+    assert config.get("SILENTREPORTS") == "no", (
+        f"stigcompliance: SILENTREPORTS in /etc/default/aide is "
+        f"{config.get('SILENTREPORTS')!r}, expected 'no'"
+    )

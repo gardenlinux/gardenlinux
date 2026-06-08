@@ -7,6 +7,12 @@ Verify the operating system automatically audits account modification.
 """
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-30-disaSTIG-rules",
+        "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-disaSTIG-rules",
+    ]
+)
 @pytest.mark.feature("disaSTIGmedium")
 def test_audit_calling_user_group_related_utilities(audit_rule):
     for bin in [
@@ -34,8 +40,8 @@ def test_audit_calling_user_group_related_utilities(audit_rule):
         "/usr/bin/passwd",
     ]:
         assert audit_rule(
-            binary_call=bin
-        ), f"No audit rule found for {bin} binary calls"
+            fs_watch_path=bin, access_types="x"
+        ), f"No audit rule found for {bin} execution"
 
 
 def test_audit_rules_for_logging_attempts_to_delete_privileges():
