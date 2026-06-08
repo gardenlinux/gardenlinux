@@ -9,6 +9,5 @@ fails, shutdown fails, or aborts fail.
 
 
 @pytest.mark.feature("disaSTIGmedium")
-def test_kernel_dump_is_disabled():
-    with open("/proc/sys/kernel/core_pattern") as fd:
-        assert fd.read() == "|/bin/false"
+def test_kernel_dump_is_disabled(sysctl):
+    assert sysctl["kernel.core_pattern"] == "|/bin/false"
