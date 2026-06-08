@@ -8,18 +8,21 @@ functions.
 """
 
 
+@pytest.mark.security_id(203756)
 @pytest.mark.feature("log")
 @pytest.mark.booted("Needs working systemd")
 def test_auditd_service_active(systemd):
     assert systemd.is_active("auditd")
 
 
+@pytest.mark.security_id(203756)
 @pytest.mark.feature("log")
 @pytest.mark.booted("Needs working systemd")
 def test_systemd_configured_to_restart_auditd_service(systemd):
     assert systemd.get_unit_properties("auditd")["Restart"] != "no"
 
 
+@pytest.mark.security_id(203756)
 @pytest.mark.feature("_selinux")
 def test_selinux_enabled(lsm):
     assert "selinux" in lsm
@@ -29,6 +32,7 @@ def test_selinux_enabled(lsm):
 @pytest.mark.feature(
     "disaSTIGmedium", reason="aide-init.service is enabled by disaSTIGmedium"
 )
+@pytest.mark.security_id(203756)
 @pytest.mark.booted(reason="requires systemd to query unit enable state")
 def test_aide_init_service_is_enabled(systemd) -> None:
     """Verify aide-init.service is enabled (SRG-OS-000445-GPOS-00199)."""
@@ -41,6 +45,7 @@ def test_aide_init_service_is_enabled(systemd) -> None:
 @pytest.mark.feature(
     "disaSTIGmedium", reason="aide-check.timer is enabled by disaSTIGmedium"
 )
+@pytest.mark.security_id(203756)
 @pytest.mark.booted(reason="requires systemd to query unit enable state")
 def test_aide_check_timer_is_enabled(systemd) -> None:
     """Verify aide-check.timer is enabled (SRG-OS-000445-GPOS-00199)."""

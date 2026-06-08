@@ -10,6 +10,7 @@ unload, and restart actions, and also for all program initiations.
 """
 
 
+@pytest.mark.security_id(203775)
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="audit subsystem required")
 @pytest.mark.root(reason="requires access to audit rules")

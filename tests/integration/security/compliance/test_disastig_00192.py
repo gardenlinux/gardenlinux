@@ -8,6 +8,7 @@ memory from unauthorized code execution.
 """
 
 
+@pytest.mark.security_id(203753)
 @pytest.mark.arch("amd64")
 def test_nx_bit_hardware_support():
     """
@@ -20,6 +21,7 @@ def test_nx_bit_hardware_support():
         ), "Finding: Hardware does not support or report the NX bit."
 
 
+@pytest.mark.security_id(203753)
 @pytest.mark.arch("amd64")
 def test_nx_not_disabled_at_boot(kernel_cmdline):
     """Verify the kernel has not been explicitly told to disable NX."""

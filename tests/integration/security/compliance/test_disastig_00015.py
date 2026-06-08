@@ -8,6 +8,7 @@ establish what type of events occurred.
 """
 
 
+@pytest.mark.security_id(203604)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit event validation requires audit subsystem")
 @pytest.mark.root(reason="required to read audit logs")
@@ -20,6 +21,7 @@ def test_audit_event_generated(shell):
     assert result.stdout.strip() != "", "stigcompliance: no audit events captured"
 
 
+@pytest.mark.security_id(203604)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit event validation requires audit subsystem")
 @pytest.mark.root(reason="required to read audit logs")

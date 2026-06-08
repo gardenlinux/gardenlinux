@@ -8,5 +8,6 @@ information during reception.
 """
 
 
+@pytest.mark.security_id(203751)
 def test_disastig_00190():
     pytest.skip(reason="covered by test_disastig_00187.py")

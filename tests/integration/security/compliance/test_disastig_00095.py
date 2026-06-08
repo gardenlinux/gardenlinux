@@ -5,6 +5,7 @@ from plugins.file import File
 from plugins.parse_file import ParseFile
 
 
+@pytest.mark.security_id(203670)
 @pytest.mark.testcov("GL-TESTCOV-disaSTIGmedium-config-kernel-cmdline-audit")
 @pytest.mark.feature("disaSTIGmedium")
 def test_audit_cmdline_config_file_exists(file: File):
@@ -19,6 +20,7 @@ def test_audit_cmdline_config_file_exists(file: File):
     ), "stigcompliance: /etc/kernel/cmdline.d/90-audit.cfg must exist"
 
 
+@pytest.mark.security_id(203670)
 @pytest.mark.testcov("GL-TESTCOV-disaSTIGmedium-config-kernel-cmdline-audit")
 @pytest.mark.feature("disaSTIGmedium")
 def test_audit_cmdline_config_file_content(parse_file: ParseFile):
@@ -34,6 +36,7 @@ def test_audit_cmdline_config_file_content(parse_file: ParseFile):
     ), "stigcompliance: /etc/kernel/cmdline.d/90-audit.cfg must contain audit=1"
 
 
+@pytest.mark.security_id(203670)
 @pytest.mark.testcov("GL-TESTCOV-disaSTIGmedium-config-kernel-cmdline-audit")
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="kernel cmdline is only available on a booted system")

@@ -8,5 +8,6 @@ functions.
 """
 
 
+@pytest.mark.security_id(203656)
 def test_disastig_00068():
     pytest.skip(reason="covered by test_disastig_00067.py")
