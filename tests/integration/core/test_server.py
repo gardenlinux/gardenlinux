@@ -266,9 +266,9 @@ def test_server_sudoers_keepssh_content(parse_file: ParseFile):
 
 @pytest.mark.feature("server")
 @pytest.mark.root
-def test_sudo_resets_user_environment(parse_file: ParseFile):
+def test_sudo_secure_path_is_set(parse_file: ParseFile):
     lines = parse_file.lines("/etc/sudoers")
-    assert "Defaults env_reset" in lines
+    assert "Defaults secure_path" in lines
 
 
 # =============================================================================

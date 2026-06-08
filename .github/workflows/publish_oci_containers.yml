@@ -379,15 +379,13 @@ jobs:
           merge-multiple: true
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - if: ${{ steps.tests_containers.outputs.cache-hit == 'true' }}
-        name: Load OCI archives
+      - name: Load OCI archives
         run: |
           for oci in *.oci; do
             podman load -i "${oci}"
             rm -f "${oci}"
           done
-      - if: ${{ steps.tests_containers.outputs.cache-hit == 'true' }}
-        name: Publish tests images and manifest
+      - name: Publish tests images and manifest
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
