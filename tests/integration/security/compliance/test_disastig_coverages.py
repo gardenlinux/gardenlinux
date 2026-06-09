@@ -54,3 +54,63 @@ def test_faillock_deny_is_3(parse_file) -> None:
     assert (
         config["deny"] == "3"
     ), f"stigcompliance: deny in /etc/security/faillock.conf is {config['deny']!r}, expected '3'"
+
+
+@pytest.mark.testcov(
+    ["GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-90-finalize-rules"]
+)
+@pytest.mark.feature(
+    "disaSTIGmedium",
+    reason="audit rules are made immutable by disaSTIGmedium via 90-finalize.rules",
+)
+@pytest.mark.booted(reason="requires running audit subsystem")
+@pytest.mark.root(reason="requires access to audit status")
+def test_audit_rules_are_immutable(shell) -> None:
+    result = shell("auditctl -s", capture_output=True, ignore_exit_code=True)
+    assert (
+        "enabled 2" in result.stdout
+    ), "stigcompliance: audit rules are not immutable (expected 'enabled 2' in auditctl -s output)"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-audit-rules-service-override"])
+@pytest.mark.feature(
+    "disaSTIGmedium",
+    reason="audit-rules.service override is provided by disaSTIGmedium",
+)
+def test_audit_rules_service_override_exists(file) -> None:
+    assert file.exists(
+        "/etc/systemd/system/audit-rules.service.d/override.conf"
+    ), "stigcompliance: audit-rules.service.d/override.conf is missing"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-journal-permissions"])
+@pytest.mark.feature(
+    "disaSTIGmedium",
+    reason="journal directory permissions are set by disaSTIGmedium",
+)
+def test_systemd_journal_is_not_world_readable(file) -> None:
+    assert file.has_permissions(
+        "/var/log/journal", "rwxr-s---"
+    ), "stigcompliance: /var/log/journal does not have expected permissions rwxr-s---"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-getty-no-autologin"])
+@pytest.mark.feature(
+    "disaSTIGmedium",
+    reason="getty autologin is disabled by disaSTIGmedium",
+)
+def test_getty_no_autologin_override_exists(file) -> None:
+    assert file.exists(
+        "/etc/systemd/system/getty@.service.d/no-autologin.conf"
+    ), "stigcompliance: getty no-autologin override is missing"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-pam-common-auth-faildelay"])
+@pytest.mark.feature(
+    "disaSTIGmedium",
+    reason="pam_faildelay is configured by disaSTIGmedium",
+)
+def test_pam_faildelay_is_configured(parse_file) -> None:
+    assert "auth required pam_faildelay.so delay=4000000" in parse_file.lines(
+        "/etc/pam.d/common-auth"
+    ), "stigcompliance: pam_faildelay delay=4000000 not found in /etc/pam.d/common-auth"
