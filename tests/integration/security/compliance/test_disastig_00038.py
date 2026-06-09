@@ -11,9 +11,15 @@ least one lowercase letter in every new password.
 PWQUALITY_CONF = "/etc/security/pwquality.conf"
 
 
-@pytest.mark.testcov(["GL-TESTCOV-disaSTIGlow-config-security-pwquality"])
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-disaSTIGlow-config-security-pwquality",
+        "GL-TESTCOV-disaSTIGmedium-config-security-pwquality",
+    ]
+)
 @pytest.mark.feature(
-    "disaSTIGlow", reason="password quality lcredit is configured by disaSTIGlow"
+    "disaSTIGlow or disaSTIGmedium",
+    reason="password quality lcredit is configured by disaSTIGlow and disaSTIGmedium",
 )
 def test_pwquality_conf_lcredit_is_minus_1(parse_file) -> None:
     """Verify lcredit=-1 in pwquality.conf (SRG-OS-000070-GPOS-00038)."""
