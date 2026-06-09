@@ -10,7 +10,7 @@ Verify the operating system implements replay-resistant authentication
 mechanisms for network access to privileged accounts.
 """
 
-
+@pytest.mark.security_id(203645)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"])
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires sshd effective configuration")
@@ -25,6 +25,7 @@ def test_ssh_kex_algorithms_are_replay_resistant(sshd: Sshd) -> None:
     ), "stigcompliance: SSH KexAlgorithms contain non-replay-resistant algorithms"
 
 
+@pytest.mark.security_id(203645)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"])
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires sshd effective configuration")
