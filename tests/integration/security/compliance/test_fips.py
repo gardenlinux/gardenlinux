@@ -427,7 +427,7 @@ def test_kernel_has_fips_entry_in_procfs(parse_file: ParseFile):
     has been booted into FIPS mode.
     """
     lines = parse_file.lines("/proc/sys/crypto/fips_enabled")
-    assert "1" in lines, "Kernel was not booted in FIPS mode!"
+    assert "1" in lines, f"Kernel was not booted in FIPS mode!"
 
 
 @pytest.mark.feature("_fips")
