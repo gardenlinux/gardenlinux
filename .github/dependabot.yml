@@ -20,10 +20,3 @@ updates:
       interval: "weekly"
     ignore:
       - dependency-name: "hashicorp/azurerm"
-
-  - package-ecosystem: "opentofu"
-    directory: "/tests/platformSetup/tofu/"
-    schedule:
-      interval: "weekly"
-    ignore:
-      - dependency-name: "hashicorp/azurerm"
