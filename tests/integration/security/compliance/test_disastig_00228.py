@@ -13,7 +13,7 @@ users in such a way that the user can only read and modify their own files.
 @pytest.mark.security_id(203781)
 def test_umask_is_restrictive_enough(parse_file):
     config = parse_file.parse("/etc/login.defs", format="spacedelim")
-    assert config["UMASK"] == "027"
+    assert config["UMASK"] in ("027", "077")
 
 
 @pytest.mark.security_id(203781)

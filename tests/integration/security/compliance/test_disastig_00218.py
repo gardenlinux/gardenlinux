@@ -46,8 +46,16 @@ def test_audit_concurrent_logins(shell: ShellRunner, concurrent_login_environmen
         f'| grep -i "{TEST_USER}" > {JOURNAL_FILE}'
     )
 
-    audit_hits = shell(f"grep -c '{TEST_USER}' {OUTPUT_FILE}")
-    journal_hits = shell(f"grep -c '{TEST_USER}' {JOURNAL_FILE}")
+    audit_hits = shell(
+        f"grep -c '{TEST_USER}' {OUTPUT_FILE}",
+        capture_output=True,
+        ignore_exit_code=True,
+    )
+    journal_hits = shell(
+        f"grep -c '{TEST_USER}' {JOURNAL_FILE}",
+        capture_output=True,
+        ignore_exit_code=True,
+    )
 
     total = int(audit_hits.stdout.strip() or 0) + int(journal_hits.stdout.strip() or 0)
 
