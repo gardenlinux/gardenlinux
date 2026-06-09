@@ -9,6 +9,7 @@ rate-limiting measures on impacted network interfaces.
 """
 
 
+@pytest.mark.security_id(203747)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="requires running network stack")
 @pytest.mark.root(reason="requires access to sysctl parameters")
@@ -20,6 +21,7 @@ def test_icmp_rate_limiting_enabled(sysctl):
     ), f"stigcompliance: ICMP rate limiting not enabled (value={value})"
 
 
+@pytest.mark.security_id(203747)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="requires network stack")
 @pytest.mark.root(reason="requires access to sysctl parameters")

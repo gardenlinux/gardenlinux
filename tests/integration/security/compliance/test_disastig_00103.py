@@ -9,6 +9,7 @@ necessary to return to operations with least disruption to mission processes.
 """
 
 
+@pytest.mark.security_id(203677)
 def test_disastig_00103():
     pytest.skip(
         reason="covered by core/test_services::test__kdump_kdump_tools_service_enabled, integration/boot/test_initrd::test_kdump_initrd_files"

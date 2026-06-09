@@ -9,6 +9,7 @@ implemented security safeguards/countermeasures.
 """
 
 
+@pytest.mark.security_id(203695)
 @pytest.mark.feature("disaSTIGhigh")
 def test_ctrl_alt_del_burst_is_disabled(parse_file):
     config = parse_file.parse("/etc/systemd/system.conf", format="keyval")

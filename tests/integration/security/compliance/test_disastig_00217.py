@@ -8,5 +8,6 @@ time for user access to the system.
 """
 
 
+@pytest.mark.security_id(203770)
 def test_disastig_00217():
     pytest.skip(reason="covered by test_disastig_00214.py")

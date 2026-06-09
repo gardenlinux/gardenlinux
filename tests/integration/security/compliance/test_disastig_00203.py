@@ -8,5 +8,6 @@ successful/unsuccessful attempts to access security objects occur.
 """
 
 
+@pytest.mark.security_id(203759)
 def test_disastig_00203():
     pytest.skip(reason="covered by test_disastig_00089.py")

@@ -13,5 +13,6 @@ shell sessions time out after 15 minutes of inactivity.
 @pytest.mark.feature(
     "disaSTIGmedium", reason="terminal timeout is configured by disaSTIGmedium"
 )
+@pytest.mark.security_id(203683)
 def test_terminal_tmout_profile_sets_tmout_900(parse_file) -> None:
     assert "TMOUT=900" in parse_file.lines("/etc/profile.d/99-terminal_tmout.sh")

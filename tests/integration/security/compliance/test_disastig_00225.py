@@ -11,6 +11,7 @@ Verify the operating system prevents the use of dictionary words for passwords.
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-password"], indirect=["pam_config"]
 )
+@pytest.mark.security_id(203778)
 @pytest.mark.feature("disaSTIGmedium")
 def test_dictionary_passwords_are_forbidden(pam_config):
     """

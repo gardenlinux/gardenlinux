@@ -8,6 +8,7 @@ supports on-demand reporting requirements.
 """
 
 
+@pytest.mark.security_id(203707)
 @pytest.mark.feature("log")
 def test_disastig_00139():
     pytest.skip(reason="covered by test_disastig_00140.py")

@@ -19,23 +19,31 @@ AIDE_TOOLS = [
 ]
 
 
+@pytest.mark.security_id(203756)
 @pytest.mark.feature("log")
 @pytest.mark.booted("Needs working systemd")
 def test_auditd_service_active(systemd):
     assert systemd.is_active("auditd")
 
 
+@pytest.mark.security_id(203756)
 @pytest.mark.feature("log")
 @pytest.mark.booted("Needs working systemd")
 def test_systemd_configured_to_restart_auditd_service(systemd):
     assert systemd.get_unit_properties("auditd")["Restart"] != "no"
 
 
+@pytest.mark.security_id(203756)
 @pytest.mark.feature("_selinux")
 def test_selinux_enabled(lsm):
     assert "selinux" in lsm
 
 
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-service-aide-init-enable"])
+@pytest.mark.feature(
+    "disaSTIGmedium", reason="aide-init.service is enabled by disaSTIGmedium"
+)
+@pytest.mark.security_id(203756)
 @pytest.mark.testcov(["GL-TESTCOV-aide-service-aide-init-enable"])
 @pytest.mark.feature("aide", reason="aide-init.service is enabled by the aide feature")
 @pytest.mark.booted(reason="requires systemd to query unit enable state")
@@ -45,6 +53,11 @@ def test_aide_init_service_is_enabled(systemd) -> None:
     ), "stigcompliance: aide-init.service is not enabled"
 
 
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-service-aide-check-timer-enable"])
+@pytest.mark.feature(
+    "disaSTIGmedium", reason="aide-check.timer is enabled by disaSTIGmedium"
+)
+@pytest.mark.security_id(203756)
 @pytest.mark.testcov(["GL-TESTCOV-aide-service-aide-check-timer-enable"])
 @pytest.mark.feature("aide", reason="aide-check.timer is enabled by the aide feature")
 @pytest.mark.booted(reason="requires systemd to query unit enable state")

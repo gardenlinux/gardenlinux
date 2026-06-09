@@ -20,6 +20,7 @@ PKG_BINARIES = [
 @pytest.mark.booted(
     reason="system must be booted to verify package manager permissions"
 )
+@pytest.mark.security_id(203716)
 def test_package_manager_requires_privileged_access(file: File):
     for path in PKG_BINARIES:
         if not file.exists(path):
@@ -47,6 +48,7 @@ PKG_DB_PATHS = [
 @pytest.mark.booted(
     reason="system must be booted to verify package database permissions"
 )
+@pytest.mark.security_id(203716)
 def test_package_database_protected(file: File):
     for path in PKG_DB_PATHS:
         if not file.exists(path):

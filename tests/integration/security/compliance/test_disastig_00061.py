@@ -9,5 +9,6 @@ standards, and guidance for authentication to a cryptographic module.
 """
 
 
+@pytest.mark.security_id(203649)
 def test_disastig_00061():
     pytest.skip(reason="covered by test_fips.py")

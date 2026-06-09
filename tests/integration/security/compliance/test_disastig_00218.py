@@ -23,6 +23,7 @@ def concurrent_login_environment(shell: ShellRunner):
     shell(f"rm -f {OUTPUT_FILE} {JOURNAL_FILE} {TIME_FILE}")
 
 
+@pytest.mark.security_id(203771)
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires kernel logging")
 @pytest.mark.root(reason="required to generate audit events")

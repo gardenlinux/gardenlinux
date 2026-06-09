@@ -8,5 +8,6 @@ number of characters when passwords are changed.
 """
 
 
+@pytest.mark.security_id(203628)
 def test_disastig_00040():
     pytest.skip(reason="covered by test_disastig_00046.py")

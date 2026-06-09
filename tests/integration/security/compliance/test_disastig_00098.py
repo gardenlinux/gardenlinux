@@ -12,6 +12,7 @@ modification.
 AUDIT_LOG_DIR = "/var/log/audit"
 
 
+@pytest.mark.security_id(203673)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit protection requires booted system")
 @pytest.mark.root(reason="required to inspect audit log ownership")
@@ -35,6 +36,7 @@ def test_audit_log_directory_protected(file):
     )
 
 
+@pytest.mark.security_id(203673)
 @pytest.mark.feature("disaSTIGmedium or cis")
 @pytest.mark.booted(reason="audit protection requires booted system")
 @pytest.mark.root(reason="required to inspect audit log ownership")

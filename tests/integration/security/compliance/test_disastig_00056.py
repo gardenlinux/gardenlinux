@@ -13,6 +13,7 @@ escalation mechanisms instead.
 @pytest.mark.feature(
     "disaSTIGmedium", reason="root account locking is enforced by disaSTIGmedium"
 )
+@pytest.mark.security_id(203644)
 @pytest.mark.root(reason="requires root to read shadow password status")
 def test_root_account_is_locked(shell) -> None:
     """Verify root account is locked (field 2 of passwd --status output is 'L')."""

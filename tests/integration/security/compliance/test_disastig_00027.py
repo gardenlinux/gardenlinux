@@ -11,6 +11,7 @@ AUDIT_LOG_DIR = "/var/log/audit"
 AUDIT_LOG_FILE = "/var/log/audit/audit.log"
 
 
+@pytest.mark.security_id(203616)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-audit-log-permissions"])
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires audit subsystem")
@@ -22,6 +23,7 @@ def test_audit_log_directory_permissions_restricted(file):
         ), f"stigcompliance: audit log directory {AUDIT_LOG_DIR} permissions are not restricted"
 
 
+@pytest.mark.security_id(203616)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-audit-log-permissions"])
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires audit subsystem")
@@ -33,6 +35,7 @@ def test_audit_log_file_permissions_restricted(file):
         ), f"stigcompliance: audit log file {AUDIT_LOG_FILE} permissions are not restricted"
 
 
+@pytest.mark.security_id(203616)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-audit-log-permissions"])
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires audit subsystem")

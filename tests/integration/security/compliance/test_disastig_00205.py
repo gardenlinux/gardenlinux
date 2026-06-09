@@ -9,5 +9,6 @@ classification levels) occur.
 """
 
 
+@pytest.mark.security_id(203760)
 def test_disastig_00205():
     pytest.skip(reason="covered by test_disastig_00210.py")
