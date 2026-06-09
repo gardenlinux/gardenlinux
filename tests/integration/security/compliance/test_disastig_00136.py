@@ -9,7 +9,7 @@ supports on-demand audit review and analysis.
 """
 
 
-@pytest.mark.security_id(1447)
+@pytest.mark.security_id(203704)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")

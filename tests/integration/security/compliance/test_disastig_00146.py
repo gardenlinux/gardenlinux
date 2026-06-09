@@ -9,6 +9,7 @@ mapped to Coordinated Universal Time (UTC) or Greenwich Mean Time (GMT).
 """
 
 
+@pytest.mark.security_id(203714)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="requires system time configuration")
 @pytest.mark.root(reason="required to verify time settings")

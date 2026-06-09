@@ -23,6 +23,7 @@ def concurrent_login_environment(shell: ShellRunner):
     shell(f"rm -f {OUTPUT_FILE} {JOURNAL_FILE} {TIME_FILE}")
 
 
+@pytest.mark.security_id(203771)
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires kernel logging")
 @pytest.mark.root(reason="required to generate audit events")
@@ -45,8 +46,16 @@ def test_audit_concurrent_logins(shell: ShellRunner, concurrent_login_environmen
         f'| grep -i "{TEST_USER}" > {JOURNAL_FILE}'
     )
 
-    audit_hits = shell(f"grep -c '{TEST_USER}' {OUTPUT_FILE}")
-    journal_hits = shell(f"grep -c '{TEST_USER}' {JOURNAL_FILE}")
+    audit_hits = shell(
+        f"grep -c '{TEST_USER}' {OUTPUT_FILE}",
+        capture_output=True,
+        ignore_exit_code=True,
+    )
+    journal_hits = shell(
+        f"grep -c '{TEST_USER}' {JOURNAL_FILE}",
+        capture_output=True,
+        ignore_exit_code=True,
+    )
 
     total = int(audit_hits.stdout.strip() or 0) + int(journal_hits.stdout.strip() or 0)
 

@@ -9,6 +9,7 @@ in 15 minutes are made.
 """
 
 
+@pytest.mark.security_id(203698)
 @pytest.mark.feature("disaSTIGmedium")
 def test_user_locked_after_unsuccessful_logon_attempts(parse_file):
     config = parse_file.parse("/etc/security/faillock.conf", format="keyval")

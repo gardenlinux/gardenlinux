@@ -7,6 +7,7 @@ Verify the operating system reveals error messages only to authorized users.
 """
 
 
+@pytest.mark.security_id(203664)
 @pytest.mark.feature("disaSTIGmedium")
 def test_systemd_journal_is_not_world_readable(file):
     assert file.is_owned_by_user("/var/log/journal", "root")

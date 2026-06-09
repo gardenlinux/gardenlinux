@@ -10,6 +10,7 @@ supports on-demand reporting requirements.
 """
 
 
+@pytest.mark.security_id(203651)
 @pytest.mark.feature("log")
 def test_audit_reporting_tools_installed():
     tools = ["aureport", "ausearch"]
@@ -22,6 +23,7 @@ def test_audit_reporting_tools_installed():
 @pytest.mark.root(
     "Audit reporting requires root privileges to open /var/log/audit/audit.log"
 )
+@pytest.mark.security_id(203651)
 def test_audit_reporting_execution(shell):
     result = shell("aureport --summary", capture_output=True, ignore_exit_code=True)
 
