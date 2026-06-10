@@ -12,6 +12,7 @@ configuring sudo to log to a dedicated file.
 SUDO_LOG_CONFIG = "/etc/sudoers.d/disaSTIG-sudo-log"
 
 
+@pytest.mark.security_id(203735)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-sudoers-sudo-log"])
 @pytest.mark.feature("disaSTIGmedium", reason="sudo log file required by DISA STIG")
 def test_sudo_logfile_configured(parse_file: ParseFile):

@@ -10,6 +10,7 @@ establish the identity of any individual or process associated with the event.
 """
 
 
+@pytest.mark.security_id(203671)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit retention validation requires audit subsystem")
 @pytest.mark.root(reason="required to read audit configuration and logs")

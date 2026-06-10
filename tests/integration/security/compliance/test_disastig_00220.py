@@ -7,6 +7,7 @@ Verify the operating system generates audit records for all direct access to the
 """
 
 
+@pytest.mark.security_id(203773)
 @pytest.mark.booted(reason="requires running systemd")
 def test_journald_should_not_store_logs_in_memory(systemd):
     """
@@ -17,6 +18,7 @@ def test_journald_should_not_store_logs_in_memory(systemd):
         assert result["Storage"] != "volatile"
 
 
+@pytest.mark.security_id(203773)
 @pytest.mark.feature("ssh")
 def test_sshd_log_level_is_set_to_verbose(parse_file):
     """
@@ -26,6 +28,7 @@ def test_sshd_log_level_is_set_to_verbose(parse_file):
     assert config["LogLevel"] == "VERBOSE"
 
 
+@pytest.mark.security_id(203773)
 @pytest.mark.feature("ssh")
 @pytest.mark.booted(reason="requires running systemd")
 def test_sshd_unit_is_journald_friendly(systemd):
@@ -45,6 +48,7 @@ def test_sshd_unit_is_journald_friendly(systemd):
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-session"], indirect=["pam_config"]
 )
+@pytest.mark.security_id(203773)
 def test_pam_unix_is_in_use(pam_config):
     """
     pam_unix is responsible for user sessions logging

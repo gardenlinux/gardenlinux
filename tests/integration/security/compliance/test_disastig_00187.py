@@ -9,6 +9,7 @@ transmitted information.
 """
 
 
+@pytest.mark.security_id(203748)
 @pytest.mark.booted(reason="requires booted system to verify services")
 @pytest.mark.root(reason="required to inspect system services")
 def test_telnet_service_disabled(systemd: Systemd):
@@ -17,6 +18,7 @@ def test_telnet_service_disabled(systemd: Systemd):
     ), "stigcompliance: insecure service telnet.service is enabled"
 
 
+@pytest.mark.security_id(203748)
 @pytest.mark.booted(reason="requires booted system to verify services")
 @pytest.mark.root(reason="required to inspect system services")
 def test_telnet_service_active(systemd: Systemd):
@@ -25,6 +27,7 @@ def test_telnet_service_active(systemd: Systemd):
     ), "stigcompliance: insecure service telnet.service is active"
 
 
+@pytest.mark.security_id(203748)
 @pytest.mark.booted(reason="requires booted system to verify services")
 @pytest.mark.root(reason="required to inspect system services")
 def test_rsh_service_disabled(systemd: Systemd):
@@ -33,6 +36,7 @@ def test_rsh_service_disabled(systemd: Systemd):
     ), "stigcompliance: insecure service rsh.service is enabled"
 
 
+@pytest.mark.security_id(203748)
 @pytest.mark.booted(reason="requires booted system to verify services")
 @pytest.mark.root(reason="required to inspect system services")
 def test_rsh_service_active(systemd: Systemd):
@@ -41,6 +45,7 @@ def test_rsh_service_active(systemd: Systemd):
     ), "stigcompliance: insecure service rsh.service is active"
 
 
+@pytest.mark.security_id(203748)
 @pytest.mark.booted(reason="requires booted system to verify services")
 @pytest.mark.root(reason="required to inspect system services")
 def test_rexec_service_disabled(systemd: Systemd):
@@ -49,6 +54,7 @@ def test_rexec_service_disabled(systemd: Systemd):
     ), "stigcompliance: insecure service rexec.service is enabled"
 
 
+@pytest.mark.security_id(203748)
 @pytest.mark.booted(reason="requires booted system to verify services")
 @pytest.mark.root(reason="required to inspect system services")
 def test_rexec_service_active(systemd: Systemd):
@@ -57,6 +63,7 @@ def test_rexec_service_active(systemd: Systemd):
     ), "stigcompliance: insecure service rexec.service is active"
 
 
+@pytest.mark.security_id(203748)
 @pytest.mark.booted(reason="requires booted system to verify services")
 @pytest.mark.root(reason="required to inspect system services")
 def test_rlogin_service_disabled(systemd: Systemd):
@@ -65,6 +72,7 @@ def test_rlogin_service_disabled(systemd: Systemd):
     ), "stigcompliance: insecure service rlogin.service is enabled"
 
 
+@pytest.mark.security_id(203748)
 @pytest.mark.booted(reason="requires booted system to verify services")
 @pytest.mark.root(reason="required to inspect system services")
 def test_rlogin_service_active(systemd: Systemd):
@@ -73,6 +81,7 @@ def test_rlogin_service_active(systemd: Systemd):
     ), "stigcompliance: insecure service rlogin.service is active"
 
 
+@pytest.mark.security_id(203748)
 @pytest.mark.booted(reason="requires booted system to verify services")
 @pytest.mark.root(reason="required to inspect system services")
 def test_vsftpd_service_disabled(systemd: Systemd):
@@ -81,6 +90,7 @@ def test_vsftpd_service_disabled(systemd: Systemd):
     ), "stigcompliance: insecure service vsftpd.service is enabled"
 
 
+@pytest.mark.security_id(203748)
 @pytest.mark.booted(reason="requires booted system to verify services")
 @pytest.mark.root(reason="required to inspect system services")
 def test_vsftpd_service_active(systemd: Systemd):
