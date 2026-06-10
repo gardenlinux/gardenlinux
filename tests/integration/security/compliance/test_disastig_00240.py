@@ -13,10 +13,3 @@ protected key store.
 def test_tpm2_service_enabled(systemd):
     assert systemd.is_enabled("tpm2")
     assert systemd.is_active("tpm2")
-
-
-@pytest.mark.feature("_tpm")
-def test__debug_cryptsetup(shell):
-    output = shell("cryptsetup list", capture_output=True)
-    print(f"{output=}")
-    assert False
