@@ -8,6 +8,7 @@ reflects organizational and system objectives when invalid inputs are received.
 """
 
 
+@pytest.mark.security_id(203752)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="requires audit subsystem running")
 @pytest.mark.root(reason="required to read audit logs")

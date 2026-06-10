@@ -8,6 +8,7 @@ or other system-level access.
 """
 
 
+@pytest.mark.security_id(203768)
 def test_disastig_00215():
     pytest.skip(
         reason="covered by test_disastig_00209.py, test_disastig_00210.py, test_disastig_00211.py test_disastig_00220.py test_disastig_00222.py"

@@ -1,6 +1,7 @@
 import pytest
 
 
+@pytest.mark.security_id(203721)
 @pytest.mark.feature("_selinux")
 @pytest.mark.booted(reason="requires booted system to verify LSM enforcement")
 @pytest.mark.root(reason="requires access to system security configuration")

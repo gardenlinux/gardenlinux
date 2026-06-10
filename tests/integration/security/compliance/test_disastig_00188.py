@@ -13,6 +13,7 @@ safeguards, such as, at a minimum, a Protected Distribution System (PDS).
 """
 
 
+@pytest.mark.security_id(203749)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"])
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires sshd effective configuration")
@@ -25,6 +26,7 @@ def test_ssh_ciphers_are_strong(sshd: Sshd):
     ), "stigcompliance: weak cipher allowed in SSH configuration"
 
 
+@pytest.mark.security_id(203749)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"])
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires sshd effective configuration")
@@ -37,6 +39,7 @@ def test_ssh_macs_are_strong(sshd: Sshd):
     ), "stigcompliance: weak MAC allowed in SSH configuration"
 
 
+@pytest.mark.security_id(203749)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"])
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires sshd effective configuration")

@@ -9,5 +9,6 @@ Orders, directives, policies, regulations, and standards.
 """
 
 
+@pytest.mark.security_id(203739)
 def test_disastig_00176():
     pytest.skip(reason="covered by test_fips.py")

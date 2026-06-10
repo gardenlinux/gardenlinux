@@ -10,6 +10,7 @@ transfer via shared system resources.
 
 
 # -- temporary files
+@pytest.mark.security_id(203657)
 @pytest.mark.feature("not _selinux")
 @pytest.mark.booted(reason="Mounts are present on a booted system")
 def test_tmp_mount_is_configured_securely(mount):
@@ -23,6 +24,7 @@ def test_tmp_mount_is_configured_securely(mount):
     ), f"Missing /tmp mount options: {missing_mount_options}"
 
 
+@pytest.mark.security_id(203657)
 @pytest.mark.feature("_selinux")
 @pytest.mark.booted(reason="Mounts are present on a booted system")
 def test_tmp_mount_is_configured_securely_and_with_selinux(mount):
@@ -36,12 +38,14 @@ def test_tmp_mount_is_configured_securely_and_with_selinux(mount):
     ), f"Missing /tmp mount options: {missing_mount_options}"
 
 
+@pytest.mark.security_id(203657)
 def test_temp_directores_are_world_writable_and_have_sticky_bit_set(file):
     for dir in ["/tmp", "/var/tmp"]:
         assert file.is_dir(dir)
         assert file.has_mode(dir, "1777")
 
 
+@pytest.mark.security_id(203657)
 @pytest.mark.booted(reason="Systemd should be running")
 def test_systemd_tmpfiles_configuration_is_sane(shell):
     result = shell("systemd-tmpfiles --cat-config", capture_output=True)
@@ -53,12 +57,14 @@ def test_systemd_tmpfiles_configuration_is_sane(shell):
 
 
 # -- coredumps
+@pytest.mark.security_id(203657)
 @pytest.mark.feature("disaSTIGmedium")
 def test_suid_binaries_cannot_create_coredumps(sysctl):
     assert sysctl["fs.suid_dumpable"] == 0
 
 
 # -- memory
+@pytest.mark.security_id(203657)
 @pytest.mark.feature("disaSTIGmedium")
 def test_kernel_randomizes_virtual_memory_addresses(sysctl):
     assert sysctl["kernel.randomize_va_space"] == 2
@@ -68,6 +74,7 @@ def test_kernel_randomizes_virtual_memory_addresses(sysctl):
 @pytest.mark.feature(
     "disaSTIGlow", reason="sysctl hardening config is deployed by disaSTIGlow"
 )
+@pytest.mark.security_id(203657)
 def test_sysctl_disastig_low_conf_exists(file) -> None:
     """Verify /etc/sysctl.d/99-disaSTIG.conf exists for disaSTIGlow (SRG-OS-000138-GPOS-00069)."""
     assert file.exists(
