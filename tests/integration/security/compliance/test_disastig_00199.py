@@ -1,5 +1,6 @@
-import pytest
 import re
+
+import pytest
 
 """
 Ref: SRG-OS-000445-GPOS-00199
@@ -76,7 +77,8 @@ def test_aide_conf_monitors_audit_tools(parse_file) -> None:
     missing = [
         tool
         for tool in AIDE_TOOLS
-        if not re.compile(rf"^{re.escape(tool)}.+sha512", re.MULTILINE) in parse_file.lines(AIDE_CONF)
+        if not re.compile(rf"^{re.escape(tool)}.+sha512", re.MULTILINE)
+        in parse_file.lines(AIDE_CONF)
     ]
     assert (
         not missing
