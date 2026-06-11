@@ -10,6 +10,7 @@ Verify the operating system implements replay-resistant authentication
 mechanisms for network access to privileged accounts.
 """
 
+
 @pytest.mark.security_id(203645)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"])
 @pytest.mark.feature("disaSTIGmedium")
