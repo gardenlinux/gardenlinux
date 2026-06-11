@@ -1,4 +1,5 @@
 import pytest
+import re
 
 """
 Ref: SRG-OS-000445-GPOS-00199
@@ -72,11 +73,10 @@ def test_aide_check_timer_is_enabled(systemd) -> None:
     "disaSTIGmedium", reason="AIDE monitors audit tools as configured by disaSTIGmedium"
 )
 def test_aide_conf_monitors_audit_tools(parse_file) -> None:
-    lines = parse_file.lines(AIDE_CONF)
     missing = [
         tool
         for tool in AIDE_TOOLS
-        if not any(line.startswith(tool) and "sha512" in line for line in lines)
+        if not re.compile(rf"^{re.escape(tool)}.+sha512") in parse_file.lines(AIDE_CONF)
     ]
     assert (
         not missing
