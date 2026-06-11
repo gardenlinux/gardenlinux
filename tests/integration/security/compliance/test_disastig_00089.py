@@ -1,10 +1,10 @@
-import pytest
-
 """
 Ref: SRG-OS-000239-GPOS-00089
 
 Verify the operating system automatically audits account modification.
 """
+
+import pytest
 
 
 @pytest.mark.security_id(203666)
@@ -16,6 +16,7 @@ Verify the operating system automatically audits account modification.
 )
 @pytest.mark.feature("disaSTIGmedium")
 def test_audit_calling_user_group_related_utilities(audit_rule):
+    """Verify execution of user/group management binaries is audited."""
     for bin in [
         "/usr/sbin/visudo",
         "/usr/sbin/chgpasswd",
@@ -47,6 +48,7 @@ def test_audit_calling_user_group_related_utilities(audit_rule):
 
 @pytest.mark.security_id(203666)
 def test_audit_rules_for_logging_attempts_to_delete_privileges():
+    """Audit rules for privilege deletion are covered elsewhere."""
     pytest.skip(
         reason="covered by test_disastig_00210::test_audit_rules_for_logging_attempts_to_delete_privileges"
     )

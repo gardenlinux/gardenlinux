@@ -1,9 +1,3 @@
-import re
-
-import pytest
-from plugins.find import Find
-from plugins.parse_file import ParseFile
-
 """
 Ref: SRG-OS-000373-GPOS-00156
 
@@ -13,6 +7,12 @@ membership does not grant passwordless sudo. No sudoers file may grant
 passwordless privilege escalation via NOPASSWD or bypass authentication
 via !authenticate.
 """
+
+import re
+
+import pytest
+from plugins.find import Find
+from plugins.parse_file import ParseFile
 
 SUDOERS_WHEEL = "/etc/sudoers.d/wheel"
 
@@ -24,6 +24,7 @@ SUDOERS_WHEEL = "/etc/sudoers.d/wheel"
 @pytest.mark.security_id(203723)
 @pytest.mark.root(reason="requires access to /etc/sudoers and /etc/sudoers.d")
 def test_sudoers_no_nopasswd(find: Find, parse_file: ParseFile):
+    """Verify no sudoers file enables NOPASSWD."""
     nopasswd_pattern = re.compile(r"NOPASSWD", re.IGNORECASE)
 
     find.root_paths = "/etc/sudoers.d"
@@ -45,6 +46,7 @@ def test_sudoers_no_nopasswd(find: Find, parse_file: ParseFile):
 @pytest.mark.security_id(203723)
 @pytest.mark.root(reason="requires access to /etc/sudoers and /etc/sudoers.d")
 def test_sudoers_no_authenticate_bypass(find: Find, parse_file: ParseFile):
+    """Verify no sudoers file uses !authenticate to bypass password prompts."""
     noauthenticate_pattern = re.compile(r"!authenticate", re.IGNORECASE)
 
     find.root_paths = "/etc/sudoers.d"

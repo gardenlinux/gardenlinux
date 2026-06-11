@@ -1,6 +1,3 @@
-import pytest
-from plugins.parse import Lines
-
 """
 Ref: SRG-OS-000138-GPOS-00069
 
@@ -8,12 +5,16 @@ Verify operating systems prevents unauthorized and unintended information
 transfer via shared system resources.
 """
 
+import pytest
+from plugins.parse import Lines
+
 
 # -- temporary files
 @pytest.mark.security_id(203657)
 @pytest.mark.feature("not _selinux")
 @pytest.mark.booted(reason="Mounts are present on a booted system")
 def test_tmp_mount_is_configured_securely(mount):
+    """Verify /tmp is mounted with nosuid."""
     required_mount_options = {"nosuid"}
 
     real_mount_options = mount("/tmp").options
@@ -28,6 +29,7 @@ def test_tmp_mount_is_configured_securely(mount):
 @pytest.mark.feature("_selinux")
 @pytest.mark.booted(reason="Mounts are present on a booted system")
 def test_tmp_mount_is_configured_securely_and_with_selinux(mount):
+    """Verify /tmp is mounted with nosuid and seclabel under SELinux."""
     required_mount_options = {"nosuid", "seclabel"}
 
     real_mount_options = mount("/tmp").options
@@ -40,6 +42,7 @@ def test_tmp_mount_is_configured_securely_and_with_selinux(mount):
 
 @pytest.mark.security_id(203657)
 def test_temp_directores_are_world_writable_and_have_sticky_bit_set(file):
+    """Verify /tmp and /var/tmp are world-writable with sticky bit (1777)."""
     for dir in ["/tmp", "/var/tmp"]:
         assert file.is_dir(dir)
         assert file.has_mode(dir, "1777")
@@ -48,6 +51,7 @@ def test_temp_directores_are_world_writable_and_have_sticky_bit_set(file):
 @pytest.mark.security_id(203657)
 @pytest.mark.booted(reason="Systemd should be running")
 def test_systemd_tmpfiles_configuration_is_sane(shell):
+    """Verify systemd-tmpfiles configures /tmp and /var/tmp with mode 1777."""
     result = shell("systemd-tmpfiles --cat-config", capture_output=True)
     for dir in ["/tmp", "/var/tmp"]:
         lines = Lines(result.stdout, comment_char="#")
@@ -60,6 +64,7 @@ def test_systemd_tmpfiles_configuration_is_sane(shell):
 @pytest.mark.security_id(203657)
 @pytest.mark.feature("disaSTIGmedium")
 def test_suid_binaries_cannot_create_coredumps(sysctl):
+    """Verify fs.suid_dumpable is 0."""
     assert sysctl["fs.suid_dumpable"] == 0
 
 
@@ -67,6 +72,7 @@ def test_suid_binaries_cannot_create_coredumps(sysctl):
 @pytest.mark.security_id(203657)
 @pytest.mark.feature("disaSTIGmedium")
 def test_kernel_randomizes_virtual_memory_addresses(sysctl):
+    """Verify kernel.randomize_va_space is set to 2 (full ASLR)."""
     assert sysctl["kernel.randomize_va_space"] == 2
 
 
