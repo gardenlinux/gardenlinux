@@ -1,0 +1,64 @@
+name: Re-enable inactivity-disabled workflows in package repos
+
+on:
+  schedule:
+    - cron: '0 1 * * *'  # daily at 01:00 UTC
+  workflow_dispatch:        # allow manual trigger
+
+jobs:
+  enable-disabled-workflows:
+    name: Re-enable inactivity-disabled workflows
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    steps:
+      - name: Re-enable workflows disabled due to inactivity
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          github-token: ${{ secrets.WORKFLOW_ENABLE_PAT }}
+          script: |
+            let page = 1;
+            const repos = [];
+
+            // Collect all package-* repos in the gardenlinux org
+            while (true) {
+              const { data } = await github.rest.repos.listForOrg({
+                org: 'gardenlinux',
+                type: 'public',
+                per_page: 100,
+                page,
+              });
+              if (data.length === 0) break;
+              repos.push(...data.filter(r => r.name.startsWith('package-')));
+              page++;
+            }
+
+            core.info(`Found ${repos.length} package-* repos`);
+
+            let totalEnabled = 0;
+
+            for (const repo of repos) {
+              const { data: { workflows } } = await github.rest.actions.listRepoWorkflows({
+                owner: 'gardenlinux',
+                repo: repo.name,
+                per_page: 100,
+              });
+
+              const disabled = workflows.filter(w => w.state === 'disabled_inactivity');
+
+              for (const workflow of disabled) {
+                core.info(`Re-enabling ${repo.name} / ${workflow.name}`);
+                await github.rest.actions.enableWorkflow({
+                  owner: 'gardenlinux',
+                  repo: repo.name,
+                  workflow_id: workflow.id,
+                });
+                totalEnabled++;
+              }
+            }
+
+            if (totalEnabled === 0) {
+              core.info('No workflows were disabled due to inactivity — nothing to do.');
+            } else {
+              core.info(`Re-enabled ${totalEnabled} workflow(s) across package-* repos.`);
+            }
