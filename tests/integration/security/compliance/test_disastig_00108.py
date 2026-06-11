@@ -8,6 +8,7 @@ integrity of audit tools.
 """
 
 
+@pytest.mark.security_id(203682)
 @pytest.mark.booted(reason="Requires working networking")
 def test_auditd_is_not_tampered(dpkg, dpkg_checksums, shell):
     if not dpkg.package_is_installed("auditd"):

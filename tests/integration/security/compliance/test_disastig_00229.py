@@ -8,6 +8,7 @@ the system.
 """
 
 
+@pytest.mark.security_id(203782)
 @pytest.mark.booted(reason="Requires functioning systemd")
 def test_systemd_getty_autologin_is_not_enabled(systemd):
     for i in range(7):
