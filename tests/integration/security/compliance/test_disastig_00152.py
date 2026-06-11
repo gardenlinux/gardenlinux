@@ -8,6 +8,7 @@ restrict access associated with changes to the system.
 """
 
 
+@pytest.mark.security_id(203719)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-disaSTIG-rules"])
 @pytest.mark.feature(
     "disaSTIGmedium", reason="audit rules are configured by disaSTIGmedium"
