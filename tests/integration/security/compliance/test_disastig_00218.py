@@ -1,12 +1,12 @@
-import pytest
-from plugins.shell import ShellRunner
-
 """
 Ref: SRG-OS-000472-GPOS-00218
 
 Verify the operating system generates audit records when concurrent logons to
-the same account occur from different sources. 
+the same account occur from different sources.
 """
+
+import pytest
+from plugins.shell import ShellRunner
 
 TEST_USER = "audit_concurrent_user"
 OUTPUT_FILE = "/tmp/audit_output_gl.txt"
@@ -32,6 +32,7 @@ def concurrent_login_environment(shell: ShellRunner):
 @pytest.mark.booted(reason="requires kernel logging")
 @pytest.mark.root(reason="required to generate audit events")
 def test_audit_concurrent_logins(shell: ShellRunner, concurrent_login_environment):
+    """Verify a su login plus an ssh login for the same user produce >=2 hits in ausearch and journalctl combined."""
     shell(f"date '+%H:%M:%S' > {TIME_FILE}")
 
     shell(f"su - {TEST_USER} -c 'sleep 30' &")

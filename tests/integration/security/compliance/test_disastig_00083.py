@@ -1,11 +1,11 @@
-import pytest
-
 """
 Ref: SRG-OS-000205-GPOS-00083
 
 Verify the operating system defines proper permissions on the system log
 directory /var/log so that unauthorized users cannot access log data.
 """
+
+import pytest
 
 VAR_LOG = "/var/log"
 
