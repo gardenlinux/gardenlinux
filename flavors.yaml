@@ -789,3 +789,20 @@ targets:
         test: true
         test-platform: false
         publish: true
+  - name: disaSTIGmedium
+    category: hypervisor
+    flavors:
+      - features:
+          - disaSTIGmedium
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+      - features:
+          - disaSTIGmedium
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
