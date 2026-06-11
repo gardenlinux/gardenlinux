@@ -510,6 +510,7 @@ targets:
         test-platform: false
         publish: true
       - features:
+          - _prod
           - disaSTIGmedium
         arch: amd64
         build: true
@@ -517,6 +518,7 @@ targets:
         test-platform: false
         publish: false
       - features:
+          - _prod
           - disaSTIGmedium
         arch: arm64
         build: true
