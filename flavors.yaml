@@ -509,6 +509,20 @@ targets:
         test: true
         test-platform: false
         publish: true
+      - features:
+          - disaSTIGmedium
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+      - features:
+          - disaSTIGmedium
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
   - name: baremetal
     category: baremetal
     flavors:
@@ -789,20 +803,3 @@ targets:
         test: true
         test-platform: false
         publish: true
-  - name: disaSTIGmedium
-    category: hypervisor
-    flavors:
-      - features:
-          - disaSTIGmedium
-        arch: amd64
-        build: true
-        test: true
-        test-platform: false
-        publish: false
-      - features:
-          - disaSTIGmedium
-        arch: arm64
-        build: true
-        test: true
-        test-platform: false
-        publish: false
