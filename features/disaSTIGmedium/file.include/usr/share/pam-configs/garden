@@ -1,0 +1,26 @@
+Name: Garden Linux pam policies
+Default: yes
+Priority: 1024
+Conflicts: passwdqc
+Password-Type: Primary
+Password:
+	required pam_passwdqc.so min=disabled,disabled,12,8,8 passphrase=4 similar=deny retry=5
+	required pam_pwhistory.so use_authtok remember=5 retry=5
+Password-Initial:
+	required pam_passwdqc.so min=disabled,disabled,12,8,8 passphrase=4 similar=deny retry=5
+	required pam_pwhistory.so use_authtok remember=5 retry=5
+Auth-Type: Primary
+Auth:
+	required pam_faillock.so preauth silent audit deny=5 unlock_time=900
+Auth-Initial:
+	required pam_faillock.so preauth silent audit deny=5 unlock_time=900
+Account-Type: Primary
+Account:
+	required pam_faillock.so
+Account-Initial:
+	required pam_faillock.so
+Session-Type: Additional
+Session:
+	optional pam_umask.so
+Session-Initial:
+	optional pam_umask.so

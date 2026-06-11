@@ -3,4 +3,5 @@ type: element
 features:
  include:
    - disaSTIGlow
-   - server
+   - ssh
+   - log
