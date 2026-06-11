@@ -8,6 +8,7 @@ events of interest based upon all audit fields within audit records.
 """
 
 
+@pytest.mark.security_id(203614)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit retention validation requires audit subsystem")
 @pytest.mark.root(reason="required to read audit logs")
@@ -19,6 +20,7 @@ def test_audit_filter_by_uid(shell):
     ), "stigcompliance: unable to filter audit records by user identity (uid)"
 
 
+@pytest.mark.security_id(203614)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit retention validation requires audit subsystem")
 @pytest.mark.root(reason="required to read audit logs")
@@ -30,6 +32,7 @@ def test_audit_filter_returns_structured_output(shell):
     ), "stigcompliance: audit filtering does not return structured audit records"
 
 
+@pytest.mark.security_id(203614)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit retention validation requires audit subsystem")
 @pytest.mark.root(reason="required to read audit logs")
@@ -46,6 +49,7 @@ def test_audit_filter_by_event_type(shell):
     ), "stigcompliance: unable to filter audit records by event type"
 
 
+@pytest.mark.security_id(203614)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit retention validation requires audit subsystem")
 @pytest.mark.root(reason="required to read audit logs")
@@ -62,6 +66,7 @@ def test_audit_filter_by_command(shell):
     ), "stigcompliance: unable to filter audit records by command"
 
 
+@pytest.mark.security_id(203614)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit retention validation requires audit subsystem")
 @pytest.mark.root(reason="required to read audit configuration and logs")

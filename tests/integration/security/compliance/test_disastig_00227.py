@@ -2,6 +2,7 @@ import pytest
 from plugins.sshd import Sshd
 
 
+@pytest.mark.security_id(203780)
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires SSH runtime configuration")
 @pytest.mark.root(reason="requires access to SSH configuration")

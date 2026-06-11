@@ -12,6 +12,7 @@ analyze audit records from multiple components within the system.
 AUDITD_CONF = "/etc/audit/auditd.conf"
 
 
+@pytest.mark.security_id(203613)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.root(reason="required to read audit configuration")
 def test_audit_log_retention_config(parse_file):
@@ -30,6 +31,7 @@ def test_audit_log_retention_config(parse_file):
     ), "stigcompliance: space_left_action not configured"
 
 
+@pytest.mark.security_id(203613)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit retention validation requires audit subsystem")
 @pytest.mark.root(reason="required to read audit configuration and logs")

@@ -11,5 +11,6 @@ Orders, directives, policies, regulations, and standards.
 """
 
 
+@pytest.mark.security_id(203776)
 def test_fips():
     pytest.skip(reason="covered by test_fips.py")

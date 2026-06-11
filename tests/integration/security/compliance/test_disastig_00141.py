@@ -8,5 +8,6 @@ audit records when it provides an audit reduction capability.
 """
 
 
+@pytest.mark.security_id(203709)
 def test_disastig_00141():
     pytest.skip(reason="covered by test_disastig_00142.py")

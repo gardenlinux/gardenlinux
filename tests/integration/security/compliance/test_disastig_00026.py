@@ -10,6 +10,7 @@ for audit records.
 """
 
 
+@pytest.mark.security_id(203615)
 @pytest.mark.feature("stig")
 @pytest.mark.booted(reason="requires audit subsystem running")
 @pytest.mark.root(reason="required to generate and read audit logs")
@@ -23,6 +24,7 @@ def test_audit_records_have_valid_timestamps(shell):
     ), "stigcompliance: audit records do not contain valid timestamps"
 
 
+@pytest.mark.security_id(203615)
 @pytest.mark.feature("stig")
 @pytest.mark.booted(reason="requires audit subsystem running")
 @pytest.mark.root(reason="required to generate and read audit logs")

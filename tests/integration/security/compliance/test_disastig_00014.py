@@ -8,5 +8,6 @@ confidentiality of remote access sessions.
 """
 
 
+@pytest.mark.security_id(203603)
 def test_disastig_00014():
     pytest.skip(reason="covered by test_fips.py")
