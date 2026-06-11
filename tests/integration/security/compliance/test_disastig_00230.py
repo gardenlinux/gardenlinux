@@ -8,6 +8,7 @@ anchors in trust stores or certificate stores managed by the organization.
 """
 
 
+@pytest.mark.security_id(263659)
 @pytest.mark.feature("sap")
 def test_validate_fingerprint_of_SAP_CA_certificate(shell):
     cert_path = "/etc/ssl/certs/SAP_Global_Root_CA.pem"

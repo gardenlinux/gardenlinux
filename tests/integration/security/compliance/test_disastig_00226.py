@@ -8,6 +8,7 @@ logon prompts following a failed logon attempt.
 """
 
 
+@pytest.mark.security_id(203779)
 @pytest.mark.parametrize("pam_config", ["/etc/pam.d/login"], indirect=["pam_config"])
 @pytest.mark.feature("disaSTIGmedium")
 def test_delay_is_enforced_after_failed_logins(pam_config):

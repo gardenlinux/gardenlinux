@@ -9,6 +9,7 @@ maintenance sessions.
 """
 
 
+@pytest.mark.security_id(203738)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="requires SSH runtime configuration")
 @pytest.mark.root(reason="requires access to SSH configuration")

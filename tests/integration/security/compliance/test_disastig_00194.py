@@ -1,3 +1,5 @@
+import pytest
+
 """
 Ref: SRG-OS-000437-GPOS-00194
 
@@ -6,6 +8,7 @@ versions have been installed.
 """
 
 
+@pytest.mark.security_id(203755)
 def test_no_residual_software_components(shell):
     """
     If a package is in 'rc' state, it means the package was

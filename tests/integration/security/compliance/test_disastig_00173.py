@@ -10,6 +10,7 @@ nonlocal maintenance sessions.
 """
 
 
+@pytest.mark.security_id(203736)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"])
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires SSH runtime configuration")
@@ -36,6 +37,7 @@ def test_ssh_strong_macs_present(sshd, dpkg: Dpkg):
     ), "stigcompliance: no strong MAC algorithms configured for SSH integrity protection"
 
 
+@pytest.mark.security_id(203736)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"])
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires SSH runtime configuration")

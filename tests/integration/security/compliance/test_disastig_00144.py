@@ -9,5 +9,6 @@ second.
 """
 
 
+@pytest.mark.security_id(203712)
 def test_disastig_00144():
     pytest.skip(reason="covered by test_disastig_00143.py")

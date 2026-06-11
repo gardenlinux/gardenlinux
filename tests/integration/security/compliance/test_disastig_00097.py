@@ -14,6 +14,7 @@ AUDIT_TOOL_PATHS = [
 ]
 
 
+@pytest.mark.security_id(203672)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
@@ -25,6 +26,7 @@ def test_shadow_permissions(file):
     )
 
 
+@pytest.mark.security_id(203672)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
@@ -36,6 +38,7 @@ def test_passwd_permissions_numeric(file):
     )
 
 
+@pytest.mark.security_id(203672)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
@@ -47,6 +50,7 @@ def test_passwd_permissions_symbolic(file):
     )
 
 
+@pytest.mark.security_id(203672)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
@@ -67,6 +71,7 @@ def test_audit_tools_permissions(file):
     )
 
 
+@pytest.mark.security_id(203672)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")

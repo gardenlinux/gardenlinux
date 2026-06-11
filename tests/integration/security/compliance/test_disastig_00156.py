@@ -21,6 +21,7 @@ SUDOERS_WHEEL = "/etc/sudoers.d/wheel"
     "disaSTIGmedium and not _dev",
     reason="test runner injects NOPASSWD sudoers in _dev mode for SSH access",
 )
+@pytest.mark.security_id(203723)
 @pytest.mark.root(reason="requires access to /etc/sudoers and /etc/sudoers.d")
 def test_sudoers_no_nopasswd(find: Find, parse_file: ParseFile):
     nopasswd_pattern = re.compile(r"NOPASSWD", re.IGNORECASE)
@@ -41,6 +42,7 @@ def test_sudoers_no_nopasswd(find: Find, parse_file: ParseFile):
     "disaSTIGmedium and not _dev",
     reason="test runner injects NOPASSWD sudoers in _dev mode for SSH access",
 )
+@pytest.mark.security_id(203723)
 @pytest.mark.root(reason="requires access to /etc/sudoers and /etc/sudoers.d")
 def test_sudoers_no_authenticate_bypass(find: Find, parse_file: ParseFile):
     noauthenticate_pattern = re.compile(r"!authenticate", re.IGNORECASE)
@@ -63,6 +65,7 @@ def test_sudoers_no_authenticate_bypass(find: Find, parse_file: ParseFile):
 @pytest.mark.feature(
     "disaSTIGmedium", reason="sudoers wheel truncation is applied by disaSTIGmedium"
 )
+@pytest.mark.security_id(203723)
 def test_sudoers_wheel_file_exists(file) -> None:
     """Verify /etc/sudoers.d/wheel exists (created/truncated by disaSTIGmedium)."""
     assert file.exists(SUDOERS_WHEEL), f"stigcompliance: {SUDOERS_WHEEL} does not exist"
@@ -72,6 +75,7 @@ def test_sudoers_wheel_file_exists(file) -> None:
 @pytest.mark.feature(
     "disaSTIGmedium", reason="sudoers wheel truncation is applied by disaSTIGmedium"
 )
+@pytest.mark.security_id(203723)
 def test_sudoers_wheel_file_is_empty(file) -> None:
     """Verify /etc/sudoers.d/wheel is empty (disaSTIGmedium truncates it with echo -n)."""
     assert (
