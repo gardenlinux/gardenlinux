@@ -9,7 +9,7 @@ Verify the operating system verifies correct operation of all security
 functions.
 """
 
-AIDE_CONF = "/etc/aide/aide.conf"
+AIDE_CONF = "/etc/aide/aide.conf.d/31_aide_audit-tools"
 AIDE_TOOLS = [
     "/sbin/auditctl",
     "/sbin/auditd",
