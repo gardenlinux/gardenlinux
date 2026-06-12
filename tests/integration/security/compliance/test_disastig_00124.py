@@ -14,7 +14,10 @@ def test_sudo_installed(file):
     assert file.is_executable("/usr/bin/sudo")
 
 
-@pytest.mark.feature("server")
+@pytest.mark.feature(
+    "server and not disaSTIGmedium",
+    reason="disaSTIGmedium intentionally empties the wheel file (SRG-OS-000373-GPOS-00156 takes precedence)",
+)
 def test_sudo_has_wheel_group_enabled(parse_file):
     lines = parse_file.lines("/etc/sudoers.d/wheel")
     assert "%wheel" in lines
