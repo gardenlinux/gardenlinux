@@ -22,6 +22,9 @@ def concurrent_login_environment(shell: ShellRunner):
     shell("sleep 1")
     shell(f"userdel -r {TEST_USER}")
     shell(f"rm -f {OUTPUT_FILE} {JOURNAL_FILE} {TIME_FILE}")
+    shell(
+        "rm -f /etc/group- /etc/gshadow- /etc/passwd- /etc/shadow- /etc/subgid- /etc/subuid-"
+    )
 
 
 @pytest.mark.security_id(203771)
