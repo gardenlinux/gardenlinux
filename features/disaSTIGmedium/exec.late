@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+set -x
 
 # GL-TESTCOV-disaSTIGmedium-config-login-defs-umask
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000480-GPOS-00228/
