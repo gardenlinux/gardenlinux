@@ -26,7 +26,7 @@
 -a always,exit -F path=/usr/bin/setfacl -F perm=x -F auid>=1000 -F auid!=-1 -k perm-change
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/passwd -F perm=x -F auid>=1000 -F auid!=-1 -k passwd
+-w /usr/bin/passwd -p x -k passwd
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -S delete_module -F auid>=1000 -F auid!=-1 -k kernel-module
