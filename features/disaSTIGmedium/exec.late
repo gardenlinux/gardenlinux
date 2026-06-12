@@ -14,5 +14,5 @@ printf 'UMASK\t\t077\n' >> /etc/login.defs
 if grep -q 'pam_faildelay' /etc/pam.d/login 2>/dev/null; then
     sed -i 's/^.*pam_faildelay.*/auth required pam_faildelay.so delay=4000000/' /etc/pam.d/login
 else
-    sed -i '1s/^/auth required pam_faildelay.so delay=4000000\n/' /etc/pam.d/login
+    sed -i '1i auth required pam_faildelay.so delay=4000000' /etc/pam.d/login
 fi
