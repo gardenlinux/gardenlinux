@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-set -x
 
 # GL-TESTCOV-disaSTIGmedium-config-login-defs-umask
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000480-GPOS-00228/
@@ -17,3 +16,5 @@ if grep -q 'pam_faildelay' /etc/pam.d/login 2>/dev/null; then
 else
     sed -i '1i auth required pam_faildelay.so delay=4000000' /etc/pam.d/login
 fi
+echo "=== /etc/pam.d/login after patch ==="
+cat /etc/pam.d/login
