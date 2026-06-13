@@ -1,10 +1,3 @@
-import os
-
-import pytest
-from plugins.file import File
-from plugins.parse_file import Parse, ParseFile
-from plugins.shell import ShellRunner
-
 """
 Ref: SRG-OS-000465-GPOS-00209
 
@@ -12,6 +5,13 @@ Verify the operating system generates audit records when
 successful/unsuccessful attempts to modify categories of information (e.g.,
 classification levels) occur.
 """
+
+import os
+
+import pytest
+from plugins.file import File
+from plugins.parse_file import Parse, ParseFile
+from plugins.shell import ShellRunner
 
 PRIV_ESC_RULE_FILE = "/etc/audit/rules.d/70-privilege-escalation.rules"
 
@@ -21,6 +21,7 @@ PRIV_ESC_RULE_FILE = "/etc/audit/rules.d/70-privilege-escalation.rules"
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to inspect audit config")
 def test_setreuid_rule_file_exists(file: File):
+    """Verify the privilege escalation audit rule file exists."""
     assert file.exists(
         PRIV_ESC_RULE_FILE
     ), f"stigcompliance: {PRIV_ESC_RULE_FILE} does not exist"
@@ -31,6 +32,7 @@ def test_setreuid_rule_file_exists(file: File):
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to inspect audit config")
 def test_setreuid_rule_contains_syscall(parse_file: ParseFile):
+    """Verify the privilege escalation rule audits the setreuid syscall."""
     lines = parse_file.lines(PRIV_ESC_RULE_FILE, ignore_missing=True)
 
     assert (
@@ -43,6 +45,7 @@ def test_setreuid_rule_contains_syscall(parse_file: ParseFile):
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit rules")
 def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
+    """Verify the setreuid audit rule is loaded into the running kernel."""
     output = shell(cmd="auditctl -l", capture_output=True)
 
     assert (
@@ -59,6 +62,7 @@ def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
 @pytest.mark.booted(reason="audit event validation requires audit subsystem")
 @pytest.mark.root(reason="required to trigger syscall and read audit logs")
 def test_setreuid_event_logged(shell: ShellRunner):
+    """Verify a setreuid call produces a privilege_escalation audit event."""
     pid = os.fork()
 
     if pid == 0:
