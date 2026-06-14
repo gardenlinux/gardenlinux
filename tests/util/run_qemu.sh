@@ -253,6 +253,7 @@ if [ "$arch" = "$native_arch" ]; then
 	elif [ "$(uname -s)" = Darwin ]; then
 		if [ "$(sysctl -n kern.hv_support)" = 1 ]; then
 			qemu_accel=hvf
+			qemu_cpu=host
 		fi
 	fi
 fi
