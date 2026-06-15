@@ -4,6 +4,7 @@ Ref: SRG-OS-000365-GPOS-00152
 
 import pytest
 
+
 @pytest.mark.security_id(203719)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-disaSTIG-rules"])
 @pytest.mark.feature(
