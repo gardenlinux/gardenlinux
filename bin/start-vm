@@ -22,6 +22,7 @@ main () {
     qemu_opt_uefi
     qemu_opt_cpu
     qemu_opt_memory
+    qemu_opt_cvm
     qemu_opt_monitor
     qemu_opt_remote_control
     qemu_opt_network
@@ -124,6 +125,10 @@ set_defaults () {
     port_base=2223
     vnc_base=5900
     tpm2=
+    snp=
+    tdx=
+    cvm=
+    cvm_fw=
 
     # Evaluate free and usable ports
     if [ $os != "macos" ]; then
@@ -153,7 +158,7 @@ set_defaults () {
 # passed to this script
 get_opts () {
 source "${CURR_DIR}/.constants.sh" \
-    --flags 'daemonize,uefi,legacy-bios,skipkp,vnc,tpm2' \
+    --flags 'daemonize,uefi,legacy-bios,skipkp,vnc,tpm2,snp,tdx' \
     --flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
     --flags 'pxe:' \
     --flags 'ignfile:' \
@@ -161,7 +166,8 @@ source "${CURR_DIR}/.constants.sh" \
     --flags 'ueficode:,uefivars:' \
     --flags 'fw-cfg-script:' \
     --flags 'destport:' \
-    --usage '[ --daemonize ] [ --cpu:<#> ] [ --mem:<size> ] [ --pxe:<dir> ] [<image file>[,<size>]]*' \
+    --flags 'cvm-fw:' \
+    --usage '[ --daemonize ] [ --cpu:<#> ] [ --mem:<size> ] [ --pxe:<dir> ] [--snp] [--tdx] [--cvm-fw:<firmware>] [<image file>[,<size>]]*' \
     --sample '.build/rootfs.raw' \
     --sample ',1G ubuntu-16.04.7-server-amd64.iso' \
     --help  "Starts a virtual machine using qemu. Made for running Garden Linux vms for testing. On Linux hosts, it should be able to use kvm if possible.
@@ -183,6 +189,9 @@ source "${CURR_DIR}/.constants.sh" \
 --skipkp    <bool>        Skip the key press to the verify status before execute.
 --vnc       <bool>        Switches from serial console to vnc graphics console / enables vnc in --daemonize.
 --tpm2      <bool>        Enable TPM2 emulation and QEMU passthrough using swtpm.
+--snp       <bool>        Run as an AMD SEV-SNP confidential guest. Requires --cvm-fw. Mutually exclusive with --tdx.
+--tdx       <bool>        Run as an Intel TDX confidential guest. Requires --cvm-fw. Mutually exclusive with --snp.
+--cvm-fw    <path>        Path to an SNP-/TDX-capable OVMF/TDVF firmware blob. Required when --snp or --tdx is set.
 <image file>              A file containing the image to boot. Format is determined by the extension (raw, vdi, vpc, vhd, vhdx, vmdk, qcow2, iso).
                           An optional suffix of the form <image file>,qcow=<size> can be specified to write changes to a copy-on-write device instead"
 
@@ -210,10 +219,22 @@ while true; do
         --destport)     port_dest="$1"; shift ;;
         --skipkp)       keypress=;            ;;
         --tpm2)         tpm2=1;               ;;
+        --snp)          snp=1;                ;;
+        --tdx)          tdx=1;                ;;
+        --cvm-fw)       cvm_fw="$1";    shift ;;
         --) break ;;
         *) eusage "Unknown flag '$flag'"      ;;
     esac
 done
+
+# Validate confidential-VM flags
+if [ "$snp" ] && [ "$tdx" ]; then
+    eusage "--snp and --tdx are mutually exclusive."
+fi
+if [ "$snp" ] || [ "$tdx" ]; then
+    cvm=1
+    [ -n "$cvm_fw" ] || eusage "CVM mode requires --cvm-fw <path/to/OVMF.fd>."
+fi
 
 # Get positional args in a dedicated var for
 # processing positional arguments in "qemu_opt_disk"
@@ -399,7 +420,11 @@ qemu_opt_disk () {
     disk_count=0
 
     if [ "$arch" = "amd64" ]; then
-        [ "$images" == "" ] || QEMU_OPTS+=("-device virtio-scsi-pci,id=scsi0")
+        local scsi_ctl="virtio-scsi-pci,id=scsi0"
+        # Enforce virtio modern-only and route all DMA through platform IOMMU
+        # for cvms with encrypted guest memory
+        [ "$cvm" ] && scsi_ctl+=",disable-legacy=on,iommu_platform=true"
+        [ "$images" == "" ] || QEMU_OPTS+=("-device $scsi_ctl")
     fi
 
     # Iterate over all user defined images / disks
@@ -469,6 +494,10 @@ qemu_opt_disk () {
 
 # Validate and set UEFI related options
 qemu_opt_uefi () {
+    # memory-encryption is incompatible with pflash, therefore boot
+    # confidential VMs with -bios (see qemu_opt_cvm)
+    [ "$cvm" ] && return 0
+
     # Evaluate UEFI code and vars files for related architecture and OS
     if [ "$arch" = amd64 ]; then
         # UEFI is optional on x86_64
@@ -570,6 +599,27 @@ qemu_opt_uefi () {
 }
 
 
+# Create CVM TDX/SNP guest objects
+qemu_opt_cvm () {
+    [ "$cvm" ] || return 0
+
+    if [ "$snp" ]; then
+        QEMU_OPTS+=("-object memory-backend-memfd,id=ram1,size=${memory}")
+
+        # See https://www.amd.com/content/dam/amd/en/documents/developer/56860.pdf
+        # Table 9: Guest Policy Structure for policy=0x30000
+        # cbitpos=51: SEV-SNP
+        QEMU_OPTS+=("-object sev-snp-guest,id=sev0,cbitpos=51,reduced-phys-bits=1,policy=0x30000")
+
+    elif [ "$tdx" ]; then
+        QEMU_OPTS+=("-object memory-backend-ram,id=ram1,size=${memory}")
+        QEMU_OPTS+=("-object {\"qom-type\":\"tdx-guest\",\"id\":\"tdx\",\"quote-generation-socket\":{\"type\":\"unix\",\"path\":\"/var/run/tdx-qgs/qgs.socket\"}}")
+    fi
+
+    QEMU_OPTS+=("-bios $cvm_fw")
+}
+
+
 # Validate and set the CPU architecture
 # cores and chipsets
 qemu_opt_cpu () {
@@ -578,6 +628,18 @@ qemu_opt_cpu () {
 
     # Validate amd64 arch
     if [ "$arch" = amd64 ]; then
+
+        # CVM mode overrides the normal machine selection.
+        # References the memory-backend object from qemu_opt_cvm.
+        if [ "$snp" ]; then
+            QEMU_OPTS+=("-enable-kvm" "-cpu EPYC-v4" \
+                        "-machine q35,accel=kvm,vmport=off,kernel_irqchip=split,memory-encryption=sev0,memory-backend=ram1")
+            return 0
+        elif [ "$tdx" ]; then
+            QEMU_OPTS+=("-enable-kvm" "-cpu host" \
+                        "-machine q35,accel=kvm,vmport=off,kernel-irqchip=split,confidential-guest-support=tdx,memory-backend=ram1")
+            return 0
+        fi
 
         # Validate for native or emulated arch
         if [ "$arch" = "$arch_orig" ]; then
@@ -720,11 +782,16 @@ qemu_opt_network () {
     fi
 
     # Set rom file on PXE boot
+    local net_dev
     if [ $pxe_binary ]; then
-        QEMU_OPTS+=("-device virtio-net-pci,romfile=,netdev=net0,mac=$macfull")
+        net_dev="virtio-net-pci,romfile=,netdev=net0,mac=$macfull"
     else
-        QEMU_OPTS+=("-device virtio-net-pci,netdev=net0,mac=$macfull")
+        net_dev="virtio-net-pci,netdev=net0,mac=$macfull"
     fi
+    # Enforce virtio modern-only and route all DMA through platform IOMMU
+    # for cvms with encrypted guest memory
+    [ "$cvm" ] && net_dev+=",disable-legacy=on,iommu_platform=true"
+    QEMU_OPTS+=("-device $net_dev")
 
     # Set bridge or host fwd network
     if [ $bridge ]; then
@@ -762,7 +829,9 @@ qemu_opt_tpm () {
 
 
 qemu_opt_misc () {
-    if [ "$arch" = "amd64" ]; then
+    # In CVM mode, we do not use the untrusted host RNG
+    # and disable virtio-balloon
+    if [ "$arch" = "amd64" ] && [ -z "$cvm" ]; then
         # Use minimal memory
         QEMU_OPTS+=("-device virtio-balloon")
 
@@ -799,8 +868,10 @@ qemu_status () {
     [ $bridge ]     && printf "  interface: %s  bridged\n" $bridge
     [ $bridge ]     || printf "  sshport: (host) tcp/%s -> (vm) tcp/%s  (unbridged)\n"  $port $port_dest
     [ $vnc ]        && printf "  vncport: %s\n" $(( vnc_port + 5900 ))
-    [ $uefi ]       && printf "  uefi boot enabled. %s.vars stores efivars\n" $mac
+    [ $uefi ] && [ -z "$cvm" ] && printf "  uefi boot enabled. %s.vars stores efivars\n" "$mac"
     [ $tpm2 ]       && printf "  tpm2 emulation enabled\n"
+    [ $snp ]        && printf "  cvm: AMD SEV-SNP (firmware: %s)\n" "$cvm_fw"
+    [ $tdx ]        && printf "  cvm: Intel TDX (firmware: %s)\n" "$cvm_fw"
 
     # Print inflated disks
     for i in "${inflatelist[@]}"; do
