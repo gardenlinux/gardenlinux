@@ -8,5 +8,6 @@ supports after-the-fact investigations of security incidents.
 """
 
 
+@pytest.mark.security_id(203708)
 def test_disastig_00140():
     pytest.skip(reason="covered by test_disastig_00063.py")

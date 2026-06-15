@@ -12,6 +12,7 @@ invalid logon attempts by a user during a 15-minute time period.
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-auth"], indirect=["pam_config"]
 )
+@pytest.mark.security_id(203594)
 @pytest.mark.feature("disaSTIGmedium")
 def test_stig_common_auth_pam_faillock(pam_config):
 

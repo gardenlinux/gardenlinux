@@ -12,6 +12,7 @@ new password upon account recovery for password-based authentication.
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-account"], indirect=["pam_config"]
 )
+@pytest.mark.security_id(263654)
 def test_password_expiration_checking_pam_module_is_in_use(pam_config):
     """
     man 8 pam_unix:

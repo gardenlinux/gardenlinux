@@ -8,6 +8,7 @@ are no longer associated to a user.
 """
 
 
+@pytest.mark.security_id(263650)
 def test_disastig_00110():
     """
     pam_unix is responsible for account expiration enforcement

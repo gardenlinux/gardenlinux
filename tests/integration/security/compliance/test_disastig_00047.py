@@ -17,6 +17,7 @@ PAM_FILES = [
 ]
 
 
+@pytest.mark.security_id(203635)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="requires authentication stack")
 @pytest.mark.root(reason="required for pam.d checks")
@@ -31,6 +32,7 @@ def test_authentication_uses_valid_pam_modules(file: File, parse_file: ParseFile
     ), "stigcompliance: no valid PAM authentication modules found"
 
 
+@pytest.mark.security_id(203635)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="requires authentication stack")
 @pytest.mark.root(reason="required for pam.d checks")

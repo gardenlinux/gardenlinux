@@ -8,6 +8,7 @@ establish the outcome of the events.
 """
 
 
+@pytest.mark.security_id(203608)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit event validation requires audit subsystem")
 @pytest.mark.root(reason="required to read audit logs")

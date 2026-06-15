@@ -94,7 +94,7 @@ For more information about the release strategy and lifecycle, have a look at th
 ## Download Garden Linux Releases
 
 Images are published as:
-- GitHub Releses in https://github.com/gardenlinux/gardenlinux/releases
+- GitHub Releases in https://github.com/gardenlinux/gardenlinux/releases
 - GitHub Packages https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux
 
 ## Download Nightly Releases 
