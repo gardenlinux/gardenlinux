@@ -509,22 +509,6 @@ targets:
         test: true
         test-platform: false
         publish: true
-      - features:
-          - _prod
-          - disaSTIGmedium
-        arch: amd64
-        build: true
-        test: true
-        test-platform: false
-        publish: false
-      - features:
-          - _prod
-          - disaSTIGmedium
-        arch: arm64
-        build: true
-        test: true
-        test-platform: false
-        publish: false
   - name: baremetal
     category: baremetal
     flavors:
