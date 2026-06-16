@@ -16,6 +16,6 @@ def test_delay_is_enforced_after_failed_logins(pam_config):
         type_="auth",
         control_contains="required",
         module_contains="pam_faildelay.so",
-        arg_contains="delay=4000000",  # microseconds, 4 * 1mln
+        arg_contains=["delay=4000000"],  # microseconds, 4 * 1mln
     )
     assert len(results) == 1, "pam_faildelay should enforce a delay of 4 seconds"
