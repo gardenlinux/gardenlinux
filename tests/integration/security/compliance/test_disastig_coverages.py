@@ -114,3 +114,14 @@ def test_pam_faildelay_is_configured(parse_file) -> None:
     assert "auth required pam_faildelay.so delay=4000000" in parse_file.lines(
         "/etc/pam.d/common-auth"
     ), "stigcompliance: pam_faildelay delay=4000000 not found in /etc/pam.d/common-auth"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-pam-garden-disaSTIG"])
+@pytest.mark.feature(
+    "disaSTIGmedium",
+    reason="garden-disaSTIG pam config is shipped by disaSTIGmedium",
+)
+def test_pam_garden_disastig_config_exists(file) -> None:
+    assert file.exists(
+        "/usr/share/pam-configs/garden-disaSTIG"
+    ), "stigcompliance: /usr/share/pam-configs/garden-disaSTIG is missing"

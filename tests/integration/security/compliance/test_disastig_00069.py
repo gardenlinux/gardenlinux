@@ -59,6 +59,7 @@ def test_systemd_tmpfiles_configuration_is_sane(shell):
 # -- coredumps
 @pytest.mark.security_id(203657)
 @pytest.mark.feature("disaSTIGmedium")
+@pytest.mark.booted(reason="sysctl values are only applied on a booted system")
 def test_suid_binaries_cannot_create_coredumps(sysctl):
     assert sysctl["fs.suid_dumpable"] == 0
 
@@ -66,6 +67,7 @@ def test_suid_binaries_cannot_create_coredumps(sysctl):
 # -- memory
 @pytest.mark.security_id(203657)
 @pytest.mark.feature("disaSTIGmedium")
+@pytest.mark.booted(reason="sysctl values are only applied on a booted system")
 def test_kernel_randomizes_virtual_memory_addresses(sysctl):
     assert sysctl["kernel.randomize_va_space"] == 2
 
