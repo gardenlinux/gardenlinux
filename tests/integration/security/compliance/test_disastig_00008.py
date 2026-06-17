@@ -10,6 +10,7 @@ for all accounts and/or account types. A hard maxlogins limit in
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGlow-config-security-limits"])
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-limits-maxlogins"])
 @pytest.mark.feature(
     "disaSTIGlow", reason="maxlogins limit is configured by disaSTIGlow"
 )
