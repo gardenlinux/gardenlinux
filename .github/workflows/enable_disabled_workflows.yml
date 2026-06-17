@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 1 * * *'  # daily at 01:00 UTC
   workflow_dispatch:        # allow manual trigger
+    inputs:
+      dry_run:
+        description: 'Dry run — log what would be re-enabled without making changes'
+        default: 'false'
+        type: boolean
 
 jobs:
   enable-disabled-workflows:
@@ -29,7 +34,7 @@ jobs:
                 page,
               });
               if (data.length === 0) break;
-              repos.push(...data.filter(r => r.name.startsWith('package-')));
+              repos.push(...data.filter(r => r.name.startsWith('package-') && !r.archived && !r.disabled));
               page++;
             }
 
@@ -47,12 +52,16 @@ jobs:
               const disabled = workflows.filter(w => w.state === 'disabled_inactivity');
 
               for (const workflow of disabled) {
-                core.info(`Re-enabling ${repo.name} / ${workflow.name}`);
-                await github.rest.actions.enableWorkflow({
-                  owner: 'gardenlinux',
-                  repo: repo.name,
-                  workflow_id: workflow.id,
-                });
+                if (context.payload.inputs?.dry_run === 'true') {
+                  core.info(`[DRY RUN] Would re-enable ${repo.name} / ${workflow.name}`);
+                } else {
+                  core.info(`Re-enabling ${repo.name} / ${workflow.name}`);
+                  await github.rest.actions.enableWorkflow({
+                    owner: 'gardenlinux',
+                    repo: repo.name,
+                    workflow_id: workflow.id,
+                  });
+                }
                 totalEnabled++;
               }
             }
@@ -60,5 +69,6 @@ jobs:
             if (totalEnabled === 0) {
               core.info('No workflows were disabled due to inactivity — nothing to do.');
             } else {
-              core.info(`Re-enabled ${totalEnabled} workflow(s) across package-* repos.`);
+              const mode = context.payload.inputs?.dry_run === 'true' ? '[DRY RUN] Would have re-enabled' : 'Re-enabled';
+              core.info(`${mode} ${totalEnabled} workflow(s) across package-* repos.`);
             }
