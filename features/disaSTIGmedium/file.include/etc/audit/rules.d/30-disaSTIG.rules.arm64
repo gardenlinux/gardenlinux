@@ -68,8 +68,8 @@
 -w /etc/security/opasswd -p wa -k usergroup-modification
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000468-GPOS-00212/
-# Note: rmdir syscall exists on amd64 only; arm64 uses 30-disaSTIG.rules.arm64 without it
--a always,exit -S unlink,unlinkat,rename,renameat,rmdir -F auid>=1000 -F auid!=-1 -k file-delete
+# Note: unlink, rename, rmdir do not exist as separate syscalls on arm64
+-a always,exit -S unlinkat,renameat -F auid>=1000 -F auid!=-1 -k file-delete
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000472-GPOS-00217/
 -w /var/run/utmp -p wa -k logins
