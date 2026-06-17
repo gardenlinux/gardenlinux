@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 """
@@ -7,7 +9,7 @@ Verify the operating system verifies correct operation of all security
 functions.
 """
 
-AIDE_CONF = "/etc/aide/aide.conf"
+AIDE_CONF = "/etc/aide/aide.conf.d/31_aide_audit-tools"
 AIDE_TOOLS = [
     "/sbin/auditctl",
     "/sbin/auditd",
@@ -72,11 +74,11 @@ def test_aide_check_timer_is_enabled(systemd) -> None:
     "disaSTIGmedium", reason="AIDE monitors audit tools as configured by disaSTIGmedium"
 )
 def test_aide_conf_monitors_audit_tools(parse_file) -> None:
-    lines = parse_file.lines(AIDE_CONF)
     missing = [
         tool
         for tool in AIDE_TOOLS
-        if not any(line.startswith(tool) and "sha512" in line for line in lines)
+        if not re.compile(rf"^{re.escape(tool)}.+sha512", re.MULTILINE)
+        in parse_file.lines(AIDE_CONF)
     ]
     assert (
         not missing
