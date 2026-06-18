@@ -18,9 +18,13 @@ TIME_FILE = "/tmp/audit_start_time"
 def concurrent_login_environment(shell: ShellRunner):
     shell(f"id {TEST_USER} || useradd -m {TEST_USER}")
     yield
-    shell(f"pkill -u {TEST_USER}")
+    shell(f"pkill -9 -u {TEST_USER}", ignore_exit_code=True)
+    shell("sleep 1")
     shell(f"userdel -r {TEST_USER}")
     shell(f"rm -f {OUTPUT_FILE} {JOURNAL_FILE} {TIME_FILE}")
+    shell(
+        "rm -f /etc/group- /etc/gshadow- /etc/passwd- /etc/shadow- /etc/subgid- /etc/subuid-"
+    )
 
 
 @pytest.mark.security_id(203771)
