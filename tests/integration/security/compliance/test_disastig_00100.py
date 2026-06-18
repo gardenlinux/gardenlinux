@@ -11,7 +11,6 @@ import platform
 
 import pytest
 
-
 ALLOWED_LIB_DIRS = {
     "x86_64": {
         "/usr/lib",
