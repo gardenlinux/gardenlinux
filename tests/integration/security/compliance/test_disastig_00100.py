@@ -48,11 +48,14 @@ def ld_library_paths():
     }
 
 
+@pytest.mark.security_id(203675)
 def test_no_unsolicited_lib_path_for_ldconfig(ld_library_paths):
     diff = ld_library_paths - ALLOWED_LIB_DIRS[platform.machine()]
     assert not diff, f"unexpected shared libraries lookup paths configured: {diff}"
 
 
+@pytest.mark.security_id(203675)
+@pytest.mark.feature("disaSTIGmedium")
 def test_lib_directories_are_only_root_writable(ld_library_paths, file):
     for lib_path in ld_library_paths:
         if file.exists(lib_path):
@@ -60,6 +63,8 @@ def test_lib_directories_are_only_root_writable(ld_library_paths, file):
             assert file.has_permissions(lib_path, "rwxr-xr-x")
 
 
+@pytest.mark.security_id(203675)
+@pytest.mark.feature("disaSTIGmedium")
 def test_python_lib_directory_is_only_root_writable(file, dpkg):
     python_pkg = dpkg.collect_installed_packages().get_package("python3")
     if python_pkg:
@@ -68,6 +73,7 @@ def test_python_lib_directory_is_only_root_writable(file, dpkg):
         assert file.has_permissions(dist_packages, "rwxr-xr-x")
 
 
+@pytest.mark.security_id(203675)
 def test_python_disallows_installing_packages_with_pip_on_system_level(dpkg, file):
     python_pkg = dpkg.collect_installed_packages().get_package("python3")
     if python_pkg:
@@ -77,6 +83,7 @@ def test_python_disallows_installing_packages_with_pip_on_system_level(dpkg, fil
         )
 
 
+@pytest.mark.security_id(203675)
 def test_only_root_can_install_deb_packages(file):
     assert file.get_owner("/var/lib/dpkg") == ("root", "root")
     assert file.has_permissions("/var/lib/dpkg", "rwxr-xr-x")

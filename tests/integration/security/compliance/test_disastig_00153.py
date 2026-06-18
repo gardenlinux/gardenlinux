@@ -4,20 +4,22 @@ import pytest
 from plugins.find import Find
 from plugins.parse_file import ParseFile
 
+"""
+Ref: SRG-OS-000366-GPOS-00153
+
+Verify the operating system prevents the installation of patches, service
+packs, device drivers, or operating system components without verification they
+have been digitally signed using a certificate that is recognized and approved
+by the organization. 
+"""
+
 APT_CONF_DIR = "/etc/apt/apt.conf.d"
 
 
+@pytest.mark.security_id(203720)
 @pytest.mark.feature("not container and not lima and not baremetal")
 @pytest.mark.root(reason="required to verify package signature enforcement")
 def test_package_signature_verification_enabled(parse_file: ParseFile, find: Find):
-    """
-    As per DISA STIG compliance requirement, the operating system must prevent the
-    installation of patches, service packs, device drivers, or operating system components
-    without verification they have been digitally signed using a certificate that is recognized
-    and approved by the organization.
-    Ref: SRG-OS-000366-GPOS-00153
-    """
-
     find.root_paths = APT_CONF_DIR
     find.entry_type = "files"
 
