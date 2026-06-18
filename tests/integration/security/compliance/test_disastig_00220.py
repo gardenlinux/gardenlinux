@@ -1,18 +1,16 @@
-import pytest
-
 """
 Ref: SRG-OS-000475-GPOS-00220
 
 Verify the operating system generates audit records for all direct access to the information system.
 """
 
+import pytest
+
 
 @pytest.mark.security_id(203773)
 @pytest.mark.booted(reason="requires running systemd")
 def test_journald_should_not_store_logs_in_memory(systemd):
-    """
-    Confirm that journald is not configured to store logs in memory
-    """
+    """Verify /etc/systemd/journald.conf Storage is not set to 'volatile'."""
     result = systemd.get_config("/etc/systemd/journald.conf")
     if "Storage" in result.keys():
         assert result["Storage"] != "volatile"
@@ -21,9 +19,7 @@ def test_journald_should_not_store_logs_in_memory(systemd):
 @pytest.mark.security_id(203773)
 @pytest.mark.feature("ssh")
 def test_sshd_log_level_is_set_to_verbose(parse_file):
-    """
-    Confirm sshd log level is not manipulated
-    """
+    """Verify /etc/ssh/sshd_config sets LogLevel to VERBOSE."""
     config = parse_file.parse("/etc/ssh/sshd_config", format="spacedelim")
     assert config["LogLevel"] == "VERBOSE"
 
@@ -32,9 +28,7 @@ def test_sshd_log_level_is_set_to_verbose(parse_file):
 @pytest.mark.feature("ssh")
 @pytest.mark.booted(reason="requires running systemd")
 def test_sshd_unit_is_journald_friendly(systemd):
-    """
-    The sshd.service unit must forward stdout/stderr to the journal.
-    """
+    """Verify ssh.service has StandardOutput=journal and StandardError=journal/inherit."""
     result = systemd.get_unit_properties("ssh")
     assert (
         result["StandardOutput"] == "journal"
@@ -50,9 +44,7 @@ def test_sshd_unit_is_journald_friendly(systemd):
 )
 @pytest.mark.security_id(203773)
 def test_pam_unix_is_in_use(pam_config):
-    """
-    pam_unix is responsible for user sessions logging
-    """
+    """Verify pam_unix.so is required as a session module in /etc/pam.d/common-session."""
     results = pam_config.find_entries(
         type_="session",
         control_contains="required",

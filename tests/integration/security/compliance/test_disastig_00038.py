@@ -1,5 +1,3 @@
-import pytest
-
 """
 Ref: SRG-OS-000070-GPOS-00038
 
@@ -7,6 +5,8 @@ Verify the operating system enforces password complexity by requiring at least
 one lowercase character. Setting lcredit=-1 in pwquality.conf mandates at
 least one lowercase letter in every new password.
 """
+
+import pytest
 
 PWQUALITY_CONF = "/etc/security/pwquality.conf"
 
