@@ -8,6 +8,7 @@ successful/unsuccessful logon attempts occur.
 import pytest
 
 
+@pytest.mark.security_id(203767)
 @pytest.mark.feature("log")
 @pytest.mark.booted(reason="Needs running auditd")
 @pytest.mark.root(reason="Needs access to audit logs")
@@ -17,6 +18,7 @@ def test_audit_record_tools_for_logon_attempts_exist(file):
     assert file.exists("/usr/bin/aulastlog"), "aulastlog binary not found"
 
 
+@pytest.mark.security_id(203767)
 @pytest.mark.feature("log")
 @pytest.mark.booted(reason="Needs running auditd")
 @pytest.mark.root(reason="Needs access to audit logs")

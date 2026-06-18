@@ -9,6 +9,7 @@ protected key store.
 import pytest
 
 
+@pytest.mark.security_id(263660)
 @pytest.mark.feature("_tpm")
 def test_tpm2_service_enabled(systemd):
     """Verify the tpm2 service is enabled and active."""

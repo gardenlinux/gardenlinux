@@ -18,6 +18,7 @@ def test_audit_kernel_module_load_rules_present(audit_rule):
         assert audit_rule(syscall=syscall, rule_fields=["auid>=1000", "auid!=-1"])
 
 
+@pytest.mark.security_id(203775)
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="audit subsystem required")
 @pytest.mark.root(reason="requires access to audit rules")
@@ -26,6 +27,7 @@ def test_audit_kernel_module_delete_rules_present(audit_rule):
     assert audit_rule(syscall="delete_module", rule_fields=["auid>=1000", "auid!=-1"])
 
 
+@pytest.mark.security_id(203775)
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="audit subsystem required")
 @pytest.mark.root(reason="requires access to audit rules")
@@ -34,6 +36,7 @@ def test_audit_kmod_binary_watched(audit_rule):
     assert audit_rule(fs_watch_path="/bin/kmod", access_types="x")
 
 
+@pytest.mark.security_id(203775)
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="audit subsystem required")
 @pytest.mark.root(reason="requires access to audit rules")
