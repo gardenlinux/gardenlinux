@@ -1,5 +1,3 @@
-import pytest
-
 """
 Ref: SRG-OS-000057-GPOS-00027, SRG-OS-000120-GPOS-00061,
      SRG-OS-000122-GPOS-00063, SRG-OS-000329-GPOS-00128
@@ -8,6 +6,8 @@ Verify the operating system protects audit logs, uses SHA512 as the password
 hashing algorithm, enables the audit daemon, and automatically locks an account
 after three consecutive invalid logon attempts.
 """
+
+import pytest
 
 AUDITD_CONF = "/etc/audit/auditd.conf"
 
@@ -18,6 +18,7 @@ AUDITD_CONF = "/etc/audit/auditd.conf"
 )
 @pytest.mark.booted(reason="requires systemd")
 def test_auditd_service_is_enabled(systemd) -> None:
+    """Verify auditd.service is enabled."""
     assert systemd.is_enabled("auditd"), "stigcompliance: auditd.service is not enabled"
 
 
@@ -26,6 +27,7 @@ def test_auditd_service_is_enabled(systemd) -> None:
     "disaSTIGmedium", reason="auditd log_group is set to root by disaSTIGmedium"
 )
 def test_auditd_conf_log_group_is_root(parse_file) -> None:
+    """Verify auditd.conf log_group is set to root."""
     config = parse_file.parse(AUDITD_CONF, format="keyval")
     assert config["log_group"] == "root", (
         f"stigcompliance: log_group in {AUDITD_CONF} is "
@@ -38,6 +40,7 @@ def test_auditd_conf_log_group_is_root(parse_file) -> None:
     "disaSTIGmedium", reason="SHA512 password hashing is configured by disaSTIGmedium"
 )
 def test_login_defs_encrypt_method_is_sha512(parse_file) -> None:
+    """Verify ENCRYPT_METHOD in /etc/login.defs is SHA512."""
     config = parse_file.parse("/etc/login.defs", format="spacedelim")
     assert config["ENCRYPT_METHOD"] == "SHA512", (
         f"stigcompliance: ENCRYPT_METHOD in /etc/login.defs is "
@@ -50,6 +53,7 @@ def test_login_defs_encrypt_method_is_sha512(parse_file) -> None:
     "disaSTIGlow", reason="faillock deny threshold is configured by disaSTIGlow"
 )
 def test_faillock_deny_is_3(parse_file) -> None:
+    """Verify faillock.conf deny threshold is set to 3."""
     config = parse_file.parse("/etc/security/faillock.conf", format="keyval")
     assert (
         config["deny"] == "3"
@@ -66,6 +70,7 @@ def test_faillock_deny_is_3(parse_file) -> None:
 @pytest.mark.booted(reason="requires running audit subsystem")
 @pytest.mark.root(reason="requires access to audit status")
 def test_audit_rules_are_immutable(shell) -> None:
+    """Verify auditctl reports rules are immutable (enabled 2)."""
     result = shell("auditctl -s", capture_output=True, ignore_exit_code=True)
     assert (
         "enabled 2" in result.stdout
@@ -78,6 +83,7 @@ def test_audit_rules_are_immutable(shell) -> None:
     reason="audit-rules.service override is provided by disaSTIGmedium",
 )
 def test_audit_rules_service_override_exists(file) -> None:
+    """Verify the audit-rules.service override drop-in exists."""
     assert file.exists(
         "/etc/systemd/system/audit-rules.service.d/override.conf"
     ), "stigcompliance: audit-rules.service.d/override.conf is missing"
@@ -89,6 +95,7 @@ def test_audit_rules_service_override_exists(file) -> None:
     reason="journal directory permissions are set by disaSTIGmedium",
 )
 def test_systemd_journal_is_not_world_readable(file) -> None:
+    """Verify /var/log/journal has rwxr-s--- permissions."""
     assert file.has_permissions(
         "/var/log/journal", "rwxr-s---"
     ), "stigcompliance: /var/log/journal does not have expected permissions rwxr-s---"
@@ -100,6 +107,7 @@ def test_systemd_journal_is_not_world_readable(file) -> None:
     reason="getty autologin is disabled by disaSTIGmedium",
 )
 def test_getty_no_autologin_override_exists(file) -> None:
+    """Verify the getty@.service no-autologin drop-in exists."""
     assert file.exists(
         "/etc/systemd/system/getty@.service.d/no-autologin.conf"
     ), "stigcompliance: getty no-autologin override is missing"
@@ -111,6 +119,18 @@ def test_getty_no_autologin_override_exists(file) -> None:
     reason="pam_faildelay is configured by disaSTIGmedium",
 )
 def test_pam_faildelay_is_configured(parse_file) -> None:
+    """Verify pam_faildelay with delay=4000000 is configured in /etc/pam.d/common-auth."""
     assert "auth required pam_faildelay.so delay=4000000" in parse_file.lines(
         "/etc/pam.d/common-auth"
     ), "stigcompliance: pam_faildelay delay=4000000 not found in /etc/pam.d/common-auth"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-pam-garden-disaSTIG"])
+@pytest.mark.feature(
+    "disaSTIGmedium",
+    reason="garden-disaSTIG pam config is shipped by disaSTIGmedium",
+)
+def test_pam_garden_disastig_config_exists(file) -> None:
+    assert file.exists(
+        "/usr/share/pam-configs/garden-disaSTIG"
+    ), "stigcompliance: /usr/share/pam-configs/garden-disaSTIG is missing"
