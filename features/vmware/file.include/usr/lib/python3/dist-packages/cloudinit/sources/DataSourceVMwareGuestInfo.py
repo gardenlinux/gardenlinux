@@ -418,7 +418,7 @@ def load(data):
         return {}
     try:
         return json.loads(data)
-    except:
+    except Exception:
         return safeyaml.load(data)
 
 
@@ -574,7 +574,7 @@ def is_valid_ip_addr(val):
             addr = ipaddress.ip_address(val)
         except ipaddress.AddressValueError:
             addr = ipaddress.ip_address(unicode(val))
-    except:
+    except Exception:
         return False
     if addr.is_link_local or addr.is_loopback or addr.is_unspecified:
         return False
