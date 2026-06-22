@@ -28,6 +28,7 @@ for kernel in /boot/vmlinuz-*; do
 	ln -s "initrd.img-${kernel#*-}" /boot/initrd
 	SYSTEMD_ESP_PATH=/efi kernel-install add "${kernel#*-}" "${kernel}"
 	rm /boot/initrd
+	rm "$kernel" "/boot/initrd.img-${kernel#*-}"
 done
 
 rm -rf "$initrd_include"
