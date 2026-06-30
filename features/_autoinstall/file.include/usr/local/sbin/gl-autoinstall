@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -e
+
+targetDir="/tmp/install"
+
+# Check kernel command line for targetDisk override (gl.install.target=/dev/sdX)
+get_cmdline_target() {
+    local targetDisk
+    targetDisk=$(cat /proc/cmdline | tr ' ' '\n' | grep '^gl.install.target=' | cut -d= -f2-)
+    if [ -n "$targetDisk" ] && [ -b "$targetDisk" ]; then
+        echo "$targetDisk"
+        return 0
+    fi
+    return 1
+}
+
+# Find the first suitable block device for installation
+# Skip: loop devices, CD-ROM (sr*), read-only devices, the live ISO device
+find_target_disk() {
+    for dev in /sys/block/*; do
+        name=$(basename "$dev")
+
+        # Skip loop devices, CD-ROMs, and ram disks
+        case "$name" in
+            loop*|sr*|ram*|zram*) continue ;;
+        esac
+
+        # Skip read-only devices
+        if [ "$(cat "$dev/ro" 2>/dev/null)" = "1" ]; then
+            continue
+        fi
+
+        # Skip removable devices (USB, CD, etc)
+        if [ "$(cat "$dev/removable" 2>/dev/null)" = "1" ]; then
+            continue
+        fi
+
+        echo "/dev/$name"
+        return 0
+    done
+    return 1
+}
+
+# Try kernel command line first, then auto-detect
+targetDisk=$(get_cmdline_target || find_target_disk || true)
+if [ -z "$targetDisk" ]; then
+    echo "ERROR: No suitable block device found for installation"
+    echo "Hint: Pass gl.install.target=/dev/sdX on kernel command line"
+    exit 1
+fi
+
+echo "Auto-installing Garden Linux to $targetDisk..."
+export GL_INSTALL_TARGET="$targetDisk"
+/opt/install/install.sh
+
+echo "Installation complete. Shutting down for reboot..."
+sync
+systemctl reboot

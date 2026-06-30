@@ -24,6 +24,8 @@ github_source_path: docs/how-to/choosing-flavors.md
 github_target_path: docs/how-to/choosing-flavors.md
 ---
 
+
+
 # Choosing Flavors
 
 A Garden Linux [flavor](/explanation/flavors) is a pre-composed combination of

@@ -4,7 +4,11 @@ description: "Step-by-step guide to deploying Garden Linux on bare metal servers
 category: "tutorials"
 tags: ["tutorial", "bare-metal", "on-premises", "beginner"]
 related_topics:
-  - /how-to/installation/on-premises/bare-metal.md
+  - /how-to/installation/on-premises/iso.md
+  - /how-to/installation/on-premises/pxe-boot.md
+  - /how-to/installation/post-install.md
+  - /how-to/building-images.md
+  - /how-to/getting-images.md
 migration_status: "done"
 migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
 migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
@@ -19,8 +23,10 @@ github_target_path: "docs/tutorials/on-premises/first-boot-bare-metal.md"
 
 Garden Linux is a minimal, security-hardened Linux distribution designed for cloud and container environments. This tutorial guides you through deploying Garden Linux on a bare metal server by writing a disk image directly to the target drive using `dd`.
 
-:::tip No ISO Installer
-Garden Linux does not currently provide an ISO installer image for bare-metal deployment. Instead, pre-built `.raw` disk images are written directly to the target disk using the `dd` command from a live system.
+:::tip Alternative Installation Methods
+For automated provisioning and other installation options, see:
+- [Install Using ISO](/how-to/installation/on-premises/iso.md) — Boot from ISO media with interactive or automatic installation
+- [Install Using PXE Boot](/how-to/installation/on-premises/pxe-boot.md) — Network-based installation with Ignition
 :::
 
 **Difficulty:** Beginner | **Time:** ~20 minutes
@@ -255,7 +261,13 @@ You have successfully completed this tutorial when:
 
 ## Advanced Provisioning Methods
 
-Beyond the `dd`-based installation shown in this tutorial, Garden Linux supports more advanced bare-metal provisioning workflows:
+Beyond the `dd`-based installation shown in this tutorial, Garden Linux supports additional bare-metal provisioning workflows:
+
+### ISO Installation
+
+For interactive or automatic installation from bootable media, Garden Linux provides ISO images with built-in installers. The `_autoinstall` feature enables fully automated installations that detect the target disk and install without user interaction.
+
+See the [Install Using ISO](/how-to/installation/on-premises/iso.md) guide for details.
 
 ### PXE Boot with Ignition
 
@@ -266,7 +278,7 @@ For automated fleet provisioning, Garden Linux supports network boot using iPXE 
 - Network configuration
 - Custom service deployment
 
-See the [PXE Boot guide](/how-to/installation/on-premises/pxe-boot) and [bare-metal platform-specific configuration](/how-to/installation/on-premises/bare-metal) for details.
+See the [Install Using PXE Boot](/how-to/installation/on-premises/pxe-boot.md) guide for details.
 
 ### ironcore.dev — NeoNephos Projects
 

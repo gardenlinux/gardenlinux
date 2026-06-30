@@ -1,5 +1,6 @@
 ---
 title: "Container Installation"
+order: 2
 related_topics:
   - /tutorials/container/index.md
   - /explanation/container-base-image.md
