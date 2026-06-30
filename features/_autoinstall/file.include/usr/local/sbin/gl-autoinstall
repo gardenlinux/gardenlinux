@@ -55,4 +55,4 @@ export GL_INSTALL_TARGET="$targetDisk"
 
 echo "Installation complete. Shutting down for reboot..."
 sync
-systemctl poweroff
+systemctl reboot

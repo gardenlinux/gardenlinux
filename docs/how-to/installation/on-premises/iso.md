@@ -67,20 +67,15 @@ flowchart TD
     Partition --> Copy[Copy rootfs to disk]
     Copy --> InstallBoot[Install bootloader: syslinux BIOS or systemd-boot UEFI]
 
-    InstallBoot --> Complete{Mode?}
-    Complete -->|Interactive| Reboot[Reboot]
-    Complete -->|Automatic| Poweroff[Power off]
-
-    Poweroff --> RemoveISO[Remove ISO, power on]
+    InstallBoot --> Reboot[Reboot]
+    Reboot --> RemoveISO[Remove ISO]
     RemoveISO --> Running[Garden Linux running from disk]
-    Reboot --> Running
 
     style Mode fill:#e1f5ff
-    style Complete fill:#e1f5ff
     style Service fill:#fff4e1
     style DetectDisk fill:#fff4e1
     style AutoRun fill:#fff4e1
-    style Poweroff fill:#fff4e1
+    style Reboot fill:#fff4e1
     style Login fill:#f0f0f0
     style UserRun fill:#f0f0f0
     style SelectDisk fill:#f0f0f0
@@ -205,7 +200,7 @@ When the ISO boots:
    - Skips read-only devices
    - Skips removable devices (USB drives, CD-ROMs)
 3. Sets `GL_INSTALL_TARGET` to the detected device and runs `/opt/install/install.sh` non-interactively
-4. After successful installation, powers off the system
+4. After successful installation, reboots the system
 
 The first non-removable writable block device is selected as the installation target. For typical single-disk systems, this is `/dev/sda` or `/dev/vda` (virtio disk in VMs).
 
@@ -227,11 +222,10 @@ The `gl-autoinstall` script will use the specified device instead of auto-detect
 
 ### Post-Installation Workflow
 
-After installation completes and the system powers off:
+After installation completes and the system reboots:
 
 1. Remove the ISO media (eject CD-ROM, unmount virtual CD, or remove USB drive)
-2. Power on the system
-3. The system boots from the installed disk
+2. The system boots from the installed disk
 
 This workflow enables automated unattended installation in batch provisioning scenarios.
 
@@ -311,7 +305,7 @@ The test script automatically:
 1. Detects that the ISO has the [`_autoinstall`](/reference/features/_autoinstall) feature by reading the `.requirements` file
 2. Creates a virtual disk (`/dev/vda` in QEMU)
 3. Boots the ISO — the `gl-autoinstall.service` runs automatically and installs to `/dev/vda`
-4. Waits for installation to complete and system to power off
+4. Waits for installation to complete and system to reboot
 5. Starts a second QEMU instance booting from the installed disk
 6. Runs the test suite on the installed system
 
