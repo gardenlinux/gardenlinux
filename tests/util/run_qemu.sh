@@ -246,10 +246,10 @@ fi
 
 if ! ((skip_cleanup)); then
 	if ((autoinstall && (is_iso || is_pxe_archive))); then
-		# For autoinstall, only set poweroff trap on stage 2 (installed system)
-		# On stage 1, we exit early and let gl-autoinstall.service handle poweroff
+		# For autoinstall, only set poweroff trap on the installed system.
+		# On the live boot we exit early and let gl-autoinstall.service handle the reboot.
 		cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
-# Only poweroff on exit if this is the installed system (stage 2)
+# Only poweroff on exit if this is the installed system (post-install boot)
 if [ -f /.installed ] || ! mountpoint -q /run/rootfs 2>/dev/null; then
 	trap "poweroff -f > /dev/null 2>&1" EXIT
 fi
@@ -288,7 +288,7 @@ fi
 
 if ! ((skip_tests)); then
 	if ((autoinstall)); then
-		# For autoinstall (ISO or PXE), only run tests on the installed system (stage 2)
+		# For autoinstall (ISO or PXE), only run tests on the installed system (post-install boot)
 		cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
 if [ -f /.installed ] || ! mountpoint -q /run/rootfs 2>/dev/null; then
 	echo "=== SECOND BOOT: Preparing to run tests ===" | tee /dev/console
@@ -374,8 +374,6 @@ qemu_opts=(
 	-device "virtio-net-pci,netdev=net0"
 )
 
-# QEMU options are set up normally - two-stage logic is in the execution section
-
 # Add the main disk (boot disk for raw/PXE, install target vda for ISO)
 qemu_opts+=(
 	-drive "if=virtio,format=qcow2,file=$tmpdir/disk.qcow"
@@ -398,24 +396,22 @@ else
 fi
 
 if ((is_pxe_archive)); then
-	if [ "$arch" = aarch64 ]; then
-		# For ARM64, try direct kernel boot instead of network boot
-		# This bypasses the UEFI network boot issue
-		qemu_opts+=(
-			-kernel "$pxe_extract_dir/vmlinuz"
-			-initrd "$pxe_extract_dir/initrd"
-			-append "$(cat "$pxe_extract_dir/cmdline") gl.url=http://10.0.2.2:8080/root.squashfs"
-		)
-	else
-		qemu_opts+=(
-			-boot order=nc
-		)
-	fi
+	# Boot from network on first boot only; subsequent reboots fall through to disk.
+	# -boot once=n,order=c is honoured by SeaBIOS and by modern QEMU/EDK2 for the
+	# very first boot.  After the installer writes EFI boot entries into the
+	# persistent edk2-qemu-vars pflash, reboots pick the on-disk loader from NVRAM.
+	# aarch64 also uses iPXE here: EDK2 aarch64 ships with the EFI PXE/HTTP stack
+	# and loads boot.ipxe from TFTP the same way x86_64 UEFI does.
+	qemu_opts+=(
+		-boot once=n,order=c
+	)
 elif ((is_iso)); then
 	# For ISO testing, boot from CDROM
 	# WORKAROUND: The dracut initrd in the ISO doesn't load ahci driver automatically
 	# Use SCSI CD-ROM attached to virtio-scsi controller for better compatibility
+	# Boot from CD-ROM on first boot only; reboots fall through to disk.
 	qemu_opts+=(
+		-boot once=d,order=c
 		-device "virtio-scsi-pci,id=scsi"
 		-drive "id=cd0,if=none,format=raw,readonly=on,media=cdrom,file=$(realpath -- "$image")"
 		-device "scsi-cd,drive=cd0,bus=scsi.0"
@@ -539,116 +535,25 @@ fi
 
 echo "🚀  starting test VM"
 
-# Helper function to run QEMU with proper output handling
+# Run QEMU and stream its serial output:
+# - Raw output (with colors) goes to the console for better readability
+# - Cleaned output (without problematic escape sequences) goes to the log file
+# The sed cleaning removes:
+# - OSC escape sequences (e.g., title changes that can clutter logs) - s/\x1b\][0-9]*\x07//g
+# - CSI escape codes (colors, cursor moves, screen clears, etc.) - s/\x1b[\[0-9;!?=]*[a-zA-Z]//g
+# - Tabs are replaced with spaces for better log readability - s/\t/    /g
+# - Non-printable characters that might cause issues in log files - s/[^[:print:]]//g
+# Colors are preserved in console output but removed from log file
 run_qemu() {
-	local stage_label="$1"
+	local label="$1"
 	shift
 	local -a opts=("$@")
 
-	echo "$stage_label"
-
-	# Start QEMU and stream its serial output:
-	# - Raw output (with colors) goes to the console for better readability
-	# - Cleaned output (without problematic escape sequences) goes to the log file
-	# The sed cleaning removes:
-	# - OSC escape sequences (e.g., title changes that can clutter logs) - s/\x1b\][0-9]*\x07//g
-	# - CSI escape codes (colors, cursor moves, screen clears, etc.) - s/\x1b[\[0-9;!?=]*[a-zA-Z]//g
-	# - Tabs are replaced with spaces for better log readability - s/\t/    /g
-	# - Non-printable characters that might cause issues in log files - s/[^[:print:]]//g
-	# Colors are preserved in console output but removed from log file
+	echo "$label"
 	"qemu-system-$arch" "${opts[@]}" | stdbuf -i0 -o0 tee >(sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g' >>"$log_dir/$log_file_log")
 }
 
-# Two-stage boot for autoinstall: install then test
-if ((autoinstall && (is_iso || is_pxe_archive))); then
-	echo "⚙️  Two-stage autoinstall detected: will run installation then boot installed system"
-
-	# Stage 1: Installation (no tests)
-	# Boot from ISO/PXE, install to disk, poweroff
-	run_qemu "🚀  Stage 1: Installing Garden Linux to disk..." "${qemu_opts[@]}" || {
-		exit_code=$?
-		if [ $exit_code -ne 0 ]; then
-			echo "❌ Stage 1 installation failed with exit code $exit_code" >&2
-			exit 1
-		fi
-	}
-
-	echo "✅ Stage 1 complete: Installation finished, system powered off"
-	echo ""
-
-	# Stage 2: Boot installed system and run tests
-	# Build new qemu_opts without boot media
-	qemu_opts_stage2=(
-		-machine "$qemu_machine"
-		-cpu "$qemu_cpu"
-		-m 4096
-		-accel "$qemu_accel"
-		-display none
-		-serial stdio
-		-fw_cfg "name=opt/gardenlinux/config_script,file=$tmpdir/fw_cfg-script.sh"
-		-chardev "file,id=test_junit,path=$log_dir/$log_file_junit"
-		-device virtio-serial
-		-device "virtserialport,chardev=test_junit,name=test_junit"
-		-device "virtio-net-pci,netdev=net0"
-		-drive "if=virtio,format=qcow2,file=$tmpdir/disk.qcow"
-	)
-
-	# For PXE, explicitly set boot order to disk (not network) for stage 2
-	if ((is_pxe_archive)); then
-		qemu_opts_stage2+=(
-			-boot order=c
-		)
-	fi
-
-	if ! ((skip_tests)); then
-		qemu_opts_stage2+=(
-			-drive "if=virtio,format=raw,readonly=on,file=$test_dist_dir/dist.ext2.raw"
-		)
-	fi
-
-	if ((debug)); then
-		qemu_opts_stage2+=(
-			-display gtk
-		)
-	else
-		qemu_opts_stage2+=(
-			-display none
-		)
-	fi
-
-	# Add UEFI firmware (preserves boot entries from stage 1)
-	if [ "$uefi" = "true" ] || [ "$arch" = aarch64 ]; then
-		qemu_opts_stage2+=(
-			-drive "if=pflash,unit=0,format=raw,readonly=on,file=$tmpdir/edk2-qemu-code"
-			-drive "if=pflash,unit=1,format=raw,file=$tmpdir/edk2-qemu-vars"
-		)
-	fi
-
-	# Add TPM (preserves state from stage 1)
-	if [ "$tpm2" = "true" ]; then
-		qemu_opts_stage2+=(
-			-chardev "socket,id=chrtpm,path=$tmpdir/swtpm.sock"
-			-tpmdev "emulator,id=tpm0,chardev=chrtpm"
-			-device "$qemu_tpm_dev,tpmdev=tpm0"
-		)
-	fi
-
-	# Network configuration for stage 2
-	if ((ssh)); then
-		qemu_opts_stage2+=(
-			-netdev "user,id=net0,net=169.254.169.0/24,dhcpstart=169.254.169.9,hostfwd=tcp::2222-:22,guestfwd=tcp:169.254.169.254:80-cmd:socat - TCP:127.0.0.1:8181"
-		)
-	else
-		qemu_opts_stage2+=(
-			-netdev "user,id=net0,net=169.254.169.0/24,dhcpstart=169.254.169.9,guestfwd=tcp:169.254.169.254:80-cmd:socat - TCP:127.0.0.1:8181"
-		)
-	fi
-
-	run_qemu "🚀  Stage 2: Booting installed system and running tests..." "${qemu_opts_stage2[@]}"
-else
-	# Single-stage boot: non-autoinstall or direct boot from image
-	run_qemu "🚀  Starting VM..." "${qemu_opts[@]}"
-fi
+run_qemu "🚀  Starting VM..." "${qemu_opts[@]}"
 
 # Check if JUnit log is available and parse results
 if [ -f "$log_dir/$log_file_junit" ] && [ "$(wc -c "$log_dir/$log_file_junit" | cut -d' ' -f1)" != "0" ]; then
