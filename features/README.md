@@ -1,33 +1,21 @@
 # Features
 
 ## General
-Each folder represents a usable Garden Linux `feature` that can be added to a final Garden Linux artifact. This allows you to build Garden Linux for different cloud platforms (e.g. `azure`, `gcp`, `container` etc.) with a different set of features like `CIS`, `read_only`, `firewall` etc. Currently, the following feature types are available:
+Each folder represents a usable Garden Linux `feature` that can be added to a final Garden Linux artifact. This allows you to build Garden Linux for different cloud platforms (e.g. `azure`, `gcp`, `container` etc.) with a different set of features like `cis`, `firewall` etc. The three feature types are defined in [ADR 0034](https://github.com/gardenlinux/gardenlinux/blob/main/docs/reference/adr/0034-feature-terminology.md):
 
-| Feature Type | Feature Name |
-|---|---|
-| platform | `ali`, `aws`, `azure`, `gcp`, `kvm`, `metal`, ... |
-| flag | `firewall`, `gardener`, `ssh`, `_prod`, `_slim`, `_readonly`, `_pxe`, `_iso`, ... |
-| Element | `cis`, `fedramp`, ... |
+| Feature type | Description | Examples |
+|---|---|---|
+| `platform` | Deployment target (cloud provider, hypervisor, or hardware environment). Exactly one platform feature must be present in a well-formed build. | `ali`, `aws`, `azure`, `baremetal`, `gcp`, `kvm`, ... |
+| `element` | Functional component or capability added on top of the platform. Multiple elements may be present. | `cis`, `fedramp`, `firewall`, `gardener`, `metal`, `ssh`, ... |
+| `flag` | Lightweight modifier. Identified by a leading `_` in the feature name. | `_fips`, `_iso`, `_pxe`, `_prod`, `_readonly`, `_slim`, ... |
 
 *Keep in mind that `not all features` may be combined together. However, features may in-/exclude other features or block the build process by given exclusive/incompatible feature combinations.*
 
 ## Building a custom set of features
 
-Garden Linux utilizes the [gardenlinux/builder](https://github.com/gardenlinux/builder) to create customized Linux distributions and their flavors. The `gardenlinux/gardenlinux` repository is maintained by the Garden Linux team, highlighting specialized "features" that are also available for other projects.
+Garden Linux uses the [gardenlinux/builder](https://github.com/gardenlinux/builder) to create customized Linux distributions. The `gardenlinux/gardenlinux` repository is maintained by the Garden Linux team and provides specialized features that are also available for other projects.
 
-To initiate a build, navigate to the root directory of the `gardenlinux/gardenlinux` repository and use the command:
-
-```bash
-./build ${platform}-${feature1}-${feature2}-${feature3}-${arch}
-```
-
-Where:
-
-- `${platform}` denotes the desired platform (e.g., kvm, metal, aws). It should be the first part of the flavor that is built.
-- `${featureX}` represents one or more specific features from the `features/` folder. Features are appended and separated by a hyphen `-` or (if the feature starts with an underscore `_`) by an underscore.
-- `${arch}` optionally you can reference a certain architecture `amd64` or `arm64`. It should be the last part of the flavor that is built.
-
-You can combine multiple platforms and features as needed.
+The build command takes a **flavor** (`{cname}-{arch}`) as its argument — the version is resolved automatically by the script. For a full explanation of the naming hierarchy — cname, flavor, versioned flavor, and artifact base name — see [ADR 0035](https://github.com/gardenlinux/gardenlinux/blob/main/docs/reference/adr/0035-cname-flavor-artifact-naming.md) and the [Builder documentation](https://github.com/gardenlinux/builder/blob/main/docs/how-to/building-images.md).
 
 ## Official Published Flavors
 

@@ -62,28 +62,9 @@ Garden Linux generates platform-specific image formats optimized for each deploy
 
 These specialized formats ensure optimal performance and integration with each platform's virtualization or provisioning systems.
 
-### The CNAME System
+### Canonical Names: cname, Flavor, Versioned Flavor, Artifact Base Name
 
-Every artifact receives a canonical name (CNAME) that serves as its unique identifier throughout the pipeline. The CNAME format encodes all essential information:
-
-```
-{target}-{features}-{arch}-{version}-{commit}
-```
-
-For example:
-
-```
-aws-gardener_prod-amd64-2150.0.0-31a9f915
-```
-
-The CNAME is generated using `gl-features-parse --cname` and serves critical functions:
-
-- **Uniqueness**: No two artifacts can have the same name
-- **Traceability**: The name contains target, features, architecture, version, and source commit
-- **Automation**: CI/CD systems can programmatically identify and retrieve specific variants
-- **Distribution**: S3 paths and container tags are derived from the CNAME
-
-This system ensures that what was built, tested, and deployed can be precisely identified and reproduced.
+For the full naming hierarchy, worked example, and the `/etc/os-release` keys written by the builder, see [Canonical Names in Flavors Reference](/reference/flavors#canonical-names) and [Feature resolution in `/etc/os-release`](/reference/features#feature-resolution-in-etcos-release).
 
 ## Distribution Channels
 
@@ -95,21 +76,21 @@ An Amazon S3 bucket serves as the primary distribution channel for OS images, pr
 - High availability and durability
 - Regional distribution (global and China-specific buckets)
 
-Artifact organization follows the CNAME hierarchy:
+Artifact organization follows the artifact base name hierarchy:
 
 ```
-s3://gardenlinux-images/
-  └── {cname}/
-      └── {version}/
-          ├── {cname}.tar.gz
-          ├── {cname}.vhd
-          └── {cname}.raw.xz
+s3://gardenlinux-github-releases/
+  └── objects/
+      └── {artifact base name}/
+          ├── {artifact base name}.tar.gz
+          ├── {artifact base name}.vhd
+          └── {artifact base name}.raw.xz
 ```
 
 For example, the AWS Gardener image for version 2150.0.0 appears at:
 
 ```
-s3://gardenlinux-images/aws-gardener_prod-amd64-2150.0.0/2150.0.0/aws-gardener_prod-amd64-2150.0.0.tar.gz
+s3://gardenlinux-github-releases/objects/aws-gardener_prod-amd64-2150.0.0-abc1234/aws-gardener_prod-amd64-2150.0.0-abc1234.tar.gz
 ```
 
 ### GitHub Actions Artifacts
@@ -169,7 +150,7 @@ Common Platform Enumeration (CPE) files enable automated vulnerability scanning 
 
 Only flavors explicitly marked with `publish: true` in `flavors.yaml` are included in releases.
 
-The [flavor system](/explanation/flavors.md) determines which variants proceed to publication based on their maturity and support requirements.
+The [flavor system](/explanation/flavors) determines which variants proceed to publication based on their maturity and support requirements.
 
 ### GitHub Workflows Orchestration
 

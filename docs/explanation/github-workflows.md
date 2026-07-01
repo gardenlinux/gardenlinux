@@ -445,7 +445,16 @@ The key artifacts and their producers/consumers are:
 | `kmodbuild-container-{arch}` | [`build_kmodbuild_container.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/build_kmodbuild_container.yml) | [`publish_kmodbuild_container.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish_kmodbuild_container.yml) |
 | `workflow-data` | [`nightly.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/nightly.yml) / [`manual_release.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/manual_release.yml) (upload_workflow_data job) | [`download_workflow_data.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/download_workflow_data.yml) |
 | `flavor-version-data` | [`build.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/build.yml) (upload_flavor_version_data job) | [`download_workflow_data.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/download_workflow_data.yml), [`test_report.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/test_report.yml) |
-| `{chroot,qemu,cloud,oci}-test-{cname}` | `test_flavor_*.yml` | [`test_report.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/test_report.yml) |
+| `{chroot,qemu,cloud,oci}-test-{artifact-base-name}` | `test_flavor_*.yml` | [`test_report.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/test_report.yml) |
+
+:::note
+The workflow env variable in `test_flavor_*.yml` is still named `CNAME` for
+historical reasons. Its value at runtime is the *artifact base name* form
+(`{cname}-{arch}-{version}-{short_commit}`) — the version and commit are read
+from the `VERSION` and `COMMIT` files cached in CI by `build_requirements.yml`.
+Renaming the env variable is a code change tracked separately and is out of
+scope for this document.
+:::
 
 ## Related Topics
 
