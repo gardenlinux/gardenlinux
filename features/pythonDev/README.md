@@ -24,5 +24,5 @@ For production, we recommend using a [multistage build with bare-python](https:/
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|python|
+|included_features|[`python`](/reference/features/python)|
 |excluded_features|None|

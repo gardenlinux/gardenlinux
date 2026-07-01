@@ -96,7 +96,7 @@ flavors is in the [Flavor Matrix](/reference/flavor-matrix).
 For organizations needing to run Gardener-managed Kubernetes on physical
 hardware, Garden Linux integrates with [IronCore](https://ironcore.dev) to
 provision bare-metal worker nodes via the Cluster API. This use case combines
-the `capi` (Cluster API) feature with the `baremetal` platform to enable PXE
+the [`capi`](/reference/features/capi) (Cluster API) feature with the [`baremetal`](/reference/features/baremetal) platform to enable PXE
 boot, ignition-based provisioning, and full hardware lifecycle management. It is
 designed for large-scale on-premises or edge deployments where control plane and
 worker nodes run on dedicated servers without a hypervisor layer.
@@ -213,7 +213,7 @@ include [cloud-init for initialization](/how-to/installation/post-install.html#m
 
 Deploy directly to physical servers by writing a raw disk image (`.raw`) to the
 target drive or via PXE network boot. This environment gives complete hardware
-control with no hypervisor overhead. The `baremetal` platform includes drivers
+control with no hypervisor overhead. The [`baremetal`](/reference/features/baremetal) platform includes drivers
 for common server hardware and supports UEFI and legacy BIOS boot modes. Use
 cases include data-center infrastructure nodes, edge appliances, and
 single-tenant hardware.

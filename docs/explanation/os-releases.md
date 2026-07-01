@@ -64,7 +64,7 @@ These specialized formats ensure optimal performance and integration with each p
 
 ### Canonical Names: cname, Flavor, Versioned Flavor, Artifact Base Name
 
-For the full naming hierarchy, worked example, and the `/etc/os-release` keys written by the builder, see [Canonical Names in Flavors Reference](/reference/flavors#canonical-names) and [Feature resolution in `/etc/os-release`](/reference/features#feature-resolution-in-etcos-release).
+For the full naming hierarchy, worked example, and the `/etc/os-release` keys written by the builder, see [Canonical Names in Flavors Reference](/reference/flavors#canonical-names) and [Feature resolution in `/etc/os-release`](/reference/features/#feature-resolution-in-etcos-release).
 
 ## Distribution Channels
 

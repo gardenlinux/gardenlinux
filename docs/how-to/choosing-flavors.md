@@ -38,8 +38,8 @@ name (cname)** combined with a target architecture. Under
 
 The cname is assembled from three feature types defined in
 [ADR 0034](/reference/adr/0034-feature-terminology): exactly one **platform**
-feature (e.g. `aws`), zero or more **element** features (e.g. `gardener`), and
-zero or more **flag** features (e.g. `_prod`). In `aws-gardener_prod`, `aws` is
+feature (e.g. [`aws`](/reference/features/aws)), zero or more **element** features (e.g. [`gardener`](/reference/features/gardener)), and
+zero or more **flag** features (e.g. [`_prod`](/reference/features/_prod)). In `aws-gardener_prod`, `aws` is
 the platform feature, `gardener` is an element feature, and `_prod` is a flag
 feature.
 

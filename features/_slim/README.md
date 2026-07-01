@@ -23,5 +23,5 @@ This feature does not support unit tests.
 |---|---|
 |type|flag|
 |artifact|None|
-|included_features|server|
+|included_features|[`server`](/reference/features/server)|
 |excluded_features|None|

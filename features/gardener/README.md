@@ -14,10 +14,10 @@ As Garden Linux is the Container Node OS for Gardener, that's also where the "Ga
 ### Features
 The `gardener` feature adjusts Garden Linux to fulfil the `gardener.cloud` requirements:
 - installs package `containerd`
-  - This is a duplicate of the ContainerHost (chost) feature, but as `containerd` is a fundamental requirement of Gardener it is also included in this feature
+  - This is a duplicate of the ContainerHost ([`chost`](/reference/features/chost)) feature, but as `containerd` is a fundamental requirement of Gardener it is also included in this feature
 - By default, systemd unit files for `containerd` are disabled and will be enabled by Gardener itself.
 - Installs default requirements for Gardener / Kubernetes `apparmor`, `ethtool`, `ipvsadm`, `socat`, `ebtables`
-  - This is very similar to the KubernetesHost (khost) feature of GardenLinux itself but adapted to Gardener needs
+  - This is very similar to the KubernetesHost ([`khost`](/reference/features/khost)) feature of GardenLinux itself but adapted to Gardener needs
 - Installs filesystem clients `btrfs-progs`, `xfsprogs`, `nfs-common`, `cifs-utils` to support common Gardener remote file system needs
 - Installs standard tools like `jq`, `curl` and `netcat` as needed by Gardener
 
@@ -45,5 +45,5 @@ Unit tests are supported for this feature and will ensure that the groups are co
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|server|
+|included_features|[`server`](/reference/features/server)|
 |excluded_features|None|

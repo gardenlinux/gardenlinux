@@ -144,13 +144,13 @@ Features are concatenated with `-` as separator. Flag features (whose names begi
 
 For example, `aws-gardener_prod_fips` is assembled from:
 
-- `aws` — the platform feature
-- `gardener` — an element, joined with `-` → `aws-gardener`
-- `_prod` — a flag, appended directly (no `-`) → `aws-gardener_prod`
-- `_fips` — a flag, appended directly (no `-`) → `aws-gardener_prod_fips`
+- [`aws`](/reference/features/aws) — the platform feature
+- [`gardener`](/reference/features/gardener) — an element, joined with `-` → `aws-gardener`
+- [`_prod`](/reference/features/_prod) — a flag, appended directly (no `-`) → `aws-gardener_prod`
+- [`_fips`](/reference/features/_fips) — a flag, appended directly (no `-`) → `aws-gardener_prod_fips`
 :::
 
-**Worked example** for `aws` (platform), `gardener` (element), `_prod` (flag) features on `amd64` at version `2150.1.0` with commit `abc1234`:
+**Worked example** for [`aws`](/reference/features/aws) (platform), [`gardener`](/reference/features/gardener) (element), [`_prod`](/reference/features/_prod) (flag) features on `amd64` at version `2150.1.0` with commit `abc1234`:
 
 1. **cname** = `aws-gardener_prod` (feature encoding only)
 1. **flavor** = `aws-gardener_prod-amd64` (cname + arch)
