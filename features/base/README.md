@@ -25,5 +25,5 @@ Representing the base layer for Garden Linux requires many additional unit tests
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|`_slim`|
+|included_features|[`_slim`](/reference/features/_slim)|
 |excluded_features|None|

@@ -18,5 +18,5 @@ SapMachine - An OpenJDK release maintained and supported by SAP
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|_curl|
+|included_features|[`_curl`](/reference/features/_curl)|
 |excluded_features|None|

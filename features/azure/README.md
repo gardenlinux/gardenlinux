@@ -26,5 +26,5 @@ This platform feature supports unit testing and is based on the `azure` fixture 
 |---|---|
 |type|platform|
 |artifact|`.raw`, `.vhd`|
-|included_features|cloud|
+|included_features|[`cloud`](/reference/features/cloud)|
 |excluded_features|None|

@@ -20,5 +20,5 @@ This feature installs nvm-cli as well as a systemd unit that creates /etc/nvme/h
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|multipath|
+|included_features|[`multipath`](/reference/features/multipath)|
 |excluded_features|None|

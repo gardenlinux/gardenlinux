@@ -26,5 +26,5 @@ This platform feature supports unit testing and is based on the `aws` fixture to
 |---|---|
 |type|platform|
 |artifact|`.raw`|
-|included_features|cloud|
+|included_features|[`cloud`](/reference/features/cloud)|
 |excluded_features|None|

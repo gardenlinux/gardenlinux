@@ -18,5 +18,5 @@ checkbox HW Test Kit
 |---|---|
 |type|flag|
 |artifact|None|
-|included_features|_iso|
-|excluded_features|sap, firewall, log, _selinux, _ignite|
+|included_features|[`_iso`](/reference/features/_iso)|
+|excluded_features|[`sap`](/reference/features/sap), [`firewall`](/reference/features/firewall), [`log`](/reference/features/log), [`_selinux`](/reference/features/_selinux), [`_ignite`](/reference/features/_ignite)|

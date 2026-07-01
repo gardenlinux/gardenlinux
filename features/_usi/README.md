@@ -18,5 +18,5 @@ boot using a UKI with embedded EROFS root disk
 |---|---|
 |type|flag|
 |artifact|None|
-|included_features|_nocrypt, _unsigned|
-|excluded_features|_legacy|
+|included_features|[`_nocrypt`](/reference/features/_nocrypt), [`_unsigned`](/reference/features/_unsigned)|
+|excluded_features|[`_legacy`](/reference/features/_legacy)|

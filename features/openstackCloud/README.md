@@ -25,5 +25,5 @@ This platform feature supports unit testing and is based on the `openstackccee` 
 |---|---|
 |type|platform|
 |artifact|`.raw`,`.qcow2`, `.vmdk`|
-|included_features|cloud|
+|included_features|[`cloud`](/reference/features/cloud)|
 |excluded_features|None|

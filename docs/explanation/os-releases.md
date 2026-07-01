@@ -64,7 +64,7 @@ These specialized formats ensure optimal performance and integration with each p
 
 ### The CNAME system
 
-Every artifact receives a canonical name (CNAME) that serves as its unique identifier throughout the pipeline. The CNAME format encodes all essential information:
+For the full naming hierarchy, worked example, and the `/etc/os-release` keys written by the builder, see [Canonical Names in Flavors Reference](/reference/flavors#canonical-names) and [Feature resolution in `/etc/os-release`](/reference/features/#feature-resolution-in-etcos-release).
 
 ```
 {target}-{features}-{arch}-{version}-{commit}

@@ -26,5 +26,5 @@ This platform feature supports unit testing and is based on the `ali` fixture to
 |---|---|
 |type|platform|
 |artifact|`.raw`,`.qcow2`|
-|included_features|cloud|
+|included_features|[`cloud`](/reference/features/cloud)|
 |excluded_features|None|
