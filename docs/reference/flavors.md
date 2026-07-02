@@ -120,18 +120,14 @@ Flavors with `publish: false` are still available as GitHub workflow artifacts f
 
 Each Garden Linux build is identified by a four-level naming hierarchy defined in [ADR 0035](/reference/adr/0035-cname-flavor-artifact-naming):
 
-| Term | Format | Example |
-|---|---|---|
-| **cname** | `{feature-encoding}` | `aws-gardener_prod` |
-| **flavor** | `{cname}-{arch}` | `aws-gardener_prod-amd64` |
-| **versioned flavor** | `{cname}-{arch}-{version}` | `aws-gardener_prod-amd64-2150.1.0` |
+| Term                   | Format                                    | Example                                    |
+| ---------------------- | ----------------------------------------- | ------------------------------------------ |
+| **cname**              | `{feature-encoding}`                      | `aws-gardener_prod`                        |
+| **flavor**             | `{cname}-{arch}`                          | `aws-gardener_prod-amd64`                  |
+| **versioned flavor**   | `{cname}-{arch}-{version}`                | `aws-gardener_prod-amd64-2150.1.0`         |
 | **artifact base name** | `{cname}-{arch}-{version}-{short_commit}` | `aws-gardener_prod-amd64-2150.1.0-abc1234` |
 
 **cname** (canonical name) encodes only the feature set — no architecture, version, or commit. It is the minimal, canonically-sorted representation of the features selected for a build.
-
-:::note
-ADR 0035 specifies that `GARDENLINUX_CNAME` in `/etc/os-release` will contain exactly the cname once the migration is complete. Currently it contains the versioned flavor (`{cname}-{arch}-{version}`).
-:::
 
 **flavor** qualifies the cname with a target architecture. This is the stable identifier used in `flavors.yaml` entries, CI job naming, and as the argument to the `./build` script.
 
@@ -148,7 +144,7 @@ For example, `aws-gardener_prod_fips` is assembled from:
 - [`gardener`](/reference/features/gardener) — an element, joined with `-` → `aws-gardener`
 - [`_prod`](/reference/features/_prod) — a flag, appended directly (no `-`) → `aws-gardener_prod`
 - [`_fips`](/reference/features/_fips) — a flag, appended directly (no `-`) → `aws-gardener_prod_fips`
-:::
+  :::
 
 **Worked example** for [`aws`](/reference/features/aws) (platform), [`gardener`](/reference/features/gardener) (element), [`_prod`](/reference/features/_prod) (flag) features on `amd64` at version `2150.1.0` with commit `abc1234`:
 
