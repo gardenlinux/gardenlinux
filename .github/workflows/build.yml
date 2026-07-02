@@ -132,4 +132,6 @@ jobs:
         with:
           name: ${{ inputs.prefix }}flavor-version-data
           path: flavor_version_data.json
+          include-hidden-files: true
           if-no-files-found: error
+          archive: false

@@ -79,4 +79,6 @@ jobs:
         with:
           name: ${{ inputs.prefix }}kmodbuild-container-${{ matrix.arch }}
           path: kmodbuild_container_${{ matrix.arch }}.oci
+          include-hidden-files: true
           if-no-files-found: error
+          archive: true

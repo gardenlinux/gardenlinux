@@ -92,6 +92,9 @@ jobs:
             tests/coverage_report.xml
             tests/coverage_report.json
           retention-days: 30
+          include-hidden-files: true
+          if-no-files-found: ignore
+          archive: true
 
   test-plugins:
     name: Test plugins

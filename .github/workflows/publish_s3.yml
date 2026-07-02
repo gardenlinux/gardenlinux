@@ -42,6 +42,9 @@ jobs:
           name: parent-workflow-data
           overwrite: true
           path: workflow_data.json
+          include-hidden-files: true
+          if-no-files-found: error
+          archive: false
   trustedboot_flavors_supported_matrix:
     needs: workflow_data
     name: Generate flavors matrix for trustedboot

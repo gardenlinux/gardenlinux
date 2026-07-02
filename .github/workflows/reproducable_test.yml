@@ -11,7 +11,7 @@ on:
         type: choice
         required: true
         default: "One new build with latest nightly"
-        options: 
+        options:
         - "Two new builds"
         - "One new build with latest nightly"
         - "Two nightly builds"
@@ -51,7 +51,7 @@ jobs:
     with:
       workflow_name: "nightly"
       run_number: ${{ inputs.run_number1 }}
-  
+
   build_b:
     name: Build B
     if: ${{ inputs.nightly == 'Two new builds' }}
@@ -100,7 +100,7 @@ jobs:
     if: always()
     permissions:
       actions: read
-    
+
     strategy:
       matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix) }}
       fail-fast: false
@@ -156,9 +156,11 @@ jobs:
       if: always()
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
       with:
-        if-no-files-found: error
         name: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
         path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
+        include-hidden-files: true
+        if-no-files-found: error
+        archive: true
 
   bare_difference_check:
     needs: [ bare_flavors_matrix, build_a, build_b, run_number_a, run_number_b ]
@@ -167,7 +169,7 @@ jobs:
     if: always()
     permissions:
       actions: read
-    
+
     strategy:
       matrix: ${{ fromJson(needs.bare_flavors_matrix.outputs.matrix) }}
       fail-fast: false
@@ -223,10 +225,12 @@ jobs:
       if: always()
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
       with:
-        if-no-files-found: error
         name: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
         path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
-  
+        include-hidden-files: true
+        if-no-files-found: error
+        archive: true
+
   format_result:
     needs: [ difference_check, bare_difference_check, run_number_a, run_number_b, flavors_matrix, bare_flavors_matrix ]
     if: always()
