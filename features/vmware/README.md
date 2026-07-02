@@ -28,5 +28,5 @@ This platform feature supports unit testing and is based on the `chroot` and `kv
 |---|---|
 |type|platform|
 |artifact|`.vmdk`,`.ova`|
-|included_features|cloud|
+|included_features|[`cloud`](/reference/features/cloud)|
 |excluded_features|None|

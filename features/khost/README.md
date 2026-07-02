@@ -9,7 +9,7 @@ github_target_path: docs/reference/features/khost.md
 ## Feature: khost
 ### Description
 <website-feature>
-The vhost feature adjusts Garden Linux to support running Kubernetes (vanilla) workloads.
+The `khost` feature adjusts Garden Linux to support running Kubernetes (vanilla) workloads.
 </website-feature>
 
 ### Features
@@ -23,5 +23,5 @@ Unit tests will ensure that the needed packages are present as well as the `kubl
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|`chost`|
+|included_features|[`chost`](/reference/features/chost)|
 |excluded_features|None|

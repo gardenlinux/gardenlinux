@@ -251,5 +251,5 @@ This feature does not support unit tests.
 |---|---|
 |type|flag|
 |artifact|`.oci.tar.xz`|
-|included_features|cloud|
+|included_features|[`cloud`](/reference/features/cloud)|
 |excluded_features|None|

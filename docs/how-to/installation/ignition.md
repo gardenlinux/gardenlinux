@@ -36,13 +36,13 @@ Ignition runs only once during the first boot (`ignition.firstboot=1`). After co
 
 ## When to Use Ignition
 
-Use Ignition for bare-metal and PXE deployments. The `_pxe` feature includes the `_ignite` feature, which provides Ignition support during the initramfs stage.
+Use Ignition for bare-metal and PXE deployments. The [`_pxe`](/reference/features/_pxe) feature includes the [`_ignite`](/reference/features/_ignite) feature, which provides Ignition support during the initramfs stage.
 
 For cloud platform deployments (AWS, Azure, GCP, OpenStack), use [cloud-init](/how-to/installation/cloud-init.md) instead, as these platforms integrate with cloud-init natively.
 
 ## Prerequisites
 
-- Garden Linux build with the `_ignite` feature (automatically included with `_pxe`)
+- Garden Linux build with the [`_ignite`](/reference/features/_ignite) feature (automatically included with [`_pxe`](/reference/features/_pxe))
 - [Butane](https://github.com/coreos/butane) (optional but recommended, for translating YAML to JSON)
 
 ## Configuration Format and Basic Structure

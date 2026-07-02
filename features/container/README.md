@@ -31,5 +31,5 @@ Testing of specific units can be avoided by placing the `non_container` fixture.
 |---|---|
 |type|platform|
 |artifact|`.tar.gz`|
-|included_features|base|
+|included_features|[`base`](/reference/features/base)|
 |excluded_features|None|

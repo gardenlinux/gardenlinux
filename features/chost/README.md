@@ -29,5 +29,5 @@ buildkit
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|server|
+|included_features|[`server`](/reference/features/server)|
 |excluded_features|None|

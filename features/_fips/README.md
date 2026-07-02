@@ -27,5 +27,5 @@ We have several tests executed.
 |---|---|
 |type|flag|
 |artifact|None|
-|included_features|base|
+|included_features|[`base`](/reference/features/base)|
 |excluded_features|None|

@@ -18,5 +18,5 @@ Google Distributed Cloud Hosted (gdch environment)
 |---|---|
 |type|platform|
 |artifact|.raw|
-|included_features|cloud|
+|included_features|[`cloud`](/reference/features/cloud)|
 |excluded_features|None|

@@ -23,5 +23,5 @@ To be fully compliant these unit tests validate the extended capabilities on `gs
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|server|
+|included_features|[`server`](/reference/features/server)|
 |excluded_features|None|
