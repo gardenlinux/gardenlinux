@@ -438,6 +438,24 @@ targets:
     category: hypervisor
     flavors:
       - features:
+          - cloud
+          - server
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - cloud
+          - server
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
           - gardener
           - _prod
         arch: amd64
