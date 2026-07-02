@@ -1,7 +1,15 @@
+---
+title: "Feature: metal"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/metal/README.md
+github_target_path: docs/reference/features/metal.md
+---
+
 ## Feature: metal
 ### Description
 <website-feature>
-This platform feature creates an artifact for (bare) metal systems.
+This feature creates an artifact for (bare) metal systems.
 </website-feature>
 
 ### Features

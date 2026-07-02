@@ -1,3 +1,11 @@
+---
+title: "Feature: cis"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/cis/README.md
+github_target_path: docs/reference/features/cis.md
+---
+
 ## Feature: cis
 ### Description
 <website-feature>

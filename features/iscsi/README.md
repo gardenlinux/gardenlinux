@@ -1,3 +1,11 @@
+---
+title: "Feature: iscsi"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/iscsi/README.md
+github_target_path: docs/reference/features/iscsi.md
+---
+
 ## Feature: iscsi
 ### Description
 <website-feature>
