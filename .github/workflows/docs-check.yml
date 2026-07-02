@@ -27,7 +27,7 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.action != 'closed'
     uses: gardenlinux/docs-ng/.github/workflows/docs-checks.yml@main
     with:
-      override-repo: gardenlinux
+      override-repo: ${{ github.event.repository.name }}
       override-ref: ${{ github.head_ref || github.ref_name }}
       override-commit: ${{ github.event.pull_request.head.sha || github.sha }}
 
@@ -72,7 +72,7 @@ jobs:
               repo: 'docs-ng',
               event_type: 'docs-pr',
               client_payload: {
-                repo: 'gardenlinux',
+                repo: '${{ github.event.repository.name }}',
                 pr_number: `${context.payload.pull_request.number}`,
                 commit_sha: isMergedPR
                   ? context.payload.pull_request.merge_commit_sha
