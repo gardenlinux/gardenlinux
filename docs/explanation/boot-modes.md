@@ -85,7 +85,7 @@ of the initrd. It no longer needs to detect devices or disks; instead, the job
 of the initrd is now only to loop mount the embedded EROFS and pass control
 to it.
 
-![USI disk layout showing the EFI partition containing the UKI with embedded EROFS rootfs, and the separate var partition](/projects/gardenlinux/.media/usi_disk_layout.svg)
+![USI disk layout showing the EFI partition containing the UKI with embedded EROFS rootfs, and the separate var partition](.media/usi_disk_layout.svg)
 
 USI is UEFI-only and is a prerequisite for Secure Boot and Trusted Boot.
 
@@ -124,7 +124,7 @@ Three modes of operation are available for the `/var` partition:
 The following diagram shows the systemd unit dependency chain during a USI
 boot:
 
-![USI systemd boot dependency chain](/projects/gardenlinux/.media/usi_systemd_dependency_chain.svg)
+![USI systemd boot dependency chain](.media/usi_systemd_dependency_chain.svg)
 
 ## Secure Boot and Trusted Boot
 
