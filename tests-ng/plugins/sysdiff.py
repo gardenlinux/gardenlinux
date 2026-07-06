@@ -83,6 +83,7 @@ IGNORED_SYSCTL_PARAMS = {
     # Kernel dynamic parameters
     "kernel.ns_last_pid",
     "kernel.random.uuid",
+    "kernel.random.entropy_avail",
     # Network dynamic parameters
     "net.netfilter.nf_conntrack_count",
     # Memory dynamic parameters
