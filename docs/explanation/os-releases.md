@@ -189,6 +189,12 @@ flowchart LR
     G -->|Yes| I[publish.yml GHCR]
     H --> J[manual_gh_release_page.yml]
     I --> J
+
+    class A input
+    class B,E decision
+    class C,F process
+    class D,G decision
+    class H,I,J output
 ```
 
 Key workflows in the pipeline:
@@ -226,6 +232,11 @@ Manual download]
     F --> I[Users & Automation]
     G --> I
     H --> I
+
+    class A input
+    class B,C,D,E decision
+    class F,G,H output
+    class I process
 ```
 
 This flow ensures consistency between what is defined, built, tested, and distributed.

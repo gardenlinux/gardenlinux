@@ -71,15 +71,11 @@ flowchart TD
     Reboot --> RemoveISO[Remove ISO]
     RemoveISO --> Running[Garden Linux running from disk]
 
-    style Mode fill:#e1f5ff
-    style Service fill:#fff4e1
-    style DetectDisk fill:#fff4e1
-    style AutoRun fill:#fff4e1
-    style Reboot fill:#fff4e1
-    style Login fill:#f0f0f0
-    style UserRun fill:#f0f0f0
-    style SelectDisk fill:#f0f0f0
-    style ConfirmInstall fill:#f0f0f0
+    class Mode decision
+    class Service,DetectDisk,AutoRun,Reboot input
+    class Login,UserRun,SelectDisk,ConfirmInstall process
+    class Start,Firmware,BootISO,Bootloader,LoadKernel,InitMount,Overlay neutral
+    class Partition,Copy,InstallBoot,RemoveISO,Running neutral
 ```
 
 

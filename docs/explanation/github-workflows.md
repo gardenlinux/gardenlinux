@@ -97,6 +97,11 @@ flowchart LR
 
     PS --> DWD
     PS --> US3
+
+    class N,MR,MT input
+    class B,BR,BFM,BF,BBF,BT,BK decision
+    class T,TC,TQ,TCL,TO,TR process
+    class P,PS,POC,PKM,US3,DWD output
 ```
 
 
@@ -133,6 +138,11 @@ flowchart TD
 
     PUB_GHCR["publish_ghcr\ncalls publish.yml\npushes images to ghcr.io"]
     PUB_S3["publish_s3\ncalls publish_s3.yml\nuploads images to S3"]
+
+    class CRON input
+    class BUILD,TEST,UPLOAD decision
+    class BUILD_RETRY,TEST_RETRY process
+    class PUB_GHCR,PUB_S3 output
 ```
 
 
@@ -181,6 +191,11 @@ flowchart TD
 
     PUB_GHCR["publish_ghcr\ncalls publish.yml at main\npushes images to ghcr.io"]
     PUB_S3["publish_s3\ncalls publish_s3.yml at main\nuploads images to S3"]
+
+    class DISPATCH input
+    class BUILD,TEST,UPLOAD decision
+    class BUILD_RETRY,TEST_RETRY process
+    class PUB_GHCR,PUB_S3 output
 ```
 
 
@@ -230,6 +245,10 @@ flowchart TD
         DL_REQ --> TEST_DL
         TEST_DL["test_download_platform_test\ncalls tests.yml\ntest_types=input"]
     end
+
+    class DISPATCH input
+    class BUILD,DL_REQ,DL_STORE,DL_BUILD_TESTS,DL_MATRIX,DL_FLAVORS decision
+    class TEST_BUILT,TEST_DL process
 ```
 
 
@@ -280,6 +299,11 @@ flowchart TD
     TC & TQ & TCL & TO --> REP
 
     REP["test_report\ncalls test_report.yml\nGenerates JUnit report + workflow summary"]
+
+    class CALL input
+    class M1,M2,M3,M4,M5,DTS decision
+    class TC,TQ,TCL,TO process
+    class REP output
 ```
 
 
@@ -315,6 +339,11 @@ flowchart TD
     PKM -->|failure| RETRY
 
     RETRY["publish_retry\nre-dispatch publish workflow\nmax 3 retries"]
+
+    class CALL input
+    class WD,WDA decision
+    class POC,PKM output
+    class RETRY process
 ```
 
 
@@ -366,6 +395,11 @@ flowchart TD
     US3T & US3TC & US3N & US3NC & GLRD -->|any failure| RETRY
 
     RETRY["publish_retry\nre-dispatch publish_s3 workflow\nmax 5 retries"]
+
+    class CALL input
+    class WD,WDA,TBS,NTBS,TBM decision
+    class US3T,US3TC,US3N,US3NC,GLRD output
+    class RETRY process
 ```
 
 

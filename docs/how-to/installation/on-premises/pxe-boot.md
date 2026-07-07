@@ -90,13 +90,12 @@ flowchart TD
     Reboot --> Running[Garden Linux running from disk]
     Running --> Subsequent[Subsequent boots: direct from disk]
 
-    style InstallCheck fill:#e1f5ff
-    style AutoCheck fill:#e1f5ff
-    style ManualOrIgnition fill:#e1f5ff
-    style LiveOnly fill:#f0f0f0
-    style AutoService fill:#fff4e1
-    style IgnitionInstall fill:#d4edda
-    style ManualInstall fill:#f0f0f0
+    class InstallCheck,AutoCheck,ManualOrIgnition decision
+    class AutoService input
+    class LiveOnly,ManualInstall process
+    class IgnitionInstall output
+    class A,B,C,D,E,F,G,H,I,J,K,L,M neutral
+    class Partition,Copy,InstallBoot,Reboot,Running,Subsequent neutral
 ```
 
 ## Prerequisites

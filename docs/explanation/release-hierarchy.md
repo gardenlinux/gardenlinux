@@ -93,6 +93,10 @@ flowchart TD
 
     B --> C1
     B --> C2
+
+    class A,A1,A2,A3,B1,B2 input
+    class B,C decision
+    class C1,C2 output
 ```
 
 ## Related Topics
