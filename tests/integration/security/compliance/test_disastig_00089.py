@@ -1,14 +1,23 @@
-import pytest
-
 """
 Ref: SRG-OS-000239-GPOS-00089
 
 Verify the operating system automatically audits account modification.
 """
 
+import pytest
 
+
+@pytest.mark.security_id(203666)
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-30-disaSTIG-rules",
+        "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-disaSTIG-rules",
+    ]
+)
 @pytest.mark.feature("disaSTIGmedium")
+@pytest.mark.booted(reason="auditctl requires a live kernel audit subsystem")
 def test_audit_calling_user_group_related_utilities(audit_rule):
+    """Verify execution of user/group management binaries is audited."""
     for bin in [
         "/usr/sbin/visudo",
         "/usr/sbin/chgpasswd",
@@ -34,11 +43,13 @@ def test_audit_calling_user_group_related_utilities(audit_rule):
         "/usr/bin/passwd",
     ]:
         assert audit_rule(
-            binary_call=bin
-        ), f"No audit rule found for {bin} binary calls"
+            fs_watch_path=bin, access_types="x"
+        ), f"No audit rule found for {bin} execution"
 
 
+@pytest.mark.security_id(203666)
 def test_audit_rules_for_logging_attempts_to_delete_privileges():
+    """Audit rules for privilege deletion are covered elsewhere."""
     pytest.skip(
         reason="covered by test_disastig_00210::test_audit_rules_for_logging_attempts_to_delete_privileges"
     )

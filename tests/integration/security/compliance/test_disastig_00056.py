@@ -1,5 +1,3 @@
-import pytest
-
 """
 Ref: SRG-OS-000109-GPOS-00056
 
@@ -8,11 +6,14 @@ prevents direct login as root, forcing administrators to use privilege
 escalation mechanisms instead.
 """
 
+import pytest
+
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-root-locked"])
 @pytest.mark.feature(
     "disaSTIGmedium", reason="root account locking is enforced by disaSTIGmedium"
 )
+@pytest.mark.security_id(203644)
 @pytest.mark.root(reason="requires root to read shadow password status")
 def test_root_account_is_locked(shell) -> None:
     """Verify root account is locked (field 2 of passwd --status output is 'L')."""
