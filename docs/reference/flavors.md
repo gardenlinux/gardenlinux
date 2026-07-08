@@ -127,7 +127,7 @@ Each Garden Linux build is identified by a four-level naming hierarchy defined i
 
 **flavor** qualifies the cname with a target architecture. This is the stable identifier used in `flavors.yaml` entries, CI job naming, and as the argument to the `./build` script.
 
-**versioned flavor** qualifies the flavor with a version. The version is never passed on the `./build` command line — it is resolved internally from the `VERSION` file via `./get_version`.
+**versioned flavor** qualifies the flavor with a version. The version can optionally be passed on the `./build` command line or is resolved internally from the `VERSION` file via `./get_version`.
 
 **artifact base name** qualifies the versioned flavor with a short commit hash. It is the prefix of every file produced under `.build/` and the key used for S3 artifact storage.
 

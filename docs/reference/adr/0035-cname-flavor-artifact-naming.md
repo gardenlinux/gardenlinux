@@ -52,10 +52,11 @@ The minimal features are sorted by **lexicographical topological order** with a 
 The cname string is assembled from the sorted minimal features as follows: features are concatenated with `-` as separator, except that flag features (which begin with `_`) are joined directly to the preceding component without a leading `-`. This encoding is reversible: given a cname, the minimal feature set can be recovered by replacing every occurrence of `_` with `-_` and splitting on `-`.
 
 Examples:
+
 - Features `{aws, gardener, _prod}` where `aws` is the platform, `gardener` the element, `_prod` the flag → cname = `aws-gardener_prod`
 - Features `{container}` → cname = `container`
 
-The word *canonical* is fitting: the cname is the canonical way to represent a particular set of features in their minimal, consistently-sorted form. It identifies *what* is being built, independent of where or when. Two builds with the same cname are builds of the same feature set.
+The word _canonical_ is fitting: the cname is the canonical way to represent a particular set of features in their minimal, consistently-sorted form. It identifies _what_ is being built, independent of where or when. Two builds with the same cname are builds of the same feature set.
 
 ### 2. Flavor
 
@@ -93,11 +94,11 @@ The artifact base name is the prefix of every file produced under `.build/` by t
 
 ### 6. Summary table
 
-| Term | Format | Example |
-|---|---|---|
-| **cname** | `{feature-encoding}` | `aws-gardener_prod` |
-| **flavor** | `{cname}-{arch}` | `aws-gardener_prod-amd64` |
-| **versioned flavor** | `{cname}-{arch}-{version}` | `aws-gardener_prod-amd64-1877.3` |
+| Term                   | Format                                    | Example                                   |
+| ---------------------- | ----------------------------------------- | ----------------------------------------- |
+| **cname**              | `{feature-encoding}`                      | `aws-gardener_prod`                       |
+| **flavor**             | `{cname}-{arch}`                          | `aws-gardener_prod-amd64`                 |
+| **versioned flavor**   | `{cname}-{arch}-{version}`                | `aws-gardener_prod-amd64-1877.3`          |
 | **artifact base name** | `{cname}-{arch}-{version}-{short_commit}` | `aws-gardener_prod-amd64-1877.3-a1b2c3d4` |
 
 ## Consequences
