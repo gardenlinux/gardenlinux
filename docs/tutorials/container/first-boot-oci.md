@@ -67,7 +67,7 @@ You'll pull a Garden Linux OCI image from the GitHub Container Registry and run 
 Garden Linux publishes OCI container images to the GitHub Container Registry. Two image streams are available:
 
 :::tip
-For a comprehensive overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
+For a complete overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
 :::
 
 - **Release images** — stable, versioned releases
