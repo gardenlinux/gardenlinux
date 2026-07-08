@@ -56,7 +56,7 @@ Collections of packages assembled into APT repositories. These repositories cont
 **Documentation**:
 
 - **Explanation**: [Garden Linux Repository Infrastructure ](/explanation/repo-infrastructure.html) - Understand how Garden Linux assembles, distributes, and releases packages through its repository infrastructure
-- **How-To**: [Creating APT Repository Releases](/how-to/releases/apt-repos.html) - Comprehensive guide to creating releases for Garden Linux APT repositories
+- **How-To**: [Creating APT Repository Releases](/how-to/releases/apt-repos.html) - Complete guide to creating releases for Garden Linux APT repositories
 
 ## 3. Operating system image releases
 
@@ -72,7 +72,7 @@ Complete Garden Linux operating system images built by consuming an APT reposito
 **Documentation**:
 
 - **Explanation**: [OS Releases](/explanation/os-releases.md) - Understand what Garden Linux OS Releases are
-- **How-To**: [Creating OS Releases ](/how-to/releases/os-releases.md) - Comprehensive guide to creating Garden Linux OS major and minor releases
+- **How-To**: [Creating OS Releases ](/how-to/releases/os-releases.md) - Complete guide to creating Garden Linux OS major and minor releases
 
 ## Release flow diagram
 
