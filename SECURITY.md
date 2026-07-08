@@ -34,14 +34,14 @@ following volunteers:
 
 The Garden Linux community asks that all suspected vulnerabilities be privately and
 responsibly disclosed. If you've found a vulnerability or a potential
-vulnerability in Garden Linux please let us know by writing an e-mail to
+vulnerability in Garden Linux, let us know by writing an e-mail to
 [secure@sap.com](mailto:secure@sap.com). We'll send a confirmation e-mail to
 acknowledge your report, and we'll send an additional e-mail when we've
 identified the issue positively or negatively.
 
 ### Public Disclosure Processes
 
-If you know of a publicly disclosed vulnerability please IMMEDIATELY e-mail to
+If you know of a publicly disclosed vulnerability, IMMEDIATELY e-mail
 [secure@sap.com](mailto:secure@sap.com) to inform the Garden Linux Security Team
 about the vulnerability, so they may start the patch, release, and communication
 process.
