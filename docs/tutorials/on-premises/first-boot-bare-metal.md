@@ -62,7 +62,7 @@ You'll write a Garden Linux `.raw` disk image to your server's boot drive using 
 Garden Linux provides pre-built disk images for bare metal deployment. Start by selecting an appropriate image for your server.
 
 :::tip
-For a comprehensive overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
+For a complete overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
 :::
 
 #### Official Images

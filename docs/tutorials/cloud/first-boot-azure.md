@@ -43,7 +43,7 @@ You'll deploy a Garden Linux instance on Azure with a basic networking setup (re
 Garden Linux provides pre-built images for Azure via an Azure Community Gallery. Start by selecting an appropriate image for your deployment.
 
 :::tip
-For a comprehensive overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
+For a complete overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
 :::
 
 :::warning
@@ -110,7 +110,7 @@ For a complete list of maintained releases and their support lifecycle, see the 
 
 ##### Upload the image to Azure
 
-Please [Create a Resource Group](#create-a-resource-group) first.
+[Create a Resource Group](#create-a-resource-group) first.
 
 ###### Create a Storage Account
 

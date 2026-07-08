@@ -43,7 +43,7 @@ You'll deploy a Garden Linux instance on AWS EC2 with a basic networking setup (
 Garden Linux provides pre-built AMIs for multiple AWS regions. Start by selecting an appropriate image for your deployment.
 
 :::tip
-For a comprehensive overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
+For a complete overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
 :::
 
 :::warning

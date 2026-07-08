@@ -44,7 +44,7 @@ You'll deploy a Garden Linux instance on GCP Compute Engine with a basic network
 Garden Linux provides pre-built images for GCP in the shared Garden Linux GCP project. Start by selecting an appropriate image for your deployment.
 
 :::tip
-For a comprehensive overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
+For a complete overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
 :::
 
 :::warning
@@ -112,7 +112,7 @@ For a complete list of maintained releases and their support lifecycle, see the 
 
 ##### Upload the image to GCP
 
-Please [Create a Resource Group](#create-a-resource-group) first.
+[Create a Resource Group](#create-a-resource-group) first.
 
 ###### Create a Cloud Storage Bucket
 

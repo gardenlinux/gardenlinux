@@ -56,7 +56,7 @@ You'll launch a Garden Linux virtual machine using plain QEMU commands with envi
 Garden Linux provides pre-built disk images for KVM. Start by selecting an appropriate image for your deployment.
 
 :::tip
-For a comprehensive overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
+For a complete overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
 :::
 
 #### Official Images
