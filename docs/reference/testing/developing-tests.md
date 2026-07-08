@@ -1,6 +1,6 @@
 ---
 title: "Developing Tests"
-description: "Comprehensive guidelines for developing and maintaining tests in the Garden Linux test framework"
+description: "Complete guidelines for developing and maintaining tests in the Garden Linux test framework"
 related_topics:
   - /contributing/testing.md
   - /explanation/testing/test-framework-architecture.md
@@ -24,7 +24,7 @@ github_target_path: "docs/reference/testing/developing-tests.md"
 
 # Developing Tests
 
-This document provides comprehensive guidelines for developing and maintaining tests in the Garden Linux test framework.
+This document provides complete guidelines for developing and maintaining tests in the Garden Linux test framework.
 
 ## Test development principles
 
@@ -583,7 +583,7 @@ def test_weird_cases(input_val, expected):
 
 ### Test coverage markers
 
-Please have a look at the [Test Coverage Documentation](test-coverage-markers.md)
+Have a look at the [Test Coverage Documentation](test-coverage-markers.md)
 
 ### Missing Markers (TODO)
 
@@ -713,7 +713,7 @@ The project enforces code quality through CI linting (see `.github/workflows/lin
 
 In order to improve your development experience, and to allow us to process your PRs faster, we suggest your enable them with your editor or IDE.
 
-Please refer to your editor's documentation for clues on how to set them up.
+Refer to your editor's documentation for clues on how to set them up.
 
 We highly suggest you configure your IDE or text editor to automatically apply formatting and type checking on save.
 **Guidelines:**
