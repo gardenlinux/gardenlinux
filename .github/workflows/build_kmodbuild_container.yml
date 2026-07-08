@@ -33,6 +33,7 @@ jobs:
             COMMIT
             VERSION
           key: ${{ inputs.prefix }}build-container-${{ matrix.arch }}-${{ github.run_id }}
+          fail-on-cache-miss: true
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@efdffb9a6b279cd7aada23b02baf4ec2534dc6d2 # pin@0.10.21
@@ -53,21 +54,18 @@ jobs:
           commit="$(./get_commit)"
           commit_short="${commit:0:8}"
 
-          version="$(bin/garden-version "${{ inputs.version }}")"
-
-          if [ "$version" == "today" ]; then
-            version="$(bin/garden-version now)"
-          fi
+          snapshot_version="$(bin/garden-version $(date --rfc-3339=seconds -r $CNAME.tar.gz))"
+          version="$(cat VERSION)"
 
           mkdir ".build"
           tar -C ".build/" -xzf "$CNAME.tar.gz"
           rm "$CNAME.tar.gz"
 
           base="ghcr.io/${{ github.repository }}:$version"
-          image="$(podman load -i .build/container-${{ matrix.arch }}-$(cat VERSION)-${commit_short}.oci | awk '{ print $NF }')"
+          image="$(podman load -i .build/container-${{ matrix.arch }}-$version-${commit_short}.oci | awk '{ print $NF }')"
           podman tag "$image" "$base"
 
-          snapshot="$(gh api "/repos/gardenlinux/repo/contents/.container?ref=$version" | jq -r '.content' | base64 -d)"
+          snapshot="$(gh api "/repos/gardenlinux/repo/contents/.container?ref=$snapshot_version" | jq -r '.content' | base64 -d)"
 
           podman login -u token -p "${GH_TOKEN}" ghcr.io
           podman pull --arch ${{ matrix.arch }} "$snapshot"
