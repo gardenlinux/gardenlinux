@@ -43,7 +43,7 @@ OS releases follow a structured lifecycle with distinct phases:
 2. **Minor releases** (`2150.1.0`) - Security patches and CVE fixes within a major version
 3. **Nightly releases** - Continuous integration builds from main branch
 
-Each release type serves different user needs, with major releases initiating a new support cycle and minor releases extending security coverage. For comprehensive information about maintenance phases and support commitments, see the [Release Lifecycle](/reference/releases/release-lifecycle.md) document.
+Each release type serves different user needs, with major releases initiating a new support cycle and minor releases extending security coverage. For complete information about maintenance phases and support commitments, see the [Release Lifecycle](/reference/releases/release-lifecycle.md) document.
 
 ## Core artifacts
 
@@ -141,7 +141,7 @@ Beyond deployable artifacts, OS releases generate essential metadata for securit
 
 ### GitHub release notes
 
-Automatically generated release notes provide comprehensive information about each release:
+Automatically generated release notes provide complete information about each release:
 
 - Software Component Versions
 - Published Images
