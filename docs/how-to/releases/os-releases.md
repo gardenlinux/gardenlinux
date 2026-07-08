@@ -1,6 +1,6 @@
 ---
 title: Creating OS Releases
-description: Comprehensive guide to creating Garden Linux OS major and minor releases
+description: Complete guide to creating Garden Linux OS major and minor releases
 order: 3
 related_topics:
   - /explanation/release-hierarchy.md
@@ -34,7 +34,7 @@ This document is about the third tier, the [OS Releases](/explanation/os-release
 
 ## Understanding OS releases
 
-Please read the [OS Releases Explanation](/explanation/os-releases.md) to get familiar with the concepts for the Releases.
+Read the [OS Releases Explanation](/explanation/os-releases.md) to get familiar with the concepts for the Releases.
 
 ## Prerequisites
 
