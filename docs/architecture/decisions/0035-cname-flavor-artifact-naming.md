@@ -59,19 +59,19 @@ flavor = {cname}-{arch}
 
 The flavor identifies what is being built for which architecture, independent of any particular release version. It is a stable identifier that persists across versions of a build target. This is the natural unit for entries in `flavors.yaml`, for CI job naming, and for any context where the version is tracked separately.
 
-### 3. Builder Target
+### 3. Versioned Flavor
 
-A **builder target** is the flavor qualified with a version — the string passed to the builder to invoke a build:
+A **versioned flavor** is the flavor qualified with a version — the string passed to the builder to invoke a build:
 
 ```
-builder target = {cname}-{arch}-{version}
+versioned flavor = {cname}-{arch}-{version}
 ```
 
 Examples: `aws-gardener_prod-amd64-1877.3`, `container-amd64-1877.3`.
 
 ### 4. Artifact Base Name
 
-The **artifact base name** is the builder target plus the short commit hash:
+The **artifact base name** is the versioned flavor plus the short commit hash:
 
 ```
 artifact base name = {cname}-{arch}-{version}-{short_commit}
@@ -81,7 +81,7 @@ The artifact base name is the prefix of every file produced under `.build/` by t
 
 ### 5. `GARDENLINUX_CNAME` in `/etc/os-release`
 
-`GARDENLINUX_CNAME` MUST contain the cname as defined in section 1 — i.e. the feature encoding only, without architecture, version, or commit hash. This is a change from the current state where `GARDENLINUX_CNAME` contains the full builder target (`{cname}-{arch}-{version}`).
+`GARDENLINUX_CNAME` MUST contain the cname as defined in section 1 — i.e. the feature encoding only, without architecture, version, or commit hash. This is a change from the current state where `GARDENLINUX_CNAME` contains the full versioned flavor (`{cname}-{arch}-{version}`).
 
 ### 6. Summary table
 
@@ -89,54 +89,14 @@ The artifact base name is the prefix of every file produced under `.build/` by t
 |---|---|---|
 | **cname** | `{feature-encoding}` | `aws-gardener_prod` |
 | **flavor** | `{cname}-{arch}` | `aws-gardener_prod-amd64` |
-| **builder target** | `{cname}-{arch}-{version}` | `aws-gardener_prod-amd64-1877.3` |
+| **versioned flavor** | `{cname}-{arch}-{version}` | `aws-gardener_prod-amd64-1877.3` |
 | **artifact base name** | `{cname}-{arch}-{version}-{short_commit}` | `aws-gardener_prod-amd64-1877.3-a1b2c3d4` |
 
 ## Consequences
 
 ### Benefits
 
-Having four clearly-bounded terms eliminates the most common source of ambiguity across the project: whether a "cname" includes the commit, the version, or both. Components can now validate their assumptions against this ADR. The distinction between cname (feature-set only, version-independent) and flavor (cname plus architecture) and builder target (flavor plus version) cleanly separates what is being built from where and when.
-
-### Impact on individual components
-
-#### `gardenlinux/builder`
-
-The builder's `parse_features` script already implements the feature encoding, sorting, and minimisation algorithm that produces the cname as defined here — what the builder currently calls `cname_base`. The following terminology changes are required:
-
-- The builder's internal variable `cname_base` maps to *cname* under this ADR.
-- The builder's internal variable `cname` (currently `{cname_base}-{arch}-{version}`) maps to *builder target* under this ADR.
-- `BUILDER_CNAME` passed to feature scripts currently contains the builder target. It should be updated to contain only the cname (feature encoding), with `BUILDER_FLAVOR` (`{cname}-{arch}`) and `BUILDER_TARGET` (`{cname}-{arch}-{version}`) introduced as separate variables.
-- The make target rule and artifact naming in `Makefile` use the builder target form and require no functional change, only renaming of internal variables.
-- `docs/features.md` and `docs/getting_started.md` should be updated to reflect the new terminology.
-
-#### `gardenlinux/gardenlinux`
-
-- `GARDENLINUX_CNAME` in `/etc/os-release` currently contains the builder target (`{cname}-{arch}-{version}`, set from `BUILDER_CNAME`). It must be updated to contain only the cname (feature encoding) per this ADR. `features/base/exec.config` must be updated accordingly once `BUILDER_CNAME` is updated in the builder.
-- `flavors.yaml` entries and the `flavors/` tooling currently produce strings of the form `{platform}-{features}-{arch}`, which matches the *flavor* definition in this ADR. No change required there.
-- References in CI workflows and scripts that construct `{cname}-{arch}-{version}-{short_commit}` and call this "the cname" should be updated to use the term *artifact base name*.
-
-#### `gardenlinux/python-gardenlinux-lib`
-
-This library has the most significant divergence from the definitions in this ADR and requires the most substantial rework:
-
-1. **`CName` class and the role of `platform`**: The library's `CName` class treats `platform` as a first-class field, exposing `CName.platform` and `CName.features["platform"]` as primary identifiers. Under this ADR, platform is simply a feature of type `platform` that sorts to the front of the cname — it has no special status in the cname string itself. The `CName` class should drop `platform` as a first-class accessor and instead expose it via the general feature-set breakdown if needed.
-
-2. **Commit as primary cname component**: The library's primary cname format is `{cname}-{arch}-{version}-{commit}`. The no-commit form exists only as an explicit workaround (labelled as such in a comment at [`cname.py:97`](https://github.com/gardenlinux/python-gardenlinux-lib/blob/5f2338f568762b6fa42fc19d0148a8951fc8e537/src/gardenlinux/features/cname.py#L97)). As a direct consequence, `release_metadata_string` writes `GARDENLINUX_CNAME` including the commit — which means release files generated by the library contain a different value for `GARDENLINUX_CNAME` than what the builder writes. Under this ADR, the `.cname` property must return only the feature encoding, and the commit-extended form should be exposed as a distinct property (e.g. `.artifact_base_name`). The workaround branch can be removed once the primary format is corrected.
-
-3. **`flavor` property**: `CName.flavor` currently returns the feature-encoding prefix (what this ADR calls the *cname*). It should be renamed to `cname`, and a new `flavor` property returning `{cname}-{arch}` introduced.
-
-4. **`flavors/parser.py`**: This separate module parses `flavors.yaml` and generates strings of the form `{target}-{feature}-{arch}`, which match the *flavor* definition here. The module name and its output are consistent with this ADR and require no renaming. However, the relationship between this module and `features/parser.py` (which also deals with something it calls "flavor") should be clarified in documentation.
-
-5. **Sorting**: The library's `get_flavor_from_feature_set` uses a `reduce` with simple underscore/hyphen logic. This does not reproduce the lexicographical topological sort defined here. For correctness, cname construction in the library must use the same algorithm as the builder, or — preferably — delegate to the builder's `parse_features` script rather than reimplementing the sort, e.g. by consuming `GARDENLINUX_CNAME` from `/etc/os-release` which is already correctly sorted and minimised by the builder.
-
-#### `gardenlinux/glci`
-
-glci uses a version-less, commit-less string (e.g. `aws-gardener_prod-amd64`) as its config-time `cname` field. Under this ADR that string is a *flavor*, not a cname. The `cfgFlavor.Cname` field in `config.go` should be renamed to `cfgFlavor.Flavor` and the YAML key updated from `cname` to `flavor` in `glci.yaml` and related config files. Version and commit are already appended at runtime when constructing manifest lookup keys and image names, which is correct behaviour and requires no change.
-
-#### `gardenlinux/gardenlinux-update`
-
-`gardenlinux-update` reads `GARDENLINUX_CNAME` from `/etc/os-release` and strips the version suffix to obtain a prefix for OCI manifest matching. Once `GARDENLINUX_CNAME` is updated to contain only the cname (feature encoding), the stripping logic in `getCname()` must be removed — the value read from `/etc/os-release` will already be the cname directly. The variable used for OCI manifest prefix matching would then be the *flavor* (`{cname}-{arch}`), requiring the arch to be appended separately.
+Having four clearly-bounded terms eliminates the most common source of ambiguity across the project: whether a "cname" includes the commit, the version, or both. Components can now validate their assumptions against this ADR. The distinction between cname (feature-set only, version-independent), flavor (cname plus architecture), and versioned flavor (flavor plus version) cleanly separates what is being built from where and when.
 
 
 

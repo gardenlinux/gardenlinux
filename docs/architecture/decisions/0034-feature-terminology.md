@@ -23,7 +23,7 @@ Features are not independent: they form a **directed acyclic graph (DAG)**. Each
 - `features.include`: other features that are automatically pulled in when this feature is selected.
 - `features.exclude`: other features that are removed from the build if they were only transitively included (explicitly including an excluded feature is a hard build error).
 
-The DAG is resolved and validated at build time. For the precise mechanics of how feature content (package lists, file overlays, build time scripts such as `exec.config` and `exec.early`) is applied during the build, this ADR defers to the `gardenlinux/builder` documentation.[^1]
+For the precise mechanics of how the feature DAG is handled and how feature content (package lists, file overlays, build time scripts such as `exec.config` and `exec.early`) is applied during the build, this ADR defers to the `gardenlinux/builder` documentation.[^1]
 
 ### 2. Feature types
 
@@ -33,7 +33,7 @@ Every feature has exactly one type, declared in its `info.yaml`. The type is pri
 
 A feature of type `platform` represents a deployment target — the combination of hardware, firmware, and cloud or hypervisor environment the image is intended to run on. Examples: `aws`, `azure`, `gcp`, `kvm`, `baremetal`, `container`.
 
-In a well-formed build exactly one platform feature SHOULD be present. If zero or more than one platform feature is present after DAG resolution, the builder will by default treat this as an error. Explicitly opting in via `--allow-frankenstein` downgrades this to a warning and allows the build to continue; the resulting image is referred to as a **frankenstein image** and is not considered a supported configuration.
+In a well-formed build exactly one platform feature SHOULD be present. If zero or more than one platform feature is present, the build is ordinarily treated as invalid. Implementations may provide an explicit override that allows such builds to continue; the resulting image is referred to as a **frankenstein image** and is not considered a supported configuration.
 
 #### 2.2 `element`
 
@@ -41,7 +41,7 @@ A feature of type `element` represents a functional component or capability adde
 
 #### 2.3 `flag`
 
-A feature of type `flag` represents a lightweight modifier. Flags are distinguished by a leading underscore in their name (e.g. `_prod`, `_fips`, `_trustedboot`). They are intended for minor behavioural changes that do not warrant a full element and SHOULD NOT include other features.
+A feature of type `flag` represents a lightweight modifier. Flags are distinguished by a leading underscore in their name (e.g. `_prod`, `_fips`, `_trustedboot`). They are intended for minor behavioural changes that do not warrant a full element and MUST NOT include non-flag features.
 
 ### 3. Feature set
 
@@ -49,7 +49,7 @@ The **feature set** of a build is the complete set of features present after DAG
 
 ### 4. `GARDENLINUX_FEATURES_*` and `GARDENLINUX_PLATFORM` in `/etc/os-release`
 
-The builder exposes the resolved feature set to feature scripts via environment variables. These are written verbatim into `/etc/os-release` by `features/base/exec.config`:
+The build process writes the following keys into `/etc/os-release`:
 
 | Key | Content |
 |---|---|
@@ -68,32 +68,6 @@ The builder exposes the resolved feature set to feature scripts via environment 
 ### Benefits
 
 A shared written definition eliminates the ambiguity that has caused silent bugs (e.g. the `openstackbaremetal` regression described in [ADR 0020](0020-enforce-single-platform-by-default-in-builder.md)) and divergent implementations. All tooling can now be validated against a single reference.
-
-### Impact on individual components
-
-#### `gardenlinux/builder`
-
-No functional changes required. The builder's existing behaviour is consistent with the definitions in this ADR. Documentation in `docs/features.md` should be updated to cross-reference this ADR.
-
-#### `gardenlinux/gardenlinux`
-
-`features/base/exec.config` already implements the `GARDENLINUX_PLATFORM` / frankenstein logic correctly. `features/README.md` contains outdated content (notably listing `metal` as a platform when it is in fact an element; `baremetal` is the platform) and must be updated to match this ADR.
-
-#### `gardenlinux/python-gardenlinux-lib`
-
-This library contains a parallel implementation of the feature type system. Several adjustments are required:
-
-- The `CName.platform` property returns `platforms[0]` and falls back to a `frankenstein` constant controlled by the `GL_ALLOW_FRANKENSTEIN` environment variable. This logic duplicates `features/base/exec.config` but with different environment variable names and without being tied to the builder's `BUILDER_FEATURES_PLATFORMS` output. It should be aligned: the single-platform-or-frankenstein resolution belongs in the build layer (i.e. `exec.config`), not in a parsing library. The library should read `GARDENLINUX_PLATFORM` from release files rather than re-deriving it from the feature list.
-- The library's `Parser.filter_as_dict()` correctly separates features by type, which is consistent with this ADR and can be retained.
-- The `GL_ALLOW_FRANKENSTEIN` and `GL_ALLOW_MULTIPLE_PLATFORMS` environment variables in the library are not defined by the builder and should be removed in favour of reading the already-resolved `GARDENLINUX_PLATFORM` value from the release file.
-
-#### `gardenlinux/glci`
-
-glci uses the word `platform` to mean cloud provider (e.g. `"AWS"`, `"Azure"`). This is a distinct concept from the feature-type `platform` defined here. To avoid confusion it may be worth considering renaming glci's internal config field (e.g. to `cloud_provider` or `target`) in a future cleanup, though this is not required for correctness given that glci reads `GARDENLINUX_PLATFORM` from the manifest and that contract is defined in [ADR 0031](0031-builder-glci-interface.md).
-
-#### `gardenlinux/gardenlinux-update`
-
-No changes required. This tool reads `GARDENLINUX_PLATFORM` from `/etc/os-release` indirectly (via the OCI index annotations populated from the manifest). The meaning is consistent with this ADR.
 
 
 
