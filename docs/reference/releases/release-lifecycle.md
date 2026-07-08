@@ -69,7 +69,7 @@ Every night, a new build is triggered via the GitHub Action [Nightly Build](http
 
 Occasionally, nightly patches (like "nightly-1592.1") are released if the initial nightly build requires urgent fixes.
 
-Nightly releases contain the latest software packages and are geared toward rapid iteration for advanced users interested in cutting-edge changes. However, they are not as thoroughly maintained and tested as stable releases. Nightly releases do not include maintenance commitments and are not recommended for production environments.
+Nightly releases contain the latest software packages and are geared toward rapid iteration for advanced users interested in latest changes. However, they are not as thoroughly maintained and tested as stable releases. Nightly releases do not include maintenance commitments and are not recommended for production environments.
 
 Up to once per quarter, a nightly release is promoted to a stable release and is then supported with nine months of standard maintenance.
 
