@@ -39,7 +39,7 @@ The ISO installation process boots Garden Linux as a live system from removable 
 4. **Disk install** — Partitions the target disk, copies the root filesystem to disk, and installs the bootloader (UEFI: systemd-boot; Legacy BIOS: syslinux)
 5. **Reboot** — System reboots into the installed system from disk
 
-### Boot and Installation Flow
+### Boot and installation flow
 
 ```mermaid
 flowchart TD
@@ -79,7 +79,7 @@ flowchart TD
 ```
 
 
-## Disk Layout and Bootloader
+## Disk layout and bootloader
 
 The installation creates a GPT partition table with EFI (510 MiB, VFAT) and ROOT (remaining space, ext4) partitions. The bootloader is firmware-dependent: syslinux for Legacy BIOS, systemd-boot for UEFI.
 
@@ -89,7 +89,7 @@ For full details on the partition layout and bootloader configuration, see [Disk
 
 Before installing, build the appropriate Garden Linux ISO for your use case and write it to boot media.
 
-### Build an Interactive ISO
+### Build an interactive ISO
 
 Build a Garden Linux ISO with the [`_iso`](/reference/features/_iso) feature for interactive (manual) installation:
 
@@ -99,7 +99,7 @@ Build a Garden Linux ISO with the [`_iso`](/reference/features/_iso) feature for
 
 This generates an ISO image in `.build/` with the naming pattern `baremetal-gardener_prod_iso-amd64-<version>-<commit>.iso`.
 
-### Build an Auto-Install ISO
+### Build an auto-install ISO
 
 Build a Garden Linux ISO with the [`_autoinstall`](/reference/features/_autoinstall) feature for automatic unattended installation (includes `_iso`):
 
@@ -113,7 +113,7 @@ This generates an ISO image in `.build/` with the naming pattern `baremetal-gard
 See the how-to guide on [building images](/how-to/building-images.md) for detailed build system documentation.
 :::
 
-### Write ISO to Boot Media
+### Write ISO to boot media
 
 For physical hardware installation, write the ISO to a USB drive:
 
@@ -128,7 +128,7 @@ sync
 
 For virtual machines, attach the ISO file directly as a virtual CD-ROM — no media preparation is needed.
 
-## Interactive Installation
+## Interactive installation
 
 Interactive installation provides manual control over the target disk selection and installation process. Use this method when you need to verify the target disk or perform custom disk management.
 
@@ -139,7 +139,7 @@ Interactive installation provides manual control over the target disk selection 
 
 The system boots into a live Garden Linux environment with root auto-login on the console.
 
-### Run the Installer
+### Run the installer
 
 Log in as root (auto-login on console) and run the installation script:
 
@@ -180,11 +180,11 @@ reboot
 
 The system boots into the installed Garden Linux from disk.
 
-## Automatic Installation (Auto-Install ISO)
+## Automatic installation (auto-install ISO)
 
 Automatic installation eliminates manual interaction by detecting the first suitable block device and installing automatically on first boot. Use this method for automated deployments, VM provisioning, or testing scenarios.
 
-### How Auto-Install Works
+### How auto-install works
 
 When the ISO boots:
 
@@ -200,7 +200,7 @@ When the ISO boots:
 
 The first non-removable writable block device is selected as the installation target. For typical single-disk systems, this is `/dev/sda` or `/dev/vda` (virtio disk in VMs).
 
-### Override the Target Disk
+### Override the target disk
 
 To specify a different target disk, pass the `gl.install.target=` kernel parameter. Edit the bootloader configuration at ISO boot time:
 
@@ -216,7 +216,7 @@ To specify a different target disk, pass the `gl.install.target=` kernel paramet
 
 The `gl-autoinstall` script will use the specified device instead of auto-detecting.
 
-### Post-Installation Workflow
+### Post-installation workflow
 
 After installation completes and the system reboots:
 
@@ -225,7 +225,7 @@ After installation completes and the system reboots:
 
 This workflow enables automated unattended installation in batch provisioning scenarios.
 
-## Post-Installation
+## Post-installation
 
 After installation, the system boots directly from disk. The live boot dracut module is automatically disabled during installation.
 
@@ -243,19 +243,19 @@ For more post-installation configuration options, see the [Post-Install Configur
 
 ## Troubleshooting
 
-### System Does Not Boot from ISO
+### System does not boot from ISO
 
 - **Verify boot order** — Ensure CD-ROM or USB is set as the first boot device in BIOS/UEFI settings
 - **Check ISO integrity** — Verify the ISO file checksum matches the expected value
 - **Try different USB write method** — If using USB, try writing with different tools (`dd`, Rufus, Etcher)
 
-### Installer Does Not Detect Target Disk
+### Installer does not detect target disk
 
 - **Verify disk is visible** — Check that the target disk appears in `lsblk` output before running the installer
 - **Check disk is writable** — Ensure the disk is not read-only (check `ro` flag in `/sys/block/*/ro`)
 - **Ensure disk is separate from ISO** — The installer skips removable media to avoid installing over the ISO media itself
 
-### Installation Fails or Errors
+### Installation fails or errors
 
 - **Check disk space** — Ensure the target disk has at least 5 GiB of available space
 - **Verify filesystem support** — The installer requires ext4 and VFAT filesystem support
@@ -265,7 +265,7 @@ For more post-installation configuration options, see the [Post-Install Configur
   journalctl -u gl-autoinstall.service  # For auto-install ISOs
   ```
 
-### Auto-Install Does Not Start
+### Auto-install does not start
 
 - **Verify [`_autoinstall`](/reference/features/_autoinstall) feature is present** — Check that the ISO was built with the [`_autoinstall`](/reference/features/_autoinstall) feature
 - **Check for suitable disks** — Ensure at least one non-removable writable block device exists
@@ -275,20 +275,20 @@ For more post-installation configuration options, see the [Post-Install Configur
   journalctl -u gl-autoinstall.service
   ```
 
-### System Boots Back to ISO After Installation
+### System boots back to ISO after installation
 
 - **Remove ISO media** — Ensure the ISO media (USB drive or virtual CD-ROM) is removed or unmounted before rebooting
 - **Check boot order** — Configure BIOS/UEFI to prioritize the installed disk over removable media
 - **Verify bootloader installation** — Check installation logs for bootloader installation errors
 
-## Testing ISO Installation in QEMU
+## Testing ISO installation in QEMU
 
 The Garden Linux test framework includes built-in support for testing ISO installations using QEMU. For ISO images with the [`_autoinstall`](/reference/features/_autoinstall) feature, the test framework automatically detects this capability (via the `.requirements` file) and triggers a two-stage process:
 
 1. **Stage 1** — Boot from ISO, install to disk automatically (via `gl-autoinstall.service`), reboot
 2. **Stage 2** — Boot from installed disk, run tests on the installed system
 
-### Run Installation Tests
+### Run installation tests
 
 Test an ISO installation with:
 
@@ -312,6 +312,6 @@ The test script automatically:
 - [Boot Loader Specification](https://systemd.io/BOOT_LOADER_SPECIFICATION/)
 - [QEMU Documentation](https://www.qemu.org/documentation/)
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
