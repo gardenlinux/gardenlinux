@@ -265,13 +265,13 @@ Or via GitHub UI:
 3. Select `main` branch
 4. Set version to `MAJOR.MINOR.0`
 
-### Step 5: Update Garden Linux Documentation
+### Step 5: Update Garden Linux documentation
 
 :::info
 TODO: add steps on how to update the documentation
 :::
 
-## Phase 2: Post-Release Work
+## Phase 2: Post-release work
 
 ### Verify release completeness
 
