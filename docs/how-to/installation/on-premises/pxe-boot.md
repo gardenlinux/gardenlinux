@@ -36,14 +36,14 @@ Garden Linux supports two PXE deployment modes:
 
 Both modes support [Ignition](/how-to/installation/ignition) for first-boot configuration (users, SSH keys, files, services).
 
-### PXE Live Boot Workflow
+### PXE live boot workflow
 
 1. **Network boot via iPXE** — Client firmware loads iPXE from TFTP, which fetches the kernel, initrd, and squashfs root filesystem over HTTP
 2. **Live system** — Garden Linux runs from an OverlayFS with the squashfs image as the lower layer and tmpfs as the upper layer
 3. **Ignition configuration** (optional) — Applies first-boot configuration if configured
 4. **System ready** — Garden Linux runs from RAM; changes are ephemeral
 
-### PXE Boot + Install Workflow
+### PXE boot + install workflow
 
 1. **Network boot via iPXE** — Same as live boot: fetch kernel, initrd, and squashfs over HTTP
 2. **Live system** — Garden Linux runs from OverlayFS temporarily
@@ -51,7 +51,7 @@ Both modes support [Ignition](/how-to/installation/ignition) for first-boot conf
 4. **Installation** — Copies the live system to disk, installs the bootloader, and reboots into the installed system
 5. **Subsequent boots** — System boots directly from disk without PXE
 
-### Boot + Install Flow Diagram
+### Boot + install flow diagram
 
 ```mermaid
 flowchart TD
@@ -114,17 +114,17 @@ flowchart TD
 
 Download iPXE binaries from <https://boot.ipxe.org>.
 
-## Disk Layout and Bootloader
+## Disk layout and bootloader
 
 The installation creates a GPT partition table with EFI (510 MiB, VFAT) and ROOT (remaining space, ext4) partitions. The bootloader is firmware-dependent: syslinux for Legacy BIOS, systemd-boot for UEFI.
 
 For full details on the partition layout and bootloader configuration, see [Disk Layout and Bootloader](/how-to/installation/on-premises/disk-layout.md).
 
-## Prepare PXE Boot Artifacts
+## Prepare PXE boot artifacts
 
 Before deploying, build Garden Linux with PXE support and create the iPXE boot script.
 
-### Build PXE Images
+### Build PXE images
 
 Build a Garden Linux image with the [`_pxe`](/reference/features/_pxe) feature:
 
@@ -142,7 +142,7 @@ This generates an archive in `.build/` with the naming pattern `baremetal-garden
 tar -C .build -xf baremetal-gardener_prod_pxe-amd64-today-local.pxe.tar.gz
 ```
 
-### Build Variants for PXE
+### Build variants for PXE
 
 The [`_pxe`](/reference/features/_pxe) feature provides the core PXE boot capability (network boot with Ignition support). For disk installation, add either [`_install`](/reference/features/_install) (manual/Ignition-triggered) or [`_autoinstall`](/reference/features/_autoinstall) (automatic):
 
@@ -158,11 +158,11 @@ The [`_autoinstall`](/reference/features/_autoinstall) feature includes [`_insta
 For detailed build system documentation and building PXE images with custom features, see [Building Images](/how-to/building-images.md).
 :::
 
-### Create the iPXE Boot Script
+### Create the iPXE boot script
 
 Create an iPXE boot script that instructs iPXE to fetch the Garden Linux kernel, initramfs, and root filesystem. The kernel parameters differ depending on the deployment mode.
 
-#### Live Boot Only (No Disk Installation)
+#### Live boot only (no disk installation)
 
 For an ephemeral live boot without installing to disk:
 
@@ -191,7 +191,7 @@ ignition.config.url=${base-url}/ignition.json \
 ignition.platform.id=metal
 ```
 
-#### Boot + Install to Disk
+#### Boot + install to disk
 
 :::warning Required Feature
 Boot + install mode requires the [`_install`](/reference/features/_install) or [`_autoinstall`](/reference/features/_autoinstall) feature. If your PXE image was built without these features, the `/opt/install/install.sh` script will not be available.
@@ -226,7 +226,7 @@ This requires an Ignition configuration that triggers the built-in `/opt/install
 The `cmdline` file from the `*.pxe.tar.gz` archive contains many useful parameters and can be used as a reference when building custom boot scripts.
 :::
 
-### Kernel Parameters Explained
+### Kernel parameters explained
 
 | Parameter | Live Boot | Boot + Install | Description |
 |-----------|-----------|----------------|-------------|
@@ -242,13 +242,13 @@ The `cmdline` file from the `*.pxe.tar.gz` archive contains many useful paramete
 
 Replace `http://192.168.1.10:8080` with your HTTP server's address.
 
-## Configure First-Boot Provisioning
+## Configure first-boot provisioning
 
 Garden Linux PXE deployments use Ignition for first-boot provisioning. The [`_pxe`](/reference/features/_pxe) feature includes the [`_ignite`](/reference/features/_ignite) feature, which provides Ignition support during the initramfs stage.
 
 For [cloud platform deployments](/how-to/installation/cloud/), Garden Linux uses [cloud-init](/how-to/installation/cloud-init.md) instead. Both tools provide declarative system configuration including users, SSH keys, files, and services.
 
-### Ignition Configuration for Live Boot
+### Ignition configuration for live boot
 
 For ephemeral live boot without disk installation, create an Ignition configuration with the desired system state (users, SSH keys, services):
 
@@ -273,7 +273,7 @@ Translate the YAML to JSON using [Butane](/how-to/installation/ignition.md#trans
 
 For additional Ignition configuration examples including network configuration, package installation, and custom scripts, see [Provision with Ignition](/how-to/installation/ignition.md).
 
-### Ignition Configuration for Boot + Install
+### Ignition configuration for boot + install
 
 :::info Installation Support
 Garden Linux PXE images require the [`_install`](/reference/features/_install) or [`_autoinstall`](/reference/features/_autoinstall) feature for disk installation. The [`_pxe`](/reference/features/_pxe) feature alone provides only live boot capability.
@@ -291,7 +291,7 @@ When [`_install`](/reference/features/_install) is included, `/opt/install/insta
 The examples below show the semi-automatic approach using Ignition.
 :::
 
-#### Installation Approaches
+#### Installation approaches
 
 ##### Approach 1: Automatic Installation (Recommended for Automation)
 
@@ -367,7 +367,7 @@ passwd:
 NVMe drives use the naming pattern `/dev/nvme0n1`, `/dev/nvme1n1`, etc. Virtio disks use `/dev/vda`, `/dev/vdb`, etc. SATA/SAS drives use `/dev/sda`, `/dev/sdb`, etc. Adjust the `GL_INSTALL_TARGET` value accordingly.
 :::
 
-#### Customizing the Installation
+#### Customizing the installation
 
 The built-in installer (`/opt/install/install.sh` from the `_install` feature) uses default configurations that can be customized:
 
@@ -392,7 +392,7 @@ To customize these, you can either:
 1. Provide custom `install.part` and `install.fstab` files via Ignition
 2. Use a custom installation script served via Ignition (for advanced use cases)
 
-##### Approach 3: Manual Installation
+##### Approach 3: Manual installation
 
 For interactive installation, boot the PXE system without installation configuration, then SSH in and run:
 
@@ -402,7 +402,7 @@ For interactive installation, boot the PXE system without installation configura
 
 The script will prompt for the target disk and root password.
 
-#### Built-in Installation Features
+#### Built-in installation features
 
 :::info
 The installation script and features described below are only available when your PXE image is built with the [`_install`](/reference/features/_install) or [`_autoinstall`](/reference/features/_autoinstall) feature.
@@ -424,7 +424,7 @@ When using [`_autoinstall`](/reference/features/_autoinstall), an additional wra
 - Exports `GL_INSTALL_TARGET` and calls `install.sh`
 - Reboots into the installed system
 
-#### Translate and Deploy
+#### Translate and deploy
 
 Translate the Ignition YAML file to JSON using Butane and deploy it to your HTTP server:
 
@@ -438,9 +438,9 @@ cp ignition.json /var/www/pxe/
 
 The iPXE boot script references `ignition.json` via the `ignition.config.url=` kernel parameter.
 
-## Set Up Network Boot Infrastructure
+## Set up network boot infrastructure
 
-### Configure DHCP Server
+### Configure DHCP server
 
 Set up a DHCP server to provide PXE chainloading. Example using `dnsmasq`:
 
@@ -476,7 +476,7 @@ systemctl restart dnsmasq
 
 Replace `192.168.1.10` and other IPs to match your environment.
 
-### Configure TFTP Server
+### Configure TFTP server
 
 Set up a TFTP server to serve iPXE binaries. Example using `tftpd-hpa`:
 
@@ -493,7 +493,7 @@ curl -O https://boot.ipxe.org/ipxe.efi
 systemctl restart tftpd-hpa
 ```
 
-### Configure HTTP Server
+### Configure HTTP server
 
 Set up an HTTP server to host Garden Linux images and configuration files. Example using `nginx`:
 
@@ -534,7 +534,7 @@ systemctl reload nginx
 
 ## Boot the Target System
 
-### Live Boot Mode
+### Live boot mode
 
 1. **Configure BIOS/UEFI** — Enable network boot in the firmware settings and set network boot as the first boot device
 2. **Power on the system** — The system boots via PXE and fetches the iPXE binary from TFTP
@@ -545,7 +545,7 @@ systemctl reload nginx
 
 The system is now running in live mode. All changes are stored in tmpfs and will be lost on reboot.
 
-### Boot + Install Mode
+### Boot + install mode
 
 1. **Configure BIOS/UEFI** — Enable network boot in the firmware settings and set network boot as the first boot device
 2. **Power on the system** — The system boots via PXE and fetches the iPXE binary from TFTP
@@ -560,14 +560,14 @@ The installation typically completes in 5-10 minutes depending on network speed 
 
 ## Post-Installation
 
-### After Live Boot
+### After live boot
 
 Live boot systems run entirely from RAM. Changes are ephemeral and lost on reboot or shutdown. To persist configuration:
 
 - **Switch to boot + install mode** — Reboot with an iPXE boot script configured for installation (see [Boot + Install to Disk](#boot-install-to-disk))
 - **Manual installation** — Log into the live system and manually partition, format, and install to disk
 
-### After Boot + Install
+### After boot + install
 
 After installation, the system boots directly from disk without PXE. The dracut module responsible for live booting is disabled, and the installation tools remain available in `/opt/install/` for reference.
 
@@ -580,7 +580,7 @@ System configuration tasks:
 
 ## Troubleshooting
 
-### System Does Not Boot via PXE
+### System does not boot via PXE
 
 - **Verify network boot is enabled** — Check BIOS/UEFI settings
 - **Check DHCP responses** — Use `tcpdump` on the DHCP server to verify PXE DHCP responses:
@@ -593,7 +593,7 @@ System configuration tasks:
   get undionly.kpxe
   ```
 
-### iPXE Fails to Download Files
+### iPXE fails to download files
 
 - **Check HTTP server logs** — Verify requests are reaching the server:
   ```bash
@@ -606,7 +606,7 @@ System configuration tasks:
   ```
 - **Verify file permissions** — Ensure files are readable by the web server
 
-### Ignition Configuration Not Applied
+### Ignition configuration not applied
 
 - **Check Ignition logs** — After booting the live system, check Ignition journal entries:
   ```bash
@@ -619,7 +619,7 @@ System configuration tasks:
   ```
 - **Verify ignition.config.url is reachable** — Ensure the URL in `boot.ipxe` is correct and accessible from the target system
 
-### Installation Fails or Does Not Start
+### Installation fails or does not start
 
 **For `_autoinstall` images:**
 - **Check gl-autoinstall.service logs**:
@@ -647,16 +647,16 @@ System configuration tasks:
   GL_INSTALL_TARGET=/dev/sda /opt/install/install.sh
   ```
 
-### System Boots Back to PXE After Installation
+### System boots back to PXE after installation
 
 - **UEFI boot order not updated** — The installation should update the UEFI boot order. If it does not, manually set the disk as the first boot device in firmware settings
 - **Bootloader installation failed** — Check installation logs for bootloader errors
 
-## Testing PXE Boot in QEMU
+## Testing PXE boot in QEMU
 
 The Garden Linux test framework supports testing PXE boot scenarios using QEMU. This is useful for validating PXE installations without physical hardware or a full network boot infrastructure.
 
-### Test PXE Live Boot
+### Test PXE live boot
 
 Test a PXE archive in live boot mode (no installation):
 
@@ -717,6 +717,6 @@ This workflow allows testing the complete PXE boot + installation process withou
 - [systemd-boot Documentation](https://www.freedesktop.org/software/systemd/man/latest/systemd-boot.html)
 - [Syslinux Documentation](https://wiki.syslinux.org/)
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
