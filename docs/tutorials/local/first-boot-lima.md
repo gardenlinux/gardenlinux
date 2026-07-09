@@ -153,6 +153,6 @@ limactl stop gardenlinux
 limactl delete gardenlinux
 ```
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

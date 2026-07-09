@@ -294,6 +294,6 @@ openstack image delete gardenlinux-tutorial
 rm ${USER_DATA} ${KEY_NAME} ${KEY_NAME}.pub ${GL_QCOW2} ${GL_TAR_XZ}
 ```
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

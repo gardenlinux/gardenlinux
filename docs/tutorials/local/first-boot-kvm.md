@@ -307,6 +307,6 @@ rm -f "$FW_CFG_SCRIPT" "$UEFI_VARS_TMP" "$GL_IMAGE"
 rm -rf "$SSH_KEY_DIR"
 ```
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

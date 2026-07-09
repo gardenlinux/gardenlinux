@@ -324,6 +324,6 @@ test -n ${BUCKET} && gcloud storage rm --recursive gs://${BUCKET} --quiet
 rm ${USER_DATA} ${KEY_NAME} ${KEY_NAME}.pub
 ```
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
