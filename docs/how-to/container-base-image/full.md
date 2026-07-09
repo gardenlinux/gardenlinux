@@ -37,7 +37,7 @@ This guide uses `podman` commands throughout. If you use Docker, replace `podman
 
 Choose a version by [looking at the Garden Linux Container Image Reference](/reference/container-images.md#full-container-images).
 
-## Basic Containerfile Example
+## Basic Containerfile example
 
 Use the full Garden Linux container as a base for applications that need a standard Linux environment:
 
@@ -59,7 +59,7 @@ EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
-## Installing Additional Packages
+## Installing additional packages
 
 The full container image includes `apt`, allowing you to install packages at build time:
 
@@ -75,10 +75,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 Always include `rm -rf /var/lib/apt/lists/*` at the end of `apt-get` commands to reduce image size.
 :::
 
-## Further Reading
+## Further reading
 
 - [unbase_oci GitHub Repository](https://github.com/gardenlinux/unbase_oci) — Tool for creating bare container images
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
