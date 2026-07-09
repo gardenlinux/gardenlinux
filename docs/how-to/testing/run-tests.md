@@ -48,11 +48,11 @@ The main entry point is `./test` in the Garden Linux root directory (symlink to 
 Use `./test --help` to see all available options and examples.
 :::
 
-## Test Environments
+## Test environments
 
 Garden Linux supports testing in multiple environments, each with different characteristics:
 
-### Chroot Testing
+### Chroot testing
 
 Runs tests directly in the extracted image filesystem.
 
@@ -69,7 +69,7 @@ Runs tests directly in the extracted image filesystem.
 ./test .build/image.tar
 ```
 
-### QEMU Testing
+### QEMU testing
 
 Boots the image in a local QEMU virtual machine.
 
@@ -96,7 +96,7 @@ Boots the image in a local QEMU virtual machine.
 ./test --ssh --skip-cleanup .build/image.raw
 ```
 
-### Cloud Testing
+### Cloud testing
 
 Deploys the image to cloud infrastructure using OpenTofu.
 
@@ -128,7 +128,7 @@ Deploys the image to cloud infrastructure using OpenTofu.
 
 See [Test in Cloud](test-in-cloud.md) for detailed cloud provider setup and authentication.
 
-### OCI Testing
+### OCI testing
 
 Runs tests in containers based on a Base Image.
 
@@ -145,7 +145,7 @@ Runs tests in containers based on a Base Image.
 ./test .build/container-amd64-today-local.oci
 ```
 
-### Kubernetes Cluster Testing
+### Kubernetes cluster testing
 
 The test framework can run directly on a live Gardener cluster (or any Kubernetes cluster running Garden Linux nodes).
 
@@ -191,9 +191,9 @@ args:
 The `ghcr.io/gardenlinux/test:nightly` container is built and published daily to provide the most up-to-date variant of the test framework. Per-release variants will be available in future releases.
 :::
 
-## Common Command-Line Options
+## Common command-line options
 
-### General Options
+### General options
 
 **`--help`**
 : Show help message and exit.
@@ -268,6 +268,6 @@ Spin up an existing cloud image using image requirements file:
   ami-07f977508ed36098e
 ```
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
