@@ -243,7 +243,7 @@ Set up infrastructure without running tests:
 ./test --cloud aws --skip-tests --skip-cleanup .build/image.raw
 ```
 
-### Planning Infrastructure Changes
+### Planning infrastructure changes
 
 See what resources would be created:
 
@@ -308,7 +308,7 @@ If authentication fails, verify:
 3. Required permissions are granted
 4. CLI tools are installed and configured
 
-### Resource Cleanup Failures
+### Resource cleanup failures
 
 If cleanup fails:
 
