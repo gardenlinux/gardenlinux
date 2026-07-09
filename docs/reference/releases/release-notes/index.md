@@ -19,6 +19,6 @@ Garden Linux release notes sourced from GitHub. Select a version below to view i
 
 <SectionIndex />
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

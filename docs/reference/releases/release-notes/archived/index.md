@@ -17,6 +17,6 @@ These releases have reached end of maintenance and are no longer actively suppor
 
 <SectionIndex />
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

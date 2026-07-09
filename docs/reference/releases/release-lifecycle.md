@@ -88,6 +88,6 @@ To ensure common understanding, the key terms used throughout this document are 
 - **Extended maintenance**: The six-month window following the end of standard maintenance
 - **End of maintenance**: The date on which the extended maintenance ends and the release enters an unsupported state
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

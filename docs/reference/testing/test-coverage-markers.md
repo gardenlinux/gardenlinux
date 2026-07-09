@@ -538,6 +538,6 @@ The test coverage marker system is based on:
 - [ADR-0032: Static Coverage Analysis](/reference/adr/0032-static-feature-test-coverage-analysis) - Primary decision for marker system
 - [ADR-0013: Discontinue Musthave Tests](/reference/adr/0013-discontinue-packages-musthave-tests) - Version-independent testing approach
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

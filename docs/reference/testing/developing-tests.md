@@ -816,6 +816,6 @@ Key decisions that guide test development:
 - [Pytest Documentation](https://docs.pytest.org/)
 - [Python Testing Best Practices](https://docs.python.org/3/library/unittest.html)
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

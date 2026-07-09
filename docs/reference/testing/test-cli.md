@@ -424,6 +424,6 @@ The test runner returns standard pytest exit codes:
 - `4` - pytest command-line usage error
 - `5` - No tests were collected
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
