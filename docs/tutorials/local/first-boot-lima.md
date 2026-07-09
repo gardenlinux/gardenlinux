@@ -53,7 +53,7 @@ brew install lima podman
 
 :::
 
-## What You'll Build
+## What you'll build
 
 You'll launch a Garden Linux virtual machine using Lima with a single command, open a shell into the VM, and verify the installation. Lima handles all QEMU configuration, SSH setup, and user provisioning automatically — no manual configuration scripts are needed.
 
@@ -138,7 +138,7 @@ VERSION="${GL_VERSION}"
 
 ## Success Criteria
 
-You have successfully completed this tutorial when:
+This tutorial is complete when:
 
 - Your Garden Linux virtual machine is running under Lima
 - You can open a shell via `limactl shell gardenlinux`

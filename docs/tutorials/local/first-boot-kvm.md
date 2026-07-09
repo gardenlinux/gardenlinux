@@ -45,7 +45,7 @@ sudo apt install qemu-system-arm qemu-efi-aarch64
 
 :::
 
-## What You'll Build
+## What you'll build
 
 You'll launch a Garden Linux virtual machine using plain QEMU commands with environment variables for configuration. The tutorial covers downloading a disk image for your architecture (amd64 or arm64), creating a configuration script for first-boot setup (including SSH access), and verifying the installation.
 
@@ -288,7 +288,7 @@ VERSION="${GL_VERSION}"
 
 ## Success Criteria
 
-You have successfully completed this tutorial when:
+This tutorial is complete when:
 
 - Your Garden Linux virtual machine is running
 - You can connect via SSH on the forwarded port

@@ -56,7 +56,7 @@ podman machine start
 This tutorial uses `podman` commands throughout. If you use Docker, replace `podman` with `docker` — the commands are interchangeable.
 :::
 
-## What You'll Build
+## What you'll build
 
 You'll pull a Garden Linux OCI image from the GitHub Container Registry and run an interactive container. No infrastructure setup, SSH configuration, or disk images are required — a single command gets you a running Garden Linux environment.
 
@@ -173,7 +173,7 @@ apt install <package-name>
 
 ## Success Criteria
 
-You have successfully completed this tutorial when:
+This tutorial is complete when:
 
 - You can pull the Garden Linux OCI image from the GitHub Container Registry
 - You can start an interactive container session

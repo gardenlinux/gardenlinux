@@ -51,7 +51,7 @@ Recommended live systems include:
 Both include the required tools and network support.
 :::
 
-## What You'll Build
+## What you'll build
 
 You'll write a Garden Linux `.raw` disk image to your server's boot drive using `dd` from a live system, configure SSH access for remote administration, and boot into the installed system. The tutorial uses the `baremetal-gardener_prod` [flavor](/explanation/flavors), which includes the standard kernel and physical hardware support required for bare metal deployment.
 
@@ -253,7 +253,7 @@ VERSION="${GL_VERSION}"
 
 ## Success Criteria
 
-You have successfully completed this tutorial when:
+This tutorial is complete when:
 
 - Garden Linux is running on your bare metal server
 - You can connect via SSH

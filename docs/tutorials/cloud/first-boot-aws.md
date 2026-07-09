@@ -32,7 +32,7 @@ Before starting, you'll need:
 - Basic familiarity with EC2 concepts
 - An SSH client on your local machine
 
-## What You'll Build
+## What you'll build
 
 You'll deploy a Garden Linux instance on AWS EC2 with a basic networking setup (VPC, subnet, internet gateway, and security group), configure SSH access, and verify the installation. The tutorial uses the `aws-gardener_prod` [flavor](/explanation/flavors), which is optimized for gardener production workloads on AWS.
 
@@ -351,7 +351,7 @@ VERSION="${GL_VERSION}"
 
 ## Success Criteria
 
-You have successfully completed this tutorial when:
+This tutorial is complete when:
 
 - Your Garden Linux instance is running on AWS
 - You can connect via SSH
