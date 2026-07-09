@@ -41,7 +41,7 @@ Choose the approach based on your needs: inspect framework behavior, investigate
 
 Enable debug-level logging to see detailed information about plugin operations, system interactions, and test execution flow.
 
-### Enable Debug Logging
+### Enable debug logging
 
 Enable debug logging for all components:
 
@@ -128,7 +128,7 @@ Cloud VMs use the SSH user and Internet Protocol (IP) address from the OpenTofu 
 3. Investigate the system state, check logs, or run tests manually
 4. Re-run tests without `--skip-cleanup` or use `--only-cleanup` to clean up resources when done
 
-## Dev Mode (Rapid Iteration)
+## Dev mode (rapid iteration)
 
 Use the `--dev` flag to quickly iterate on tests with automatic file synchronization and re-execution.
 
@@ -208,9 +208,9 @@ The `--dev` flag works the same way in chroot environments:
 ./test --dev .build/image.tar
 ```
 
-## Common Debugging Scenarios
+## Common debugging scenarios
 
-### Test Fails Unexpectedly
+### Test fails unexpectedly
 
 1. Enable debug logging to see what is happening:
 
@@ -229,7 +229,7 @@ The `--dev` flag works the same way in chroot environments:
    ./test --dev --test-args "test_failing.py -v" .build/image.raw
    ```
 
-### Test Passes Locally But Fails in Continuous Integration (CI)
+### Test passes locally but fails in Continuous Integration (CI)
 
 1. Test in the same environment as CI (cloud testing):
 
@@ -262,7 +262,7 @@ The `--dev` flag works the same way in chroot environments:
    ls -la /etc/
    ```
 
-### Test Takes Too Long to Run
+### Test takes too long to run
 
 1. Run only the specific test:
 
@@ -292,7 +292,7 @@ If you cannot connect to a VM:
 - Verify VM is still running
 - Check firewall rules for cloud VMs
 
-### File Synchronization Issues in Dev Mode
+### File synchronization issues in dev mode
 
 If changes are not synced in dev mode:
 
@@ -309,7 +309,7 @@ If tests fail with permission errors:
 - Use `sudo` when running tests manually if needed
 - Verify file permissions in the test environment
 
-### Test Environment Differences
+### Test environment differences
 
 If tests behave differently across environments:
 
