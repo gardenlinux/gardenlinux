@@ -26,13 +26,13 @@ github_target_path: docs/how-to/releases/os-releases.md
 
 This guide explains how to create Garden Linux major and minor OS releases.
 
-## Release Hierarchy
+## Release hierarchy
 
 Garden Linux uses a [three-tier release hierarchy](/explanation/release-hierarchy.md) to deliver a complete operating system.
 
 This document is about the third tier, the [OS Releases](/explanation/os-releases) - where abstract package definitions become concrete, deployable operating system images distributed to end users.
 
-## Understanding OS Releases
+## Understanding OS releases
 
 Please read the [OS Releases Explanation](/explanation/os-releases.md) to get familiar with the concepts for the Releases.
 
@@ -45,7 +45,7 @@ Before creating an OS release, ensure you have:
 
 ## Phase 0: Preparation
 
-### Step 1: Assessment of Current State
+### Step 1: Assessment of current state
 
 Verify that the system is ready for a release. This means all tests pass and there are no blockers for the next major release in the release workflows. Also assessing possible backports is important.
 
@@ -62,11 +62,11 @@ Verify that the system is ready for a release. This means all tests pass and the
 - Are there any critical or highly-rated issues that need to be addressed?
 - Have recent CVEs been assessed for impact?
 
-### Step 2: Check previous Tiers
+### Step 2: Check previous tiers
 
 Be sure to have complete [Packaging](/how-to/packaging/) and [Created a APT Repository](/how-to/releases/apt-repos) before proceeding.
 
-## Phase 1: Creating the Release
+## Phase 1: Creating the release
 
 ### Step 1: Build Garden Linux OS
 
@@ -154,7 +154,7 @@ gh workflow run nightly.yml \
 - Verify all build jobs complete successfully
 - Check that artifacts are published
 
-### Step 2: Create GitHub Release
+### Step 2: Create GitHub release
 
 After the build completes, create the official GitHub release page:
 
@@ -242,7 +242,7 @@ git push -u origin rel-2150
 
 This branch is used for creating future minor releases of the APT repository.
 
-### Step 4: Generate CPE File
+### Step 4: Generate CPE file
 
 Generate the Common Platform Enumeration (CPE) file for the new release:
 
@@ -273,19 +273,19 @@ TODO: add steps on how to update the documentation
 
 ## Phase 2: Post-Release Work
 
-### Verify Release Completeness
+### Verify release completeness
 
 - Verify the GitHub release page is complete and accurate
 - Check that all expected artifacts are attached to the release
 - Confirm the CPE file was generated and uploaded
 - Test installation using the new release
 
-### Notify Stakeholders
+### Notify stakeholders
 
 - Notify relevant teams about the new release
 - Gardener OS Extension Team
 - Update any documentation referencing supported versions
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
