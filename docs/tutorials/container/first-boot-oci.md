@@ -191,6 +191,6 @@ exit
 podman rmi "${GL_IMAGE}"
 ```
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

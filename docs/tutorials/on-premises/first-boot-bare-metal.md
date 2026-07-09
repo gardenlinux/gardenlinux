@@ -289,6 +289,6 @@ For large-scale bare-metal lifecycle management, consider the [IronCore Project]
 - Hardware inventory and monitoring
 - Fleet-wide orchestration
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

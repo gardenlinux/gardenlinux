@@ -381,6 +381,6 @@ az group delete \
 rm ${USER_DATA} ${KEY_NAME} ${KEY_NAME}.pub
 ```
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
