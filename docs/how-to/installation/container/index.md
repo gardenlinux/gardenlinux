@@ -28,6 +28,6 @@ For a complete step-by-step first-boot tutorial, see:
 
 :::
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

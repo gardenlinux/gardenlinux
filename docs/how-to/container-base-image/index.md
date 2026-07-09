@@ -26,10 +26,10 @@ Garden Linux provides two families of [Open Container Initiative (OCI)](https://
 
 [Have a look at the detailed explanation](/explanation/container-base-image.md).
 
-## Further Reading
+## Further reading
 
 - [unbase_oci GitHub Repository](https://github.com/gardenlinux/unbase_oci) — Tool for creating bare container images
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

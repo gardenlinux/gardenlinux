@@ -30,6 +30,6 @@ For complete step-by-step first-boot tutorials, see:
 
 <SectionIndex />
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
