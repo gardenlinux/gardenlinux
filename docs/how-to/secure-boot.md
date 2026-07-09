@@ -99,7 +99,7 @@ Where setup mode is not available (e.g. some cloud providers require keys at
 instance creation time), use external enrollment as described in the
 provider-specific sections below.
 
-## Verifying Secure Boot Status
+## Verifying Secure Boot status
 
 On any running Garden Linux instance, verify that Secure Boot is active:
 
@@ -129,7 +129,7 @@ For [`_trustedboot`](/reference/features/_trustedboot) images, the
 `check-secureboot` initrd service enforces this: if Secure Boot is not active,
 the system halts before reaching userspace.
 
-## Building Secure Boot Images
+## Building Secure Boot images
 
 Generate the signing certificates before building:
 
@@ -245,6 +245,6 @@ The exact Secure Boot enforcement depends on your OpenStack deployment and
 the hypervisor configuration. Consult your OpenStack administrator for the
 supported Secure Boot modes and UEFI variable handling in your environment.
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
