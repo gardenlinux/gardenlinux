@@ -144,7 +144,7 @@ gcloud compute images create ${IMAGE_NAME} \
  --guest-os-features=VIRTIO_SCSI_MULTIQUEUE
 ```
 
-#### Build Your Own Images
+#### Build your own images
 
 You can [Build your own Garden Linux Images](/how-to/building-images) or even [Create a custom Feature](/how-to/custom-feature).
 

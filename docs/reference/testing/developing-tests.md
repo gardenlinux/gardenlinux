@@ -595,7 +595,7 @@ TODO: Explain what this marker is good for.
 
 When developing or maintaining tests, you'll often need to debug failing tests or understand test framework behavior.
 
-### Adding Debug Logging
+### Adding debug logging
 
 Tests, plugins, and handlers can output additional debugging information using Python's logging framework. This is the primary way to provide visibility into what your code is doing:
 
@@ -700,7 +700,7 @@ You can stop watch mode at any time with `Ctrl+C`.
 
 The `--dev` flag will work the same as [in the VM Setup](#debugging-tests-in-a-booted-vm).
 
-## Python Best Practices
+## Python best practices
 
 ### Code Style and CI Enforcement
 
@@ -789,7 +789,7 @@ from .systemd import Systemd, SystemdUnit
 
 See `tests/util/requirements.txt` for current dependencies. Each dependency should be justified.
 
-### Adding New Dependencies
+### Adding new dependencies
 
 When adding new dependencies:
 
@@ -798,7 +798,7 @@ When adding new dependencies:
 3. **Consider alternatives** - Are there lighter alternatives?
 4. **Update requirements.txt** - Pin package versions in `tests/util/requirements.txt`
 
-## Related Architecture Decisions
+## Related architecture decisions
 
 Key decisions that guide test development:
 

@@ -90,7 +90,7 @@ GL_ARCH="arm64"
 For a complete list of maintained releases and their support lifecycle, see the [releases reference](/reference/releases/).
 :::
 
-#### Build Your Own Images
+#### Build your own images
 
 You can [Build your own Garden Linux Images](/how-to/building-images) or even [Create a custom Feature](/how-to/custom-feature).
 
