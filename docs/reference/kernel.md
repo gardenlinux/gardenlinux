@@ -51,12 +51,12 @@ Debian scans licenses and patches out everything
 that violates the claim to stay 100% free. Since Garden Linux shares this
 approach, we benefit from Debian patches.
 
-Additionally, Debian provides a good kernel configuration,
+Debian also provides a good kernel configuration,
 which is used by Garden Linux as a base for configuration.
 We extend this kernel configuration to our specific requirements during the
 kernel integration process.
 
-Furthermore, Debian kernel [patches](https://salsa.debian.org/kernel-team/linux/-/tree/master/debian/patches) are applied in most cases.
+Debian kernel [patches](https://salsa.debian.org/kernel-team/linux/-/tree/master/debian/patches) are applied in most cases.
 
 ## Kernel flavours
 
