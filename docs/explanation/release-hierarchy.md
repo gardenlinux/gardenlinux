@@ -99,6 +99,6 @@ flowchart TD
     class C1,C2 output
 ```
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

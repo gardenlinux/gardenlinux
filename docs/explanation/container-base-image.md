@@ -94,10 +94,10 @@ When using Garden Linux container base images:
 
 By understanding the conceptual differences between Garden Linux's container image offerings, you can make informed decisions that optimize your containerized applications for size, security, and operational efficiency.
 
-## Further Reading
+## Further reading
 
 - [unbase_oci GitHub Repository](https://github.com/gardenlinux/unbase_oci) — Tool for creating bare container images
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

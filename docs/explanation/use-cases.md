@@ -232,6 +232,6 @@ For a step-by-step guide on choosing the right flavor, see
 flavors including FIPS, USI, and Trusted Boot variants, see the
 [Flavor Matrix](/reference/flavor-matrix).
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
