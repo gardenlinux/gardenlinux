@@ -33,7 +33,7 @@ Before starting, you'll need:
 - Basic familiarity with GCP concepts
 - An SSH client on your local machine
 
-## What You'll Build
+## What you'll build
 
 You'll deploy a Garden Linux instance on GCP Compute Engine with a basic networking setup (VPC network, subnet, firewall rules, and static external IP), configure SSH access, and verify the installation. The tutorial uses the `gardener_prod` [flavor](/explanation/flavors), which is optimized for production workloads.
 
@@ -288,7 +288,7 @@ VERSION="${GL_VERSION}"
 
 ## Success Criteria
 
-You have successfully completed this tutorial when:
+This tutorial is complete when:
 
 - Your Garden Linux instance is running on GCP
 - You can connect via SSH

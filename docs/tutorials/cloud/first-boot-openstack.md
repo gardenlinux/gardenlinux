@@ -33,7 +33,7 @@ Before starting, you'll need:
 - Knowledge of your OpenStack environment's external/public network name and available flavors
 - An SSH client on your local machine
 
-## What You'll Build
+## What you'll build
 
 You'll upload a Garden Linux image to your OpenStack Glance service, deploy an instance with a basic networking setup (network, subnet, router, security group, and floating IP), configure SSH access, and verify the installation. The tutorial uses the `gardener_prod` [flavor](/explanation/flavors), which is optimized for production workloads.
 
@@ -253,7 +253,7 @@ VERSION="${GL_VERSION}"
 
 ## Success Criteria
 
-You have successfully completed this tutorial when:
+This tutorial is complete when:
 
 - Your Garden Linux instance is running on OpenStack
 - You can connect via SSH

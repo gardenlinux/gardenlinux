@@ -32,7 +32,7 @@ Before starting, you'll need:
 - Basic familiarity with Azure concepts
 - An SSH client on your local machine
 
-## What You'll Build
+## What you'll build
 
 You'll deploy a Garden Linux instance on Azure with a basic networking setup (resource group, virtual network, subnet, and network security group), configure SSH access, and verify the installation. The tutorial uses the `azure-gardener_prod` [flavor](/explanation/flavors), which is optimized for gardener production workloads on Azure.
 
@@ -361,7 +361,7 @@ VERSION="${GL_VERSION}"
 
 ## Success Criteria
 
-You have successfully completed this tutorial when:
+This tutorial is complete when:
 
 - Your Garden Linux instance is running on Azure
 - You can connect via SSH
