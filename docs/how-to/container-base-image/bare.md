@@ -65,7 +65,7 @@ COPY hello.py /
 CMD [ "python3", "/hello.py" ]
 ```
 
-#### Adding Python Dependencies
+#### Adding Python dependencies
 
 Since `bare-python` lacks `pip`, use a multi-stage build with the `container-python-dev` image to install dependencies, then copy them into the bare image:
 
@@ -114,12 +114,12 @@ COPY --from=compile /test.jar /
 CMD [ "java", "-jar", "/test.jar" ]
 ```
 
-## Debug a Bare Container
+## Debug a bare container
 
 If a setup works in the normal container, but fails in the corresponding bare container, debugging the problem can get challenging, as the [unbase_oci tool](/explanation/container-base-image.md#the-unbase-oci-tool) removes basic binaries like `sh`.
 By following the steps in this section, you can regain the basic functionalities without rebuilding the image.
 
-### Step 1: Pull and Mount the Image
+### Step 1: Pull and mount the image
 
 As the first step, we want to mount the bare image to a debian installation. As mounting does not automatically pull the image, we pull it manually:
 
@@ -132,7 +132,7 @@ podman run --rm -it \
 
 You are now in a Debian shell with the bare image accessible at `/mnt`.
 
-### Step 2: Enter the Bare Image
+### Step 2: Enter the bare image
 
 Run commands inside the bare image using `chroot`:
 
@@ -156,7 +156,7 @@ Now you can spawn a shell:
 chroot /mnt toybox sh
 ```
 
-### Step 4: Analyze Image Size
+### Step 4: Analyze image size
 
 Bare images may unexpectedly grow. To find the cause of the issue, we can install tools to the debian container and use them on the `/mnt` folder.
 
@@ -200,10 +200,10 @@ dust -n 32 -w 64 -r /mnt
 
 This shows which directories consume the most space, helping identify unnecessary files.
 
-## Further Reading
+## Further reading
 
 - [unbase_oci GitHub Repository](https://github.com/gardenlinux/unbase_oci) — Tool for creating bare container images
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
