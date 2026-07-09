@@ -59,6 +59,6 @@ These tools configure users, SSH keys, network settings, files, and systemd serv
 
 <SectionIndex />
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

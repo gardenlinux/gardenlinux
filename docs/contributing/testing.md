@@ -59,6 +59,6 @@ The Garden Linux test framework is built on several architectural decisions:
 
 For more details, see [Test Framework Architecture](/explanation/testing/test-framework-architecture.md#related-architecture-decisions).
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

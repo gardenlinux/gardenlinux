@@ -22,6 +22,6 @@ github_target_path: docs/how-to/testing/index.md
 
 <SectionIndex />
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

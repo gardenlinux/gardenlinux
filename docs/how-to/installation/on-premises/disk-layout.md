@@ -72,7 +72,7 @@ The systemd-boot configuration includes console output to both serial (`ttyS0` f
 
 The identical disk layout for both firmware types allows migrating an installation between Legacy BIOS and UEFI systems by re-running the appropriate bootloader installation script on the target system.
 
-## Related Topics
+## Related topics
 
 - [Boot Modes](/explanation/boot-modes.md) — Technical background on BIOS and UEFI boot processes
 - [Install Using ISO](/how-to/installation/on-premises/iso.md) — ISO installation guide

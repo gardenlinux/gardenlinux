@@ -31,7 +31,7 @@ After installation, follow one or more of these post-installation steps to compl
 
 - [Creating A User Using the `fwcfg`-script for LIMA Deployments](/how-to/installation/post-install.md#method-2-fwcfg-script-kvmqemu)
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
 

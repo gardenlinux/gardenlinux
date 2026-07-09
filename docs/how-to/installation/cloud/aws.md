@@ -29,7 +29,7 @@ After installation, follow one or more of these post-installation steps to compl
 
 - [Creating a User Account using `cloud-init`](/how-to/installation/post-install.md#method-3-cloud-init-user-data-cloud-platforms)
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
 

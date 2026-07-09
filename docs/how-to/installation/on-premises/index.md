@@ -39,6 +39,6 @@ Garden Linux on-premises images require building with appropriate features (`_is
 
 <SectionIndex />
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
