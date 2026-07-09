@@ -91,7 +91,7 @@ for the rationale and the opt-in override flag.
 
 ## The publication pipeline
 
-The flavor system not only defines what to build, but also manages the journey from development to production through the build/test/publish triad.
+The flavor system defines what to build and manages the journey from development to production through the build/test/publish triad.
 
 ### Selective publication
 
@@ -164,7 +164,7 @@ The `gl-flavors-parse` command-line tool parses [`flavors.yaml`](/reference/flav
 gl-flavors-parse --publish --json-by-arch
 ```
 
-This parsing step transforms the static configuration into a dynamic build plan.
+This parsing step transforms the static configuration into a build plan.
 
 ## Related topics
 
