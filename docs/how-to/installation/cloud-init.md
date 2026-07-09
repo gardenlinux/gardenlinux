@@ -21,11 +21,11 @@ github_target_path: docs/how-to/installation/cloud-init.md
 
 # Provision with cloud-init
 
-cloud-init is the industry-standard multi-distribution method for cross-platform cloud instance initialization. Garden Linux uses cloud-init on all major cloud platforms (AWS, Azure, GCP, OpenStack) for first-boot provisioning and configuration.
+cloud-init is a multi-distribution method for cross-platform cloud instance initialization. Garden Linux uses cloud-init on all major cloud platforms (AWS, Azure, GCP, OpenStack) for first-boot provisioning and configuration.
 
 ## What is cloud-init?
 
-[cloud-init](https://cloud-init.io/) is a widely-adopted provisioning tool that automates the initialization of cloud instances. It runs on every boot (not just first boot) and performs tasks including:
+[cloud-init](https://cloud-init.io/) is a widely-adopted provisioning tool that automates the initialization of cloud instances. It runs on every boot, not on first boot only, and performs tasks including:
 
 - Creating users and groups
 - Adding SSH authorized keys
