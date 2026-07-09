@@ -68,7 +68,7 @@ The following principles guide all test development in Garden Linux:
 
 #### 6. Use abstractions judiciously to hide implementation details
 
-- Leverage plugins for infrastructure concerns (parsing files, accessing data, establishing connections)
+- Use plugins for infrastructure concerns (parsing files, accessing data, establishing connections)
 - Use handlers for setup/teardown operations
 - Keep test logic visible and maintain Arrange-Act-Assert structure
 - Avoid over-abstraction that requires reading multiple plugins to understand a test
