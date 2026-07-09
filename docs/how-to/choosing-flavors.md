@@ -38,7 +38,7 @@ background on how flavors work, see [Flavors](/explanation/flavors). For the
 complete list of all published flavors, see the
 [Flavor Matrix](/reference/flavor-matrix).
 
-## Step 1: Identify Your Use Case
+## Step 1: Identify your use case
 
 Determine which of the primary Garden Linux use cases matches your workload.
 Each use case maps to a specific feature set.
@@ -56,7 +56,7 @@ If no existing use case matches, you can compose a custom flavor. See
 [Building Images](/how-to/building-images) for instructions.
 :::
 
-## Step 2: Determine Your Target Platform
+## Step 2: Determine your target platform
 
 The platform identifies the hardware or cloud environment where the image runs.
 Choose the platform that corresponds to your infrastructure.
@@ -83,7 +83,7 @@ for the rationale and opt-in override.
 For the full list of platform targets and their YAML schema, see
 [Flavors Reference](/reference/flavors).
 
-## Step 3: Select additional Features
+## Step 3: Select additional features
 
 You can extend the use case and platform specific features with additional features. The most common features are listed below.
 
@@ -97,7 +97,7 @@ You can extend the use case and platform specific features with additional featu
 | [`_tpm2`](/reference/features/_tpm2)               | TPM 2.0 sealed disk encryption for `/var`, bound to the Secure Boot certificate chain (see [Boot Modes: Mutable Data](/explanation/boot-modes#mutable-data-modes))    |
 
 
-## Step 4: Look Up the Flavor Name
+## Step 4: Look up the flavor name
 
 Once you have a platform and feature set, look up the exact flavor name and
 confirm it is published.
@@ -123,7 +123,7 @@ If you do not find pre-built existing images for your use case, you can compose 
 :::
 
 
-## Example: Choosing a Gardener Flavor on AWS
+## Example: Choosing a Gardener flavor on AWS
 
 The following walkthrough illustrates all four steps for a common scenario, an AWS Gardener node.
 
@@ -135,6 +135,6 @@ The following walkthrough illustrates all four steps for a common scenario, an A
 To obtain the image for this [flavor](/explanation/flavors), see
 [Getting Images](/how-to/getting-images).
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
