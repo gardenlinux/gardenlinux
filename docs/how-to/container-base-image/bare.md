@@ -140,7 +140,7 @@ Run commands inside the bare image using `chroot`:
 chroot /mnt <command>
 ```
 
-### Step 3: Install Basic Utilities
+### Step 3: Install basic utilities
 
 To spawn a shell inside the bare image, install [toybox](https://landley.net/toybox/), which provides many CLI utilities in a single binary:
 
