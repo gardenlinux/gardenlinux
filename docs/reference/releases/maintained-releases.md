@@ -26,4 +26,4 @@ The table below provides the current list of actively maintained Garden Linux re
 All data is sourced from [GLRD](/reference/supporting_tools/glrd)
 :::
 
-## Active Releases
+## Active releases

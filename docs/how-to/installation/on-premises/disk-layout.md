@@ -16,7 +16,7 @@ github_target_path: docs/how-to/installation/on-premises/disk-layout.md
 
 Garden Linux on-premises installations (ISO and PXE boot) use a standardized GPT partition layout with firmware-specific bootloader configuration. This page describes the partition scheme and bootloader installation for both Legacy BIOS and UEFI systems.
 
-## Partition Layout
+## Partition layout
 
 The installation creates a GPT partition table with two partitions:
 
@@ -30,7 +30,7 @@ This layout supports both Legacy BIOS and UEFI firmware using the same partition
 - **Legacy BIOS** — Stores syslinux bootloader stages (stage 2 and higher)
 - **UEFI** — Stores systemd-boot bootloader and kernel images
 
-### Root Partition Type GUIDs
+### Root partition type GUIDs
 
 Garden Linux uses architecture-specific root partition GUIDs from the [Discoverable Partitions Specification](https://uapi-group.org/specifications/specs/discoverable_partitions_specification/). This enables automatic root partition discovery by systemd without requiring `root=` kernel parameters or `/etc/fstab` entries.
 
@@ -43,7 +43,7 @@ Garden Linux uses architecture-specific root partition GUIDs from the [Discovera
 The generic Linux filesystem GUID (`0FC63DAF-8483-4772-8E79-3D69D8477DE4`) should not be used for root partitions as it disables automatic discovery features.
 :::
 
-## Bootloader Installation
+## Bootloader installation
 
 The installation script detects the firmware type and installs the appropriate bootloader automatically.
 
@@ -68,7 +68,7 @@ UKI images can be signed for Secure Boot support.
 
 The systemd-boot configuration includes console output to both serial (`ttyS0` for ISO, `ttyS1` for PXE) and VGA (`tty0`).
 
-## Firmware Migration
+## Firmware migration
 
 The identical disk layout for both firmware types allows migrating an installation between Legacy BIOS and UEFI systems by re-running the appropriate bootloader installation script on the target system.
 

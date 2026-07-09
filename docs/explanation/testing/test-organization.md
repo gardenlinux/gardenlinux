@@ -25,7 +25,7 @@ github_target_path: "docs/explanation/testing/test-organization.md"
 
 This page explains how Garden Linux tests are organized, structured, and named to improve maintainability and discoverability.
 
-## Test Categorization
+## Test categorization
 
 All test files are placed into `tests/integration/{category}`. The following tree structure shows how tests are organized by functional area:
 
@@ -40,7 +40,7 @@ tests/integration/
     └── compliance/          # Compliance tests (CIS, FIPS, STIG, FedRAMP)
 ```
 
-### Purpose of Categorization
+### Purpose of categorization
 
 The purpose of categorizing tests is to improve maintainability and discoverability, following [ADR-0008](/reference/adr/0008-unified-and-declarative-test-logic.md). By grouping related tests together, developers can more easily:
 
@@ -51,7 +51,7 @@ The purpose of categorizing tests is to improve maintainability and discoverabil
 
 These categories are subject to change as new tests are added and the test suite evolves.
 
-### Category Descriptions
+### Category descriptions
 
 **boot/** - Tests related to system boot processes:
 
@@ -98,7 +98,7 @@ These categories are subject to change as new tests are added and the test suite
 - Capabilities and permissions
 - Compliance frameworks (CIS, Federal Information Processing Standard (FIPS), Security Technical Implementation Guide (STIG), Federal Risk and Authorization Management Program (FedRAMP))
 
-## File Naming Convention
+## File naming convention
 
 Test files follow the pattern `test_*.py` and should be named based on the functionality they test:
 
@@ -110,7 +110,7 @@ Test files follow the pattern `test_*.py` and should be named based on the funct
 
 The filename should clearly indicate what aspect of the system is being tested.
 
-## Test Function Naming
+## Test function naming
 
 Test functions should clearly describe what they verify by naming them accordingly and providing a useful comment:
 
@@ -125,7 +125,7 @@ def test_startup_time(systemd: Systemd):
     """Test that system startup time is within acceptable limits."""
 ```
 
-### Naming Guidelines
+### Naming guidelines
 
 - Use descriptive names that explain what breaks if the test fails
 - Start with `test_` (pytest requirement)
@@ -133,7 +133,7 @@ def test_startup_time(systemd: Systemd):
 - Be specific about what is being tested
 - Include a docstring that explains the test purpose
 
-## Feature-Based Organization
+## Feature-based organization
 
 Tests are organized by functionality rather than Garden Linux features. However, feature-specific tests use the `@pytest.mark.feature` marker to limit execution:
 
@@ -147,7 +147,7 @@ def test_ssh_service_running(systemd: Systemd, service_ssh):
 Tests are not strictly tied to features in the `features` folder. Use `@pytest.mark.feature()` if you need a test condition related to a feature.
 :::
 
-## Test Discovery
+## Test discovery
 
 Pytest automatically discovers and runs tests based on naming conventions:
 
@@ -157,7 +157,7 @@ Pytest automatically discovers and runs tests based on naming conventions:
 
 The framework follows these conventions to ensure consistent test discovery across all environments.
 
-## Organization Principles
+## Organization principles
 
 The test organization follows these principles:
 
@@ -167,7 +167,7 @@ The test organization follows these principles:
 4. **Flexible Structure** - Categories can evolve as new tests are added
 5. **Discovery-Friendly** - Naming conventions support automatic test discovery
 
-## Evolution and Maintenance
+## Evolution and maintenance
 
 The test organization is not fixed. As the test suite grows:
 
@@ -178,7 +178,7 @@ The test organization is not fixed. As the test suite grows:
 
 The goal is always to make tests easy to find and understand.
 
-## Related Architecture Decisions
+## Related architecture decisions
 
 Test organization is guided by:
 

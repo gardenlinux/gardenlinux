@@ -43,7 +43,7 @@ These are USI images with all optional security features enabled. See
 | In-place updates           | Yes      | No     |
 | TPM 2.0 disk encryption    | Optional | No     |
 
-## Legacy Boot Mode
+## Legacy boot mode
 
 Legacy boot mode uses a standard partition layout with a boot partition (used
 by both syslinux for BIOS boot and systemd-boot for UEFI boot) and an ext4
@@ -92,7 +92,7 @@ USI is UEFI-only and is a prerequisite for Secure Boot and Trusted Boot.
 
 The [`_usi`](/reference/features/_usi) feature selects this boot mode.
 
-### Mutable Data Modes
+### Mutable data modes
 
 While an immutable root filesystem provides strong security guarantees, most
 systems require writable state. Garden Linux mounts `/var` as writable, and

@@ -21,7 +21,7 @@ editLink: false
 
 The following tables lists all Garden Linux OCI Container Images.
 
-## Full Container Images
+## Full container images
 
 Garden Linux publishes two image streams for full Container Images to the GitHub Container Registry:
 
@@ -47,7 +47,7 @@ GL_IMAGE="ghcr.io/gardenlinux/nightly:latest"
 For a complete list of maintained releases and their support lifecycle, see the [releases reference](/reference/releases/index.md).
 :::
 
-## Bare Container Images
+## Bare container images
 
 Garden Linux offers a range of specialized bare container images, each tailored for specific applications and designed for minimalism and security.
 
@@ -61,7 +61,7 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
 | `bare-nodejs`     | Node.js runtime — for JavaScript applications                     | `ghcr.io/gardenlinux/gardenlinux/bare-nodejs:<version>`     |
 | `bare-sapmachine` | SAPMachine JDK (Java Development Kit) — for Java/SAP applications | `ghcr.io/gardenlinux/gardenlinux/bare-sapmachine:<version>` |
 
-### Unbase OCI Tool
+### Unbase OCI tool
 
 The `unbase_oci` tool is instrumental in the development of these "bare" container images.
 

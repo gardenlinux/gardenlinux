@@ -24,4 +24,4 @@ The table below lists releases that have reached their end of maintenance and ar
 All data is sourced from [GLRD](/reference/supporting_tools/glrd)
 :::
 
-## Out of Maintenance Releases
+## Out of maintenance releases
