@@ -45,11 +45,11 @@ For cloud platform deployments (AWS, Azure, GCP, OpenStack), use [cloud-init](/h
 - Garden Linux build with the `_ignite` feature (automatically included with `_pxe`)
 - [Butane](https://github.com/coreos/butane) (optional but recommended, for translating YAML to JSON)
 
-## Configuration Format and Basic Structure
+## Configuration format and basic structure
 
 Ignition configurations are written in JSON format. For improved readability, write configurations in YAML using the [Butane](https://github.com/coreos/butane) translator, which converts YAML to the JSON format Ignition requires.
 
-### Basic Structure (YAML with Butane)
+### Basic structure (YAML with Butane)
 
 Create a basic Ignition configuration in YAML format:
 
@@ -88,9 +88,9 @@ Translate the YAML configuration to JSON:
 
 The `--strict` flag reports warnings as errors, ensuring configuration correctness.
 
-## Common Provisioning Tasks
+## Common provisioning tasks
 
-### Create Users
+### Create users
 
 Add a user with passwordless sudo access:
 
@@ -106,7 +106,7 @@ passwd:
 
 The `wheel` group provides passwordless sudo access in Garden Linux.
 
-### Add SSH Authorized Keys
+### Add SSH authorized keys
 
 Add SSH public keys for user authentication:
 
@@ -122,7 +122,7 @@ passwd:
         - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExamplePublicKeyHere user@host
 ```
 
-### Configure Networking
+### Configure networking
 
 Configure a static IP address using systemd-networkd:
 
@@ -145,7 +145,7 @@ storage:
           DNS=9.9.9.9
 ```
 
-### Install Packages
+### Install packages
 
 Create a systemd unit that runs once to install additional packages:
 
@@ -177,7 +177,7 @@ systemd:
 
 Garden Linux mounts `/usr` read-only by default. Remount it read-write before installing packages, then remount read-only afterward.
 
-### Enable and Start Services
+### Enable and start services
 
 Enable systemd services on first boot:
 
@@ -205,7 +205,7 @@ systemd:
         WantedBy=multi-user.target
 ```
 
-### Write Configuration Files
+### Write configuration files
 
 Write custom configuration files to disk:
 
@@ -230,7 +230,7 @@ storage:
             port: 5432
 ```
 
-### Run Custom Scripts
+### Run custom scripts
 
 Create a systemd unit that runs a custom script on first boot:
 
@@ -288,7 +288,7 @@ How you deliver the Ignition configuration depends on the deployment method:
 | **Bare Metal (Pre-install)** | Inject the configuration into the disk image before first boot |
 | **VM Testing** | Use firmware configuration (`fw_cfg`) or attach as a volume |
 
-### PXE Boot Example
+### PXE boot example
 
 In your iPXE boot script, specify the Ignition configuration URL:
 
@@ -304,9 +304,9 @@ initrd ${base-url}/rootfs.initrd
 boot
 ```
 
-## Advanced Configuration
+## Advanced configuration
 
-### Partition and Format Disks
+### Partition and format disks
 
 Define custom partition layouts and filesystems:
 
@@ -337,7 +337,7 @@ This configuration is used by the Garden Linux PXE installation script to partit
 The ROOT partition type uses the x86-64 root partition GUID (`4f68bce3-e8cd-4db1-96e7-fbcaf984b709`) from the [Discoverable Partitions Specification](https://uapi-group.org/specifications/specs/discoverable_partitions_specification/). For ARM64 systems, use `b921b045-1df0-41c3-af44-4c6f280d3fae`.
 :::
 
-### Merge Multiple Configurations
+### Merge multiple configurations
 
 Split complex configurations into multiple files using the `merge` directive:
 
@@ -361,7 +361,7 @@ storage:
 
 Ignition fetches and merges the referenced configurations during first boot.
 
-### Ignition Platforms
+### Ignition platforms
 
 Ignition uses the `ignition.platform.id=` kernel parameter to identify the platform and determine where to fetch configuration:
 
@@ -375,7 +375,7 @@ For Garden Linux PXE deployments, use `ignition.platform.id=metal`.
 
 ## Troubleshooting
 
-### View Ignition Logs
+### View Ignition logs
 
 If Ignition fails during first boot, check the journal for error messages:
 
@@ -385,7 +385,7 @@ journalctl -u ignition-disks.service
 journalctl -u ignition-files.service
 ```
 
-### Validate Configuration Syntax
+### Validate configuration syntax
 
 Use Butane to validate your YAML configuration before translating to JSON:
 
@@ -395,7 +395,7 @@ Use Butane to validate your YAML configuration before translating to JSON:
 
 If the configuration is valid, Butane outputs nothing. Errors are reported to stderr.
 
-### Common Errors
+### Common errors
 
 - **Configuration not fetched** — Verify the URL specified in `ignition.config.url=` is reachable from the target system
 - **Files not written** — Ensure file paths are absolute and parent directories exist
@@ -409,6 +409,6 @@ If the configuration is valid, Butane outputs nothing. Errors are reported to st
 - [Butane Documentation](https://coreos.github.io/butane/)
 - [Butane Configuration Specification](https://coreos.github.io/butane/config-fcos-v1_5/)
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
