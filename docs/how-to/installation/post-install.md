@@ -24,7 +24,7 @@ related_topics:
   - /tutorials/cloud/first-boot-openstack.md
 ---
 
-## Creating A User
+## Creating a user
 
 Garden Linux installations do not create a default user on installation. This is due to the specific use cases it was designed for not requiring a user.
 
@@ -38,7 +38,7 @@ These tools configure users, SSH keys, files, and services on first boot without
 
 If you would still like to create a new user account manually, follow the instructions below.
 
-### When Is Manual User Creation Required?
+### When is manual user creation required?
 
 Manual user creation is necessary when automated provisioning tools are unavailable:
 
@@ -58,7 +58,7 @@ Platform-specific tutorials:
 - [First Boot on GCP](/tutorials/cloud/first-boot-gcp.md)
 - [First Boot on OpenStack](/tutorials/cloud/first-boot-openstack.md)
 
-### Method 1: `chroot` (For Bare Metal / Offline Deployments)
+### Method 1: `chroot` (for bare metal / offline deployments)
 
 Use this method when you have **direct access** to the disk (e.g., from a live
 system before first boot).
