@@ -104,6 +104,6 @@ available.
 - [kernel.org LTS releases](https://www.kernel.org/category/releases.html)
 - [Debian kernel patches](https://salsa.debian.org/kernel-team/linux/-/tree/master/debian/patches)
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

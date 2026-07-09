@@ -22,6 +22,6 @@ This section provides information about Garden Linux releases, including the rel
 
 <SectionIndex />
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

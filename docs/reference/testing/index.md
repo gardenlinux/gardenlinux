@@ -23,6 +23,6 @@ github_target_path: docs/reference/testing/index.md
 
 <SectionIndex />
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

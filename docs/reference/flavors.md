@@ -125,6 +125,6 @@ The `gl-flavors-parse` command-line tool parses flavors.yaml and generates filte
 gl-flavors-parse --publish --json-by-arch
 ```
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
