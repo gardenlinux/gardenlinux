@@ -90,7 +90,7 @@ tar -xf "${GL_TAR_XZ}" "${GL_RAW}"
 For a complete list of maintained releases and their support lifecycle, see the [releases reference](/reference/releases/).
 :::
 
-#### Build Your Own Images
+#### Build your own images
 
 You can [Build your own Garden Linux Images](/how-to/building-images) or even [Create a custom Feature](/how-to/custom-feature).
 
@@ -259,7 +259,7 @@ You have successfully completed this tutorial when:
 - You can connect via SSH
 - You can verify the Garden Linux version using `cat /etc/os-release`
 
-## Advanced Provisioning Methods
+## Advanced provisioning methods
 
 Beyond the `dd`-based installation shown in this tutorial, Garden Linux supports additional bare-metal provisioning workflows:
 

@@ -173,7 +173,7 @@ AMI_ID=$(aws ec2 register-image \
     --output text)
 ```
 
-#### Build Your Own Images
+#### Build your own images
 
 You can [Build your own Garden Linux Images](/how-to/building-images) or even [Create a custom Feature](/how-to/custom-feature).
 

@@ -531,7 +531,7 @@ def test_cron_permissions(client):
         assert result.stdout.strip() == "700"
 ```
 
-## Related Architecture Decisions
+## Related architecture decisions
 
 The test coverage marker system is based on:
 
