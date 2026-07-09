@@ -44,6 +44,6 @@ Lookup the [ADR 0011: Garden Linux versioning](/reference/adr/0011-garden-linux-
 Older Garden Linux versions (before 2016) used a different versioning scheme (e.g., `1443.2`, `1592.5`). The documentation covers both schemes where relevant.
 :::
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

@@ -145,6 +145,6 @@ enrollment steps.
 The handling of Secure Boot signing keys in the release pipeline is described
 in [ADR 0005](/reference/adr/0005-secure-boot-keys-glci).
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

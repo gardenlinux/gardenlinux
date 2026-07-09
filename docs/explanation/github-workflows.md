@@ -481,6 +481,6 @@ The key artifacts and their producers/consumers are:
 | `flavor-version-data` | [`build.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/build.yml) (upload_flavor_version_data job) | [`download_workflow_data.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/download_workflow_data.yml), [`test_report.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/test_report.yml) |
 | `{chroot,qemu,cloud,oci}-test-{cname}` | `test_flavor_*.yml` | [`test_report.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/test_report.yml) |
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

@@ -222,6 +222,6 @@ The test framework architecture is based on several key decisions:
 - [ADR-0016: Minimal Host Dependencies](/reference/adr/0016-minimal-host-dependencies-for-test-ng.md) - Reducing host requirements
 - [ADR-0022: System State Diffing](/reference/adr/0022-test-ng-system-state-diffing.md) - Detecting system modifications
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

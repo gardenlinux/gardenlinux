@@ -185,6 +185,6 @@ Test organization is guided by:
 - [ADR-0008: Unified Test Logic](/reference/adr/0008-unified-and-declarative-test-logic.md) - Declarative test organization
 - [ADR-0010: Incremental Migration](/reference/adr/0010-incremental-migration-and-coexistence-of-tests.md) - Migration and coexistence strategy
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

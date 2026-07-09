@@ -166,6 +166,6 @@ gl-flavors-parse --publish --json-by-arch
 
 This parsing step transforms the static configuration into a dynamic build plan.
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

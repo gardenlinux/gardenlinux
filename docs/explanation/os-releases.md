@@ -241,6 +241,6 @@ Manual download]
 
 This flow ensures consistency between what is defined, built, tested, and distributed.
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />

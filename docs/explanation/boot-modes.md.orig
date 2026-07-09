@@ -43,7 +43,7 @@ These are USI images with all optional security features enabled. See
 | In-place updates           | Yes      | No     |
 | TPM 2.0 disk encryption    | Optional | No     |
 
-## Legacy boot mode
+## Legacy Boot Mode
 
 Legacy boot mode uses a standard partition layout with a boot partition (used
 by both syslinux for BIOS boot and systemd-boot for UEFI boot) and an ext4
@@ -85,14 +85,18 @@ of the initrd. It no longer needs to detect devices or disks; instead, the job
 of the initrd is now only to loop mount the embedded EROFS and pass control
 to it.
 
+<<<<<<< HEAD
 ![USI disk layout showing the EFI partition containing the UKI with embedded EROFS rootfs, and the separate var partition](.media/usi_disk_layout.svg#light-mode-only)
 ![USI disk layout showing the EFI partition containing the UKI with embedded EROFS rootfs, and the separate var partition](.media/usi_disk_layout_dark.svg#dark-mode-only)
+=======
+![USI disk layout showing the EFI partition containing the UKI with embedded EROFS rootfs, and the separate var partition](assets/usi_disk_layout.svg)
+>>>>>>> f535027fb (fix: docs: correct asset paths)
 
 USI is UEFI-only and is a prerequisite for Secure Boot and Trusted Boot.
 
 The [`_usi`](/reference/features/_usi) feature selects this boot mode.
 
-### Mutable data modes
+### Mutable Data Modes
 
 While an immutable root filesystem provides strong security guarantees, most
 systems require writable state. Garden Linux mounts `/var` as writable, and
@@ -125,8 +129,12 @@ Three modes of operation are available for the `/var` partition:
 The following diagram shows the systemd unit dependency chain during a USI
 boot:
 
+<<<<<<< HEAD
 ![USI systemd boot dependency chain](.media/usi_systemd_dependency_chain.svg#light-mode-only)
 ![USI systemd boot dependency chain](.media/usi_systemd_dependency_chain_dark.svg#dark-mode-only)
+=======
+![USI systemd boot dependency chain](assets/usi_systemd_dependency_chain.svg)
+>>>>>>> f535027fb (fix: docs: correct asset paths)
 
 ## Secure Boot and Trusted Boot
 
@@ -139,6 +147,6 @@ dependencies, see [Secure Boot and Trusted Boot](/explanation/secure-boot).
 For cloud-provider deployment steps, see
 [Deploying Secure Boot Images](/how-to/secure-boot).
 
-## Related topics
+## Related Topics
 
 <RelatedTopics />
