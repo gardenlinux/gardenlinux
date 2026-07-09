@@ -43,7 +43,7 @@ Each release contains:
 - A "Published Images" section listing cloud-native references (AMI IDs,
   Community Gallery URNs, GCP image names) where applicable
 
-### Downloading from GitHub Releases
+### Downloading from GitHub releases
 
 Use the following script as a starting point for any platform. Set
 `GL_FLAVOR` to the [flavor](/explanation/flavors) name — look it up in the
@@ -72,7 +72,7 @@ For a complete list of maintained releases and their support lifecycle, see the
 [releases reference](/reference/releases/).
 :::
 
-### Image Formats by Platform
+### Image formats by platform
 
 Each platform target produces a different image format:
 
@@ -86,7 +86,7 @@ Each platform target produces a different image format:
 | [`baremetal`](/reference/features/baremetal) | Raw disk image    | `.raw`             |
 | [`vmware`](/reference/features/vmware)       | Raw disk image    | `.raw`             |
 
-### Platform-Specific Tutorials
+### Platform-specific tutorials
 
 For complete step-by-step instructions on downloading and deploying images,
 including cloud infrastructure setup and first-boot configuration, see:
@@ -104,7 +104,7 @@ including cloud infrastructure setup and first-boot configuration, see:
 - [First Boot on Bare Metal](/tutorials/on-premises/first-boot-bare-metal) —
   download and write to disk with `dd`
 
-## Cloud Provider Marketplaces
+## Cloud provider marketplaces
 
 :::warning
 [Publishing official Garden Linux images in cloud provider marketplaces](https://github.com/gardenlinux/gardenlinux/issues/4592)
@@ -124,7 +124,7 @@ section of each release on the
 | [`azure`](/reference/features/azure) | Azure Community Gallery   | `/CommunityGalleries/gardenlinux-<uuid>/Images/<flavor>/Versions/<version>` |
 | [`gcp`](/reference/features/gcp)     | Shared GCP project        | `projects/sap-se-gcp-gardenlinux/global/images/<image-name>`                |
 
-## Container Images
+## Container images
 
 Garden Linux OCI container images are published to the
 [GitHub Container Registry](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux).
@@ -148,7 +148,7 @@ For distroless (`bare-*`) variants, see the
 For a complete walkthrough, see
 [First Boot as OCI Image](/tutorials/container/first-boot-oci).
 
-## Build Your Own Images
+## Build your own images
 
 If no pre-built [flavor](/explanation/flavors) matches your requirements, or
 you need a custom feature combination, build your own image:
@@ -158,6 +158,6 @@ you need a custom feature combination, build your own image:
 - [Create a custom Feature](/how-to/custom-feature) — extend Garden Linux
   with your own features
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
