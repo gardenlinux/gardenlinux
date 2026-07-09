@@ -59,7 +59,7 @@ Enable debug logging for a specific test:
 Tests need to implement debug output. Results may vary depending on the test.
 :::
 
-### Debug Output in Tests
+### Debug output in tests
 
 For information on adding debug output to tests, see [Developing Tests](/reference/testing/developing-tests#debugging-tests).
 
@@ -132,7 +132,7 @@ Cloud VMs use the SSH user and Internet Protocol (IP) address from the OpenTofu 
 
 Use the `--dev` flag to quickly iterate on tests with automatic file synchronization and re-execution.
 
-### QEMU Dev Mode
+### QEMU dev mode
 
 Start a QEMU VM in dev mode:
 
@@ -162,7 +162,7 @@ Stop watch mode at any time with `Ctrl+C`.
 `--dev` is shorthand for `--ssh --skip-cleanup --skip-tests --watch`.
 :::
 
-### Cloud Dev Mode
+### Cloud dev mode
 
 Start a cloud VM in dev mode:
 
@@ -200,7 +200,7 @@ Stop watch mode at any time with `Ctrl+C`.
 `--dev` is shorthand for `--skip-cleanup --skip-tests --watch` in cloud mode.
 :::
 
-### Chroot Dev Mode
+### Chroot dev mode
 
 The `--dev` flag works the same way in chroot environments:
 
@@ -241,7 +241,7 @@ The `--dev` flag works the same way in chroot environments:
 
 3. Enable debug logging in CI by modifying test arguments
 
-### Need to Inspect System State
+### Need to inspect system state
 
 1. Start VM with cleanup disabled:
 
@@ -281,9 +281,9 @@ The `--dev` flag works the same way in chroot environments:
    ./test --test-args "-m 'not slow'" .build/image.raw
    ```
 
-## Troubleshooting Tips
+## Troubleshooting tips
 
-### Connection Issues
+### Connection issues
 
 If you cannot connect to a VM:
 
@@ -301,7 +301,7 @@ If changes are not synced in dev mode:
 - Verify `inotify-tools` is installed
 - Look for errors in the watch mode output
 
-### Permission Issues
+### Permission issues
 
 If tests fail with permission errors:
 
@@ -317,6 +317,6 @@ If tests behave differently across environments:
 - Verify the test is appropriate for the environment
 - Check for environment-specific configurations
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
