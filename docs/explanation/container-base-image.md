@@ -86,7 +86,7 @@ The unbase_oci process results in images that contain exactly what an applicatio
 When using Garden Linux container base images:
 
 - Match the image variant to your application's language/runtime requirements
-- Leverage multi-stage builds when using bare images to handle build-time dependencies
+- Use multi-stage builds when using bare images to handle build-time dependencies
 - Regularly update to newer image versions to include security patches
 - Consider your deployment context: development vs. production environments may warrant different image choices
 - Consult the [Container Images reference](/reference/container-images.md) for specific image variants and tags
