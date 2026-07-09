@@ -48,7 +48,7 @@ If you plan to provision cloud resources, the cloud provider-specific Command-Li
 - `aliyun` - Alibaba Cloud Command-Line Interface
 - `openstack-clients` - OpenStack Command-Line Interface
 
-## Install on Debian-Based Systems
+## Install on Debian-based systems
 
 Install the core dependencies:
 
@@ -87,7 +87,7 @@ Install cloud provider CLIs (optional):
 brew install azure-cli awscli gcloud-cli aliyun-cli openstackclient
 ```
 
-## Verify Installation
+## Verify installation
 
 After installation, verify that the core tools are available:
 
@@ -105,7 +105,7 @@ make --version
 jq --version
 ```
 
-## Next Steps
+## Next steps
 
 Once the environment is set up:
 
@@ -113,6 +113,6 @@ Once the environment is set up:
 2. **Run tests**: Follow the [Run Tests](run-tests.md) guide
 3. **Troubleshoot issues**: See [Debug Tests](debug-tests.md) if you encounter problems
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
