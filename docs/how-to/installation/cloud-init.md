@@ -48,7 +48,7 @@ For bare-metal and PXE deployments, use [Ignition](/how-to/installation/ignition
 - Garden Linux cloud platform image (aws, azure, gcp, openstack, vmware flavors automatically include cloud-init)
 - Access to the cloud platform's user-data mechanism (varies by platform)
 
-## Configuration Format and Basic Structure
+## Configuration format and basic structure
 
 cloud-init supports two user-data formats: cloud-config (YAML) and shell scripts.
 
@@ -63,7 +63,7 @@ write_files: []
 runcmd: []
 ```
 
-### Shell Scripts (Shebang Format)
+### Shell scripts (shebang format)
 
 Start with a shebang (`#!/usr/bin/env bash`). cloud-init executes the script directly:
 
@@ -75,9 +75,9 @@ echo "Hello from Garden Linux" > /etc/motd
 
 Use shell scripts for simple tasks and procedural logic. Use cloud-config for declarative user and file management.
 
-## Common Provisioning Tasks
+## Common provisioning tasks
 
-### Create Users
+### Create users
 
 Add a new user with passwordless sudo access:
 
@@ -92,7 +92,7 @@ users:
 
 The `wheel` group provides passwordless sudo access in Garden Linux.
 
-### Add SSH Authorized Keys
+### Add SSH authorized keys
 
 Add SSH public keys for user authentication:
 
@@ -107,7 +107,7 @@ users:
       - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExamplePublicKeyHere user@host
 ```
 
-### Configure Networking
+### Configure networking
 
 Configure a static IP address using systemd-networkd:
 
@@ -131,7 +131,7 @@ runcmd:
 
 Most cloud platforms handle networking automatically via DHCP and metadata services. Use custom network configuration only when required.
 
-### Install Packages
+### Install packages
 
 Install additional software packages on first boot:
 
@@ -157,7 +157,7 @@ apt-get install -y htop vim curl
 mount -o remount,ro /usr
 ```
 
-### Enable and Start Services
+### Enable and start services
 
 Enable and start systemd units:
 
@@ -194,7 +194,7 @@ runcmd:
   - systemctl enable --now my-app
 ```
 
-### Write Configuration Files
+### Write configuration files
 
 Write custom configuration files to disk:
 
@@ -215,7 +215,7 @@ write_files:
     permissions: '0600'
 ```
 
-### Run Custom Scripts
+### Run custom scripts
 
 Execute custom shell scripts during instance initialization:
 
@@ -283,7 +283,7 @@ For step-by-step deployment walkthroughs including instance creation with user-d
 - [First Boot on GCP](/tutorials/cloud/first-boot-gcp.md)
 - [First Boot on OpenStack](/tutorials/cloud/first-boot-openstack.md)
 
-### Default Usernames per Platform
+### Default usernames per platform
 
 Garden Linux cloud images include a platform-specific default user:
 
@@ -296,9 +296,9 @@ Garden Linux cloud images include a platform-specific default user:
 
 These users are pre-configured with SSH key access via the cloud platform's metadata service. You only need to enable SSH to access them.
 
-## Advanced Configuration
+## Advanced configuration
 
-### Multi-Part MIME User-Data
+### Multi-part MIME user-data
 
 Combine multiple user-data formats (cloud-config + shell script):
 
@@ -326,7 +326,7 @@ combined.attach(MIMEText(shell_script, 'x-shellscript'))
 print(combined.as_string())
 ```
 
-### Conditional Execution
+### Conditional execution
 
 Run commands only on specific platforms:
 
@@ -336,7 +336,7 @@ runcmd:
   - [ sh, -c, 'if [ "$(cloud-init query platform)" = "aws" ]; then echo "Running on AWS"; fi' ]
 ```
 
-### Fetch External Configuration
+### Fetch external configuration
 
 Download and apply configuration from external sources:
 
@@ -349,7 +349,7 @@ runcmd:
 
 ## Troubleshooting
 
-### View cloud-init Logs
+### View cloud-init logs
 
 Check cloud-init execution logs:
 
@@ -365,7 +365,7 @@ cat /var/log/cloud-init.log
 cat /var/log/cloud-init-output.log
 ```
 
-### Validate Configuration Syntax
+### Validate configuration syntax
 
 Test cloud-config syntax before deploying:
 
@@ -377,7 +377,7 @@ cloud-init schema --config-file user_data.yaml
 cloud-init devel schema --config-file user_data.yaml
 ```
 
-### Common Errors
+### Common errors
 
 - **SSH not enabled** — Ensure user-data includes `systemctl enable --now ssh`
 - **User not created** — Verify cloud-config YAML syntax and check `/var/log/cloud-init.log`
@@ -395,6 +395,6 @@ cloud-init devel schema --config-file user_data.yaml
 - [GCP cloud-init](https://cloud.google.com/container-optimized-os/docs/how-to/create-configure-instance#use-cloud-init)
 - [OpenStack User Data](https://docs.openstack.org/nova/queens/user/user-data.html)
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
