@@ -27,7 +27,7 @@ github_target_path: "docs/reference/testing/test-coverage-markers.md"
 
 This guide explains how to create and use test coverage markers for establishing traceability between Garden Linux features and tests, as defined in [ADR-0032](/reference/adr/0032-static-feature-test-coverage-analysis). The following sections detail the tooling, marker syntax, categories and placement guidelines.
 
-## Coverage.py and Test Coverage Analysis
+## Coverage.py and test coverage analysis
 
 **Tool Location:** [`tests/util/coverage.py`](https://github.com/gardenlinux/gardenlinux/tree/main/tests/util/coverage.py)
 
@@ -37,7 +37,7 @@ This guide explains how to create and use test coverage markers for establishing
 
 These markers follow a specific format (`GL-TESTCOV-$feature-$category-$description` - see [Marker Schema](#marker-schema) for details) that enables automated parsing and analysis. The tool scans both feature definitions and test files to establish traceability between what's configured and what's tested.
 
-### Key Capabilities
+### Key capabilities
 
 1. **Static Coverage Analysis**
    - Analyzes test coverage markers in features without running tests
@@ -55,7 +55,7 @@ These markers follow a specific format (`GL-TESTCOV-$feature-$category-$descript
    - Enables audit trail for compliance requirements
    - Supports version-independent testing strategies
 
-### How It Works
+### How it works
 
 **Step 1: Feature Scanning**
 
@@ -82,7 +82,7 @@ These markers follow a specific format (`GL-TESTCOV-$feature-$category-$descript
 - Highlights gaps in test coverage
 - Provides actionable insights for improving test coverage
 
-### Usage Example
+### Usage example
 
 ```bash
 # Generate coverage report
@@ -141,7 +141,7 @@ _fips:
 ✓ JUnit XML report written to: tests/coverage_report.xml
 ```
 
-### Integration with Development Workflow
+### Integration with development workflow
 
 1. **During Feature Development**
    - Add test coverage markers to new features (see [When to Create Markers](#when-to-create-markers) for guidelines)
@@ -161,7 +161,7 @@ _fips:
    - Block PRs that reduce test coverage
    - Generate audit reports for compliance tracking
 
-## Marker Schema
+## Marker schema
 
 All test coverage markers follow this format:
 
@@ -186,7 +186,7 @@ GL-TESTCOV-server-service-systemd-timesyncd-enable
 GL-TESTCOV-cisOS-config-crontab-permissions
 ```
 
-## Category Reference
+## Category reference
 
 Garden Linux uses **four main categories** for tes coverage markers:
 
@@ -288,7 +288,7 @@ Garden Linux uses **four main categories** for tes coverage markers:
 - `GL-TESTCOV-aws-script-clocksource-setup` - AWS clocksource setup script
 - `GL-TESTCOV-cloud-script-profile-autologout` - Auto-logout profile script
 
-## Special Patterns
+## Special patterns
 
 ### Overview: `-no-` vs `-disable`
 
@@ -306,7 +306,7 @@ Markers use two distinct patterns to indicate negation, each with a specific sem
 3. **Different Reversibility**: Removed items need reinstallation, disabled items can be re-enabled
 4. **Clear Intent**: Makes it obvious whether something is missing or just turned off
 
-### The `-no-` Pattern (Absence/Removal)
+### The `-no-` pattern (absence/removal)
 
 **Meaning:** Indicates something **does not exist** or was **completely removed**
 
@@ -332,7 +332,7 @@ Markers use two distinct patterns to indicate negation, each with a specific sem
 - ✅ Ensure security-sensitive files are actually removed
 - ✅ Confirm features are not present (stronger guarantee than disabled)
 
-### The `-disable` Pattern (Deactivation)
+### The `-disable` pattern (deactivation)
 
 **Meaning:** Indicates something **exists but is turned off** or **deactivated**
 
@@ -356,7 +356,7 @@ Markers use two distinct patterns to indicate negation, each with a specific sem
 - ✅ Ensure features are turned off in configuration
 - ✅ Confirm functionality is deactivated (but can be re-enabled if needed)
 
-## When to Create Markers
+## When to create markers
 
 ### ✅ DO Create Markers For:
 
@@ -402,7 +402,7 @@ If a package in `pkg.include` installs an important service, it makes sense to a
 
 **Why:** These are build-time operations that cannot fail silently - build failures catch them.
 
-## Where to Place Markers
+## Where to place markers
 
 ### Features
 

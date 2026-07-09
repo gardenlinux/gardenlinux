@@ -20,7 +20,7 @@ github_target_path: docs/explanation/flavors.md
 
 # Flavors
 
-## What Are Flavors?
+## What are flavors?
 
 Garden Linux's flavor system solves a fundamental challenge: how to create dozens of specialized operating system images for different platforms, architectures, and use cases without creating a maintainability nightmare. At its core, a flavor is not a standalone definition, but a **composition** of smaller, reusable components called features.
 
@@ -39,11 +39,11 @@ The combinatorial explosion of possibilities would be impossible to manage if ea
 
 This compositional approach allows Garden Linux to generate many unique flavor variants from the simple YAML definitions in [`flavors.yaml`](/reference/flavors.md).
 
-## The Composition Philosophy
+## The composition philosophy
 
 The flavor system embodies Garden Linux's customizable design philosophy. Instead of creating separate, hand-crafted images for each use case, we compose images from standardized building blocks.
 
-### Feature-Based Design
+### Feature-based design
 
 Features are the primary building blocks. -python`(Python),`bare-nodejs`(Node.js),
   and`bare-sapmachine` (Java/SAP). These images have a minimal footprint and
@@ -67,7 +67,7 @@ For an explanation of how boot-related features interact, see
 [Secure Boot and Trusted Boot](/explanation/secure-boot).
 :::
 
-### Target Abstraction
+### Target abstraction
 
 Targets represent deployment platforms, but they're designed to minimize duplication. The `aws` target doesn't copy-paste all cloud-related configuration - it inherits base `cloud` configuration and adds AWS-specific elements like EC2 instance metadata handling and other AWS-specific settings-python`(Python),`bare-nodejs`(Node.js),
   and`bare-sapmachine` (Java/SAP). These images have a minimal footprint and
@@ -89,11 +89,11 @@ broken images. See
 for the rationale and the opt-in override flag.
 :::
 
-## The Publication Pipeline
+## The publication pipeline
 
 The flavor system not only defines what to build, but also manages the journey from development to production through the build/test/publish triad.
 
-### Selective Publication
+### Selective publication
 
 Not all built flavors are published to end users. The `publish` flag in [`flavors.yaml`](/reference/flavors.md) controls distribution:
 
@@ -119,7 +119,7 @@ This separation enables several important workflows:
 More information can be looked up in the [Flavors Configuration Reference](/reference/flavors.md)
 :::
 
-### From Build to Publish
+### From build to publish
 
 The publication pipeline follows a staged maturity model:
 
@@ -129,7 +129,7 @@ The publication pipeline follows a staged maturity model:
 
 Each stage acts as a gate. A flavor might have `build: true` but `test: false` during initial development. Once tests pass reliably, it can progress to `test: true` and eventually `publish: true`.
 
-### The CNAME System
+### The CNAME system
 
 As flavors progress through the pipeline, they receive a canonical name (CNAME) that uniquely identifies them. The CNAME format `{target}-{features}-{arch}-{version}-{commit}` serves several critical functions:
 
@@ -151,11 +151,11 @@ For example, `aws-gardener_prod_fips` is composed of:
 
 The CNAME system ensures that what was tested is exactly what gets deployed.
 
-## Integration Points
+## Integration points
 
 The flavor system integrates with several other components in the Garden Linux ecosystem:
 
-### gl-flavors-parse Tool
+### gl-flavors-parse tool
 
 The `gl-flavors-parse` command-line tool parses [`flavors.yaml`](/reference/flavors.md) and generates filtered output matrices. It's details can be looked up in the [Python Library Command-lin Interface](/reference/python-gardenlinux-lib-cli)
 

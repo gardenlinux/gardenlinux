@@ -26,7 +26,7 @@ github_target_path: docs/explanation/release-hierarchy.md
 
 Garden Linux uses a three-tier release hierarchy to deliver a complete operating system:
 
-## 1. Package Releases
+## 1. Package releases
 
 Individual software packages are built and versioned in `package-*` repositories (e.g., `package-containerd`, `package-curl`). Each package has its own releases cycle and versioning. Release cycles might even differ between Garden Linux Major OS Releases.
 
@@ -42,7 +42,7 @@ Individual software packages are built and versioned in `package-*` repositories
 - **Explanation**: [Garden Linux Packaging](/explanation/packaging) - This document explains how Garden Linux packages are built using the tools in the `package-build` repository and how they fit into the broader packaging ecosystem.
 - **How-To**: [Packaging](/how-to/packaging/) - Overview how to use the Garden Linux Package Build System
 
-## 2. APT Repository Releases
+## 2. APT repository releases
 
 Collections of packages assembled into APT repositories. These repositories contain both custom-built packages and dependencies from Debian snapshots.
 
@@ -58,7 +58,7 @@ Collections of packages assembled into APT repositories. These repositories cont
 - **Explanation**: [Garden Linux Repository Infrastructure ](/explanation/repo-infrastructure.html) - Understand how Garden Linux assembles, distributes, and releases packages through its repository infrastructure
 - **How-To**: [Creating APT Repository Releases](/how-to/releases/apt-repos.html) - Comprehensive guide to creating releases for Garden Linux APT repositories
 
-## 3. Operating System Image Releases
+## 3. Operating system image releases
 
 Complete Garden Linux operating system images built by consuming an APT repository. These are the final artifacts that users deploy.
 
@@ -74,7 +74,7 @@ Complete Garden Linux operating system images built by consuming an APT reposito
 - **Explanation**: [OS Releases](/explanation/os-releases.md) - Understand what Garden Linux OS Releases are
 - **How-To**: [Creating OS Releases ](/how-to/releases/os-releases.md) - Comprehensive guide to creating Garden Linux OS major and minor releases
 
-## Release Flow Diagram
+## Release flow diagram
 
 ```mermaid
 flowchart TD

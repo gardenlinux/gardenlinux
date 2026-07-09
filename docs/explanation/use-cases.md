@@ -41,7 +41,7 @@ Consider Garden Linux when you need:
 - A modular, feature-based build system for custom OS variants
 - Consistent operating system across multiple infrastructure platforms
 
-## Primary Use Cases
+## Primary use cases
 
 ### Gardener Kubernetes Nodes
 
@@ -115,7 +115,7 @@ infrastructure requests into bare-metal operations.
 | -------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------- | ------------ |
 | [`baremetal`](/reference/features/baremetal) | [`baremetal-capi`](/reference/flavor-matrix.md#baremetal-capi-amd64) | [`capi`](/reference/features/capi) | amd64, arm64 |
 
-### Vanilla Kubernetes Nodes
+### Vanilla Kubernetes nodes
 
 Garden Linux is also perfectly capable of running non-Gardener vanilla
 [Kubernetes](https://kubernetes.io/) Nodes. Garden Linux ships with the
@@ -138,7 +138,7 @@ The [`khost`](/reference/features/khost) feature is not published as a standalon
 `flavors.yaml`. Build a custom flavor by combining [`khost`](/reference/features/khost) with your target
 platform. See [Building Images](/how-to/building-images) for instructions.
 
-### Container Base Images
+### Container base images
 
 Garden Linux produces two families of Open Container Initiative (OCI) container
 images:
@@ -177,7 +177,7 @@ an auditable, minimal foundation.
 | Bare (Node.js)    | [`bare-nodejs`](/reference/flavor-matrix.md#bare-nodejs-amd64)                 | Minimal Node.js runtime (distroless) | amd64, arm64 |
 | Bare (Java/SAP)   | [`bare-sapmachine`](/reference/flavor-matrix.md#bare-sapmachine-amd64)         | Minimal SAPMachine JDK (distroless)  | amd64, arm64 |
 
-### Virtualization Host
+### Virtualization host
 
 Garden Linux serves well as host for virtualized environments by support running
 workloads in KVM/libvirt. Garden Linux ships with the
@@ -198,18 +198,18 @@ hypervisors in public or private clouds.
 | -------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------ | ------------ |
 | [`baremetal`](/reference/features/baremetal) | [`baremetal-vhost`](/reference/flavor-matrix.md#baremetal-vhost-amd64) | [`vhost`](/reference/features/vhost) | amd64, arm64 |
 
-## Supported Deployment Environments
+## Supported deployment environments
 
 Nearly all of the above use cases can be deployed in one of three environment
 categories:
 
-### Cloud Providers
+### Cloud providers
 
 Major public clouds are supported out of the box: AWS, Microsoft Azure, Google
 Cloud Platform (GCP), and OpenStack for private clouds. Garden Linux images
 include [cloud-init for initialization](/how-to/installation/post-install.html#method-3-cloud-init-user-data-cloud-platforms).
 
-### On-Premises / Bare-Metal
+### On-premises / bare-metal
 
 Deploy directly to physical servers by writing a raw disk image (`.raw`) to the
 target drive or via PXE network boot. This environment gives complete hardware
@@ -218,14 +218,14 @@ for common server hardware and supports UEFI and legacy BIOS boot modes. Use
 cases include data-center infrastructure nodes, edge appliances, and
 single-tenant hardware.
 
-### Virtualization & Local Development
+### Virtualization & local development
 
 Run Garden Linux as a guest virtual machine in libvirt/KVM, VMware and OpenStack
 or use libvirt/KVM or Lima for local development on Linux and macOS. This
 environment is ideal for testing, CI pipelines, and developer workflows where
 rapid iteration and reproducibility are priorities.
 
-## Flavor Selection Guide
+## Flavor selection guide
 
 For a step-by-step guide on choosing the right flavor, see
 [Choosing Flavors](/how-to/choosing-flavors). For the complete matrix of all

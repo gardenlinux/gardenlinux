@@ -26,11 +26,11 @@ github_target_path: "docs/reference/testing/developing-tests.md"
 
 This document provides comprehensive guidelines for developing and maintaining tests in the Garden Linux test framework.
 
-## Test Development Principles
+## Test development principles
 
 The following principles guide all test development in Garden Linux:
 
-### Core Principles
+### Core principles
 
 #### 1. Be easy to read and understand (without extensive knowledge of Garden Linux internals)
 
@@ -99,9 +99,9 @@ The following principles guide all test development in Garden Linux:
 
 - [Test Coverage Markers](test-coverage-markers.md) need to be added to features and tests to assure a high test coverage.
 
-## Framework Structure
+## Framework structure
 
-### How Tests, Plugins, and Handlers Connect
+### How tests, plugins, and handlers connect
 
 The framework uses pytest's plugin system to automatically register fixtures:
 
@@ -139,9 +139,9 @@ Utility functions provide reusable functionality:
 - **Usage**: Used by plugins and handlers
 - **Examples**: `equals_ignore_case`, `parse_etc_file`
 
-## Test Organization and Naming
+## Test organization and naming
 
-### Directory Structure
+### Directory structure
 
 All test files are placed into `tests/integration/{category}`. The following tree structure shows how tests are organized by functional area:
 
@@ -165,7 +165,7 @@ The purpose of categorizing tests is to improve maintainability and discoverabil
 
 These categories are subject to change as new tests are added and the test suite evolves.
 
-### File Naming Convention
+### File naming convention
 
 Test files follow the pattern `test_*.py` and should be named based on the functionality they test:
 
@@ -179,7 +179,7 @@ Test files follow the pattern `test_*.py` and should be named based on the funct
 Tests are not strictly tied to features in the `features` folder anymore. Have a look at `@pytest.mark.feature()` if you need a test condition related to a feature.
 :::
 
-### Test Function Naming and Comments
+### Test function naming and comments
 
 Test functions should clearly describe what they verify by naming them accordingly and providing a useful comment:
 
@@ -194,7 +194,7 @@ def test_startup_time(systemd: Systemd):
     """Test that system startup time is within acceptable limits."""
 ```
 
-### Feature-Based Organization
+### Feature-based organization
 
 Tests are organized by functionality rather than Garden Linux features. However, feature-specific tests use the `@pytest.mark.feature` marker to limit execution:
 
@@ -204,9 +204,9 @@ def test_ssh_service_running(systemd: Systemd, service_ssh):
     assert systemd.is_active("ssh"), "SSH service is not running"
 ```
 
-## Test Writing Best Practices
+## Test writing best practices
 
-### Assertions Only in Test Code
+### Assertions only in test code
 
 Test functions should contain only assertions and minimal logic:
 
@@ -266,7 +266,7 @@ def test_service_running(shell: ShellRunner):
     assert result.stdout.strip() == "active", "SSH service is not running"
 ```
 
-### Parsing Plugins
+### Parsing plugins
 
 Use the parsing plugins to keep file/command parsing consistent and readable:
 
@@ -385,7 +385,7 @@ def test_name(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
     kernel_module.unload_modules()
 ```
 
-### Utils for Helper Functions
+### Utils for helper functions
 
 Utility functions should not be used directly in tests but provide reusable functionality:
 
@@ -400,7 +400,7 @@ def test_config_value(sshd: Sshd):
     assert equals_ignore_case(actual_value, "VERBOSE"), f"Expected VERBOSE, got {actual_value}"
 ```
 
-### Shell Calls vs Filesystem Lookups
+### Shell calls vs filesystem lookups
 
 Prefer filesystem lookups over shell calls when possible. Use shell calls only when:
 
@@ -433,9 +433,9 @@ def test_service_status(shell: ShellRunner):
     assert result.stdout.strip() == "active", "SSH service is not running"
 ```
 
-## Markers and Test Configuration
+## Markers and test configuration
 
-### Core Markers
+### Core markers
 
 #### `@pytest.mark.booted(reason="...")`
 
@@ -501,7 +501,7 @@ def test_correct_ntp_on_aws(timedatectl: TimeDateCtl):
     # Test implementation
 ```
 
-### Common Filtering Patterns
+### Common filtering patterns
 
 **Environment-specific filtering:**
 
@@ -581,7 +581,7 @@ def test_weird_cases(input_val, expected):
 
 **Guideline:** Prefer clarity and intent over DRY-ness in tests. Parametrize when it makes tests simpler, not just shorter.
 
-### Test Coverage Markers
+### Test coverage markers
 
 Please have a look at the [Test Coverage Documentation](test-coverage-markers.md)
 

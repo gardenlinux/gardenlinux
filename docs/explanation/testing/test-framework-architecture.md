@@ -26,11 +26,11 @@ github_target_path: "docs/explanation/testing/test-framework-architecture.md"
 
 This page explains the design and architecture of the Garden Linux test framework, including how tests, plugins, and handlers interact, and how the test distribution system works.
 
-## Framework Components
+## Framework components
 
 The Garden Linux test framework is built on pytest and uses a modular architecture with three main components, as defined in [ADR-0006](/reference/adr/0006-new-test-framework-in-place-self-contained-test-execution.md) and [ADR-0008](/reference/adr/0008-unified-and-declarative-test-logic.md):
 
-### How Tests, Plugins, and Handlers Connect
+### How tests, plugins, and handlers connect
 
 The framework uses pytest's plugin system to automatically register fixtures:
 
@@ -40,7 +40,7 @@ The framework uses pytest's plugin system to automatically register fixtures:
 
 **Registration**: All plugins are automatically registered as pytest fixtures via `conftest.py`.
 
-## Directory Structure
+## Directory structure
 
 ```
 tests/
@@ -77,7 +77,7 @@ Plugins are pytest fixtures that handle infrastructure concerns and system inter
 
 **Guideline**: Handle "how to access" not "what to test".
 
-### Plugin Design Philosophy
+### Plugin design philosophy
 
 Plugins focus on infrastructure concerns:
 
@@ -102,7 +102,7 @@ Handlers are pytest fixtures that manage test setup and teardown.
 
 **Key distinction**: Unlike regular fixtures that provide data, handlers manage stateful resources that need explicit cleanup.
 
-### Handler Responsibilities
+### Handler responsibilities
 
 Handlers must:
 
@@ -112,7 +112,7 @@ Handlers must:
 - Only restore what they changed
 - Clean up in reverse order of setup (especially important for dependencies like kernel modules)
 
-## Utility Functions
+## Utility functions
 
 Utility functions (`tests/plugins/utils.py`) provide reusable functionality.
 
@@ -124,11 +124,11 @@ Utility functions (`tests/plugins/utils.py`) provide reusable functionality.
 
 These functions are building blocks for plugins and handlers, not directly accessible to tests.
 
-## Test Distribution System
+## Test distribution system
 
 The test framework is automatically built and packaged when running tests. The build process creates a self-contained distribution, as specified in [ADR-0006](/reference/adr/0006-new-test-framework-in-place-self-contained-test-execution.md), that includes the Python runtime, test framework, and all dependencies.
 
-### Build Components
+### Build components
 
 The build system creates several artifacts:
 
@@ -139,7 +139,7 @@ The build system creates several artifacts:
 - `.build/dist.vhd` - Virtual Hard Disk (VHD) filesystem image for import in Azure
 - `.build/edk2-*` - EFI Development Kit II (EDK2) firmware files for QEMU boot
 
-### Build Process
+### Build process
 
 The build system follows these steps:
 
@@ -148,7 +148,7 @@ The build system follows these steps:
 3. **Distribution** - Creates both a compressed tar archive and an ext2 filesystem image
 4. **Firmware** - Downloads EDK2 firmware files for QEMU virtualization
 
-### Automatic Building
+### Automatic building
 
 The build process runs automatically when you execute `./test`:
 
@@ -161,7 +161,7 @@ cd tests
 make -f util/build.makefile
 ```
 
-### Distribution Structure
+### Distribution structure
 
 The built distribution contains:
 
@@ -199,7 +199,7 @@ The distribution approach ensures that:
 - Tests can run on minimal systems without Python pre-installed
 - The same test code runs identically across all test environments
 
-## Design Principles
+## Design principles
 
 The architecture follows these key principles, derived from [ADR-0006](/reference/adr/0006-new-test-framework-in-place-self-contained-test-execution.md), [ADR-0007](/reference/adr/0007-non-invasive-read-only-testing.md), and [ADR-0008](/reference/adr/0008-unified-and-declarative-test-logic.md):
 
@@ -210,7 +210,7 @@ The architecture follows these key principles, derived from [ADR-0006](/referenc
 5. **Extensible** - New plugins and handlers can be added without modifying the core framework
    [text](/how-to/releases/index.md)
 
-## Related Architecture Decisions
+## Related architecture decisions
 
 The test framework architecture is based on several key decisions:
 

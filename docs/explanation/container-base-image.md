@@ -22,7 +22,7 @@ github_target_path: docs/explanation/container-base-image.md
 
 Garden Linux provides two families of [Open Container Initiative (OCI)](/reference/glossary.html#oci-oci-image-format) container images designed for different use cases in containerized environments. Understanding the differences between these image types helps you select the most appropriate foundation for your applications based on your requirements for functionality, size, and security.
 
-## Full Container Images
+## Full container images
 
 Full container images provide a complete Debian-based Linux environment with access to the APT package manager, systemd init system, and common utilities.
 
@@ -37,7 +37,7 @@ These images are suitable for applications that require:
 While offering maximum compatibility, full images have a larger footprint and potentially larger attack surface due to the inclusion of package managers and shells.
 :::
 
-## Bare Container Images (Distroless-style)
+## Bare container images (distroless-style)
 
 Bare container images follow a distroless approach, containing only the specific runtime and its direct dependencies required to run an application. The [Garden Linux Container Image Reference](/reference/container-images.md#full-container-images) lists several specialized bare image variants.
 
@@ -52,7 +52,7 @@ These images provide significant benefits:
 By design, bare images intentionally exclude components like shells (`sh`, `bash`) and package managers (`apt`, `pip`, `npm`) to enforce dependency containment and minimize potential vulnerabilities.
 :::
 
-## Choosing Between Full and Bare Images
+## Choosing between full and bare images
 
 Select full container images when your application requires:
 
@@ -70,7 +70,7 @@ Choose bare container images when:
 
 The decision ultimately depends on balancing your application's functional requirements against operational considerations like size, security, and maintenance overhead.
 
-## The unbase_oci Tool
+## The unbase_oci tool
 
 Garden Linux bare images are created using the [`unbase_oci`](https://github.com/gardenlinux/unbase_oci) tool, which analyzes container images to identify and retain only the files necessary for specific runtime environments. This tool:
 
@@ -81,7 +81,7 @@ Garden Linux bare images are created using the [`unbase_oci`](https://github.com
 
 The unbase_oci process results in images that contain exactly what an application needs to run—nothing more, nothing less—achieving the distroless ideal while maintaining compatibility with Garden Linux's security and reliability standards.
 
-## Best Practices
+## Best practices
 
 When using Garden Linux container base images:
 

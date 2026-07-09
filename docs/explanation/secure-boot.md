@@ -71,7 +71,7 @@ Trusted Boot is implemented on top of the
 [`_tpm2`](/reference/features/_tpm2) if persistent `/var` storage is required.
 :::
 
-### Security Guarantees
+### Security guarantees
 
 A Trusted Boot image enforces the following at runtime:
 
@@ -88,7 +88,7 @@ A Trusted Boot image enforces the following at runtime:
 - **No emergency shell** — The emergency service is overridden to immediately
   halt the system, preventing shell access on boot failure.
 
-### Feature Dependencies
+### Feature dependencies
 
 The [`_trustedboot`](/reference/features/_trustedboot) feature automatically
 includes:
@@ -104,7 +104,7 @@ The [`_nocrypt`](/reference/features/_nocrypt) and
 [`_unsigned`](/reference/features/_unsigned) features are incompatible with
 [`_trustedboot`](/reference/features/_trustedboot).
 
-### Mutable Data with Trusted Boot
+### Mutable data with Trusted Boot
 
 Because Trusted Boot uses the USI boot mode, `/var` is always a separate
 partition managed by `systemd-repart`. Two options are available:
@@ -122,7 +122,7 @@ partition managed by `systemd-repart`. Two options are available:
 For a full comparison of mutable data modes, see
 [Boot Modes: Mutable Data Modes](/explanation/boot-modes#mutable-data-modes).
 
-### Building Trusted Boot Images
+### Building Trusted Boot images
 
 Before building any image with [`_trustedboot`](/reference/features/_trustedboot)
 or [`_tpm2`](/reference/features/_tpm2), Secure Boot signing certificates must
@@ -135,7 +135,7 @@ For step-by-step deployment instructions — including auto-key-enrollment,
 cloud-provider-specific certificate upload, and how to verify Secure Boot is
 active — see [Deploying Secure Boot Images](/how-to/secure-boot).
 
-### Deploying Trusted Boot Images
+### Deploying Trusted Boot images
 
 Cloud providers that support UEFI Secure Boot (AWS, GCP) require the Garden
 Linux signing certificates to be enrolled alongside the image. See

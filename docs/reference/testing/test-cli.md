@@ -36,7 +36,7 @@ The main entry point is `./test` in the Garden Linux root directory (symlink to 
 ./test [OPTIONS] <image-file>
 ```
 
-## Common Options
+## Common options
 
 ### `--help`
 
@@ -100,7 +100,7 @@ Enable debug logging:
 ./test --test-args "--log-cli-level=DEBUG" .build/image.raw
 ```
 
-## Cloud-Specific Options
+## Cloud-specific options
 
 ### `--cloud <provider>`
 
@@ -163,7 +163,7 @@ Only run `tofu plan` for cloud setups (shows what resources would be created wit
 QEMU VM testing ignores this flag.
 :::
 
-## QEMU-Specific Options
+## QEMU-specific options
 
 ### `--ssh`
 
@@ -187,7 +187,7 @@ Enable debug mode (display window) for QEMU VM.
 
 Shows a graphical window with the QEMU VM console output.
 
-## Development Options
+## Development options
 
 ### `--dev`
 
@@ -235,7 +235,7 @@ Watch for file changes and re-run tests automatically (used internally by `--dev
 ./test --ssh --skip-cleanup --skip-tests --watch .build/image.raw
 ```
 
-## Image Types
+## Image types
 
 The test runner automatically detects the image type based on the file extension:
 
@@ -263,7 +263,7 @@ The test runner automatically detects the image type based on the file extension
 
 ## Examples
 
-### Basic Testing
+### Basic testing
 
 Run chroot tests:
 
@@ -283,7 +283,7 @@ Run cloud tests:
 ./test --cloud aws .build/image.raw
 ```
 
-### Development Workflow
+### Development workflow
 
 Run QEMU with SSH and keep running:
 
@@ -297,7 +297,7 @@ Use dev mode for rapid iteration:
 ./test --dev --test-args "test_ssh.py -v" .build/image.raw
 ```
 
-### Specific Test Execution
+### Specific test execution
 
 Run only SSH tests:
 
@@ -317,7 +317,7 @@ Run multiple specific tests:
 ./test --test-args "test_ssh.py test_network.py -v" .build/image.raw
 ```
 
-### Cloud Testing
+### Cloud testing
 
 Test on AWS with cleanup:
 
@@ -365,7 +365,7 @@ Show QEMU debug window:
 ./test --debug .build/image.raw
 ```
 
-### Infrastructure Only
+### Infrastructure only
 
 Set up infrastructure without running tests:
 
@@ -379,7 +379,7 @@ Plan cloud resources without creating them:
 ./test --cloud aws --cloud-plan .build/image.raw
 ```
 
-## Option Combinations
+## Option combinations
 
 Common option combinations:
 
@@ -413,7 +413,7 @@ Common option combinations:
 ./test --ssh --debug --skip-cleanup .build/image.raw
 ```
 
-## Exit Codes
+## Exit codes
 
 The test runner returns standard pytest exit codes:
 
