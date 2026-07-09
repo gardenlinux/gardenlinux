@@ -37,7 +37,7 @@ Cloud testing deploys the image to cloud infrastructure using OpenTofu, providin
 - Alibaba Cloud (ALI)
 - OpenStack
 
-## Cloud Provider Authentication
+## Cloud provider authentication
 
 Before running tests, authenticate with the cloud providers you want to test against. Each provider has its own authentication method.
 
@@ -130,7 +130,7 @@ export OS_CLOUD=gardenlinux-test
 You can download the `clouds.yaml` from your OpenStack dashboard.
 :::
 
-## Cloud-Specific Command-Line Options
+## Cloud-specific command-line options
 
 ### `--cloud <provider>`
 
@@ -191,7 +191,7 @@ QEMU VM testing ignores this flag.
 
 ## Examples
 
-### Basic Cloud Testing
+### Basic cloud testing
 
 Test on AWS:
 
@@ -211,7 +211,7 @@ Test on GCP:
 ./test --cloud gcp .build/image.raw
 ```
 
-### Testing with Resource Inspection
+### Testing with resource inspection
 
 Keep resources running after tests for inspection:
 
@@ -225,7 +225,7 @@ Clean up resources later:
 ./test --cloud aws --only-cleanup .build/image.raw
 ```
 
-### Testing Existing Cloud Images
+### Testing existing cloud images
 
 Test an existing AWS AMI:
 
@@ -235,7 +235,7 @@ Test an existing AWS AMI:
   ami-07f977508ed36098e
 ```
 
-### Infrastructure Setup Only
+### Infrastructure setup only
 
 Set up infrastructure without running tests:
 
@@ -251,7 +251,7 @@ See what resources would be created:
 ./test --cloud aws --cloud-plan .build/image.raw
 ```
 
-### Running Specific Tests
+### Running specific tests
 
 Run only specific tests on cloud:
 
@@ -261,9 +261,9 @@ Run only specific tests on cloud:
   .build/image.raw
 ```
 
-## Resource Management
+## Resource management
 
-### Automatic Cleanup
+### Automatic cleanup
 
 By default, cloud resources are automatically cleaned up after tests complete:
 
@@ -272,7 +272,7 @@ By default, cloud resources are automatically cleaned up after tests complete:
 # Resources are automatically destroyed
 ```
 
-### Manual Cleanup
+### Manual cleanup
 
 Skip automatic cleanup for investigation:
 
@@ -284,7 +284,7 @@ Skip automatic cleanup for investigation:
 ./test --cloud aws --only-cleanup .build/image.raw
 ```
 
-### Cleanup After Interruption
+### Cleanup after interruption
 
 If tests are interrupted with `--skip-cleanup`, re-run without the flag or use `--only-cleanup`:
 
@@ -299,7 +299,7 @@ If tests are interrupted with `--skip-cleanup`, re-run without the flag or use `
 
 ## Troubleshooting
 
-### Authentication Issues
+### Authentication issues
 
 If authentication fails, verify:
 
@@ -316,7 +316,7 @@ If cleanup fails:
 2. Check cloud provider console for orphaned resources
 3. Manually delete resources if automatic cleanup fails
 
-### Timeout Issues
+### Timeout issues
 
 Cloud resource provisioning can take time. If tests timeout:
 
@@ -324,6 +324,6 @@ Cloud resource provisioning can take time. If tests timeout:
 2. Verify network connectivity
 3. Try a different region
 
-## Related Topics
+## Related topics
 
 <RelatedTopics />
