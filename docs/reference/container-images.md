@@ -52,7 +52,7 @@ For a complete list of maintained releases and their support lifecycle, see the 
 Garden Linux offers a range of specialized bare container images, each tailored for specific applications and designed for minimalism and security.
 
 These containers are optimized as base images for Dockerfiles.
-Their development is streamlined by the [unbase_oci](https://github.com/gardenlinux/unbase_oci) tool, which efficiently minimizes image size by removing unnecessary components from base container images.
+Their development uses the [unbase_oci](https://github.com/gardenlinux/unbase_oci) tool, which minimizes image size by removing unnecessary components from base container images.
 
 | Image             | Description                                                       | URI                                                         |
 | ----------------- | ----------------------------------------------------------------- | ----------------------------------------------------------- |
@@ -70,4 +70,4 @@ The `unbase_oci` tool is instrumental in the development of these "bare" contain
   - Reduces image size and potential security vulnerabilities.
   - Operates on OCI archives, comparing base and target images to identify and retain only necessary additions and their dependencies.
 - **Repository Link**: [unbase_oci](https://github.com/gardenlinux/unbase_oci)
-- **Impact**: This tool is pivotal in creating streamlined, "distroless-like" images, ensuring that the resulting containers are lean and secure.
+- **Impact**: This tool creates minimal, "distroless-like" images, ensuring that the resulting containers are lean and secure.
