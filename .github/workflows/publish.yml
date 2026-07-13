@@ -42,6 +42,9 @@ jobs:
           name: parent-workflow-data
           overwrite: true
           path: workflow_data.json
+          include-hidden-files: true
+          if-no-files-found: error
+          archive: false
   publish_oci_containers:
     needs: workflow_data
     name: Publish container base image

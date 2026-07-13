@@ -60,8 +60,10 @@ jobs:
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
         if: always()
         with:
-          if-no-files-found: ignore
           name: chroot-test-${{ env.CNAME }}
           path: |
             .build/${{ env.CNAME }}.chroot.test.log
             .build/${{ env.CNAME }}.chroot.test.xml
+          include-hidden-files: true
+          if-no-files-found: ignore
+          archive: true
