@@ -258,7 +258,8 @@ if ! ((skip_tests)); then
 		"--system-booted"
 		"--allow-system-modifications"
 	)
-	if [ "$qemu_accel" == "tcg" ]; then
+	# skip performance metrics when no acceleration is availale or being run in a github runner
+	if [[ "$qemu_accel" == "tcg" || (-v RUNNER_ENVIRONMENT && "$RUNNER_ENVIRONMENT" == github-hosted ) ]]; then
 		test_args+=("--skip-performance-metrics")
 	fi
 	if ((ssh)); then
