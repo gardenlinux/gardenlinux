@@ -153,11 +153,6 @@ else
 	qemu-img create -q -f qcow2 -F raw -b "$(realpath -- "$image")" "$tmpdir/disk.qcow" 4G
 fi
 
-console_device="/dev/ttyS0"
-if [ "$arch" = aarch64 ]; then
-	console_device="/dev/ttyAMA0"
-fi
-
 cat >"$tmpdir/fw_cfg-script.sh" <<EOF
 #!/usr/bin/env bash
 
@@ -180,7 +175,7 @@ fi
 cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
 # Send all output to console so it appears on
 # the QEMU serial output (and thus in logs).
-exec >$console_device
+exec >/dev/console
 exec 2>&1
 
 echo "⚙️  Qemu environment quirks..."
