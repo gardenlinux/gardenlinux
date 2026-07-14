@@ -18,6 +18,7 @@ class Sshd:
             parts = line.split(maxsplit=1)
             if len(parts) == 2:
                 key, value = parts
+                key = str.casefold(key)
                 # If key already exists, convert to set and append
                 if key in self._sshd_config:
                     if isinstance(self._sshd_config[key], set):
@@ -27,7 +28,7 @@ class Sshd:
                 else:
                     self._sshd_config[key] = value
             elif len(parts) == 1:
-                key = parts[0]
+                key = str.casefold(parts[0])
                 self._sshd_config[key] = None
 
     def get_config(self) -> dict:
