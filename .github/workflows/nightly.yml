@@ -277,6 +277,21 @@ jobs:
             body += '\n```\n\n';
             body += `</details>\n\n`;
 
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+            });
+
+            const duplicate = existingIssues.find(issue =>
+              issue.title.includes(`run #${{ github.run_id }}`)
+            );
+
+            if (duplicate) {
+              core.notice(`Issue already exists for this run: ${duplicate.html_url}`);
+              return;
+            }
+
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
