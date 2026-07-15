@@ -432,7 +432,7 @@ if ((is_pxe_archive)); then
 	# stack and loads boot.ipxe from TFTP the same way x86_64 UEFI does.
 	if ! ((use_bootindex)); then
 		qemu_opts+=(
-			-boot once=n,order=c
+			-boot "once=n,order=c"
 		)
 	fi
 elif ((is_iso)); then
@@ -451,7 +451,7 @@ elif ((is_iso)); then
 		)
 	else
 		qemu_opts+=(
-			-boot once=d,order=c
+			-boot "once=d,order=c"
 			-device "virtio-scsi-pci,id=scsi"
 			-drive "id=cd0,if=none,format=raw,readonly=on,media=cdrom,file=$(realpath -- "$image")"
 			-device "scsi-cd,drive=cd0,bus=scsi.0"
