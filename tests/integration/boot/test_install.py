@@ -14,9 +14,8 @@ from plugins.file import File
 @pytest.mark.feature("_install and not _autoinstall")
 def test_install_script(file: File):
     """Test that main install script exists"""
-    assert file.exists(
-        "/opt/install/install.sh"
-    ), "install script should exist"
+    assert file.exists("/opt/install/install.sh"), "install script should exist"
+
 
 @pytest.mark.testcov(
     [
@@ -29,6 +28,7 @@ def test_install_repart_efi_config(file: File):
     assert file.exists(
         "/opt/install/repart/00-efi.conf"
     ), "repart config for EFI should exist"
+
 
 @pytest.mark.testcov(
     [
