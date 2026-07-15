@@ -18,7 +18,7 @@ class Sshd:
             parts = line.split(maxsplit=1)
             if len(parts) == 2:
                 key, value = parts
-                key = str.casefold(key)
+                key = key.lower()
                 # If key already exists, convert to set and append
                 if key in self._sshd_config:
                     if isinstance(self._sshd_config[key], set):
@@ -28,14 +28,14 @@ class Sshd:
                 else:
                     self._sshd_config[key] = value
             elif len(parts) == 1:
-                key = str.casefold(parts[0])
+                key = parts[0].lower()
                 self._sshd_config[key] = None
 
     def get_config(self) -> dict:
         return self._sshd_config
 
     def get_config_section(self, key: str) -> str | set | None:
-        return self._sshd_config.get(str.casefold(key))
+        return self._sshd_config.get(key.lower())
 
 
 @pytest.fixture
