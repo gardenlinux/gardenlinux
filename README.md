@@ -38,20 +38,20 @@ semver compliant one comprised of a 3 numerical segment identifier
 ## Releases
 
 Find all information about our currently maintained and latest
-releases at our [Maintained Releases](https://gardenlinux-docs.netlify.app/reference/releases/maintained-releases.html)
+releases at our [Maintained Releases](https://docs.gardenlinux.org/reference/releases/maintained-releases.html)
 documentation page.
 
 ## Documentation
 
-For [Tutorials](https://gardenlinux-docs.netlify.app/tutorials/),
-[How-Tos](https://gardenlinux-docs.netlify.app/how-to/) and
-[Explanations](https://gardenlinux-docs.netlify.app/explanation/) around
+For [Tutorials](https://docs.gardenlinux.org/tutorials/),
+[How-Tos](https://docs.gardenlinux.org/how-to/) and
+[Explanations](https://docs.gardenlinux.org/explanation/) around
 Gardenlinux, its structure and supporting tools, visit
-[our Documentation](https://gardenlinux-docs.netlify.app).
+[our Documentation](https://docs.gardenlinux.org).
 
 To jump directly into a fresh local Garden Linux VM, check out
-[this section](https://gardenlinux-docs.netlify.app/tutorials/local/) for first
-boot tutorials using KVM or LIME with one of our currently supported [releases](https://gardenlinux-docs.netlify.app/reference/releases/maintained-releases.html).
+[this section](https://docs.gardenlinux.org/tutorials/local/) for first
+boot tutorials using KVM or LIME with one of our currently supported [releases](https://docs.gardenlinux.org/reference/releases/maintained-releases.html).
 
 ## Community
 
@@ -74,7 +74,7 @@ https://lists.neonephos.org/g/gardenlinux-security-embargo
 We welcome your contributions to Gardenlinux or any supporting projects.
 
 To find out more, visit our
-[Contributor Documentation](https://gardenlinux-docs.netlify.app/contributing).
+[Contributor Documentation](https://docs.gardenlinux.org/contributing).
 
 ## Licensing
 
