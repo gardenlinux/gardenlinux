@@ -11,8 +11,9 @@ reflects organizational and system objectives when invalid inputs are received.
 @pytest.mark.security_id(203752)
 @pytest.mark.feature("log")
 @pytest.mark.booted(reason="requires audit subsystem running")
+@pytest.mark.root(reason="ausearch requires root; triggers audited failed syscall as root")
 def test_invalid_input_handling_is_audited(shell):
-    shell("echo '# test' >> /root/.profile", ignore_exit_code=True)
+    shell("cat /proc/1/mem", ignore_exit_code=True)
     result = shell(cmd="ausearch -ts recent", capture_output=True)
 
     assert "success=no" in result.stdout(
