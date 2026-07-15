@@ -78,7 +78,7 @@ RUN exportLibs.py
 
 # Production stage: copy dependencies into bare image
 FROM ghcr.io/gardenlinux/gardenlinux/bare-python:2150.0.0
-COPY --from=packages /usr/local/lib/python3.13/dist-packages/ /usr/local/lib/python3.13/dist-packages/
+COPY --from=packages /usr/local/lib/python3.14/dist-packages/ /usr/local/lib/python3.14/dist-packages/
 COPY --from=packages /required_libs /
 COPY main.py /
 ENTRYPOINT [ "python3", "/main.py" ]
@@ -166,7 +166,7 @@ dust -n 32 -w 64 -r /mnt
  52M └─┬ mnt                        │████████████████████ │ 100%
  52M   └─┬ usr                      │████████████████████ │ 100%
  43M     ├─┬ lib                    │█████████████████░░░ │  82%
- 28M     │ ├─┬ python3.13           │███████████▒▒▒▒▒▒░░░ │  55%
+ 28M     │ ├─┬ python3.14           │███████████▒▒▒▒▒▒░░░ │  55%
 5.2M     │ │ ├── lib-dynload        │██▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │  10%
 5.2M     │ │ ├── __pycache__        │██▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │  10%
 2.4M     │ │ ├─┬ encodings          │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   5%
@@ -192,7 +192,7 @@ dust -n 32 -w 64 -r /mnt
 708K     │   ├── libzstd.so.1.5.7   │█▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒░░░ │   1%
 580K     │   └── libm.so.6          │█▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒░░░ │   1%
 7.0M     ├─┬ bin                    │███░░░░░░░░░░░░░░░░░ │  13%
-6.9M     │ └── python3.13           │███░░░░░░░░░░░░░░░░░ │  13%
+6.9M     │ └── python3.14           │███░░░░░░░░░░░░░░░░░ │  13%
 2.4M     └─┬ share                  │█░░░░░░░░░░░░░░░░░░░ │   5%
 1.9M       └─┬ zoneinfo             │█░░░░░░░░░░░░░░░░░░░ │   4%
 572K         └── America            │█░░░░░░░░░░░░░░░░░░░ │   1%
