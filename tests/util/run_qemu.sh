@@ -319,6 +319,13 @@ if [ "$arch" = aarch64 ]; then
 	qemu_tpm_dev=tpm-tis-device
 fi
 
+# aarch64 virt machine does not support the legacy BIOS boot-device-list
+# (-boot order/once) used by SeaBIOS/x86.  Use per-device bootindex= instead.
+use_bootindex=0
+if [ "$arch" = aarch64 ]; then
+	use_bootindex=1
+fi
+
 native_arch="$(map_arch "$(uname -m)")"
 
 qemu_accel=tcg
@@ -358,6 +365,13 @@ EOF
 	fi
 fi
 
+# On aarch64 PXE, set bootindex=0 on the network device so EDK2 tries network
+# first.  On all other arch/boot-type combinations, no bootindex is needed here.
+net_device="virtio-net-pci,netdev=net0"
+if ((is_pxe_archive && use_bootindex)); then
+	net_device="virtio-net-pci,netdev=net0,bootindex=0"
+fi
+
 qemu_opts=(
 	-machine "$qemu_machine"
 	-cpu "$qemu_cpu"
@@ -369,13 +383,22 @@ qemu_opts=(
 	-chardev "file,id=test_junit,path=$log_dir/$log_file_junit"
 	-device virtio-serial
 	-device "virtserialport,chardev=test_junit,name=test_junit"
-	-device "virtio-net-pci,netdev=net0"
+	-device "$net_device"
 )
 
-# Add the main disk (boot disk for raw/PXE, install target vda for ISO)
-qemu_opts+=(
-	-drive "if=virtio,format=qcow2,file=$tmpdir/disk.qcow"
-)
+# Add the main disk (boot disk for raw/PXE, install target vda for ISO).
+# On aarch64, split into an explicit device so we can attach bootindex=1;
+# if=virtio shorthand does not accept bootindex.
+if ((use_bootindex)); then
+	qemu_opts+=(
+		-drive "if=none,id=bootdisk,format=qcow2,file=$tmpdir/disk.qcow"
+		-device "virtio-blk-pci,drive=bootdisk,bootindex=1"
+	)
+else
+	qemu_opts+=(
+		-drive "if=virtio,format=qcow2,file=$tmpdir/disk.qcow"
+	)
+fi
 
 if ! ((skip_tests)); then
 	qemu_opts+=(
@@ -395,25 +418,45 @@ fi
 
 if ((is_pxe_archive)); then
 	# Boot from network on first boot only; subsequent reboots fall through to disk.
-	# -boot once=n,order=c is honoured by SeaBIOS and by modern QEMU/EDK2 for the
-	# very first boot.  After the installer writes EFI boot entries into the
-	# persistent edk2-qemu-vars pflash, reboots pick the on-disk loader from NVRAM.
-	# aarch64 also uses iPXE here: EDK2 aarch64 ships with the EFI PXE/HTTP stack
-	# and loads boot.ipxe from TFTP the same way x86_64 UEFI does.
-	qemu_opts+=(
-		-boot once=n,order=c
-	)
+	#
+	# x86_64 (SeaBIOS / EDK2 q35): -boot once=n,order=c is honoured for the very
+	# first boot.  After the installer writes EFI boot entries into the persistent
+	# edk2-qemu-vars pflash, reboots pick the on-disk loader from NVRAM.
+	#
+	# aarch64 (EDK2 virt): the virt machine has no legacy BIOS boot-device-list,
+	# so -boot once/order is not supported and causes QEMU to abort.  Instead we
+	# use per-device bootindex= properties: bootindex=0 on virtio-net (try network
+	# first) and bootindex=1 on the boot disk (fallback).  After the installer
+	# writes NVRAM boot entries, subsequent reboots follow NVRAM and pick the
+	# on-disk loader, not the network.  EDK2 aarch64 ships with the EFI PXE/HTTP
+	# stack and loads boot.ipxe from TFTP the same way x86_64 UEFI does.
+	if ! ((use_bootindex)); then
+		qemu_opts+=(
+			-boot once=n,order=c
+		)
+	fi
 elif ((is_iso)); then
 	# For ISO testing, boot from CDROM
 	# WORKAROUND: The dracut initrd in the ISO doesn't load ahci driver automatically
 	# Use SCSI CD-ROM attached to virtio-scsi controller for better compatibility
 	# Boot from CD-ROM on first boot only; reboots fall through to disk.
-	qemu_opts+=(
-		-boot once=d,order=c
-		-device "virtio-scsi-pci,id=scsi"
-		-drive "id=cd0,if=none,format=raw,readonly=on,media=cdrom,file=$(realpath -- "$image")"
-		-device "scsi-cd,drive=cd0,bus=scsi.0"
-	)
+	#
+	# x86_64: -boot once=d,order=c is used for the one-shot CD-ROM first boot.
+	# aarch64: -boot is not supported; bootindex=0 on the scsi-cd device is used.
+	if ((use_bootindex)); then
+		qemu_opts+=(
+			-device "virtio-scsi-pci,id=scsi"
+			-drive "id=cd0,if=none,format=raw,readonly=on,media=cdrom,file=$(realpath -- "$image")"
+			-device "scsi-cd,drive=cd0,bus=scsi.0,bootindex=0"
+		)
+	else
+		qemu_opts+=(
+			-boot once=d,order=c
+			-device "virtio-scsi-pci,id=scsi"
+			-drive "id=cd0,if=none,format=raw,readonly=on,media=cdrom,file=$(realpath -- "$image")"
+			-device "scsi-cd,drive=cd0,bus=scsi.0"
+		)
+	fi
 fi
 
 if [ "$uefi" = "true" ] || [ "$arch" = aarch64 ]; then
