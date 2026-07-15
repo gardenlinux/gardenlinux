@@ -1,4 +1,12 @@
-# 35. Canonical Name, Flavor, and Artifact Naming
+---
+title: "ADR 0035: Canonical Name, Flavor, and Artifact Naming"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: docs/reference/adr/0032-static-feature-test-coverage-analysis.md
+github_target_path: docs/reference/adr/0032-static-feature-test-coverage-analysis.md
+---
+
+# ADR 0035: Canonical Name, Flavor, and Artifact Naming
 
 Date: 2026-06-12
 

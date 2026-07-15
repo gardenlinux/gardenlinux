@@ -1,4 +1,12 @@
-# 34. Garden Linux Feature Terminology
+---
+title: "ADR 0034: Garden Linux Feature Terminology"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: docs/reference/adr/0032-static-feature-test-coverage-analysis.md
+github_target_path: docs/reference/adr/0032-static-feature-test-coverage-analysis.md
+---
+
+# ADR 0034: Garden Linux Feature Terminology
 
 Date: 2026-06-12
 
