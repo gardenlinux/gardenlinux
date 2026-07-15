@@ -16,8 +16,8 @@ def test_python_environment_is_installed(shell: ShellRunner):
         "python3-pip"
     ), "python3-pip package is not installed"
     assert dpkg.package_is_installed(
-        "python3.13-venv"
-    ), "python3.13-venv package is not installed"
+        "python3.14-venv"
+    ), "python3.14-venv package is not installed"
 
 
 dependencies = {
