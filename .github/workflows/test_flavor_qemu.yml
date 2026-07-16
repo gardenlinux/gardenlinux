@@ -63,6 +63,12 @@ jobs:
           rm "$CNAME.tar.gz"
           tree .build
         # TODO: handle skipping better
+      - name: rw for KVM
+        # TODO: can we do this in a nicer way?
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
       - name: Execute tests
         run: |
           if [ ! -e ".build/$CNAME.raw" ]; then
