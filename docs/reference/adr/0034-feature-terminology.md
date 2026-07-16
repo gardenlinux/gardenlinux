@@ -2,8 +2,8 @@
 title: "ADR 0034: Garden Linux Feature Terminology"
 github_org: gardenlinux
 github_repo: gardenlinux
-github_source_path: docs/reference/adr/0032-static-feature-test-coverage-analysis.md
-github_target_path: docs/reference/adr/0032-static-feature-test-coverage-analysis.md
+github_source_path: docs/reference/adr/0034-feature-terminology.md
+github_target_path: docs/reference/adr/0034-feature-terminology.md
 ---
 
 # ADR 0034: Garden Linux Feature Terminology
@@ -53,7 +53,7 @@ A feature of type `flag` represents a lightweight modifier. Flags are distinguis
 
 ### 3. Feature set
 
-The **feature set** of a build is the complete set of features present after DAG resolution — the transitive closure of all included features minus all excluded ones. This is distinct from the *minimal* feature set used for naming (see [ADR 0035](0035-cname-flavor-artifact-naming.md)).
+The **feature set** of a build is the complete set of features present after DAG resolution — the transitive closure of all included features minus all excluded ones. This is distinct from the *minimal* feature set used for naming (see [ADR 0035](./0035-cname-flavor-artifact-naming.md)).
 
 ### 4. `GARDENLINUX_FEATURES_*` and `GARDENLINUX_PLATFORM` in `/etc/os-release`
 
@@ -69,13 +69,13 @@ The build process writes the following keys into `/etc/os-release`:
 
 `GARDENLINUX_PLATFORM` is derived from `GARDENLINUX_FEATURES_PLATFORMS` as follows: if exactly one platform feature is present, `GARDENLINUX_PLATFORM` is set to that feature's name. If more than one platform feature is present (frankenstein build), `GARDENLINUX_PLATFORM` is set to the literal string `frankenstein`.
 
-`GARDENLINUX_PLATFORM` is always a single token and is the value to be used for all platform-routing decisions (publishing, testing, image naming). `GARDENLINUX_FEATURES_PLATFORMS` is informational and reflects the raw feature graph output; it MUST NOT be used as input to publishing or routing decisions (see also [ADR 0031](0031-builder-glci-interface.md)).
+`GARDENLINUX_PLATFORM` is always a single token and is the value to be used for all platform-routing decisions (publishing, testing, image naming). `GARDENLINUX_FEATURES_PLATFORMS` is informational and reflects the raw feature graph output; it MUST NOT be used as input to publishing or routing decisions (see also [ADR 0031](./0031-builder-glci-interface.md)).
 
 ## Consequences
 
 ### Benefits
 
-A shared written definition eliminates the ambiguity that has caused silent bugs (e.g. the `openstackbaremetal` regression described in [ADR 0020](0020-enforce-single-platform-by-default-in-builder.md)) and divergent implementations. All tooling can now be validated against a single reference.
+A shared written definition eliminates the ambiguity that has caused silent bugs (e.g. the `openstackbaremetal` regression described in [ADR 0020](./0020-enforce-single-platform-by-default-in-builder.md)) and divergent implementations. All tooling can now be validated against a single reference.
 
 
 

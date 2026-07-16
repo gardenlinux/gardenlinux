@@ -2,8 +2,8 @@
 title: "ADR 0035: Canonical Name, Flavor, and Artifact Naming"
 github_org: gardenlinux
 github_repo: gardenlinux
-github_source_path: docs/reference/adr/0032-static-feature-test-coverage-analysis.md
-github_target_path: docs/reference/adr/0032-static-feature-test-coverage-analysis.md
+github_source_path: docs/reference/adr/0035-cname-flavor-artifact-naming.md
+github_target_path: docs/reference/adr/0035-cname-flavor-artifact-naming.md
 ---
 
 # ADR 0035: Canonical Name, Flavor, and Artifact Naming
@@ -109,4 +109,4 @@ Having four clearly-bounded terms eliminates the most common source of ambiguity
 
 
 [^1]: See comment at [`cname.py:97`](https://github.com/gardenlinux/python-gardenlinux-lib/blob/5f2338f568762b6fa42fc19d0148a8951fc8e537/src/gardenlinux/features/cname.py#L97): `# Workaround Garden Linux canonical names without mandatory final commit hash`
-[^2]: See [ADR 0034](0034-feature-terminology.md)
+[^2]: See [ADR 0034](./0034-feature-terminology.md)

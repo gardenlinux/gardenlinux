@@ -2,8 +2,8 @@
 title: "ADR 0033: Retention policy for Gardener cloud images"
 github_org: gardenlinux
 github_repo: gardenlinux
-github_source_path: docs/reference/adr/0032-static-feature-test-coverage-analysis.md
-github_target_path: docs/reference/adr/0032-static-feature-test-coverage-analysis.md
+github_source_path: docs/reference/adr/0033-retention-policy-for-gardener-cloud-images.md
+github_target_path: docs/reference/adr/0033-retention-policy-for-gardener-cloud-images.md
 ---
 
 # ADR 0033: Retention policy for Gardener cloud images
