@@ -76,6 +76,8 @@ The follow key decision needs to be taken:
    images
 2. Garden Linux integrates FIPS as a static always-on feature that must be preselected.
 
+We took the decision as team to go with 2. 
+
 ## Consequences
 
 Once set in with this decision, we will not abel to change. WHen we offer FIPS to users, this will
