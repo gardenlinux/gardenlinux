@@ -1,0 +1,3 @@
+markers:
+  "etc/multipath.conf":
+  - "GL-TESTCOV-multipath-config-multipath-conf"

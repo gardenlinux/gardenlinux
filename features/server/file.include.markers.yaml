@@ -1,0 +1,73 @@
+markers:
+  "etc/dracut.conf.d/25-uefi-stub.conf":
+  - "GL-TESTCOV-server-config-initrd-uefi-stub"
+  "etc/dracut.conf.d/general.conf":
+  - "GL-TESTCOV-server-config-initrd-general"
+  "etc/kernel-img.conf":
+  - "GL-TESTCOV-server-config-kernel-img-conf"
+  "etc/locale.conf":
+  - "GL-TESTCOV-server-config-locale-conf"
+  "etc/machine-id":
+  - "GL-TESTCOV-server-config-machine-id"
+  "etc/profile.d/50-nohistory.sh":
+  - "GL-TESTCOV-server-script-profile-nohistory"
+  "etc/sudoers.d/keepssh":
+  - "GL-TESTCOV-server-config-sudoers-keepssh"
+  "etc/sudoers.d/wheel":
+  - "GL-TESTCOV-server-config-sudoers-wheel"
+  "etc/sysctl.d/40-enable-unprivileged-user-namespaces.conf":
+  - "GL-TESTCOV-server-config-sysctl-enable-unprivileged-user-namespaces"
+  "etc/sysctl.d/40-restrict-dmesg.conf":
+  - "GL-TESTCOV-server-config-sysctl-restrict-dmesg"
+  "etc/sysctl.d/90-allow-ping-for-non-root-user.conf":
+  - "GL-TESTCOV-server-config-sysctl-allow-ping-for-non-root-user"
+  "etc/systemd/network/99-default.network":
+  - "GL-TESTCOV-server-config-network-default"
+  "etc/systemd/networkd.conf.d/00-gardenlinux-server.conf":
+  - "GL-TESTCOV-server-config-network-server"
+  "etc/systemd/resolved.conf.d/00-disable-llmnr.conf":
+  - "GL-TESTCOV-server-config-resolved-llmnr-disable"
+  "etc/systemd/resolved.conf.d/01-disable-mdns.conf":
+  - "GL-TESTCOV-server-config-resolved-mdns-disable"
+  "etc/systemd/system.conf.d/00-gardenlinux-server.conf":
+  - "GL-TESTCOV-server-config-systemd-system-conf-server"
+  "etc/systemd/system/kexec-load@.service":
+  - "GL-TESTCOV-server-service-kexec-load-unit"
+  "etc/systemd/system/systemd-coredump@.service.d/override.conf":
+  - "GL-TESTCOV-server-config-service-systemd-coredump-override"
+  "etc/systemd/system/systemd-growfs@.service.d/override.conf":
+  - "GL-TESTCOV-server-config-service-systemd-growfs-override"
+  "etc/systemd/system/systemd-networkd-wait-online.service.d/any.conf":
+  - "GL-TESTCOV-server-config-service-systemd-networkd-wait-online-any"
+  "etc/systemd/system/systemd-resolved.service.d/wait-for-networkd.conf":
+  - "GL-TESTCOV-server-config-service-systemd-resolved-wait-for-networkd"
+  "etc/systemd/system/systemd-timesyncd.service.d/override.conf":
+  - "GL-TESTCOV-server-config-service-systemd-timesyncd-override"
+  "etc/systemd/system/tmp.mount":
+  - "GL-TESTCOV-server-config-mount-tmp"
+  "etc/update-motd.d/05-logo":
+  - "GL-TESTCOV-server-config-update-motd-logo"
+  "etc/update-motd.d/10-hostname":
+  - "GL-TESTCOV-server-config-update-motd-hostname"
+  "etc/update-motd.d/20-uname":
+  - "GL-TESTCOV-server-config-update-motd-uname"
+  "etc/update-motd.d/30-load":
+  - "GL-TESTCOV-server-config-update-motd-load"
+  "etc/update-motd.d/40-free":
+  - "GL-TESTCOV-server-config-update-motd-free"
+  "etc/update-motd.d/45-line":
+  - "GL-TESTCOV-server-config-update-motd-line-001"
+  "etc/update-motd.d/50-network":
+  - "GL-TESTCOV-server-config-update-motd-network"
+  "etc/update-motd.d/55-line":
+  - "GL-TESTCOV-server-config-update-motd-line-002"
+  "etc/update-motd.d/92-unattended-upgrades":
+  - "GL-TESTCOV-server-config-update-motd-unattended-upgrades"
+  "etc/update-motd.d/95-needrestart":
+  - "GL-TESTCOV-server-config-update-motd-needrestart"
+  "usr/lib/systemd/system/dbus.socket":
+  - "GL-TESTCOV-server-config-systemd-system-dbus-socket"
+  "usr/share/pam-configs/garden":
+  - "GL-TESTCOV-server-config-pam-garden"
+  "usr/share/pam-configs/garden-extra":
+  - "GL-TESTCOV-server-config-pam-garden-extra"

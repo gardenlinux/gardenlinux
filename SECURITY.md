@@ -18,7 +18,6 @@ following volunteers:
 * Andre Russ, (**[@gehoern](https://github.com/gehoern)**)
 * Nikolas Kraetzschmar (**[@nkraetzschmar](https://github.com/nkraetzschmar/)**)
 * Stefan Catargiu (**[@5kt](https://github.com/5kt/)**)
-* Florian Wilhelm (**[@fwilhe](https://github.com/fwilhe/)**)
 
 
 ## Disclosures

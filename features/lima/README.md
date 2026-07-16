@@ -4,22 +4,49 @@
 This feature flag produces an image suitable for using with [lima](https://lima-vm.io)
 </website-feature>
 
-Garden Linux images for Lima are published at https://images.gardenlinux.io
+Garden Linux images for Lima are published with nightly or release
 
-How to use the pre-built image:
+**How to use the pre-built image:**
 
-1. Create and start the VM
+1. Prerequisites
+    - podman
+    - access to gardenlinux-glrd.s3.eu-central-1.amazonaws.com
+
+2. Generate yaml file for Lima-VM
+
+Generate yaml file required using generate-lima-yaml.py script inside bin folder
+```bash
+# for help, use:
+./bin/generate-lima-yaml.py --help
+
+# without any argument, you will get the latest released version of Garden Linux:
+./bin/generate-lima-yaml.py
+
+# you can specify a released version:
+./bin/generate-lima-yaml.py --version <version>
+
+# for the latest nightly image, use:
+./bin/generate-lima-yaml.py --version nightly
+
+# for a particular nightly version, use:
+./bin/generate-lima-yaml.py --version <version> --allow-nightly
+```
+
+You may also use the container image that contains the script with all its dependencies:
+
+```bash
+podman run --rm ghcr.io/gardenlinux/gardenlinux/lima:latest | limactl start --name gardenlinux -
+```
+
+3. Start Lima VM with GardenLinux Image
 
 ```
-# for the latest nightly build, use:
-limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux.yaml
-# for a released version, use this (see released versions at https://github.com/gardenlinux/gardenlinux/releases):
-limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux-$VERSION.yaml
+./bin/generate-lima-yaml.py --version nightly | limactl start --name gardenlinux -
 ```
 
-2. Open a shell inside the VM: `limactl shell gardenlinux`
+4. Open a shell inside the VM: `limactl shell gardenlinux`
 
-How to build your own image:
+**How to build your own image:**
 
 1. Build an image: `./build lima`
 

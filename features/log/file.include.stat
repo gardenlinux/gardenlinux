@@ -1,1 +1,2 @@
+# GL-TESTCOV-log-config-audit-permissions
 root root 0640 /etc/audit/rules.d/*-*.rules

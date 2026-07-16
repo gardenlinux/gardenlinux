@@ -1,0 +1,19 @@
+markers:
+  "etc/modprobe.d/cramfs.conf":
+  - "GL-TESTCOV-cisModprobe-config-modprobe-cramfs"
+  "etc/modprobe.d/dccp.conf":
+  - "GL-TESTCOV-cisModprobe-config-modprobe-dccp"
+  "etc/modprobe.d/freevxfs.conf":
+  - "GL-TESTCOV-cisModprobe-config-modprobe-freevxfs"
+  "etc/modprobe.d/jffs2.conf":
+  - "GL-TESTCOV-cisModprobe-config-modprobe-jffs2"
+  "etc/modprobe.d/rds.conf":
+  - "GL-TESTCOV-cisModprobe-config-modprobe-rds"
+  "etc/modprobe.d/sctp.conf":
+  - "GL-TESTCOV-cisModprobe-config-modprobe-sctp"
+  "etc/modprobe.d/squashfs.conf":
+  - "GL-TESTCOV-cisModprobe-config-modprobe-squashfs"
+  "etc/modprobe.d/tipc.conf":
+  - "GL-TESTCOV-cisModprobe-config-modprobe-tipc"
+  "etc/modprobe.d/udf.conf":
+  - "GL-TESTCOV-cisModprobe-config-modprobe-udf"

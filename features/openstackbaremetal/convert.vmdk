@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-set -eufo pipefail
-
-qemu-img convert -o subformat=streamOptimized -f raw -O vmdk "$1" "$2"

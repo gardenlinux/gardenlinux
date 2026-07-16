@@ -1,0 +1,5 @@
+description: "OpenStack cloud specific configs"
+type: element
+features:
+  include:
+    - cloud

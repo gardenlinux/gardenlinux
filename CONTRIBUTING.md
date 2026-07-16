@@ -2,7 +2,7 @@
 
 ## Code of conduct
 
-All members of the Garden Linux community must abide by the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/master/code-of-conduct.md). Only by respecting each other can we develop a productive, collaborative community. Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting gardenlinux.opensource@sap.com and/or a Garden Linux project maintainer.
+All members of the Garden Linux community must abide by the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/main/code-of-conduct.md). Only by respecting each other can we develop a productive, collaborative community. Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting gardenlinux.opensource@sap.com and/or a Garden Linux project maintainer.
 
 ## Contributing
 
@@ -73,7 +73,7 @@ Next to this, more specific prefixes (unlike only `feature/`) may be used.
 
 ## Pull Request Checklist
 
-1. Branch from the master branch and, if needed, rebase to the current master branch before submitting your pull request. If it doesn’t merge cleanly with master you may be asked to rebase your changes.
+1. Branch from the main branch and, if needed, rebase to the current main branch before submitting your pull request. If it doesn’t merge cleanly with main you may be asked to rebase your changes.
 
 1. Commits should be as small as possible, while ensuring that each commit is correct independently (i.e., each commit should compile and pass tests).
 

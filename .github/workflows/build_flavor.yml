@@ -16,6 +16,9 @@ on:
         required: true
       signing_env:
         type: string
+        default: ""
+      prefix:
+        type: string
         default: ''
     secrets:
       secureboot_db_kms_arn:
@@ -37,28 +40,28 @@ jobs:
       id-token: write
       actions: write
     env:
-      CNAME: ''
+      CNAME: ""
       USE_KMS: ${{ inputs.signing_env == '' && 'false' || 'true' }}
     environment: ${{ inputs.signing_env }}
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@efdffb9a6b279cd7aada23b02baf4ec2534dc6d2 # pin@0.10.21
       - name: Set build reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
       - name: Load certs artifact
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
         with:
-          name: certs
+          name: ${{ inputs.prefix }}certs
           path: cert/
       - name: Configure aws credentials for kms signing
         id: aws_auth
         if: ${{ env.USE_KMS == 'true' }}
-        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_kms_role }}
           role-session-name: ${{ secrets.aws_oidc_session }}
@@ -69,24 +72,21 @@ jobs:
         run: echo "${{ secrets.secureboot_db_kms_arn }}" > cert/secureboot.db.arn
       - name: Build
         run: make ${{ inputs.flavor }}-${{ inputs.arch }}-build
-      - name: Determine CNAME
-        id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@0.10.6
-        with:
-          flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@efdffb9a6b279cd7aada23b02baf4ec2534dc6d2 # pin@0.10.21
       - name: Set CNAME
         run: |
-          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
+          echo "CNAME=$(gl-features-parse --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname)" | tee -a "$GITHUB_ENV"
       - name: Pack build artifacts for upload
         run: tar -cSzvf "$CNAME.tar.gz" -C .build -T ".build/$CNAME.artifacts"
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
         with:
-          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
+          name: ${{ inputs.prefix }}build-${{ inputs.flavor }}-${{ inputs.arch }}
           path: ${{ env.CNAME }}.tar.gz
           if-no-files-found: error
-      - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
+      - uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # pin@v5.0.4
         with:
           path: |
             COMMIT
             VERSION
-          key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
+          key: ${{ inputs.prefix }}build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}

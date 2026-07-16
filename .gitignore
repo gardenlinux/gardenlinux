@@ -48,8 +48,9 @@ __pycache__
 /tests/pytest.*.sh
 !tests/config/*.yaml.example
 tests/config
-tests-ng/log
-tests-ng/.ssh
+tests/log
+tests/.ssh
+tests/coverage_report.json
 make_targets.cache
 /bin/*.vars
 /bin/*.ipxe
