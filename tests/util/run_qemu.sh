@@ -215,9 +215,6 @@ echo "=== Current boot: $([ -f /.installed ] && echo 'INSTALLED SYSTEM' || echo 
 trap 'echo "❌ ERROR: Script failed at line $LINENO with exit code $?"' ERR
 EOF
 
-# Replace hardcoded console device with architecture-appropriate device
-sed -i "s|/dev/ttyS0|$console_device|g" "$tmpdir/fw_cfg-script.sh"
-
 # Set up SSH user
 if ((ssh)); then
 	ssh_private_key="$util_dir/../.ssh/id_ed25519_gl"
