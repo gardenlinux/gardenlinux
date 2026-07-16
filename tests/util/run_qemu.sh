@@ -246,8 +246,11 @@ if ! ((skip_cleanup)); then
 		# For autoinstall, only set poweroff trap on the installed system.
 		# On the live boot we exit early and let gl-autoinstall.service handle the reboot.
 		cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
-# Only poweroff on exit if this is the installed system (post-install boot)
-if [ -f /.installed ] || ! mountpoint -q /run/rootfs 2>/dev/null; then
+# Only poweroff on exit if this is the installed system (post-install boot).
+# /.installed is written by install.sh into the installed root only.
+# The former "|| ! mountpoint -q /run/rootfs" heuristic misfired on ISO live
+# (which uses /run/rootfsbase, not /run/rootfs), arming the trap prematurely.
+if [ -f /.installed ]; then
 	trap "poweroff -f > /dev/null 2>&1" EXIT
 fi
 EOF
@@ -287,7 +290,7 @@ if ! ((skip_tests)); then
 	if ((autoinstall)); then
 		# For autoinstall (ISO or PXE), only run tests on the installed system (post-install boot)
 		cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
-if [ -f /.installed ] || ! mountpoint -q /run/rootfs 2>/dev/null; then
+if [ -f /.installed ]; then
 	echo "=== SECOND BOOT: Preparing to run tests ===" | tee /dev/console
 	mkdir /run/gardenlinux-tests
 	mount -o ro /dev/disk/by-label/GL_TESTS /run/gardenlinux-tests
