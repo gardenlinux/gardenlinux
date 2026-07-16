@@ -353,6 +353,15 @@ if ! ((skip_tests)); then
 		test_args+=("--expected-users" "$ssh_user")
 	fi
 
+	cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
+echo "⚙️  waiting for systemd to finish initialization (timeout: 10 minutes)"
+timeout 600 systemctl is-system-running --wait || {
+	echo "⚠️  systemctl is-system-running timed out or failed, checking system status"
+	systemctl is-system-running || true
+	systemctl --failed --no-legend || true
+}
+EOF
+
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
 PYTHONUNBUFFERED=1 ./run_tests ${test_args[*]@Q} 2>&1
 EOF
