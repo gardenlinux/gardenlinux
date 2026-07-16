@@ -76,6 +76,16 @@ if [ -d ${target}/usr/lib/dracut/modules.d/98gardenlinux-live ]; then
   rm -f ${target}/etc/kernel/cmdline.d/80-pxe.cfg
   echo "Rebuilding initrd (this takes several minutes)..."
   chroot ${target}/ /etc/kernel/postinst.d/dracut ${kernel}
+  echo "Generating systemd-boot loader entries..."
+  # Ensure /etc/machine-id exists so kernel-install selects the BLS layout and
+  # uses the 'Default' entry-token from /etc/kernel/entry-token.
+  chroot ${target}/ bash -c '[ -s /etc/machine-id ] || systemd-machine-id-setup'
+  # Ensure the entry-token directory exists under the ESP.
+  chroot ${target}/ mkdir -p /efi/Default
+  # Invoke the feature's own regeneration chain (update-kernel-cmdline →
+  # kernel-install add per vmlinuz → update-syslinux) with the ESP path
+  # exported. This mirrors the proven runtime path used for kernel updates.
+  chroot ${target}/ env SYSTEMD_ESP_PATH=/efi update-bootloaders
 else
   # For non-PXE installs (like ISO), copy boot entries from live system
   echo "Copying systemd-boot entries..."
