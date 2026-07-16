@@ -6,25 +6,20 @@ the same account occur from different sources.
 """
 
 import pytest
+from handlers.audit_user import TEST_USER
 from plugins.shell import ShellRunner
 
-TEST_USER = "audit_concurrent_user"
 OUTPUT_FILE = "/tmp/audit_output_gl.txt"
 JOURNAL_FILE = "/tmp/journal_output_gl.txt"
 TIME_FILE = "/tmp/audit_start_time"
 
 
 @pytest.fixture
-def concurrent_login_environment(shell: ShellRunner):
-    shell(f"id {TEST_USER} || useradd -m {TEST_USER}")
+def concurrent_login_environment(shell: ShellRunner, audit_user):
     yield
     shell(f"pkill -9 -u {TEST_USER}", ignore_exit_code=True)
     shell("sleep 1")
-    shell(f"userdel -r {TEST_USER}")
     shell(f"rm -f {OUTPUT_FILE} {JOURNAL_FILE} {TIME_FILE}")
-    shell(
-        "rm -f /etc/group- /etc/gshadow- /etc/passwd- /etc/shadow- /etc/subgid- /etc/subuid-"
-    )
 
 
 @pytest.mark.security_id(203771)
