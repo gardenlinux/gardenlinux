@@ -1,0 +1,9 @@
+markers:
+  "etc/kernel/cmdline.d/00-cmdline.cfg":
+  - "GL-TESTCOV-gcp-config-kernel-cmdline-default"
+  "etc/kernel/cmdline.d/10-console.cfg":
+  - "GL-TESTCOV-gcp-config-kernel-cmdline-console"
+  "etc/systemd/timesyncd.conf.d/00-gardenlinux-gcp.conf":
+  - "GL-TESTCOV-gcp-config-timesyncd"
+  "usr/lib/udev/rules.d/64-gce-disk-removal.rules":
+  - "GL-TESTCOV-gcp-config-udev-rules-gce-disk-removal"

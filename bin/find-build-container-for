@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-import requests
 import sys
+import urllib.request
+import urllib.error
 
-def download_file(version):
+def fetch_container_info(version):
     # Ensure the version follows the format "1234.5"
     if '.' not in version:
         version = f"{version}.0"
@@ -11,15 +12,14 @@ def download_file(version):
     url = f"https://raw.githubusercontent.com/gardenlinux/repo/refs/tags/{version}/.container"
 
     try:
-        response = requests.get(url)
-        
-        if response.status_code == 200:
-            print(response.text)
-        else:
-            print(f"Failed to download file. HTTP Status Code: {response.status_code}")
-            print("Please check if the version number is correct.")
-    except requests.exceptions.RequestException as e:
-        print(f"An error occurred while trying to download the file: {e}")
+        with urllib.request.urlopen(url) as response:
+            content = response.read().decode('utf-8')
+            print(content)
+    except urllib.error.HTTPError as e:
+        print(f"Failed to download file. HTTP Status Code: {e.code}")
+        print("Please check if the version number is correct.")
+    except urllib.error.URLError as e:
+        print(f"An error occurred while trying to download the file: {e.reason}")
 
 def main():
     if len(sys.argv) != 2:
@@ -27,7 +27,7 @@ def main():
         return
 
     version = sys.argv[1]
-    download_file(version)
+    fetch_container_info(version)
 
 if __name__ == "__main__":
     main()

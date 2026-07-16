@@ -5,3 +5,4 @@ type: element
 features:
   depends:
     - cis
+    - ssh

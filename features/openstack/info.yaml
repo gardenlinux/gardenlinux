@@ -1,5 +1,9 @@
-description: "OpenStack platform (cloud-init, open-vm-tools)"
+description: "OpenStack platform"
 type: platform
 features:
-  include: 
-    - cloud
+  include:
+  # This set of includes gets auto adjusted depend on if we build as openstack or openstack-metal
+  # This works by cloud excluding openstackMetal and metal excluding cloud and openstackCloud
+    - openstackCloud
+    - openstackMetal
+    - server # needed to enforce proper sorting

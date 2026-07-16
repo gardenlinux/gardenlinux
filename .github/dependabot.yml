@@ -1,6 +1,7 @@
 # Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
+enable-beta-ecosystems: true # for opentofu-support
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -10,15 +11,7 @@ updates:
       - "gardenlinux/garden-linux-maintainers"
 
   - package-ecosystem: "pip"
-    directory: "/tests"
-    schedule:
-      interval: "weekly"
-    versioning-strategy: "increase-if-necessary"
-    reviewers:
-      - "gardenlinux/garden-linux-maintainers"
-
-  - package-ecosystem: "pip"
-    directory: "/tests-ng/util"
+    directory: "/tests/util"
     schedule:
       interval: "weekly"
     versioning-strategy: "increase-if-necessary"

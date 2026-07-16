@@ -1,2 +1,0 @@
-# disabling as it will fail because of the signed systemd-bootx64.efi 
-# TODO : re-enable when we have our own systemd packages

@@ -94,7 +94,7 @@ For more information about the release strategy and lifecycle, have a look at th
 ## Download Garden Linux Releases
 
 Images are published as:
-- GitHub Releses in https://github.com/gardenlinux/gardenlinux/releases
+- GitHub Releases in https://github.com/gardenlinux/gardenlinux/releases
 - GitHub Packages https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux
 
 ## Download Nightly Releases 
@@ -116,7 +116,7 @@ This can be useful if you want to evaluate Garden Linux but don't have access to
 To get started, follow the [lima install instructions](https://lima-vm.io/docs/installation/) for your OS and create a Garden Linux vm using this command:
 
 ```bash
-limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux.yaml
+podman run --rm ghcr.io/gardenlinux/gardenlinux/lima:latest | limactl start --name gardenlinux -
 ```
 
 For advanced use cases, read [the documentation page on Lima](./docs/02_operators/lima-vm.md).
@@ -139,3 +139,8 @@ Link: <a href="https://gitter.im/gardenlinux/community">https://gitter.im/garden
 Copyright 2025 SAP SE or an SAP affiliate company and GardenLinux contributors. Please see our [LICENSE](LICENSE.md) for
 copyright and license information. Detailed information including third-party components and their licensing/copyright
 information is available [via the REUSE tool](https://reuse.software).
+
+<p align="center">
+  <img alt="Bundesministerium für Wirtschaft und Energie (BMWE)-EU funding logo" src="https://apeirora.eu/assets/img/BMWK-EU.png" width="400"/>
+</p>
+

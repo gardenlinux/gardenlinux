@@ -1,0 +1,4 @@
+unit: manifest entry
+id: _has_ccloud
+_name: Converged Cloud
+value-type: bool

@@ -17,6 +17,10 @@ on:
       with_certs:
         type: boolean
         default: false
+      compatibility_flags:
+        description: 'Flags to activate compatibility modes'
+        type: string
+        default: ''
     secrets:
       aws_role:
         required: true
@@ -26,6 +30,8 @@ on:
         required: true
       aws_s3_bucket:
         required: true
+env:
+  GL_COMPATIBILITY_FLAGS: ${{ inputs.compatibility_flags }}
 jobs:
   upload_to_s3:
     name: upload to S3
@@ -34,7 +40,8 @@ jobs:
       run:
         shell: bash
     env:
-      CNAME: ''
+      CNAME: ""
+      GL_ALLOW_MULTIPLE_PLATFORMS: "1"
     permissions:
       id-token: write
     environment: oidc_aws_s3_upload
@@ -42,31 +49,29 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
+      - if: ${{ contains(inputs.compatibility_flags, 'full_checkout') }}
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          ref: ${{ inputs.commit_id }}
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
-      - uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@efdffb9a6b279cd7aada23b02baf4ec2534dc6d2 # pin@0.10.21
+      - uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
           role-duration-seconds: 14400 # 4 hours
-      - name: Set flavor version reference
-        run: |
-          echo "${{ inputs.commit_id }}" | tee COMMIT
-          echo "${{ inputs.version }}" | tee VERSION
-      - name: Set CNAME
-        run: |
-          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
+      - name: Set CNAME
+        run: |
+          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
       - name: Load test artifacts
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
         with:
           pattern: "*-test-${{ env.CNAME }}"
           merge-multiple: true
@@ -74,7 +79,7 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - if: ${{ inputs.with_certs }}
         name: Load certs artifact
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
         with:
           name: certs
           github-token: ${{ github.token }}
@@ -91,9 +96,19 @@ jobs:
             mv $CNAME.chroot.test.xml "$CNAME"
           fi
 
-          if [ -f "$CNAME.platform.test.log" ]; then
-            mv $CNAME.platform.test.log "$CNAME"
-            mv $CNAME.platform.test.xml "$CNAME"
+          if [ -f "$CNAME.cloud.test.log" ]; then
+            mv $CNAME.cloud.test.log "$CNAME"
+            mv $CNAME.cloud.test.xml "$CNAME"
+          fi
+
+          if [ -f "$CNAME.oci.test.log" ]; then
+            mv $CNAME.oci.test.log "$CNAME"
+            mv $CNAME.oci.test.xml "$CNAME"
+          fi
+
+          if [ -f "$CNAME.qemu.test.log" ]; then
+            mv $CNAME.qemu.test.log "$CNAME"
+            mv $CNAME.qemu.test.xml "$CNAME"
           fi
       - if: ${{ inputs.with_certs }}
         name: Add certs to build artifacts
@@ -105,4 +120,4 @@ jobs:
           popd
       - name: Upload to S3 bucket ${{ secrets.aws_s3_bucket }}
         run: |
-          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" upload-artifacts-to-bucket
+          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$CNAME" upload-artifacts-to-bucket --artifact-name "$CNAME"

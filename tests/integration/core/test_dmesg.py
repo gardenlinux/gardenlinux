@@ -1,0 +1,126 @@
+import pytest
+from plugins.file import File
+
+# =============================================================================
+# server and gardener Feature - dmesg
+# =============================================================================
+
+# server adds /etc/sysctl.d/40-restrict-dmesg.conf, gardener excludes it
+#    and adds /etc/sysctl.d/40-allow-nonroot-dmesg.conf instead
+
+
+@pytest.mark.testcov(["GL-TESTCOV-gardener-config-sysctl-allow-nonroot-dmesg"])
+@pytest.mark.feature("gardener")
+def test_dmesg_gardener_sysctl_no_restrictions_on_accessing_dmesg(parse_file):
+    file_path = "/etc/sysctl.d/40-allow-nonroot-dmesg.conf"
+    config = parse_file.parse(file_path, format="keyval")
+    assert config["kernel.dmesg_restrict"] == "0"
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-server-config-sysctl-restrict-dmesg",
+    ]
+)
+@pytest.mark.feature("server and not gardener")
+def test_dmesg_server_sysctl_restrictions_on_accessing_dmesg(parse_file):
+    file_path = "/etc/sysctl.d/40-restrict-dmesg.conf"
+    config = parse_file.parse(file_path, format="keyval")
+    assert config["kernel.dmesg_restrict"] == "1"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stig-config-sysctl-stig"])
+@pytest.mark.feature("stig")
+def test_dmesg_stig_sysctl_restrictions_on_accessing_dmesg(parse_file):
+    file_path = "/etc/sysctl.d/99-stig.conf"
+    config = parse_file.parse(file_path, format="keyval")
+    assert config["kernel.dmesg_restrict"] == "1"
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-gardener-config-sysctl-no-restrict-dmesg",
+    ]
+)
+@pytest.mark.feature("gardener")
+def test_gardener_sysctl_no_restrict_dmesg(file: File):
+    """Test that gardener does not restrict dmesg (allows non-root access)"""
+    # Check that allow-nonroot-dmesg config exists (covered elsewhere)
+    # or that restrict-dmesg config doesn't exist
+    assert not file.exists(
+        "/etc/sysctl.d/40-restrict-dmesg.conf"
+    ), "Gardener should not restrict dmesg access"
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-gardener-config-sysctl-allow-nonroot-dmesg",
+    ]
+)
+@pytest.mark.feature("gardener")
+@pytest.mark.booted(reason="sysctl needs a booted system")
+def test_dmesg_gardener_no_restrictions_sysctl_runtime(sysctl):
+    assert sysctl["kernel.dmesg_restrict"] == 0
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-server-config-sysctl-restrict-dmesg",
+    ]
+)
+@pytest.mark.feature("server and not gardener")
+@pytest.mark.booted(reason="sysctl needs a booted system")
+def test_dmesg_server_restrictions_sysctl_runtime(sysctl):
+    assert sysctl["kernel.dmesg_restrict"] == 1
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-gardener-config-sysctl-allow-nonroot-dmesg",
+    ]
+)
+@pytest.mark.booted(reason="needs a booted system with dmesg restrictions loaded")
+@pytest.mark.feature("gardener")
+def test_dmesg_gardener_call_by_unprivileged_user_allowed(shell):
+    res = shell("dmesg", capture_output=True, ignore_exit_code=True)
+    assert res.returncode == 0
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-server-config-sysctl-restrict-dmesg",
+    ]
+)
+@pytest.mark.feature("server and not gardener")
+@pytest.mark.booted(reason="needs a booted system with dmesg restrictions loaded")
+def test_dmesg_server_call_by_unprivileged_user_forbidden(shell):
+    res = shell("dmesg", capture_output=True, ignore_exit_code=True)
+    assert res.returncode == 1
+
+
+# =============================================================================
+# stig Feature - dmesg
+# =============================================================================
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-stig-config-sysctl-stig",
+    ]
+)
+@pytest.mark.feature("stig")
+@pytest.mark.booted(reason="sysctl needs a booted system")
+def test_dmesg_stig_restrictions_sysctl_runtime(sysctl):
+    assert sysctl["kernel.dmesg_restrict"] == 1
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-stig-config-sysctl-stig",
+    ]
+)
+@pytest.mark.feature("stig")
+@pytest.mark.booted(reason="needs a booted system with dmesg restrictions loaded")
+def test_dmesg_stig_call_by_unprivileged_user_forbidden(shell):
+    res = shell("dmesg", capture_output=True, ignore_exit_code=True)
+    assert res.returncode == 1

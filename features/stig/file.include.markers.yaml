@@ -1,0 +1,9 @@
+markers:
+  "etc/modprobe.d/disabled_usb.conf":
+  - "GL-TESTCOV-stig-config-modprobe-usb-disable"
+  "etc/rsyslog.d/50-default.conf":
+  - "GL-TESTCOV-stig-config-rsyslog-default"
+  "etc/sysctl.d/99-stig.conf":
+  - "GL-TESTCOV-stig-config-sysctl-stig"
+  "usr/share/pam-configs/garden-stig":
+  - "GL-TESTCOV-stig-config-pam-garden-stig"

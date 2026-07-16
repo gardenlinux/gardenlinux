@@ -1,4 +1,4 @@
-name: 'Tag latest and release container'
+name: "Tag latest and release container"
 on:
   workflow_call:
     inputs:
@@ -21,7 +21,7 @@ jobs:
       packages: write
     steps:
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@efdffb9a6b279cd7aada23b02baf4ec2534dc6d2 # pin@0.10.21
       - name: Tag manifest
         env:
           GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -32,16 +32,22 @@ jobs:
           is_latest="${{ inputs.is_latest }}"
 
           version_major=$(echo $version | cut -d'.' -f 1)
-          version_patch=$(echo $version | cut -d'.' -f 2)
+          version_patch=$(echo $version | cut -d'.' -f 3)
 
           container=ghcr.io/${{ github.repository }}
 
           # Tag the major release version
           echo "Tagging as ${version_major}"
-          gl-oci push-manifest-tags --container "${container}" --version "${version}" --tag "${version_major}"
+          gl-oci push-index-tags --index "${container}" --index-tag "${version}" --tag "${version_major}"
+
+          # Tag the patch release version
+          if [ -z "${version_patch}" ]; then
+            echo "Tagging as ${version}.0"
+            gl-oci push-index-tags --index "${container}" --index-tag "${version}" --tag "${version}.0"
+          fi
 
           # Tag latest only if requested
           if [ "${is_latest}" == "true" ]; then
             echo "Tagging as latest"
-            gl-oci push-manifest-tags --container "${container}" --version "${version}" --tag "latest"
+            gl-oci push-index-tags --index "${container}" --index-tag "${version}" --tag "latest"
           fi
