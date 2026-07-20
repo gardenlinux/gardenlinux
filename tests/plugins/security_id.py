@@ -20,5 +20,5 @@ def pytest_collection_modifyitems(config: pytest.Config, items: List[pytest.Item
             security_id = marker.args[0]
             item.user_properties.append(("security_id", security_id))
 
-	if item.fspath.basename.startswith("test_disastig_"):
-	    item.user_properties.append(("disa_stig_version", STIG_PROFILE))
+        if item.fspath.basename.startswith("test_disastig_"):
+            item.user_properties.append(("disa_stig_version", STIG_PROFILE))
