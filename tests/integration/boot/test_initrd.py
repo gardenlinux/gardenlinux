@@ -194,7 +194,7 @@ def test_pxe_initrd_files(initrd: Initrd):
         "GL-TESTCOV-_pxe-config-kernel-cmdline-pxe",
     ]
 )
-@pytest.mark.feature("_pxe")
+@pytest.mark.feature("_pxe and not _autoinstall")
 @pytest.mark.booted(reason="kernel cmdline needs a booted system")
 def test_pxe_kernel_cmdline(kernel_cmdline: List[str]):
     """Verify kernel command line parameters are present in the running kernel command line for PXE"""
