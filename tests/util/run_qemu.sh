@@ -187,20 +187,25 @@ EOF
 if ((ssh)); then
 	cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
 
-# Stop serial-getty to get exclusive access to serial console for test output
-# This allows our script output to reach QEMU's serial capture instead of being swallowed by getty
-systemctl stop serial-getty@ttyS0.service 2>/dev/null || true
+# Stop serial-getty to get exclusive access to the serial console for test
+# output, so our output reaches QEMU's serial capture instead of being swallowed
+# by getty. The console tty is architecture-dependent (ttyS0 on x86_64,
+# ttyAMA0 on aarch64), so derive it from the active console rather than
+# hardcoding ttyS0.
+console_tty="$(sed 's/.* //' /sys/class/tty/console/active 2>/dev/null || true)"
+if [ -n "$console_tty" ]; then
+	systemctl stop "serial-getty@${console_tty}.service" 2>/dev/null || true
+fi
 EOF
 fi
 
 cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
-# Send all output to console so it appears on
-# the QEMU serial output (and thus in logs).
+# Send all output to /dev/console so it appears on the QEMU serial output (and
+# thus in logs). /dev/console maps to the active serial console on every
+# architecture (ttyS0 on x86_64, ttyAMA0 on aarch64), so we must not hardcode a
+# specific tty device here.
 exec >/dev/console
 exec 2>&1
-
-# Redirect all output directly to serial console
-exec > /dev/ttyS0 2>&1
 
 echo "=== FW_CFG Script started at $(date) ==="
 echo "=== Script PID: $$ ==="
