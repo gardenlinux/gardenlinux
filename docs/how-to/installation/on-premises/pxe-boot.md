@@ -148,9 +148,9 @@ The [`_pxe`](/reference/features/_pxe) feature provides the core PXE boot capabi
 
 | Build Command | Features | Use Case |
 |---------------|----------|----------|
-| `./build baremetal-gardener_prod_pxe` | `_pxe` | Live boot only (ephemeral, runs from RAM) |
-| `./build baremetal-gardener_prod_pxe_install` | `_pxe`, `_install` | Manual or Ignition-triggered installation |
-| `./build baremetal-gardener_prod_pxe_autoinstall` | `_pxe`, `_autoinstall` | Automatic installation to first disk |
+| `./build baremetal-gardener_prod_pxe` | [`_pxe`](/reference/features/_pxe) | Live boot only (ephemeral, runs from RAM) |
+| `./build baremetal-gardener_prod_pxe_install` | [`_pxe`](/reference/features/_pxe), [`_install`](/reference/features/_install) | Manual or Ignition-triggered installation |
+| `./build baremetal-gardener_prod_pxe_autoinstall` | [`_pxe`](/reference/features/_pxe), [`_autoinstall`](/reference/features/_autoinstall) | Automatic installation to first disk |
 
 The [`_autoinstall`](/reference/features/_autoinstall) feature includes [`_install`](/reference/features/_install), so you get both automatic detection and the ability to manually run the installer.
 
@@ -279,8 +279,8 @@ For additional Ignition configuration examples including network configuration, 
 Garden Linux PXE images require the [`_install`](/reference/features/_install) or [`_autoinstall`](/reference/features/_autoinstall) feature for disk installation. The [`_pxe`](/reference/features/_pxe) feature alone provides only live boot capability.
 
 To enable disk installation, build with one of:
-- `_pxe` + `_install` — Manual or Ignition-triggered installation
-- `_pxe` + `_autoinstall` — Automatic installation (includes `_install`)
+- [`_pxe`](/reference/features/_pxe) + [`_install`](/reference/features/_install) — Manual or Ignition-triggered installation
+- [`_pxe`](/reference/features/_pxe) + [`_autoinstall`](/reference/features/_autoinstall) — Automatic installation (includes `_install`)
 
 When [`_install`](/reference/features/_install) is included, `/opt/install/install.sh` is available and can be used in three ways:
 
@@ -359,7 +359,7 @@ passwd:
 
 - **`systemd.units.install.service`** — Systemd service that triggers installation on first boot
 - **`Environment="GL_INSTALL_TARGET=/dev/sda"`** — Specifies the target disk for installation (change to match your disk: `/dev/sda`, `/dev/nvme0n1`, etc.)
-- **`ExecStart=/opt/install/install.sh`** — Calls the built-in installer (provided by `_install` feature)
+- **`ExecStart=/opt/install/install.sh`** — Calls the built-in installer (provided by [`_install`](/reference/features/_install) feature)
 - **`passwd.users`** — User accounts to create on the installed system
 - **`ConditionFirstBoot=yes`** — Ensures installation only runs once
 
@@ -369,7 +369,7 @@ NVMe drives use the naming pattern `/dev/nvme0n1`, `/dev/nvme1n1`, etc. Virtio d
 
 #### Customizing the installation
 
-The built-in installer (`/opt/install/install.sh` from the `_install` feature) uses default configurations that can be customized:
+The built-in installer (`/opt/install/install.sh` from the [`_install`](/reference/features/_install) feature) uses default configurations that can be customized:
 
 **Default partition layout** (`/opt/install/install.part`):
 ```
@@ -621,7 +621,7 @@ System configuration tasks:
 
 ### Installation fails or does not start
 
-**For `_autoinstall` images:**
+**For [`_autoinstall`](/reference/features/_autoinstall) images:**
 - **Check gl-autoinstall.service logs**:
   ```bash
   journalctl -u gl-autoinstall.service
@@ -676,7 +676,7 @@ The test script automatically:
 4. Boots QEMU via network boot using iPXE
 5. Runs the test suite on the live system
 
-### Test PXE Installation with `_autoinstall` Feature
+### Test PXE Installation with [`_autoinstall`](/reference/features/_autoinstall) Feature
 
 To test PXE boot + installation to disk, build the image with the [`_autoinstall`](/reference/features/_autoinstall) feature:
 

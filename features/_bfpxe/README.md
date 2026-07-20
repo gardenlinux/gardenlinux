@@ -18,5 +18,5 @@ only bluefield pxe build is done (with squashfs)
 |---|---|
 |type|flag|
 |artifact|None|
-|included_features|_ignite|
+|included_features|[`_ignite`](/reference/features/_ignite)|
 |excluded_features|None|

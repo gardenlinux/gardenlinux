@@ -114,7 +114,46 @@ Flavors with `publish: false` are still available as GitHub workflow artifacts f
 
 ## Feature List
 
-A complete list of all available features can be looked up in the [Features Reference](/reference/features/)
+Each Garden Linux build is identified by a four-level naming hierarchy defined in [ADR 0035](/reference/adr/0035-cname-flavor-artifact-naming):
+
+| Term                   | Format                                    | Example                                    |
+| ---------------------- | ----------------------------------------- | ------------------------------------------ |
+| **cname**              | `{feature-encoding}`                      | `aws-gardener_prod`                        |
+| **flavor**             | `{cname}-{arch}`                          | `aws-gardener_prod-amd64`                  |
+| **versioned flavor**   | `{cname}-{arch}-{version}`                | `aws-gardener_prod-amd64-2150.1.0`         |
+| **artifact base name** | `{cname}-{arch}-{version}-{short_commit}` | `aws-gardener_prod-amd64-2150.1.0-abc1234` |
+
+**cname** (canonical name) encodes only the feature set — no architecture, version, or commit. It is the minimal, canonically-sorted representation of the features selected for a build.
+
+**flavor** qualifies the cname with a target architecture. This is the stable identifier used in `flavors.yaml` entries, CI job naming, and as the argument to the `./build` script.
+
+**versioned flavor** qualifies the flavor with a version. The version can optionally be passed on the `./build` command line or is resolved internally from the `VERSION` file via `./get_version`.
+
+**artifact base name** qualifies the versioned flavor with a short commit hash. It is the prefix of every file produced under `.build/` and the key used for S3 artifact storage.
+
+:::info Feature name encoding in the cname
+Features are concatenated with `-` as separator. Flag features (whose names begin with `_`) are joined directly to the preceding component without a leading `-`.
+
+For example, `aws-gardener_prod_fips` is assembled from:
+
+- [`aws`](/reference/features/aws) — the platform feature
+- [`gardener`](/reference/features/gardener) — an element, joined with `-` → `aws-gardener`
+- [`_prod`](/reference/features/_prod) — a flag, appended directly (no `-`) → `aws-gardener_prod`
+- [`_fips`](/reference/features/_fips) — a flag, appended directly (no `-`) → `aws-gardener_prod_fips`
+  :::
+
+**Worked example** for [`aws`](/reference/features/aws) (platform), [`gardener`](/reference/features/gardener) (element), [`_prod`](/reference/features/_prod) (flag) features on `amd64` at version `2150.1.0` with commit `abc1234`:
+
+1. **cname** = `aws-gardener_prod` (feature encoding only)
+1. **flavor** = `aws-gardener_prod-amd64` (cname + arch)
+1. **versioned flavor** = `aws-gardener_prod-amd64-2150.1.0` (flavor + version; resolved internally by `./build`)
+1. **artifact base name** = `aws-gardener_prod-amd64-2150.1.0-abc1234` (versioned flavor + short commit; prefix for all output files)
+
+:::info `today` as a version
+The version is never specified on the `./build` command line. It is read from the `VERSION` file in the repository root via `./get_version`. On `main`, `VERSION` contains `today`, so the literal string `today` is used as the version. On a release branch, `VERSION` contains the full semver for that branch (e.g. `2150.5.0`), and `get_version` returns it as-is. Builds with version `today` are development builds and are not intended for distribution.
+:::
+
+For the authoritative specification of cname construction, sorting, and minimisation, see [ADR 0035](/reference/adr/0035-cname-flavor-artifact-naming). For the feature type definitions (`platform`, `element`, `flag`) see [ADR 0034](/reference/adr/0034-feature-terminology).
 
 ## gl-flavors-parse Tool
 

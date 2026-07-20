@@ -16,7 +16,7 @@ Accepted
 
 ## Context
 
-Garden Linux images are assembled from composable units called *features*. The main Garden Linux repository, `python-gardenlinux-lib`, and downstream tooling all use the terms *feature*, *platform*, *element*, and *flag*, but without a shared, written definition. This has led to inconsistencies — most notably in how `platform` is understood (a feature sub-type in the build system, a cloud provider name in publishing tooling, and an OCI image spec concept in update tooling) and in what the `GARDENLINUX_PLATFORM` and `GARDENLINUX_FEATURES_PLATFORMS` keys in `/etc/os-release` mean.
+Garden Linux images are assembled from composable units called _features_. The main Garden Linux repository, `python-gardenlinux-lib`, and downstream tooling all use the terms _feature_, _platform_, _element_, and _flag_, but without a shared, written definition. This has led to inconsistencies — most notably in how `platform` is understood (a feature sub-type in the build system, a cloud provider name in publishing tooling, and an OCI image spec concept in update tooling) and in what the `GARDENLINUX_PLATFORM` and `GARDENLINUX_FEATURES_PLATFORMS` keys in `/etc/os-release` mean.
 
 This ADR establishes shared definitions for these terms.
 
@@ -59,13 +59,13 @@ The **feature set** of a build is the complete set of features present after DAG
 
 The build process writes the following keys into `/etc/os-release`:
 
-| Key | Content |
-|---|---|
-| `GARDENLINUX_FEATURES` | Comma-separated list of all features in the resolved feature set |
-| `GARDENLINUX_FEATURES_PLATFORMS` | Comma-separated list of all features of type `platform` |
-| `GARDENLINUX_FEATURES_ELEMENTS` | Comma-separated list of all features of type `element` |
-| `GARDENLINUX_FEATURES_FLAGS` | Comma-separated list of all features of type `flag` |
-| `GARDENLINUX_PLATFORM` | The single authoritative platform identifier for this image |
+| Key                              | Content                                                          |
+| -------------------------------- | ---------------------------------------------------------------- |
+| `GARDENLINUX_FEATURES`           | Comma-separated list of all features in the resolved feature set |
+| `GARDENLINUX_FEATURES_PLATFORMS` | Comma-separated list of all features of type `platform`          |
+| `GARDENLINUX_FEATURES_ELEMENTS`  | Comma-separated list of all features of type `element`           |
+| `GARDENLINUX_FEATURES_FLAGS`     | Comma-separated list of all features of type `flag`              |
+| `GARDENLINUX_PLATFORM`           | The single authoritative platform identifier for this image      |
 
 `GARDENLINUX_PLATFORM` is derived from `GARDENLINUX_FEATURES_PLATFORMS` as follows: if exactly one platform feature is present, `GARDENLINUX_PLATFORM` is set to that feature's name. If more than one platform feature is present (frankenstein build), `GARDENLINUX_PLATFORM` is set to the literal string `frankenstein`.
 

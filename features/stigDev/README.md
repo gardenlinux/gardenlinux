@@ -18,5 +18,5 @@ github_target_path: docs/reference/features/stigDev.md
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|stig|
+|included_features|[`stig`](/reference/features/stig)|
 |excluded_features|None|

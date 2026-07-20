@@ -34,7 +34,7 @@ For a complete step-by-step first-boot tutorial, see:
 :::
 
 ::: info Building Custom Images
-Garden Linux on-premises images require building with appropriate features (`_iso`, `_pxe`, `metal`, etc.). See [Building Images](/how-to/building-images.md) for build system documentation, or [Getting Images](/how-to/getting-images.md) for pre-built images.
+Garden Linux on-premises images require building with appropriate features ([`_iso`](/reference/features/_iso), [`_pxe`](/reference/features/_pxe), [`metal`](/reference/features/metal), etc.). See [Building Images](/how-to/building-images.md) for build system documentation, or [Getting Images](/how-to/getting-images.md) for pre-built images.
 :::
 
 <SectionIndex />

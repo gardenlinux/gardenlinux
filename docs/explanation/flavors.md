@@ -34,8 +34,9 @@ Imagine needing to create images for:
 
 The combinatorial explosion of possibilities would be impossible to manage if each image variant required a complete, independent definition. The flavor system addresses this by separating concerns into three dimensions:
 
-1. **[Target](#target-abstraction)** - The platform or environment (e.g., aws, azure, baremetal)
-2. **[Features](#feature-based-design)** - Capabilities and configurations (e.g., gardener, \_prod, \_usi)
+1. **[Platform features](/explanation/features#feature-types)** - The deployment target (e.g., [`aws`](/reference/features/aws), [`azure`](/reference/features/azure), [`baremetal`](/reference/features/baremetal))
+2. **[Element features](/explanation/features#feature-types)** - Functional components (e.g., [`gardener`](/reference/features/gardener), [`cis`](/reference/features/cis))
+3. **[Flag features](/explanation/features#feature-types)** - Lightweight modifiers (e.g., [`_prod`](/reference/features/_prod), [`_fips`](/reference/features/_fips), [`_usi`](/reference/features/_usi))
 
 This compositional approach allows Garden Linux to generate many unique flavor variants from the simple YAML definitions in [`flavors.yaml`](/reference/flavors.md).
 

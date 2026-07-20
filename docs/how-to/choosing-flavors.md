@@ -28,10 +28,20 @@ github_target_path: docs/how-to/choosing-flavors.md
 
 # Choosing Flavors
 
-A Garden Linux [flavor](/explanation/flavors) is a pre-composed combination of
-a **platform target** (e.g. `aws`, `baremetal`) and one or more **features**
-(e.g. `gardener`, `_prod`, `_fips`). The flavor name encodes both:
-`<platform>-<feature1>_<feature2>` (e.g. `aws-gardener_prod`).
+A Garden Linux flavor is a specific build variant identified by a **canonical
+name (cname)** combined with a target architecture. Under
+[ADR 0035](/reference/adr/0035-cname-flavor-artifact-naming):
+
+- **cname** — the feature encoding only, canonically sorted (e.g.
+  `aws-gardener_prod`). See [Canonical Names](/reference/flavors#canonical-names).
+- **flavor** — `{cname}-{arch}` (e.g. `aws-gardener_prod-amd64`).
+
+The cname is assembled from three feature types defined in
+[ADR 0034](/reference/adr/0034-feature-terminology): exactly one **platform**
+feature (e.g. [`aws`](/reference/features/aws)), zero or more **element** features (e.g. [`gardener`](/reference/features/gardener)), and
+zero or more **flag** features (e.g. [`_prod`](/reference/features/_prod)). In `aws-gardener_prod`, `aws` is
+the platform feature, `gardener` is an element feature, and `_prod` is a flag
+feature.
 
 This guide walks you through selecting the right flavor in four steps. For
 background on how flavors work, see [Flavors](/explanation/flavors). For the
