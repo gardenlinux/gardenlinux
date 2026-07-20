@@ -183,24 +183,36 @@ set -euf
 set -x
 EOF
 
-# Conditionally stop serial-getty BEFORE exec redirect (only when SSH is enabled)
-if ((ssh)); then
-	cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
-
-# Stop serial-getty to get exclusive access to serial console for test output
-# This allows our script output to reach QEMU's serial capture instead of being swallowed by getty
-systemctl stop serial-getty@ttyS0.service 2>/dev/null || true
-EOF
+# The serial device that QEMU's "-serial stdio" is wired to depends on the
+# machine type, NOT on the image's console= cmdline:
+#   x86_64 (q35):        the 8250/16550 UART -> /dev/ttyS0
+#   aarch64 (virt):      the PL011 UART      -> /dev/ttyAMA0
+# We must pin the fw_cfg output to this device. Deriving it inside the guest from
+# /dev/console or /sys/class/tty/console/active is unreliable: cloud images such
+# as aws set "console=tty0 console=ttyS0" even on arm64, so the guest would send
+# output to ttyS0 (or the discarded tty0), which on the virt machine is not the
+# UART QEMU captures.
+if [ "$arch" = aarch64 ]; then
+	qemu_serial_dev=/dev/ttyAMA0
+else
+	qemu_serial_dev=/dev/ttyS0
 fi
 
+# Stop serial-getty on the QEMU serial device BEFORE the exec redirect below.
+# We need exclusive access to that device: otherwise agetty and this script both
+# own the tty, and when agetty (re)opens it the fw_cfg script receives SIGHUP and
+# dies, firing the poweroff EXIT trap before the tests run. This must happen
+# unconditionally (not only for --ssh), because on aarch64 the serial-getty runs
+# on the same PL011 device (ttyAMA0) that we redirect our output to.
 cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
-# Send all output to console so it appears on
-# the QEMU serial output (and thus in logs).
-exec >/dev/console
-exec 2>&1
+systemctl stop "serial-getty@$(basename "$qemu_serial_dev").service" 2>/dev/null || true
+EOF
 
-# Redirect all output directly to serial console
-exec > /dev/ttyS0 2>&1
+cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
+# Send all output to the serial device QEMU captures via "-serial stdio" so it
+# appears in the QEMU serial output (and thus in logs).
+exec >$qemu_serial_dev
+exec 2>&1
 
 echo "=== FW_CFG Script started at $(date) ==="
 echo "=== Script PID: $$ ==="
