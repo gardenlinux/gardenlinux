@@ -213,6 +213,20 @@ echo "=== Current boot: $([ -f /.installed ] && echo 'INSTALLED SYSTEM' || echo 
 
 # Set up error trap
 trap 'echo "❌ ERROR: Script failed at line $LINENO with exit code $?"' ERR
+
+# QEMU environment quirks: clear unit failures that are expected inside a VM so
+# the system reaches an "is-system-running == running" state instead of
+# "degraded". These services depend on hardware or cloud metadata that does not
+# exist under QEMU.
+# No /dev/ipmi0 available in QEMU.
+systemctl stop ipmievd.service >/dev/null 2>&1 || true
+systemctl reset-failed ipmievd.service >/dev/null 2>&1 || true
+# GCP startup scripts do not work inside QEMU.
+systemctl reset-failed google-guest-agent.service >/dev/null 2>&1 || true
+systemctl reset-failed google-startup-scripts.service >/dev/null 2>&1 || true
+# sshguard would interfere if too many ssh connections occur.
+systemctl stop sshguard.service >/dev/null 2>&1 || true
+systemctl reset-failed sshguard.service >/dev/null 2>&1 || true
 EOF
 
 # Set up SSH user
@@ -378,8 +392,23 @@ case "$system_state" in
 esac
 EOF
 
+	# Run the test suite. Capture the exit code explicitly instead of letting
+	# `set -e` abort the script, so we can log why the run ended. Without this,
+	# an early failure (for example the bundled Python interpreter aborting on a
+	# FIPS target before pytest prints anything) would trip `set -e` and fire the
+	# `poweroff -f` EXIT trap with no diagnostic, making the VM look like it shut
+	# down for no reason.
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
-PYTHONUNBUFFERED=1 ./run_tests ${test_args[*]@Q} 2>&1
+test_rc=0
+PYTHONUNBUFFERED=1 ./run_tests ${test_args[*]@Q} 2>&1 || test_rc=\$?
+if [ "\$test_rc" -eq 0 ]; then
+	echo "✅ test run finished (exit code 0)"
+else
+	echo "❌ test run finished with exit code \$test_rc"
+fi
+# Give the serial console time to flush before the EXIT trap powers off the VM.
+sync
+sleep 2
 EOF
 
 	# Close the conditional block for autoinstall tests
