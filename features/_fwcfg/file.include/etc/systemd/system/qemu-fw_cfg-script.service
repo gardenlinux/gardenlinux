@@ -7,6 +7,8 @@ Requires=default.target
 [Service]
 Type=idle
 ExecStart=/usr/bin/run-qemu-fw_cfg-script
+StandardOutput=tty
+StandardError=tty
 
 [Install]
 WantedBy=default.target
