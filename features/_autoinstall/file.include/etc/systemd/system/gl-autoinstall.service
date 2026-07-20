@@ -4,6 +4,8 @@ ConditionPathExists=/opt/install/install.sh
 ConditionPathExists=!/.installed
 After=default.target
 Requires=default.target
+OnFailure=emergency.target
+OnFailureJobMode=isolate
 
 [Service]
 Type=idle
