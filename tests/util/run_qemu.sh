@@ -65,11 +65,6 @@ if [[ "$image" == *.iso ]]; then
 	is_iso=1
 fi
 
-is_openstack=0
-if [[ "$image" =~ ^.*openstack-.*$ ]]; then
-	is_openstack=1
-fi
-
 mkdir -p "$log_dir"
 test_args+=("--junit-xml=/dev/virtio-ports/test_junit")
 

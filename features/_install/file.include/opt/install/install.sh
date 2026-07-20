@@ -2,7 +2,7 @@
 
 set -e
 
-thisDir=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+thisDir=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
 
 # Auto-detect rootfs source (ISO uses /run/rootfsbase, PXE uses /run/rootfs)
 if [ -d /run/rootfsbase ]; then
@@ -22,7 +22,7 @@ if [ -n "${GL_INSTALL_TARGET:-}" ]; then
 	echo "Non-interactive install to $targetDisk"
 else
 	echo "Please provide the device where you would like to install e.g. /dev/sda:"
-	read targetDisk
+	read -r targetDisk
 
 	echo "You are about to install to $targetDisk"
 	echo
@@ -75,7 +75,7 @@ if [ -d ${target}/usr/lib/dracut/modules.d/98gardenlinux-live ]; then
   rm -rf ${target}/usr/lib/dracut/modules.d/98gardenlinux-live ${target}/etc/dracut.conf.d/20-gl-live.conf
   rm -f ${target}/etc/kernel/cmdline.d/80-pxe.cfg
   echo "Rebuilding initrd (this takes several minutes)..."
-  chroot ${target}/ /etc/kernel/postinst.d/dracut ${kernel}
+  chroot "${target}/" /etc/kernel/postinst.d/dracut "${kernel}"
   echo "Generating systemd-boot loader entries..."
   # Ensure /etc/machine-id exists so kernel-install selects the BLS layout and
   # uses the 'Default' entry-token from /etc/kernel/entry-token.
@@ -106,8 +106,8 @@ if [ "$hasefi" == "1" ]; then
   chroot "${target}" bootctl install
 else
   echo "  Installing BIOS bootloader (syslinux)..."
-  chroot ${target} sfdisk --part-attrs ${targetDisk} 1 LegacyBIOSBootable
-  chroot ${target} dd if="/usr/lib/SYSLINUX/gptmbr.bin" of=${targetDisk} bs=440 count=1 conv=notrunc
+  chroot "${target}" sfdisk --part-attrs "${targetDisk}" 1 LegacyBIOSBootable
+  chroot "${target}" dd if="/usr/lib/SYSLINUX/gptmbr.bin" of="${targetDisk}" bs=440 count=1 conv=notrunc
   chroot ${target} mkdir -p /efi/syslinux
   chroot ${target} cp /usr/lib/syslinux/modules/bios/menu.c32 /efi/syslinux/
   chroot ${target} cp /usr/lib/syslinux/modules/bios/libutil.c32 /efi/syslinux/

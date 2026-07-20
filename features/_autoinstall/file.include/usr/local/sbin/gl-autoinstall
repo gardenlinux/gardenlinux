@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-targetDir="/tmp/install"
-
 # Check kernel command line for targetDisk override (gl.install.target=/dev/sdX)
 get_cmdline_target() {
     local targetDisk
