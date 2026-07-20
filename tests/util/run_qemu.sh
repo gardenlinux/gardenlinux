@@ -355,11 +355,27 @@ if ! ((skip_tests)); then
 
 	cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
 echo "⚙️  waiting for systemd to finish initialization (timeout: 10 minutes)"
-timeout 600 systemctl is-system-running --wait || {
-	echo "⚠️  systemctl is-system-running timed out or failed, checking system status"
-	systemctl is-system-running || true
-	systemctl --failed --no-legend || true
-}
+# `systemctl is-system-running --wait` blocks until startup completes, then
+# exits non-zero for any state other than "running" (most commonly "degraded"
+# when a non-critical unit such as ipmievd.service failed inside QEMU).
+# A non-"running" state must NOT abort the fw_cfg script: the script runs under
+# `set -e` with a `poweroff -f` EXIT trap, so an unguarded failure here would
+# power off the VM before the tests even start. Capture the state, warn, and
+# always continue so the test suite still runs.
+system_state="$(timeout 600 systemctl is-system-running --wait || true)"
+case "$system_state" in
+	running)
+		echo "✅ systemd reached a fully running state"
+		;;
+	degraded)
+		echo "⚠️  systemd is degraded (a non-critical unit failed); continuing with tests"
+		systemctl --failed --no-legend || true
+		;;
+	*)
+		echo "⚠️  systemd did not reach a running state (state: '${system_state:-unknown}'); continuing with tests"
+		systemctl --failed --no-legend || true
+		;;
+esac
 EOF
 
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
