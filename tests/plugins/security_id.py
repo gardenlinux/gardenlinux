@@ -4,6 +4,7 @@ import pytest
 
 STIG_PROFILE = "General Purpose Operating System STIG V3R2"
 
+
 def pytest_configure(config: pytest.Config):
     config.addinivalue_line(
         "markers",
