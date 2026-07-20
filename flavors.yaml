@@ -647,6 +647,22 @@ targets:
         test-platform: false
         publish: true
       - features:
+          - _iso
+          - _autoinstall
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+      - features:
+          - _iso
+          - _autoinstall
+        arch: arm64
+        build: true
+        test: false
+        test-platform: false
+        publish: false
+      - features:
           - _pxe
         arch: amd64
         build: true
@@ -660,6 +676,22 @@ targets:
         test: true
         test-platform: false
         publish: true
+      - features:
+          - _pxe
+          - _autoinstall
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+      - features:
+          - _pxe
+          - _autoinstall
+        arch: arm64
+        build: true
+        test: false
+        test-platform: false
+        publish: false
       - features:
           - vhost
         arch: amd64

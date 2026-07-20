@@ -1,3 +1,11 @@
+---
+title: "Feature: aide"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/aide/README.md
+github_target_path: docs/reference/features/aide.md
+---
+
 ## Feature: aide
 ### Description
 <website-feature>
