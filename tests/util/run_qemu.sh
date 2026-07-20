@@ -347,6 +347,17 @@ if [ "$arch" = aarch64 ]; then
 	use_bootindex=1
 fi
 
+# aarch64 EDK2 (virt) does not reliably create a virtio-net PXE boot option from
+# bootindex= alone: the firmware aborts with "No bootable option or device was
+# found" before iPXE ever runs, and no aarch64 iPXE option ROM ships with QEMU.
+# For traditional (non-UKI) PXE archives on aarch64 we therefore boot the
+# extracted kernel/initrd directly via QEMU -kernel/-initrd/-append instead of
+# relying on firmware network boot. x86_64 continues to use iPXE unchanged.
+pxe_direct_kernel=0
+if ((is_pxe_archive)) && [ "$arch" = aarch64 ] && ! ((is_uki)); then
+	pxe_direct_kernel=1
+fi
+
 native_arch="$(map_arch "$(uname -m)")"
 
 qemu_accel=tcg
@@ -426,10 +437,14 @@ EOF
 	fi
 fi
 
-# On aarch64 PXE, set bootindex=0 on the network device so EDK2 tries network
-# first.  On all other arch/boot-type combinations, no bootindex is needed here.
+# On aarch64 PXE that still relies on firmware network boot, set bootindex=0 on
+# the network device so EDK2 tries network first.  When we boot the kernel
+# directly via QEMU -kernel (aarch64 traditional PXE), firmware network boot is
+# bypassed, so no net bootindex is needed and the disk keeps bootindex=1 for the
+# post-install reboot.  On all other arch/boot-type combinations, no bootindex
+# is needed here.
 net_device="virtio-net-pci,netdev=net0"
-if ((is_pxe_archive && use_bootindex)); then
+if ((is_pxe_archive && use_bootindex)) && ! ((pxe_direct_kernel)); then
 	net_device="virtio-net-pci,netdev=net0,bootindex=0"
 fi
 
@@ -576,11 +591,13 @@ chain ${base-url}/boot.efi
 EOF
 
 	else
-		echo "✅ Using traditional vmlinuz/initrd boot via iPXE"
-
 		# Copy traditional boot files
 		cp "$pxe_extract_dir/vmlinuz" "$http_dir/"
 		cp "$pxe_extract_dir/initrd" "$http_dir/"
+
+		# Build the kernel command line once and reuse it for both boot
+		# mechanisms (iPXE on x86_64, QEMU direct -kernel on aarch64).
+		pxe_cmdline="$(cat "$pxe_extract_dir/cmdline") gl.url=http://10.0.2.2:8080/root.squashfs"
 
 		if ((autoinstall)); then
 			ignition_json_source="$util_dir/ignition.json"
@@ -591,20 +608,29 @@ EOF
 			cp "$ignition_json_source" "$http_dir/ignition.json"
 			echo "✅ Copied ignition.json for PXE installation"
 
-			cat >"$http_dir/boot.ipxe" <<EOF
-#!ipxe
-dhcp
-set base-url http://10.0.2.2:8080
-kernel \${base-url}/vmlinuz $(cat "$pxe_extract_dir/cmdline") gl.url=http://10.0.2.2:8080/root.squashfs ignition.firstboot=1 ignition.config.url=http://10.0.2.2:8080/ignition.json ignition.platform.id=metal
-initrd \${base-url}/initrd
-boot
-EOF
+			pxe_cmdline="$pxe_cmdline ignition.firstboot=1 ignition.config.url=http://10.0.2.2:8080/ignition.json ignition.platform.id=metal"
+		fi
+
+		if ((pxe_direct_kernel)); then
+			# aarch64 (EDK2 virt): the firmware does not reliably enumerate a
+			# virtio-net PXE boot option from bootindex= alone, so EDK2 aborts
+			# with "No bootable option or device was found" before iPXE runs.
+			# Boot the extracted kernel/initrd directly through QEMU instead.
+			# The guest still fetches root.squashfs over HTTP via gl.url using
+			# the user-net gateway (10.0.2.2), exactly as the iPXE path does.
+			echo "✅ Using direct QEMU kernel/initrd boot (aarch64 PXE)"
+			qemu_opts+=(
+				-kernel "$pxe_extract_dir/vmlinuz"
+				-initrd "$pxe_extract_dir/initrd"
+				-append "$pxe_cmdline"
+			)
 		else
+			echo "✅ Using traditional vmlinuz/initrd boot via iPXE"
 			cat >"$http_dir/boot.ipxe" <<EOF
 #!ipxe
 dhcp
 set base-url http://10.0.2.2:8080
-kernel \${base-url}/vmlinuz $(cat "$pxe_extract_dir/cmdline") gl.url=http://10.0.2.2:8080/root.squashfs
+kernel \${base-url}/vmlinuz $pxe_cmdline
 initrd \${base-url}/initrd
 boot
 EOF
