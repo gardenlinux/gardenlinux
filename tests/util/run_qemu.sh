@@ -175,8 +175,6 @@ fi
 cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
 # Send all output to console so it appears on
 # the QEMU serial output (and thus in logs).
-exec >/dev/console
-exec 2>&1
 
 echo "⚙️  Qemu environment quirks..."
 # No /dev/impi0 available in Qemu
