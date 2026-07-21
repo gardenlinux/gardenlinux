@@ -1,4 +1,12 @@
-# 25. FIPSification of Garden Linux
+---
+title: "ADR 0036: FIPSification of Garden Linux"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: docs/reference/adr/0036-fipsification-of-garden-linux.md
+github_target_path: docs/reference/adr/0036-fipsification-of-garden-linux.md
+---
+
+# ADR 0036: FIPSification of Garden Linux
 
 Date: 2025-11-24
 
