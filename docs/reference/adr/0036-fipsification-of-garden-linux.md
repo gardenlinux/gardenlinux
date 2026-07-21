@@ -82,7 +82,7 @@ The follow key decision needs to be taken:
 
 1. Garden Linux integrates FIPS as a on-demand feature, allowing it to be shipped with default
    images
-2. Garden Linux integrates FIPS as a static always-on feature that must be pre-selected.
+2. Garden Linux integrates FIPS as a static always-on feature that must be preselected.
 
 We took the decision as team to go with 2. 
 
