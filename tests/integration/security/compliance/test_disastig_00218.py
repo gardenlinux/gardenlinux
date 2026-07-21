@@ -53,7 +53,9 @@ def test_audit_concurrent_logins(shell: ShellRunner, audit_user):
             ignore_exit_code=True,
         )
 
-        total = int(audit_hits.stdout.strip() or 0) + int(journal_hits.stdout.strip() or 0)
+        total = int(audit_hits.stdout.strip() or 0) + int(
+            journal_hits.stdout.strip() or 0
+        )
 
     assert (
         total >= 2
