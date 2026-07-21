@@ -8,11 +8,6 @@ related_topics:
   - /how-to/secure-boot
   - /how-to/building-images
   - /how-to/installation/on-premises/disk-layout
-migration_status: "done"
-migration_source: "docs/legacy/boot_modes.md"
-migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4630"
-migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
-migration_approved: false
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/explanation/boot-modes.md

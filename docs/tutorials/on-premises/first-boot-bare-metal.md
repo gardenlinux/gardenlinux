@@ -9,10 +9,6 @@ related_topics:
   - /how-to/installation/post-install.md
   - /how-to/building-images.md
   - /how-to/getting-images.md
-migration_status: "done"
-migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
-migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
-migration_approved: false
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/tutorials/on-premises/first-boot-bare-metal.md

@@ -13,10 +13,6 @@ related_topics:
   - /reference/testing/test-coverage-markers.md
   - /reference/testing/test-cli.md
 order: 2
-migration_status: "done"
-migration_issue: https://github.com/gardenlinux/gardenlinux/issues/4748
-migration_source: "tests/DEVELOPER-TESTCOV.md"
-migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/testing/test-coverage-markers.md
