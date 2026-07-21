@@ -62,7 +62,7 @@ power to  provide different configurations to our system, based on the boot UKI.
 should be possible, considering that it would behave similarly to the in-place update feature.
 
 Since many of the configurations and files necessary to put the system in FIPS mode reside on the
-`/usr` partion, the usage of
+`/usr` partition, the usage of
 [`systemd-sysext`](https://www.freedesktop.org/software/systemd/man/latest/systemd-sysext.html)
 might be suited for this pursuit.
 
@@ -80,14 +80,14 @@ The change that we're proposing or have agreed to implement.
 
 The follow key decision needs to be taken:
 
-1. Garden Linux integrates FIPS as a on-deemand feature, allowing it to be shipped with default
+1. Garden Linux integrates FIPS as a on-demand feature, allowing it to be shipped with default
    images
-2. Garden Linux integrates FIPS as a static always-on feature that must be preselected.
+2. Garden Linux integrates FIPS as a static always-on feature that must be pre-selected.
 
 We took the decision as team to go with 2. 
 
 ## Consequences
 
-Once set in with this decision, we will not abel to change. WHen we offer FIPS to users, this will
-remain for as long as we're FIPS ceriticate.
+Once set in with this decision, we will not able to change. When we offer FIPS to users, this will
+remain for as long as we're FIPS certificate.
 
