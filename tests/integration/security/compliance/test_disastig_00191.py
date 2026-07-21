@@ -15,6 +15,7 @@ reflects organizational and system objectives when invalid inputs are received.
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires audit subsystem running")
 @pytest.mark.root(reason="useradd and ausearch require root privileges")
+@pytest.mark.modify(reason="creates and removes a temporary user account")
 def test_invalid_input_handling_is_audited(shell: ShellRunner, audit_user):
     """Verify ausearch -ts recent output contains name="/etc/shadow"."""
     shell(f"su {audit_user} -c 'echo >> /etc/shadow'", ignore_exit_code=True)
