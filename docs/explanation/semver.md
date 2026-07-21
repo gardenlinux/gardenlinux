@@ -12,10 +12,6 @@ related_topics:
   - /how-to/releases/apt-repos.md
   - /how-to/releases/os-releases.md
   - /reference/releases/release-lifecycle
-migration_status: "done"
-migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4705"
-migration_stakeholder: "@tmangold, @yeoldegrove, @ByteOtter"
-migration_approved: false
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/explanation/semver.md

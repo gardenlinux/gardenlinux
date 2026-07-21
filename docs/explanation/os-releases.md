@@ -11,10 +11,6 @@ related_topics:
   - /how-to/releases/os-releases.md
   - /explanation/repo-infrastructure.md
   - /explanation/github-workflows.md
-migration_status: "done"
-migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4705"
-migration_stakeholder: "@tmangold, @yeoldegrove, @ByteOtter"
-migration_approved: false
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/explanation/os-releases.md
