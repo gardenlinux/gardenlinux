@@ -4,11 +4,6 @@ description: "How to install Garden Linux on Lima"
 related_topics:
   - /tutorials/local/first-boot-lima.md
   - /how-to/installation/post-install.md
-migration_status: "done"
-migration_issue: "https://github.com/gardenlinux/gardenlinux/issues/4595"
-migration_source: "02_operators/lima-vm.md,02_operators/local-k8s-lima.md"
-migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
-migration_approved: false
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/how-to/installation/local/lima.md

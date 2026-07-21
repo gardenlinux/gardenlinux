@@ -1,8 +1,6 @@
 ---
 title: "Flavor Matrix"
 description: "Complete matrix of Garden Linux flavors with their features and dependencies."
-migration_stakeholder: "@tmang0ld, @yeoldegrove, @ByteOtter"
-migration_approved: false
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/reference/flavor-matrix.md
