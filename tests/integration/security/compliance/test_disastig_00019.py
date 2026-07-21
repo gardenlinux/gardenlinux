@@ -18,9 +18,11 @@ def test_audit_event_contains_full_record(shell):
         cmd="ausearch -ts recent",
         capture_output=True,
     )
-    assert (
-        "success=yes" in result.stdout
-        or "success=no" in result.stdout
-        or "res=success" in result.stdout
-        or "res=failed" in result.stdout
-    ), "stigcompliance: audit records do not contain outcome (success/failure) information"
+    stdout = result.stdout
+    has_outcome = (
+        "success=yes" in stdout
+        or "success=no" in stdout
+        or "res=success" in stdout
+        or "res=failed" in stdout
+    )
+    assert has_outcome, "stigcompliance: audit records do not contain outcome (success/failure) information"

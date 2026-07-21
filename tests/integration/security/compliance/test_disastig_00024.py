@@ -39,15 +39,10 @@ def test_audit_log_retention_config(parse_file):
 def test_audit_log_retention_availability(shell):
     """Verify ausearch returns structured audit records (retention works)."""
     result = shell("ausearch -ts recent", capture_output=True)
+    returncode = result.returncode
+    has_output = result.stdout.strip() != ""
+    has_structured = "type=" in result.stdout
 
-    assert (
-        result.returncode == 0
-    ), "stigcompliance: ausearch failed, audit logs not retrievable"
-
-    output = result.stdout.strip()
-
-    assert output != "", "stigcompliance: no audit records found (retention failure)"
-
-    assert (
-        "type=" in output
-    ), "stigcompliance: audit records not in expected structured format"
+    assert returncode == 0, "stigcompliance: ausearch failed, audit logs not retrievable"
+    assert has_output, "stigcompliance: no audit records found (retention failure)"
+    assert has_structured, "stigcompliance: audit records not in expected structured format"
