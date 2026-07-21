@@ -71,4 +71,5 @@ s3_downloads/
 **/encryption.tf
 COMMIT
 VERSION
+node_modules/
 edk2/
