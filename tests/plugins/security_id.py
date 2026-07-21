@@ -2,8 +2,6 @@ from typing import List
 
 import pytest
 
-STIG_PROFILE = "General Purpose Operating System STIG V3R2"
-
 
 def pytest_configure(config: pytest.Config):
     config.addinivalue_line(
@@ -21,5 +19,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: List[pytest.Item
             security_id = marker.args[0]
             item.user_properties.append(("security_id", security_id))
 
+        # Attach the DISA STIG profile version/revision info to each test_disastig_* test
+        # This is needed for diki integration compliance (Gardener) 
         if item.fspath.basename.startswith("test_disastig_"):
-            item.user_properties.append(("disa_stig_version", STIG_PROFILE))
+            item.user_properties.append(("disa_stig_version", config.inicfg.get("disa_stig_version")))
