@@ -25,4 +25,6 @@ def test_audit_event_contains_full_record(shell):
         or "res=success" in stdout
         or "res=failed" in stdout
     )
-    assert has_outcome, "stigcompliance: audit records do not contain outcome (success/failure) information"
+    assert (
+        has_outcome
+    ), "stigcompliance: audit records do not contain outcome (success/failure) information"

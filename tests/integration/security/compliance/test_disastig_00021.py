@@ -20,4 +20,6 @@ def test_audit_event_contains_individual_identities(shell):
     )
     stdout = result.stdout
     has_args = " a0=" in stdout or " a1=" in stdout or " a2=" in stdout
-    assert has_args, "stigcompliance: audit records do not contain command argument details"
+    assert (
+        has_args
+    ), "stigcompliance: audit records do not contain command argument details"

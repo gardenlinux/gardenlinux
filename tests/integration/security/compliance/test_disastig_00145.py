@@ -19,4 +19,6 @@ def test_audit_timestamp_granularity(shell):
     result = shell("ausearch -ts recent", capture_output=True)
     timestamp_pattern = r"time->\w{3}\s+\w{3}\s+\d+\s+\d{2}:\d{2}:\d{2}\s+\d{4}"
     has_timestamp = bool(re.search(timestamp_pattern, result.stdout))
-    assert has_timestamp, "stigcompliance: audit records do not contain valid timestamps with second granularity"
+    assert (
+        has_timestamp
+    ), "stigcompliance: audit records do not contain valid timestamps with second granularity"

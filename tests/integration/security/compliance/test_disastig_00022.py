@@ -26,4 +26,6 @@ def test_audit_event_contains_audit_processing_failures(shell):
         or "lost=" in stdout
         or "backlog" in stdout
     )
-    assert has_failures, "stigcompliance: audit records do not indicate alerting or detection of audit processing failures"
+    assert (
+        has_failures
+    ), "stigcompliance: audit records do not indicate alerting or detection of audit processing failures"

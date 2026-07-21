@@ -48,7 +48,9 @@ def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
     """Verify the setreuid audit rule is loaded into the running kernel."""
     output = shell(cmd="auditctl -l", capture_output=True)
     returncode = output.returncode
-    assert returncode == 0, f"stigcompliance: unable to list audit rules: {output.stderr}"
+    assert (
+        returncode == 0
+    ), f"stigcompliance: unable to list audit rules: {output.stderr}"
 
     has_setreuid = "setreuid" in output.stdout
     assert has_setreuid, "stigcompliance: setreuid audit rule not loaded in kernel"

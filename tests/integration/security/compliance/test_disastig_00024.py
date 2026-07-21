@@ -43,6 +43,10 @@ def test_audit_log_retention_availability(shell):
     has_output = result.stdout.strip() != ""
     has_structured = "type=" in result.stdout
 
-    assert returncode == 0, "stigcompliance: ausearch failed, audit logs not retrievable"
+    assert (
+        returncode == 0
+    ), "stigcompliance: ausearch failed, audit logs not retrievable"
     assert has_output, "stigcompliance: no audit records found (retention failure)"
-    assert has_structured, "stigcompliance: audit records not in expected structured format"
+    assert (
+        has_structured
+    ), "stigcompliance: audit records not in expected structured format"

@@ -19,7 +19,9 @@ def test_audit_records_have_valid_timestamps(shell):
     result = shell("ausearch -ts recent", capture_output=True)
     timestamp_pattern = r"time->\w{3}\s+\w{3}\s+\d+\s+\d+:\d+:\d+\s+\d{4}"
     has_timestamp = bool(re.search(timestamp_pattern, result.stdout))
-    assert has_timestamp, "stigcompliance: audit records do not contain valid timestamps"
+    assert (
+        has_timestamp
+    ), "stigcompliance: audit records do not contain valid timestamps"
 
 
 @pytest.mark.security_id(203615)

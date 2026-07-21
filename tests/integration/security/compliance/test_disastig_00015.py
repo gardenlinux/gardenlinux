@@ -35,4 +35,6 @@ def test_audit_event_contains_type(shell):
     )
 
     has_type = "type=" in result.stdout
-    assert has_type, "stigcompliance: audit records do not contain event type information"
+    assert (
+        has_type
+    ), "stigcompliance: audit records do not contain event type information"

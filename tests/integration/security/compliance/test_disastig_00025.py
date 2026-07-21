@@ -16,7 +16,9 @@ def test_audit_filter_by_uid(shell):
     """Verify ausearch -ua 0 succeeds (filter by user identity)."""
     result = shell("ausearch -ua 0", capture_output=True)
     returncode = result.returncode
-    assert returncode == 0, "stigcompliance: unable to filter audit records by user identity (uid)"
+    assert (
+        returncode == 0
+    ), "stigcompliance: unable to filter audit records by user identity (uid)"
 
 
 @pytest.mark.security_id(203614)
@@ -27,7 +29,9 @@ def test_audit_filter_returns_structured_output(shell):
     """Verify ausearch -ua 0 output contains a 'type=' field."""
     result = shell("ausearch -ua 0", capture_output=True)
     has_type = "type=" in result.stdout
-    assert has_type, "stigcompliance: audit filtering does not return structured audit records"
+    assert (
+        has_type
+    ), "stigcompliance: audit filtering does not return structured audit records"
 
 
 @pytest.mark.security_id(203614)
@@ -42,7 +46,10 @@ def test_audit_filter_by_event_type(shell):
         ignore_exit_code=True,
     )
     returncode = result.returncode
-    assert returncode in (0, 1), "stigcompliance: unable to filter audit records by event type"
+    assert returncode in (
+        0,
+        1,
+    ), "stigcompliance: unable to filter audit records by event type"
 
 
 @pytest.mark.security_id(203614)
@@ -57,7 +64,10 @@ def test_audit_filter_by_command(shell):
         ignore_exit_code=True,
     )
     returncode = result.returncode
-    assert returncode in (0, 1), "stigcompliance: unable to filter audit records by command"
+    assert returncode in (
+        0,
+        1,
+    ), "stigcompliance: unable to filter audit records by command"
 
 
 @pytest.mark.security_id(203614)
@@ -76,4 +86,6 @@ def test_audit_record_filtering_capability(shell):
     for cmd in commands:
         result = shell(cmd, capture_output=True)
         returncode = result.returncode
-        assert returncode == 0, f"stigcompliance: audit filtering failed for command: {cmd}"
+        assert (
+            returncode == 0
+        ), f"stigcompliance: audit filtering failed for command: {cmd}"

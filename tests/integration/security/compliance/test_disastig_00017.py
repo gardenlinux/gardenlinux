@@ -21,9 +21,8 @@ def test_audit_event_contains_location(shell):
 
     stdout = result.stdout
     has_location = (
-        "cwd=" in stdout
-        or "name=" in stdout
-        or "exe=" in stdout
-        or "path=" in stdout
+        "cwd=" in stdout or "name=" in stdout or "exe=" in stdout or "path=" in stdout
     )
-    assert has_location, "stigcompliance: audit records do not contain location (where) information"
+    assert (
+        has_location
+    ), "stigcompliance: audit records do not contain location (where) information"
