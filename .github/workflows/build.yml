@@ -114,7 +114,6 @@ jobs:
     with:
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
-      prefix: ${{ inputs.prefix }}
   upload_flavor_version_data:
     needs: [requirements, flavors]
     name: Store flavor version data

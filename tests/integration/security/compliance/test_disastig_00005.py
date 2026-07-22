@@ -1,12 +1,21 @@
+"""
+Ref: SRG-OS-000021-GPOS-00005
+
+Verify that the operating system enforces the limit of three consecutive
+invalid logon attempts by a user during a 15-minute time period.
+"""
+
 import pytest
 
 
+@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-pam-common-auth"])
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-auth"], indirect=["pam_config"]
 )
-@pytest.mark.feature("stig")
+@pytest.mark.security_id(203594)
+@pytest.mark.feature("disaSTIGmedium")
 def test_stig_common_auth_pam_faillock(pam_config):
-
+    """Verify pam_faillock is configured with deny=3 and unlock_time=900."""
     results = pam_config.find_entries(
         type_="auth",
         control_contains="required",

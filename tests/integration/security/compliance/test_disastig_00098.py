@@ -1,3 +1,10 @@
+"""
+Ref: SRG-OS-000257-GPOS-00098
+
+Verify the operating system protects audit tools from unauthorized
+modification.
+"""
+
 from pathlib import Path
 
 import pytest
@@ -5,20 +12,12 @@ import pytest
 AUDIT_LOG_DIR = "/var/log/audit"
 
 
+@pytest.mark.security_id(203673)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit protection requires booted system")
 @pytest.mark.root(reason="required to inspect audit log ownership")
 def test_audit_log_directory_protected(file):
-    """
-    As per DISA STIG it is required to verify the operating system protects audit tools
-    from unauthorized modification.
-    This test verifies:
-      - Audit log directory exists
-      - Directory is owned by root
-      - Directory is not group/world writable
-    Ref: SRG-OS-000257-GPOS-00098
-    """
-
+    """Verify /var/log/audit is owned by root with one of: rwx------, rwxr-x---, rwxr-----, rwx--x---."""
     assert file.exists(AUDIT_LOG_DIR), f"stigcompliance: {AUDIT_LOG_DIR} does not exist"
 
     assert file.is_owned_by_user(
@@ -38,20 +37,12 @@ def test_audit_log_directory_protected(file):
     )
 
 
-@pytest.mark.feature("stig or cis")
+@pytest.mark.security_id(203673)
+@pytest.mark.feature("disaSTIGmedium or cis")
 @pytest.mark.booted(reason="audit protection requires booted system")
 @pytest.mark.root(reason="required to inspect audit log ownership")
 def test_audit_log_files_protected(file):
-    """
-    As per DISA STIG it is required to verify the operating system protects
-    audit log files from unauthorized modification.
-    This test verifies:
-      - All regular files in /var/log/audit
-      - Owned by root
-      - Not group/world writable
-    Ref: SRG-OS-000257-GPOS-00098
-    """
-
+    """Verify regular files under /var/log/audit are owned by root and have mode rw------- or rw-r-----."""
     if not file.exists(AUDIT_LOG_DIR):
         pytest.skip(f"{AUDIT_LOG_DIR} does not exist")
 

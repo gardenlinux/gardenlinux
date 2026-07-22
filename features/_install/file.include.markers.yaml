@@ -1,0 +1,7 @@
+markers:
+  "opt/install/install.sh":
+  - "GL-TESTCOV-_install-script-install-sh"
+  "opt/install/repart/00-efi.conf":
+  - "GL-TESTCOV-_install-config-repart-efi"
+  "opt/install/repart/10-root.conf":
+  - "GL-TESTCOV-_install-config-repart-root"

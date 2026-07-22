@@ -1,3 +1,11 @@
+"""
+Ref: SRG-OS-000465-GPOS-00209
+
+Verify the operating system generates audit records when
+successful/unsuccessful attempts to modify categories of information (e.g.,
+classification levels) occur.
+"""
+
 import os
 
 import pytest
@@ -8,37 +16,23 @@ from plugins.shell import ShellRunner
 PRIV_ESC_RULE_FILE = "/etc/audit/rules.d/70-privilege-escalation.rules"
 
 
+@pytest.mark.security_id(203763)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to inspect audit config")
 def test_setreuid_rule_file_exists(file: File):
-    """
-    As per DISA STIG requirement, the operating system must generate audit
-    records when successful or unsuccessful attempts to modify categories
-    of information occur (e.g., privilege changes such as setreuid).
-    This test verifies that the audit subsystem is capable of searching
-    for events associated with the configured audit key for privilege
-    escalation.
-    Ref: SRG-OS-000465-GPOS-00209
-    """
+    """Verify the privilege escalation audit rule file exists."""
     assert file.exists(
         PRIV_ESC_RULE_FILE
     ), f"stigcompliance: {PRIV_ESC_RULE_FILE} does not exist"
 
 
+@pytest.mark.security_id(203763)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to inspect audit config")
 def test_setreuid_rule_contains_syscall(parse_file: ParseFile):
-    """
-    As per DISA STIG requirement, the operating system must generate audit
-    records when successful or unsuccessful attempts to modify categories
-    of information occur (e.g., privilege changes such as setreuid).
-    This test verifies that the audit subsystem is capable of searching
-    for events associated with the configured audit key for privilege
-    escalation.
-    Ref: SRG-OS-000465-GPOS-00209
-    """
+    """Verify the privilege escalation rule audits the setreuid syscall."""
     lines = parse_file.lines(PRIV_ESC_RULE_FILE, ignore_missing=True)
 
     assert (
@@ -46,19 +40,12 @@ def test_setreuid_rule_contains_syscall(parse_file: ParseFile):
     ), "stigcompliance: setreuid audit rule not configured"
 
 
+@pytest.mark.security_id(203763)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit rules")
 def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
-    """
-    As per DISA STIG requirement, the operating system must generate audit
-    records when successful or unsuccessful attempts to modify categories
-    of information occur (e.g., privilege changes such as setreuid).
-    This test verifies that the audit subsystem is capable of searching
-    for events associated with the configured audit key for privilege
-    escalation.
-    Ref: SRG-OS-000465-GPOS-00209
-    """
+    """Verify the setreuid audit rule is loaded into the running kernel."""
     output = shell(cmd="auditctl -l", capture_output=True)
 
     assert (
@@ -70,19 +57,12 @@ def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
     ), "stigcompliance: setreuid audit rule not loaded in kernel"
 
 
+@pytest.mark.security_id(203763)
 @pytest.mark.feature("not container and not lima")
 @pytest.mark.booted(reason="audit event validation requires audit subsystem")
 @pytest.mark.root(reason="required to trigger syscall and read audit logs")
 def test_setreuid_event_logged(shell: ShellRunner):
-    """
-    As per DISA STIG requirement, the operating system must generate audit
-    records when successful or unsuccessful attempts to modify categories
-    of information occur (e.g., privilege changes such as setreuid).
-    This test verifies that the audit subsystem is capable of searching
-    for events associated with the configured audit key for privilege
-    escalation.
-    Ref: SRG-OS-000465-GPOS-00209
-    """
+    """Verify a setreuid call produces a privilege_escalation audit event."""
     pid = os.fork()
 
     if pid == 0:
