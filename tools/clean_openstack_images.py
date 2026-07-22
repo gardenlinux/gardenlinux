@@ -47,7 +47,7 @@ def setup_and_run_argparser():
         type=str,
         default="gardenlinux",
         dest="credential_profile",
-        help="the name of the credetial profile from which the credentials should be sourced",
+        help="the name of the credential profile from which the credentials should be sourced",
     )
     parser.add_argument(
         "--region",
