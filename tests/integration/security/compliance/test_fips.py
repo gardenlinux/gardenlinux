@@ -435,7 +435,7 @@ def test_kernel_has_fips_entry_in_procfs(parse_file: ParseFile):
 def test_kernel_module_tcrypt_available_for_dracut(kernel_module: KernelModule):
     """
     Test that the tcrypt kernel module is available as loadable module. This will be invoke by
-    the dracut FIPS module. Since there where a bug in the kernel, we missed the configuraiton
+    the dracut FIPS module. Since there where a bug in the kernel, we missed the configuration
     """
     kernel_modules = ["tcrypt"]
     for module in kernel_modules:
@@ -472,10 +472,10 @@ def test_kernel_configs_btrfs_is_disabled(
         ), f"CONFIG_BTRFS is set in {config.path}"
 
 
-# TODO: check why this does not work on arm64
+# TODO: check why this does not work on arm64, when build crossplatfrom.
+# When run podman on x86_64 and you try to build this via podman for arm64 it will fail.
 @pytest.mark.testcov(["GL-TESTCOV-_fips-config-kernel-hmac"])
-@pytest.mark.feature("_fips")
-@pytest.mark.arch("not arm64")
+@pytest.mark.feature("_fips and not _usi")
 @pytest.mark.booted(reason="Requires running system")
 def test_kernel_hmac_file_is_correct(
     shell: ShellRunner, kernel_versions: KernelVersions
@@ -491,3 +491,20 @@ def test_kernel_hmac_file_is_correct(
     assert (
         result.stdout.strip() == f"{kernel_file}: OK"
     ), f"sha512hmac command failed for {kernel_hmac_file}"
+
+
+@pytest.mark.feature("_fips")
+def test_kernel_configs_FIPS_vendor_is_set(
+    parse_file: ParseFile, kernel_configs: KernelConfigs
+):
+    """
+    Ensure that the FIPS module name is set correctly for the kernel.
+    It should look like as follows:
+       - SAP SE Garden Linux [RELEASE] Kernel Cryptographic Module
+    """
+    for config in kernel_configs.get_installed():
+        parsed_config = parse_file.parse(config.path, format="keyval")
+        assert (
+            parsed_config["CONFIG_CRYPTO_FIPS_NAME"]
+            == "SAP SE Garden Linux nightly Kernel Cryptographic Module"
+        ), f"CONFIG_CRYPTO_BENCHMARK not set to 'm' in {config.path}"
