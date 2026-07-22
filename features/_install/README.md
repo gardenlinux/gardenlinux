@@ -25,6 +25,10 @@ The install script supports:
 - Automatic rootfs source detection (`/run/rootfsbase` for ISO, `/run/rootfs` for PXE)
 - UEFI (systemd-boot) and Legacy BIOS (syslinux) bootloaders
 
+Notice for Garden Linux developers:
+If this feature needs to be backported, e.g. for 1877, please note that depending on the systemd repart version, it might not work out of the box as some features are not supported - mainly the sector size from 00-efi.conf - this is important for compatibility with syslinux - and the fstab generation settings.
+For older versions that don't support setting the sector size via repart.d config, consider using the _SYSTEMD_REPART_MKFS_OPTIONS_VFAT_ env variable with a value of "-S 512". For the fstab append setting, it should just be removed and fstab updated afterwards.
+
 ### Unit testing
 This feature does not support unit tests.
 
