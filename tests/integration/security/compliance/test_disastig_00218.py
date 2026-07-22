@@ -1,3 +1,10 @@
+"""
+Ref: SRG-OS-000472-GPOS-00218
+
+Verify the operating system generates audit records when concurrent logons to
+the same account occur from different sources.
+"""
+
 import pytest
 from plugins.shell import ShellRunner
 
@@ -9,27 +16,23 @@ TIME_FILE = "/tmp/audit_start_time"
 
 @pytest.fixture
 def concurrent_login_environment(shell: ShellRunner):
-    """
-    As per DISA STIG compliance requirement, the operating system must generate audit
-    records when concurrent logons to the same account occur from different sources.
-    Ref: SRG-OS-000472-GPOS-00218
-    """
     shell(f"id {TEST_USER} || useradd -m {TEST_USER}")
     yield
-    shell(f"pkill -u {TEST_USER}")
+    shell(f"pkill -9 -u {TEST_USER}", ignore_exit_code=True)
+    shell("sleep 1")
     shell(f"userdel -r {TEST_USER}")
     shell(f"rm -f {OUTPUT_FILE} {JOURNAL_FILE} {TIME_FILE}")
+    shell(
+        "rm -f /etc/group- /etc/gshadow- /etc/passwd- /etc/shadow- /etc/subgid- /etc/subuid-"
+    )
 
 
-@pytest.mark.feature("stig")
+@pytest.mark.security_id(203771)
+@pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires kernel logging")
 @pytest.mark.root(reason="required to generate audit events")
 def test_audit_concurrent_logins(shell: ShellRunner, concurrent_login_environment):
-    """
-    As per DISA STIG compliance requirement, the operating system must generate audit
-    records when concurrent logons to the same account occur from different sources.
-    Ref: SRG-OS-000472-GPOS-00218
-    """
+    """Verify a su login plus an ssh login for the same user produce >=2 hits in ausearch and journalctl combined."""
     shell(f"date '+%H:%M:%S' > {TIME_FILE}")
 
     shell(f"su - {TEST_USER} -c 'sleep 30' &")
@@ -48,8 +51,16 @@ def test_audit_concurrent_logins(shell: ShellRunner, concurrent_login_environmen
         f'| grep -i "{TEST_USER}" > {JOURNAL_FILE}'
     )
 
-    audit_hits = shell(f"grep -c '{TEST_USER}' {OUTPUT_FILE}")
-    journal_hits = shell(f"grep -c '{TEST_USER}' {JOURNAL_FILE}")
+    audit_hits = shell(
+        f"grep -c '{TEST_USER}' {OUTPUT_FILE}",
+        capture_output=True,
+        ignore_exit_code=True,
+    )
+    journal_hits = shell(
+        f"grep -c '{TEST_USER}' {JOURNAL_FILE}",
+        capture_output=True,
+        ignore_exit_code=True,
+    )
 
     total = int(audit_hits.stdout.strip() or 0) + int(journal_hits.stdout.strip() or 0)
 

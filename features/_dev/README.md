@@ -1,3 +1,11 @@
+---
+title: "Feature: _dev"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/_dev/README.md
+github_target_path: docs/reference/features/_dev.md
+---
+
 ## Feature: _dev
 ### Description
 <website-feature>

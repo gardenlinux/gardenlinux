@@ -11,7 +11,7 @@ resource "terraform_data" "test_disk_hash" {
 }
 
 resource "alicloud_oss_bucket" "images" {
-  count = var.existing_root_disk != "" ? 0 : 1
+  count = 1
 
   bucket = local.bucket_name
 
@@ -36,7 +36,7 @@ resource "terraform_data" "pause_1_second" {
 }
 
 resource "alicloud_oss_bucket_public_access_block" "no_public_access" {
-  count = var.existing_root_disk != "" ? 0 : 1
+  count = 1
 
   bucket = alicloud_oss_bucket.images[0].bucket
 

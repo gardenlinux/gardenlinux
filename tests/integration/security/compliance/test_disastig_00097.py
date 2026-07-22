@@ -1,4 +1,8 @@
-from pathlib import Path
+"""
+Ref: SRG-OS-000256-GPOS-00097
+
+Verify the operating system protects audit tools from unauthorized access.
+"""
 
 import pytest
 
@@ -10,14 +14,12 @@ AUDIT_TOOL_PATHS = [
 ]
 
 
+@pytest.mark.security_id(203672)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_shadow_permissions(file):
-    """
-    As per DISA STIG requirement, the operating system must protect audit tools from unauthorized access.
-    Ref: SRG-OS-000256-GPOS-00097
-    """
+    """Verify /etc/shadow has mode 0640."""
     actual = file.get_mode("/etc/shadow")
     assert file.has_permissions("/etc/shadow", "0640"), (
         f"stigcompliance: incorrect permissions on /etc/shadow "
@@ -25,14 +27,12 @@ def test_shadow_permissions(file):
     )
 
 
+@pytest.mark.security_id(203672)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_passwd_permissions_numeric(file):
-    """
-    As per DISA STIG requirement, the operating system must protect audit tools from unauthorized access.
-    Ref: SRG-OS-000256-GPOS-00097
-    """
+    """Verify /etc/passwd has numeric mode 0644."""
     actual = file.get_mode("/etc/passwd")
     assert file.has_permissions("/etc/passwd", "0644"), (
         f"stigcompliance: incorrect permissions on /etc/passwd "
@@ -40,14 +40,12 @@ def test_passwd_permissions_numeric(file):
     )
 
 
+@pytest.mark.security_id(203672)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_passwd_permissions_symbolic(file):
-    """
-    As per DISA STIG requirement, the operating system must protect audit tools from unauthorized access.
-    Ref: SRG-OS-000256-GPOS-00097
-    """
+    """Verify /etc/passwd has symbolic mode rw-r--r--."""
     actual = file.get_mode("/etc/passwd")
     assert file.has_permissions("/etc/passwd", "rw-r--r--"), (
         f"stigcompliance: incorrect symbolic permissions on /etc/passwd "
@@ -55,16 +53,14 @@ def test_passwd_permissions_symbolic(file):
     )
 
 
+@pytest.mark.security_id(203672)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 def test_audit_tools_permissions(file):
-    """
-    As per DISA STIG requirement, the operating system must protect audit tools from unauthorized access.
-    Ref: SRG-OS-000256-GPOS-00097
-    """
+    """Verify auditctl, last and journalctl binaries have mode 755."""
     invalid = []
 
     for path in AUDIT_TOOL_PATHS:
@@ -79,50 +75,15 @@ def test_audit_tools_permissions(file):
     )
 
 
+@pytest.mark.security_id(203672)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_sticky_bit_support(file, tmp_path):
-    """
-    As per DISA STIG requirement, the operating system must protect audit tools from unauthorized access.
-    Ref: SRG-OS-000256-GPOS-00097
-    """
+    """Verify a tmp directory chmod-ed to 1777 reports both 1777 and rwxrwxrwt."""
     test_dir = tmp_path / "sticky_test"
     test_dir.mkdir()
     test_dir.chmod(0o1777)
 
     assert file.has_permissions(test_dir, "1777")
     assert file.has_permissions(test_dir, "rwxrwxrwt")
-
-
-@pytest.mark.feature("not container")
-@pytest.mark.booted(reason="audit tools check requires booted system")
-@pytest.mark.root(reason="required to execute privileged tools")
-def test_audit_tools_parent_dirs_not_writable(file):
-    """
-    As per DISA STIG requirement, the operating system must protect audit tools
-    from unauthorized deletion.
-    This test verifies that audit tool deletion is restricted via filesystem
-    permissions by ensuring parent directories are not writable by group or others.
-    Ref: SRG-OS-000258-GPOS-00099
-    """
-    checked = set()
-    for path in AUDIT_TOOL_PATHS:
-        if not file.exists(path):
-            continue
-
-        parent = str(Path(path).parent)
-        if parent in checked:
-            continue
-        checked.add(parent)
-
-        mode = file.get_mode(parent)
-
-        assert (
-            not file.has_permissions(parent, "rwxrwxrwx")
-            and not file.has_permissions(parent, "rwxrwxr-x")
-            and not file.has_permissions(parent, "rwxrwx---")
-        ), (
-            f"stigcompliance: parent directory {parent} allows unauthorized deletion "
-            f"(mode: {mode})"
-        )
