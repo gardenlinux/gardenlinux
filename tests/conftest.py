@@ -1,5 +1,4 @@
 import os
-from typing import Any, List, Optional
 
 import pytest
 
@@ -21,11 +20,11 @@ for plugin in pytest_plugins:
     pytest.register_assert_rewrite(plugin)
 
 
-def pytest_assertrepr_compare(op: str, left: Any, right: Any) -> Optional[List[str]]:
+def pytest_assertrepr_compare(op, left, right):
     if op == "in" and isinstance(right, str) and len(right) > 200:
         return [
             f"Assertion failed: '{left}' not found in comparison string.",
-            f"Comparison string (truncated): {right[:500]}...",
+            f"Comparison string (truncated): {right[:200]}...",
         ]
     return None
 
