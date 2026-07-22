@@ -25,15 +25,8 @@ gzip -d <"$runtime" | tar -x -C "$tmpdir/dist/runtime"
 set +f
 
 mkdir -p "$tmpdir/dist/tests"
-test_dirs=$(find . -mindepth 2 -maxdepth 2 -name "test_*.py" -print0 | xargs -0 -r -I {} dirname {} | sort -u)
-cp -r -t "$tmpdir/dist/tests" conftest.py handlers test_*.py
-
-mkdir -p "$tmpdir/dist/tests/plugins"
-cp plugins/*.py "$tmpdir/dist/tests/plugins/"
-
-if [ -n "$test_dirs" ]; then
-	echo "$test_dirs" | xargs -I {} cp -r {} "$tmpdir/dist/tests/"
-fi
+cp -r -t "$tmpdir/dist/tests" conftest.py handlers integration plugins
+rm -rf "$tmpdir/dist/tests/plugins/tests"
 
 # We need the OPENSSL_MODULES=/usr/lib/$(arch)-linux-gnu/ossl-modules/ to allow the python-build-standalone
 # to detect the fips.so module. See https://github.com/gardenlinux/gardenlinux/pull/3752
@@ -50,7 +43,7 @@ export PATH="$script_dir/runtime/$arch/bin:$PATH"
 cd "$script_dir/tests"
 echo "🧪  running tests with args: $0 $@"
 error=0
-COLUMNS=120 OPENSSL_MODULES=/usr/lib/$(arch)-linux-gnu/ossl-modules/ python -m pytest -rA --tb=short --color=yes -p no:cacheprovider "$@" || error=$?
+COLUMNS=120 OPENSSL_MODULES=/usr/lib/$(arch)-linux-gnu/ossl-modules/ python -u -m pytest -rA --tb=short --color=yes -p no:cacheprovider "$@" || error=$?
 if [ "$TEST_NG_EXIT_0" = 1 ]; then
 	error=0
 fi

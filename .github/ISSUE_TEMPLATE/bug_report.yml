@@ -1,0 +1,87 @@
+---
+name: Bug Report
+description: Found a bug? Let us know!
+title: "[BUG] "
+labels: ["kind/bug"]
+type: bug
+body:
+  - type: markdown
+    attributes:
+      value: >
+        **NOTE**: Please only use this form to report _reproducible bugs_ in Garden Linux.
+        If you have any questions or are looking for assistance,
+        please refer to [our documentation](https://www.gardenlinux.org/)
+  - type: input
+    attributes:
+      label: Garden Linux Version
+      description: >
+        Which version of Garden Linux are you running?
+      placeholder: 2150.1.0
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Used Flavor
+      description: >
+        Which Flavor or Feature Set does your image use?
+    validations:
+      required: false
+  - type: dropdown
+    attributes:
+      label: Deployment Type
+      description: How are you running Garden Linux?
+      multiple: false
+      options:
+        - Bare Metal
+        - KVM/LIMA
+        - AWS
+        - Google Cloud
+        - Microsoft Azure Cloud
+        - OpenStack
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Bug Description
+      description: >
+        Please describe in detail what issue you face.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: >
+        Please provide us with a step-by-step breakdown of the last thing
+        you did before encountering this issue.
+        This helps us reproducing the potential bug.
+    validations:
+      required: true
+  - type: upload
+    id: screenshots
+    attributes:
+      label: Upload Screenshots
+      description: If applicable, add screenshots to help explain your problem.
+    validations:
+      required: false
+  - type: upload
+    id: logs
+    attributes:
+      label: Upload Logs
+      description: >
+        If applicable, add any log files of your installation to help us trace the issue.
+        Helpful logs include:
+          - Any logs of the build system when building your own image (can be found in <repo>/.build/)
+            _Hint_: You might want to set the `set -x` flag in your invoked bash script for this.
+          - The output of logging daemons like journalctl or dmesg on the running system
+          - Any logs your virtualization or container engine or cloud host might produce
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/gardenlinux/gardenlinux?tab=coc-ov-file#sap-open-source-code-of-conduct).
+      options:
+        - label: I confirm that I read and agree to this project's Code of Conduct.
+    validations:
+      required: true

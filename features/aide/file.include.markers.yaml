@@ -1,0 +1,9 @@
+markers:
+  "etc/systemd/system/aide-check.service":
+  - "GL-TESTCOV-aide-service-aide-check-unit"
+  "etc/systemd/system/aide-check.timer":
+  - "GL-TESTCOV-aide-service-aide-check-timer"
+  "etc/systemd/system/aide-init.service":
+  - "GL-TESTCOV-aide-service-aide-init-unit"
+  "usr/local/sbin/aide-init-onboot.sh":
+  - "GL-TESTCOV-aide-script-aide-init-onboot"

@@ -1,3 +1,5 @@
 lsscsi
+# GL-TESTCOV-iscsi-service-iscsid-enable
 open-iscsi
+# GL-TESTCOV-iscsi-service-tgt-enable
 tgt

@@ -1,0 +1,12 @@
+markers:
+  "etc/cloud/cloud.cfg.d/01_debian-cloud.cfg":
+  - "GL-TESTCOV-openstack-config-cloud-apt-sources"
+  - "GL-TESTCOV-openstack-config-cloud-manage-hosts"
+  - "GL-TESTCOV-openstack-config-cloud-user-name"
+  - "GL-TESTCOV-openstack-config-cloud-user-shell"
+  - "GL-TESTCOV-openstack-config-cloud-user-lock-passwd"
+  - "GL-TESTCOV-openstack-config-cloud-user-sudo"
+  "etc/cloud/cloud.cfg.d/50-datasource.cfg":
+  - "GL-TESTCOV-openstack-config-cloud-datasource"
+  "etc/cloud/ds-identify.cfg":
+  - "GL-TESTCOV-openstack-config-cloud-datasource-identify"

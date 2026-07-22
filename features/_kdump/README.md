@@ -1,3 +1,11 @@
+---
+title: "Feature: _kdump"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/_kdump/README.md
+github_target_path: docs/reference/features/_kdump.md
+---
+
 # KDUMP
 
 Feature that allows the creation of a crashdump whenever the dump of a system's

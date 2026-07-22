@@ -46,3 +46,11 @@ format: install-dev format-black format-isort
 # test-plugins: Run Tests for Plugins
 test-plugins: install
 	pytest -v $(ROOT_DIR)/plugins/tests/test_*.py
+
+# coverage: Run Feature/Tests Coverage Reporting
+coverage: install
+	$(ROOT_DIR)/util/coverage.py
+
+# test-utils: Run Tests for Utils
+test-utils: install
+	pytest -v $(ROOT_DIR)/util/tests/test_*.py

@@ -1,0 +1,27 @@
+markers:
+  "etc/repart.d/00-efi.conf":
+  - "GL-TESTCOV-_usi-config-initrd-repart-efi"
+  "etc/systemd/system-generators/detect-disk-by-efivars":
+  - "GL-TESTCOV-_usi-config-initrd-systemd-system-generators-detect-disk-by-efivars"
+  "etc/systemd/system/initrd-root-fs.target.requires/sysroot-etc.mount":
+  - "GL-TESTCOV-_usi-config-initrd-mount-initrd-root-fs-target-requires-sysroot-etc-mount"
+  "etc/systemd/system/initrd-root-fs.target.requires/sysroot-home.mount":
+  - "GL-TESTCOV-_usi-config-initrd-mount-initrd-root-fs-target-requires-sysroot-home-mount"
+  "etc/systemd/system/initrd-root-fs.target.requires/sysroot-opt.mount":
+  - "GL-TESTCOV-_usi-config-initrd-mount-initrd-root-fs-target-requires-sysroot-opt-mount"
+  "etc/systemd/system/initrd-root-fs.target.requires/sysroot-root.mount":
+  - "GL-TESTCOV-_usi-config-initrd-mount-initrd-root-fs-target-requires-sysroot-root-mount"
+  "etc/systemd/system/initrd-root-fs.target.requires/sysroot.mount":
+  - "GL-TESTCOV-_usi-config-initrd-mount-initrd-root-fs-target-requires-sysroot-mount"
+  "etc/systemd/system/sysroot-etc.mount":
+  - "GL-TESTCOV-_usi-config-initrd-mount-sysroot-etc-mount"
+  "etc/systemd/system/sysroot-home.mount":
+  - "GL-TESTCOV-_usi-config-initrd-mount-sysroot-home-mount"
+  "etc/systemd/system/sysroot-opt.mount":
+  - "GL-TESTCOV-_usi-config-initrd-mount-sysroot-opt-mount"
+  "etc/systemd/system/sysroot-root.mount":
+  - "GL-TESTCOV-_usi-config-initrd-mount-sysroot-root-mount"
+  "etc/systemd/system/sysroot.mount":
+  - "GL-TESTCOV-_usi-config-initrd-mount-sysroot-mount"
+  "usr/bin/repart-esp-disk":
+  - "GL-TESTCOV-_usi-config-initrd-script-repart-esp-disk"
