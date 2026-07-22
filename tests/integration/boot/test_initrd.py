@@ -109,7 +109,7 @@ def test_nocrypt_initrd_files(initrd: Initrd):
 @pytest.mark.testcov(
     ["GL-TESTCOV-_pxe-config-initrd-module-gardenlinux-live-gl-end-unit"]
 )
-@pytest.mark.feature("_pxe")
+@pytest.mark.feature("_pxe and not _autoinstall")
 def test_pxe_gl_end_unit_exists(file):
     """Test that gl-end.service unit file exists"""
     assert file.is_regular_file(
@@ -122,7 +122,7 @@ def test_pxe_gl_end_unit_exists(file):
         "GL-TESTCOV-_pxe-config-initrd-gl-live",
     ]
 )
-@pytest.mark.feature("_pxe")
+@pytest.mark.feature("_pxe and not _autoinstall")
 @pytest.mark.root(reason="Reading the initrd contents requires root access")
 @pytest.mark.booted(reason="Chroot environments have no initrd")
 def test_pxe_initrd_gl_live_module(initrd: Initrd):
@@ -166,7 +166,7 @@ def test_pxe_initrd_omit_cdc_ether_module(initrd: Initrd):
         "GL-TESTCOV-_pxe-config-initrd-module-gardenlinux-live-squash-mount-generator",
     ]
 )
-@pytest.mark.feature("_pxe")
+@pytest.mark.feature("_pxe and not _autoinstall")
 @pytest.mark.root(reason="Reading the initrd contents requires root access")
 @pytest.mark.booted(reason="Chroot environments have no initrd")
 def test_pxe_initrd_files(initrd: Initrd):
@@ -194,7 +194,7 @@ def test_pxe_initrd_files(initrd: Initrd):
         "GL-TESTCOV-_pxe-config-kernel-cmdline-pxe",
     ]
 )
-@pytest.mark.feature("_pxe")
+@pytest.mark.feature("_pxe and not _autoinstall")
 @pytest.mark.booted(reason="kernel cmdline needs a booted system")
 def test_pxe_kernel_cmdline(kernel_cmdline: List[str]):
     """Verify kernel command line parameters are present in the running kernel command line for PXE"""
