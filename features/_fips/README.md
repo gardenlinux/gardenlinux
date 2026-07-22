@@ -1,3 +1,11 @@
+---
+title: "Feature: _fips"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/_fips/README.md
+github_target_path: docs/reference/features/_fips.md
+---
+
 ## Feature: FIPS
 ### Description
 <website-feature>
@@ -19,5 +27,5 @@ We have several tests executed.
 |---|---|
 |type|flag|
 |artifact|None|
-|included_features|base|
+|included_features|[`base`](/reference/features/base)|
 |excluded_features|None|

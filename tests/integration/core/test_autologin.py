@@ -16,7 +16,9 @@ CONFIG_FILES = [
     ]
 )
 @pytest.mark.parametrize("config_file", CONFIG_FILES)
-@pytest.mark.feature("server and (_dev or _iso)", reason="needs systemd")
+@pytest.mark.feature(
+    "server and (_dev or _iso) and not _autoinstall", reason="needs systemd"
+)
 def test_autologin(config_file, parse_file: ParseFile):
     lines = parse_file.lines(config_file)
     assert re.compile(r"ExecStart.*autologin") in lines

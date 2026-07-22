@@ -1,3 +1,11 @@
+---
+title: "Feature: kvm"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/kvm/README.md
+github_target_path: docs/reference/features/kvm.md
+---
+
 ## Feature: kvm
 ### Description
 <website-feature>
@@ -16,5 +24,5 @@ Next to this, `kvm` fixture is the base platform to perform local unit tests tha
 |---|---|
 |type|platform|
 |artifact|`.raw`,`.qcow2`|
-|included_features|`server`|
+|included_features|[`server`](/reference/features/server)|
 |excluded_features|None|
