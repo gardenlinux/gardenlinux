@@ -121,6 +121,119 @@ export function intersectFlavorsMatrix(matrixA, matrixB) {
     return { "include": intersectMatrix };
 }
 
+export async function createNightlyFailureIssue(core, github, context, needs, aptCompareOutput, newVersion, oldVersion) {
+    const failedNeeds = Object.entries(needs).filter(([_, data]) => data.result === 'failure');
+    const date = new Date().toISOString().split('T')[0];
+    const title = `Nightly workflow failed on ${date} (run #${context.runId})`;
+    const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+    let body = `## Nightly workflow failed\n\n`;
+    body += `A summary of the failure is provided below. See the [workflow run](${runUrl}) for full details.\n\n`;
+    body += `| | |\n`;
+    body += `|---|---|\n`;
+    body += `| **Workflow** | ${context.workflow} |\n`;
+    body += `| **Run** | ${runUrl} |\n`;
+    body += `| **Ref** | ${context.ref} |\n`;
+    body += `| **SHA** | ${context.sha} |\n\n`;
+
+    body += `### Failed jobs\n\n`;
+    if (failedNeeds.length > 0) {
+        for (const [name, data] of failedNeeds) {
+            body += `- **${name}**: ${data.result}\n`;
+        }
+    } else {
+        body += `- No individual job reported a failure result, but the overall workflow failed.\n`;
+    }
+
+    const { data: jobsData } = await github.rest.actions.listJobsForWorkflowRun({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        run_id: context.runId,
+    });
+
+    const failedJobs = jobsData.jobs.filter(job => job.conclusion === 'failure');
+
+    if (failedJobs.length > 0) {
+        body += `\n### Failed job logs (last 10 lines)\n\n`;
+        for (const job of failedJobs) {
+            const logLines = await getLastJobLogLines(github, context, job.id);
+            body += `<details>\n`;
+            body += `<summary><b>${job.name}</b></summary>\n\n`;
+            body += '```\n';
+            body += logLines;
+            body += '\n```\n\n';
+            body += `</details>\n\n`;
+        }
+    }
+
+    const { data: existingIssues } = await github.rest.issues.listForRepo({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        state: 'open',
+    });
+
+    const duplicate = existingIssues.find(issue =>
+        issue.title.includes(`run #${context.runId}`)
+    );
+
+    if (duplicate) {
+        core.notice(`Issue already exists for this run: ${duplicate.html_url}`);
+        return;
+    }
+
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: pullsData } = await github.rest.pulls.list({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        state: 'closed',
+        sort: 'updated',
+        direction: 'desc',
+        per_page: 100,
+    });
+
+    const recentlyMerged = pullsData.filter(pr => pr.merged_at && pr.merged_at >= oneDayAgo);
+
+    body += `\n### Pull requests merged in the last 24 hours\n\n`;
+    if (recentlyMerged.length > 0) {
+        for (const pr of recentlyMerged) {
+            body += `- #${pr.number} [${pr.title}](${pr.html_url}) by @${pr.user.login} (merged at ${pr.merged_at})\n`;
+        }
+    } else {
+        body += `- No pull requests were merged in the last 24 hours.\n`;
+    }
+
+    body += `\n### Apt packages updated since yesterday's nightly run\n\n`;
+    body += `<details>\n`;
+    body += `<summary>Click to expand output of <code>./hack/compare-apt-repo-versions.sh ${newVersion} ${oldVersion}</code></summary>\n\n`;
+    body += '```\n';
+    body += aptCompareOutput || '(no output)';
+    body += '\n```\n\n';
+    body += `</details>\n\n`;
+
+    await github.rest.issues.create({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        title: title,
+        body: body,
+    });
+}
+
+async function getLastJobLogLines(github, context, jobId) {
+    try {
+        const resp = await github.rest.actions.downloadJobLogsForWorkflowRun({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            job_id: jobId,
+        });
+        const logText = typeof resp.data === 'string' ? resp.data : String(resp.data);
+        const lines = logText.split('\n').filter(line => line !== '');
+        const lastLines = lines.slice(-10);
+        return lastLines.length > 0 ? lastLines.join('\n') : '(no log output)';
+    } catch (err) {
+        return `Error retrieving logs: ${err.message}`;
+    }
+}
+
 export async function retryWorkflow(core, githubActions, context, runID, retries) {
     if (isNaN(retries)) {
         core.setFailed("Workflow run retry requested retries are invalid");

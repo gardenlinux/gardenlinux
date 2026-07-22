@@ -71,6 +71,7 @@ s3_downloads/
 **/encryption.tf
 COMMIT
 VERSION
+node_modules/
 edk2/
 **/*-internal.md
 # docs-ng build directory (created by docs/Makefile)
