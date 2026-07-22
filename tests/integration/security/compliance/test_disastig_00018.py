@@ -18,12 +18,10 @@ def test_audit_event_contains_source(shell):
         cmd="ausearch -ts recent",
         capture_output=True,
     )
-    stdout = result.stdout
-    has_source = (
-        "auid=" in stdout
-        or "uid=" in stdout
-        or "ses=" in stdout
-        or "comm=" in stdout
-        or "exe=" in stdout
-    )
-    assert has_source, "stigcompliance: audit records do not contain source information"
+    assert (
+        "auid=" in result.stdout
+        or "uid=" in result.stdout
+        or "ses=" in result.stdout
+        or "comm=" in result.stdout
+        or "exe=" in result.stdout
+    ), "stigcompliance: audit records do not contain source information"

@@ -19,8 +19,7 @@ def test_audit_event_generated(shell):
         capture_output=True,
     )
 
-    has_output = result.stdout.strip() != ""
-    assert has_output, "stigcompliance: no audit events captured"
+    assert result.stdout.strip() != "", "stigcompliance: no audit events captured"
 
 
 @pytest.mark.security_id(203604)
@@ -34,7 +33,6 @@ def test_audit_event_contains_type(shell):
         capture_output=True,
     )
 
-    has_type = "type=" in result.stdout
     assert (
-        has_type
+        "type=" in result.stdout
     ), "stigcompliance: audit records do not contain event type information"

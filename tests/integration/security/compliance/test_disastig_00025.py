@@ -15,9 +15,9 @@ import pytest
 def test_audit_filter_by_uid(shell):
     """Verify ausearch -ua 0 succeeds (filter by user identity)."""
     result = shell("ausearch -ua 0", capture_output=True)
-    returncode = result.returncode
+
     assert (
-        returncode == 0
+        result.returncode == 0
     ), "stigcompliance: unable to filter audit records by user identity (uid)"
 
 
@@ -28,9 +28,9 @@ def test_audit_filter_by_uid(shell):
 def test_audit_filter_returns_structured_output(shell):
     """Verify ausearch -ua 0 output contains a 'type=' field."""
     result = shell("ausearch -ua 0", capture_output=True)
-    has_type = "type=" in result.stdout
+
     assert (
-        has_type
+        "type=" in result.stdout or "type=" in result.stdout or "type=" in result.stdout
     ), "stigcompliance: audit filtering does not return structured audit records"
 
 
@@ -45,8 +45,8 @@ def test_audit_filter_by_event_type(shell):
         capture_output=True,
         ignore_exit_code=True,
     )
-    returncode = result.returncode
-    assert returncode in (
+
+    assert result.returncode in (
         0,
         1,
     ), "stigcompliance: unable to filter audit records by event type"
@@ -63,8 +63,8 @@ def test_audit_filter_by_command(shell):
         capture_output=True,
         ignore_exit_code=True,
     )
-    returncode = result.returncode
-    assert returncode in (
+
+    assert result.returncode in (
         0,
         1,
     ), "stigcompliance: unable to filter audit records by command"
@@ -85,7 +85,6 @@ def test_audit_record_filtering_capability(shell):
 
     for cmd in commands:
         result = shell(cmd, capture_output=True)
-        returncode = result.returncode
         assert (
-            returncode == 0
+            result.returncode == 0
         ), f"stigcompliance: audit filtering failed for command: {cmd}"

@@ -81,5 +81,7 @@ def test_attempt_to_delete_privileges_event_logged(audit_rule, shell, sudoers_ed
         cmd="ausearch -f /etc/sudoers --just-one",
         capture_output=True,
     )
-    has_match = "<no matches>" not in result.stdout.strip()
-    assert has_match, "stigcompliance: privileges deletion attempt is not detected"
+
+    assert (
+        "<no matches>" not in result.stdout.strip()
+    ), "stigcompliance: privileges deletion attempt is not detected"

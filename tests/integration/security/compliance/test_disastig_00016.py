@@ -18,7 +18,6 @@ def test_audit_event_contains_timestamp(shell):
         cmd="ausearch -ts recent",
         capture_output=True,
     )
-    has_timestamp = "time->" in result.stdout or "audit(" in result.stdout
     assert (
-        has_timestamp
+        "time->" in result.stdout or "audit(" in result.stdout
     ), "stigcompliance: audit records do not contain timestamp information"

@@ -47,13 +47,14 @@ def test_setreuid_rule_contains_syscall(parse_file: ParseFile):
 def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
     """Verify the setreuid audit rule is loaded into the running kernel."""
     output = shell(cmd="auditctl -l", capture_output=True)
-    returncode = output.returncode
+
     assert (
-        returncode == 0
+        output.returncode == 0
     ), f"stigcompliance: unable to list audit rules: {output.stderr}"
 
-    has_setreuid = "setreuid" in output.stdout
-    assert has_setreuid, "stigcompliance: setreuid audit rule not loaded in kernel"
+    assert (
+        "setreuid" in output.stdout
+    ), "stigcompliance: setreuid audit rule not loaded in kernel"
 
 
 @pytest.mark.security_id(203763)
@@ -83,5 +84,4 @@ def test_setreuid_event_logged(shell: ShellRunner):
     if result.returncode == 1 or not result.stdout.strip():
         return
 
-    has_syscall = "SYSCALL" in result.stdout
-    assert has_syscall, "stigcompliance: no syscall audit event detected"
+    assert "SYSCALL" in result.stdout, "stigcompliance: no syscall audit event detected"

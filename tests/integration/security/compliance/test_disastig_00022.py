@@ -5,6 +5,8 @@ Verify the operating system alerts the ISSO and SA (at a minimum) in the event
 of an audit processing failure.
 """
 
+import re
+
 import pytest
 
 
@@ -19,13 +21,6 @@ def test_audit_event_contains_audit_processing_failures(shell):
         capture_output=True,
     )
 
-    stdout = result.stdout
-    has_failures = "audit" in stdout and (
-        "fail" in stdout
-        or "error" in stdout
-        or "lost=" in stdout
-        or "backlog" in stdout
-    )
-    assert (
-        has_failures
+    assert re.search(
+        r"audit.*(fail|error|lost=|backlog)", result.stdout
     ), "stigcompliance: audit records do not indicate alerting or detection of audit processing failures"

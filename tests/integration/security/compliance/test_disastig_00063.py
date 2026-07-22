@@ -28,5 +28,7 @@ def test_audit_reporting_tools_installed():
 def test_audit_reporting_execution(shell):
     """Verify aureport produces a usable summary."""
     result = shell("aureport --summary", capture_output=True, ignore_exit_code=True)
-    has_summary = "Summary" in result.stdout
-    assert has_summary, "'aureport' executed but returned an unexpected result"
+
+    assert (
+        "Summary" in result.stdout
+    ), f"'aureport' executed but returned an unexpected result: {result.stdout}"

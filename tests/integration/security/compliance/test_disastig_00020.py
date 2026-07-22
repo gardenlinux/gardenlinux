@@ -18,10 +18,8 @@ def test_audit_event_contains_full_text_recording(audit_rule, shell):
         cmd="ausearch -ts recent",
         capture_output=True,
     )
-    stdout = result.stdout
-    has_full_text = (
-        "type=EXECVE" in stdout and " a0=" in stdout
-    ) or "proctitle=" in stdout
     assert (
-        has_full_text
-    ), "stigcompliance: audit records do not contain full-text command recording"
+        "type=EXECVE" in result.stdout and " a0=" in result.stdout
+    ) or "proctitle=" in result.stdout, (
+        "stigcompliance: audit records do not contain full-text command recording"
+    )

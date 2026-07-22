@@ -36,7 +36,7 @@ def test_audit_records_contain_identity_information(shell):
     missing = [
         pattern for pattern in identity_patterns if not re.search(pattern, stdout)
     ]
-    has_all = not missing
+
     assert (
-        has_all
+        not missing
     ), "stigcompliance: audit records missing identity fields: " + ", ".join(missing)
