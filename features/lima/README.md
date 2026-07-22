@@ -1,3 +1,11 @@
+---
+title: "Feature: lima"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/lima/README.md
+github_target_path: docs/reference/features/lima.md
+---
+
 ## Feature: lima
 ### Description
 <website-feature>

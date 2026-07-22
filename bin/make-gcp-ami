@@ -77,7 +77,7 @@ class GcpImageBuild:
     def upload_image(self, bucket, raw_image_path, image_name):
         bucket_image = "gs://" + bucket + "/" + image_name + ".tar.gz"
         logger.debug(
-            f"Checking wheter image file {image_name}.tar.gz exists in bucket."
+            f"Checking whether image file {image_name}.tar.gz exists in bucket."
         )
         result = subprocess.run(
             ["gsutil", "-q", "stat", bucket_image], capture_output=True
