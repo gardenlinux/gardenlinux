@@ -1,0 +1,3 @@
+markers:
+  "etc/update-motd.d/99-glvd":
+  - "GL-TESTCOV-glvd-script-update-motd-glvd"

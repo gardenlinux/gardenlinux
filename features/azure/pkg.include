@@ -1,4 +1,6 @@
+# GL-TESTCOV-azure-service-chrony-enable
 chrony
+# GL-TESTCOV-azure-service-cloud-init-local-enable
 cloud-init
 python3-cffi-backend
 python3-passlib

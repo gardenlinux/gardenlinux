@@ -58,7 +58,7 @@ provider_installation {
   direct {}
 }
 EOF
-    if [ ! -f "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" ] || ! sha256sum -c "${TOFU_PROVIDERS_CUSTOM}/checksum.txt" >/dev/null 2>&1; then
+    if [ ! -f "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" ] || ! (cd "${TOFU_PROVIDERS_CUSTOM}" && sha256sum -c checksum.txt >/dev/null 2>&1); then
         echo "Downloading terraform-provider-azurerm"
         mkdir -p "${TOFU_PROVIDERS_CUSTOM}"
         curl -LO --create-dirs --output-dir "${TOFU_PROVIDERS_CUSTOM}" "${TOFU_PROVIDER_AZURERM_URL}"

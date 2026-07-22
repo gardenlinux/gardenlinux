@@ -52,6 +52,69 @@ class KernelModule:
             pass
         return False
 
+    def get_module_parameter(self, module: str, parameter: str) -> str | None:
+        """Get the value of a module parameter.
+
+        Returns the parameter value as a string, or None if the parameter doesn't exist
+        or the module is not loaded.
+
+        Args:
+            module: The name of the kernel module
+            parameter: The name of the parameter to retrieve
+
+        Returns:
+            The parameter value as a string, or None if not found
+        """
+        param_path = f"/sys/module/{module}/parameters/{parameter}"
+        try:
+            with open(param_path, "r") as f:
+                return f.read().strip()
+        except Exception:
+            return None
+
+    def has_module_parameter(
+        self, module: str, parameter: str, expected_value: str
+    ) -> bool:
+        """Check if a module parameter has a specific value.
+
+        Args:
+            module: The name of the kernel module
+            parameter: The name of the parameter to check
+            expected_value: The expected value of the parameter
+
+        Returns:
+            True if the parameter exists and matches the expected value, False otherwise
+        """
+        actual_value = self.get_module_parameter(module, parameter)
+        return actual_value == expected_value
+
+    def get_module_parameters(self, module: str) -> dict[str, str]:
+        """Get all parameters for a loaded module.
+
+        Args:
+            module: The name of the kernel module
+
+        Returns:
+            A dictionary mapping parameter names to their values.
+            Returns an empty dict if the module is not loaded or has no parameters.
+        """
+        params = {}
+        params_dir = f"/sys/module/{module}/parameters"
+        try:
+            if os.path.exists(params_dir):
+                for param_name in os.listdir(params_dir):
+                    param_path = os.path.join(params_dir, param_name)
+                    if os.path.isfile(param_path):
+                        try:
+                            with open(param_path, "r") as f:
+                                params[param_name] = f.read().strip()
+                        except Exception:
+                            # Some parameters may not be readable
+                            pass
+        except Exception:
+            pass
+        return params
+
     def load_module(self, module: str) -> bool:
         """Load ``module`` using ``modprobe`` and track all modules that were loaded.
         Only tracks modules that were not initially loaded.

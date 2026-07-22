@@ -186,12 +186,12 @@ class PamConfig:
                     index = 2
                 else:
                     found = False
-                    for j in range(2, len(tokens)):
-                        if tokens[j].endswith("]"):
-                            control_full = " ".join(tokens[1 : j + 1])
-                            index = j + 1
-                            found = True
-                            break
+            for j in range(2, len(tokens)):
+                if tokens[j].endswith("]"):
+                    control_full = " ".join(tokens[1 : j + 1])
+                    index = j + 1
+                    found = True
+                    break
                     if not found:
                         # malformed bracket expression: fall back to single token
                         index = 2

@@ -151,7 +151,7 @@ def setup_and_run_argparser():
         "--profile_name",
         type=str,
         default=None,
-        help="the name of the AWS profie to use (equivalent to AWS_PROFILE_NAME environment variable",
+        help="the name of the AWS profile to use (equivalent to AWS_PROFILE_NAME environment variable",
     )
     parser.add_argument(
         "--use-cc-config",

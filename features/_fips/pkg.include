@@ -4,3 +4,4 @@ libgnutls28-dev
 gnutls-bin
 libgcrypt20
 libkcapi1-hmac
+binutils

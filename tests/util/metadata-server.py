@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import http.server
+import signal
 import socketserver
+import threading
 
 API_VERSION = "2009-04-04"
 BASE_PATH = f"/{API_VERSION}"
@@ -40,4 +42,17 @@ class MetadataHandler(http.server.BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    socketserver.TCPServer(("127.0.0.1", 8181), MetadataHandler).serve_forever()
+    socketserver.TCPServer.allow_reuse_address = True
+    server = socketserver.TCPServer(("127.0.0.1", 8181), MetadataHandler)
+
+    def shutdown_handler(signum, frame):
+        """Handle shutdown signals by stopping the server in a separate thread."""
+        threading.Thread(target=server.shutdown).start()
+
+    signal.signal(signal.SIGTERM, shutdown_handler)
+    signal.signal(signal.SIGINT, shutdown_handler)
+
+    try:
+        server.serve_forever()
+    finally:
+        server.server_close()

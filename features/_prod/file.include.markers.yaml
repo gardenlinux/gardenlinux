@@ -1,0 +1,7 @@
+markers:
+  "etc/security/limits.conf":
+  - "GL-TESTCOV-_prod-config-security-limits-disable-core-dumps"
+  "etc/sysctl.d/99-disable-core-dump.conf":
+  - "GL-TESTCOV-_prod-config-sysctl-coredump-disable"
+  "etc/systemd/coredump.conf.d/disable_coredump.conf":
+  - "GL-TESTCOV-_prod-config-systemd-coredump-disable"

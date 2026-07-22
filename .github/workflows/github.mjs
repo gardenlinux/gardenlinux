@@ -40,7 +40,7 @@ export function excludeFlavorsMatrix(matrixA, matrixB) {
 }
 
 export function isMatrixEmpty(matrix) {
-    return (matrix == "" || matrix == `{"include":[]}`);
+    return (!Object.keys(matrix).includes('include') || matrix['include'].length < 1);
 }
 
 export function getGHCRRepositoryFromTarget(target) {

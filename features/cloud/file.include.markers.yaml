@@ -1,0 +1,37 @@
+markers:
+  "etc/kernel/cmdline.d/00-default.cfg":
+  - "GL-TESTCOV-cloud-config-kernel-cmdline-default"
+  "etc/kernel/cmdline.d/40-enable-swap-cgroup-accounting.cfg":
+  - "GL-TESTCOV-cloud-config-kernel-cmdline-enable-swap-cgroup-accounting"
+  "etc/kernel/cmdline.d/60-timeout.cfg":
+  - "GL-TESTCOV-cloud-config-kernel-cmdline-timeout"
+  "etc/kernel/entry-token":
+  - "GL-TESTCOV-cloud-config-kernel-entry-token"
+  "etc/kernel/postinst.d/00-kernel-cmdline":
+  - "GL-TESTCOV-cloud-config-kernel-postinst-cmdline"
+  "etc/kernel/postinst.d/zz-update-syslinux":
+  - "GL-TESTCOV-cloud-config-kernel-postinst-update-syslinux"
+  "etc/kernel/postrm.d/zz-update-syslinux":
+  - "GL-TESTCOV-cloud-config-kernel-postrm-update-syslinux"
+  "etc/modprobe.d/disabled_firewire.conf":
+  - "GL-TESTCOV-cloud-config-modprobe-firewire-disable"
+  "etc/modprobe.d/disabled_fs.conf":
+  - "GL-TESTCOV-cloud-config-modprobe-fs-disable"
+  "etc/modprobe.d/disabled_net.conf":
+  - "GL-TESTCOV-cloud-config-modprobe-net-disable"
+  "etc/modprobe.d/disabled_udf.conf":
+  - "GL-TESTCOV-cloud-config-modprobe-udf-disable"
+  "etc/modprobe.d/disabled_usb.conf":
+  - "GL-TESTCOV-cloud-config-modprobe-usb-disable"
+  "etc/profile.d/50-autologout.sh":
+  - "GL-TESTCOV-cloud-script-profile-autologout"
+  "etc/repart.d/root.conf":
+  - "GL-TESTCOV-cloud-config-repart-root"
+  "etc/sysctl.d/20-cloud.conf":
+  - "GL-TESTCOV-cloud-config-sysctl-cloud"
+  "etc/sysctl.d/21-ipv4-settings.conf":
+  - "GL-TESTCOV-cloud-config-sysctl-ipv4"
+  "etc/sysctl.d/22-ipv6-settings.conf":
+  - "GL-TESTCOV-cloud-config-sysctl-ipv6"
+  "etc/systemd/system/rngd.service.d/architecture.conf":
+  - "GL-TESTCOV-cloud-config-systemd-rngd-architecture"

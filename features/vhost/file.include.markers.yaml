@@ -1,0 +1,3 @@
+markers:
+  "etc/systemd/system-preset/00-disable-libvirtd-tls-socket.preset":
+  - "GL-TESTCOV-vhost-service-libvirtd-tls-socket-preset-disable"
