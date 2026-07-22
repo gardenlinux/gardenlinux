@@ -1,3 +1,4 @@
 openssh-server
+openssh-client
 sshguard
 python3-systemd
