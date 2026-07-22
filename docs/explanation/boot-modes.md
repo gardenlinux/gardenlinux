@@ -53,7 +53,7 @@ The [`_legacy`](/reference/features/_legacy) feature selects this boot mode.
 ## Unified System Image (USI)
 
 The USI design is loosely inspired by
-[Lennart Poettering's ideas](https://0pointer.net/blog/fitting-everything-together.html)
+[Lennart Poettering's ideas](https://web.archive.org/web/20260714124711/https://0pointer.net/blog/fitting-everything-together.html)
 on how modern operating systems should boot. It fully embraces
 [Unified Kernel Images (UKIs)](https://uapi-group.org/specifications/specs/unified_kernel_image/)
 and an immutable root filesystem. However, the design differs in how the root
