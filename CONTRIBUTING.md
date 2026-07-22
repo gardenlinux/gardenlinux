@@ -1,3 +1,11 @@
+---
+title: "Contributing Workflow"
+github_target_path: "contributing/workflow.md"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: CONTRIBUTING.md
+---
+
 # Contributing to Garden Linux
 
 ## Code of conduct
@@ -16,11 +24,11 @@ If you plan to do something more involved, first discuss your ideas on our [mail
 
 ## Steps to Contribute
 
-Should you wish to work on an issue, please claim it first by commenting on the GitHub issue that you want to work on it. This is to prevent duplicated efforts from contributors on the same issue.
+Should you wish to work on an issue, claim it first by commenting on the GitHub issue that you want to work on it. This is to prevent duplicated efforts from contributors on the same issue.
 
-If you have questions about one of the issues, with or without the tag, please comment on them and one of the maintainers will clarify it.
+If you have questions about one of the issues, with or without the tag, comment on them and one of the maintainers will clarify it.
 
-We kindly ask you to follow the [Pull Request Checklist](#Pull-Request-Checklist) to ensure reviews can happen accordingly.
+Follow the [Pull Request Checklist](#Pull-Request-Checklist) to ensure reviews can happen accordingly.
 
 ## Contributing Code
 
@@ -46,7 +54,7 @@ Due to legal reasons, contributors will be asked to accept a Developer Certifica
 
 ## GIT Branch Naming Convention
 
-By contributing to Garden Linux please make sure to take care of our git branch naming convention. All new branches should provide a prefix (mostly `feature/`) followed by a reference to an issue and a summary.
+When contributing to Garden Linux, follow the git branch naming convention. All new branches must provide a prefix (mostly `feature/`) followed by a reference to an issue and a summary.
 
 **Example**:
 
@@ -87,7 +95,7 @@ Next to this, more specific prefixes (unlike only `feature/`) may be used.
 
 1. Post review:
 
-    1. If a review requires you to change your commit(s), please test the changes again.
+    1. If a review requires you to change your commit(s), test the changes again.
     1. Amend the affected commit(s) and force push onto your branch.
     1. Set respective comments in your GitHub review to resolved.
     1. Create a general PR comment to notify the reviewers that your amendments are ready for another round of review.
@@ -96,7 +104,7 @@ Next to this, more specific prefixes (unlike only `feature/`) may be used.
 
 ## Issues and Planning
 
-We use GitHub issues to track bugs and enhancement requests. Please provide as much context as possible when you open an issue. The information you provide must be comprehensive enough to reproduce that issue for the assignee. Therefore, contributors may use but aren’t restricted to the issue template provided by the Garden Linux maintainers.
+We use GitHub issues to track bugs and enhancement requests. Provide as much context as possible when you open an issue. The information you provide must include enough detail to reproduce that issue for the assignee. Therefore, contributors may use but aren’t restricted to the issue template provided by the Garden Linux maintainers.
 
 ## Mailing List
 

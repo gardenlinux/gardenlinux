@@ -6,7 +6,7 @@ shopt -s nullglob
 exec 3>&1
 exec 1>&2
 
-container_image=ghcr.io/gardenlinux/builder:bd63099917c73e96e1285af793a14ac83617a147
+container_image=ghcr.io/gardenlinux/builder:3760e26aa5f5d5537c3e1b5c0d85b3f2a03ba687
 container_engine=podman
 target_dir=.build
 
@@ -126,7 +126,7 @@ if [ "$use_kms" = 1 ]; then
 	done
 fi
 
-# Default values which can be overriden via 'build.config' file
+# Default values which can be overridden via 'build.config' file
 tempfs_size=2G
 
 if [[ -f "$PWD"/build.config ]]; then
@@ -163,7 +163,7 @@ if [ "$container_engine" = "docker" ] \
 	apparmor_profile=builder
 fi
 
-# Apply apparmor profile if seleceted
+# Apply apparmor profile if selected
 if [ "$apparmor_profile" ]; then
 	replaced=false
 	for i in "${!container_run_opts[@]}"; do

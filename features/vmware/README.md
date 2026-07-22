@@ -1,3 +1,11 @@
+---
+title: "Feature: vmware"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/vmware/README.md
+github_target_path: docs/reference/features/vmware.md
+---
+
 ## Feature: vmware
 ### Description
 <website-feature>
@@ -20,5 +28,5 @@ This platform feature supports unit testing and is based on the `chroot` and `kv
 |---|---|
 |type|platform|
 |artifact|`.vmdk`,`.ova`|
-|included_features|cloud|
+|included_features|[`cloud`](/reference/features/cloud)|
 |excluded_features|None|
