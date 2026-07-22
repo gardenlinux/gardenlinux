@@ -1,5 +1,6 @@
 # GL-TESTCOV-ssh-service-ssh-enable
 openssh-server
+openssh-client
 # GL-TESTCOV-ssh-service-sshguard-enable
 sshguard
 python3-systemd
