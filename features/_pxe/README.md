@@ -35,6 +35,11 @@ When combined with `_trustedboot` or `_unsigned` (USI builds):
 - Fetches `root.squashfs` over HTTP at boot time
 - UEFI-only, supports Secure Boot when signed
 
+:::warning
+Please be aware of the fact that systemd-networkd-wait-online is configured to mark the system as online when at least one interface becomes online. 
+This makes the boot process faster, but, on systems with multiple NICs on different network segments, that would mean that depending on the order in which the NICs get configured, the system will get marked as online but the squashfs fetching might still fail and the system will fail to boot.
+:::
+
 ### Installation Support
 
 The `_pxe` feature provides ephemeral live boot by default. For disk installation capability, combine with:
