@@ -303,12 +303,20 @@ def test_libssl_is_in_fips_mode():
 @pytest.mark.feature("_fips")
 def test_openssl_FIPS_vendor_is_set(shell):
     """
-    This validates that we have the FIPS provider loadable AND that the vendor name is set.
+    In this test, we check what provider name was registered by the fips.so module. The name was
+    submitted to the NIST's CMVP. Garden Linux has submitted the SAP SE Garden Linux [RELEASE]
+    OpenSSL Cryptographic Module to the IUT listing.
+
+    We have to ensure that the FIPS provder suffix isn't added by accidentally to it, to ensure
+    compliance.
     """
-    GARDENLINUX_FIPS_NAME = "SAP SE Garden Linux nightly OpenSSL Cryptographic Module FIPS Provider for OpenSSL"
+    GARDENLINUX_CMVP_NAME = "SAP SE Garden Linux nightly OpenSSL Cryptographic Module"
+    OPENSSL_FIPS_PROVIDER_SUFFIX = "FIPS Provider for OpenSSL"
+
+    result = shell("openssl list -providers", capture_output=True).stdout
+
     assert (
-        GARDENLINUX_FIPS_NAME
-        in shell("openssl list -providers", capture_output=True).stdout
+        GARDENLINUX_CMVP_NAME in result and OPENSSL_FIPS_PROVIDER_SUFFIX not in result
     ), "FIPS Vendor Name for OpenSSL is incorrect!"
 
 
