@@ -301,7 +301,7 @@ def test_libssl_is_in_fips_mode():
 
 
 @pytest.mark.feature("_fips")
-def test_openssl_FIPS_vendor_is_set(shell):
+def test_openssl_FIPS_vendor_name_is_set_correctly(shell):
     """
     In this test, we check what provider name was registered by the fips.so module. The name was
     submitted to the NIST's CMVP. Garden Linux has submitted the SAP SE Garden Linux [RELEASE]
