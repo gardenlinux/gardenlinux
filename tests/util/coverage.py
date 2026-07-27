@@ -860,6 +860,14 @@ def generate_junit_xml_report(
     """
     Generate a JUnit XML report compatible with pytest and CI/CD systems.
 
+    The report uses a single <testsuite> element (with a <properties> section
+    containing a Suite property) so that pytest-multi-results-action can parse
+    metadata correctly without triggering a metadata-parsing-error.
+
+    Test cases use classname to distinguish sections:
+    - coverage.features   — one testcase per feature (pass/skip/fail)
+    - coverage.validation — duplicate detection and orphaned ID checks
+
     Args:
         markers_by_feature: Dict mapping feature names to their markers
         found_markers: Set of markers found in test files
@@ -873,74 +881,52 @@ def generate_junit_xml_report(
     """
     stats = calculate_coverage_stats(markers_by_feature, found_markers)
 
-    # Create root testsuites element
-    testsuites = ET.Element("testsuites")
-    testsuites.set("name", "marker Coverage")
     timestamp = datetime.now().isoformat()
-    testsuites.set("timestamp", timestamp)
 
-    # Testsuite 1: Feature Coverage
-    total_tests = len(markers_by_feature) + len(
-        all_features - set(markers_by_feature.keys())
-    )
-    failures = len(stats["untested_by_feature"])
-    skipped = len(all_features - set(markers_by_feature.keys()))
+    # --- Collect all testcases ---
 
-    suite1 = ET.SubElement(testsuites, "testsuite")
-    suite1.set("name", "Feature Coverage")
-    suite1.set("tests", str(total_tests))
-    suite1.set("failures", str(failures))
-    suite1.set("errors", "0")
-    suite1.set("skipped", str(skipped))
-    suite1.set("timestamp", timestamp)
-
-    # Add test cases for each feature
+    # Section 1: Feature Coverage testcases
+    feature_testcases: List[ET.Element] = []
+    feature_failures = 0
+    feature_skipped = 0
     for feature in sorted(all_features):
-        testcase = ET.SubElement(suite1, "testcase")
-        testcase.set("name", feature)
-        testcase.set("classname", "coverage.features")
-
+        tc = ET.Element("testcase")
+        tc.set("name", feature)
+        tc.set("classname", "coverage.features")
         if feature not in markers_by_feature:
-            # Feature has no markers - skip
-            skipped_elem = ET.SubElement(testcase, "skipped")
+            skipped_elem = ET.SubElement(tc, "skipped")
             skipped_elem.set("message", "No markers defined")
+            feature_skipped += 1
         elif feature in stats["untested_by_feature"]:
-            # Feature has untested IDs - failure
             untested = stats["untested_by_feature"][feature]
-            failure = ET.SubElement(testcase, "failure")
+            failure = ET.SubElement(tc, "failure")
             failure.set("message", f"{len(untested)} untested marker(s)")
             failure.set("type", "UntestedSettingIDs")
             failure.text = "Untested IDs:\n" + "\n".join(
                 f"  - {sid}" for sid in untested
             )
+            feature_failures += 1
+        feature_testcases.append(tc)
 
-    # Testsuite 2: Duplicate Detection
-    dup_failures = len(within_feature_dupes) + (1 if across_feature_dupes else 0)
-    suite2 = ET.SubElement(testsuites, "testsuite")
-    suite2.set("name", "Duplicate Detection")
-    suite2.set("tests", "1")
-    suite2.set("failures", str(dup_failures))
-    suite2.set("errors", "0")
-    suite2.set("skipped", "0")
-    suite2.set("timestamp", timestamp)
-
-    # Test for within-feature duplicates
+    # Section 2: Duplicate Detection testcases
+    dup_testcases: List[ET.Element] = []
+    dup_failures = 0
     if within_feature_dupes:
         for feature, dupes in within_feature_dupes.items():
-            testcase = ET.SubElement(suite2, "testcase")
-            testcase.set("name", f"no_duplicate_ids_within_{feature}")
-            testcase.set("classname", "coverage.validation")
-            failure = ET.SubElement(testcase, "failure")
+            tc = ET.Element("testcase")
+            tc.set("name", f"no_duplicate_ids_within_{feature}")
+            tc.set("classname", "coverage.validation")
+            failure = ET.SubElement(tc, "failure")
             failure.set("message", f"{len(dupes)} duplicate marker(s) in {feature}")
             failure.set("type", "DuplicateSettingIDs")
             failure.text = "Duplicate IDs:\n" + "\n".join(f"  - {sid}" for sid in dupes)
-
-    # Test for across-feature duplicates
+            dup_failures += 1
+            dup_testcases.append(tc)
     if across_feature_dupes:
-        testcase = ET.SubElement(suite2, "testcase")
-        testcase.set("name", "no_duplicate_ids_across_features")
-        testcase.set("classname", "coverage.validation")
-        failure = ET.SubElement(testcase, "failure")
+        tc = ET.Element("testcase")
+        tc.set("name", "no_duplicate_ids_across_features")
+        tc.set("classname", "coverage.validation")
+        failure = ET.SubElement(tc, "failure")
         failure.set(
             "message",
             f"{len(across_feature_dupes)} marker(s) duplicated across features",
@@ -950,33 +936,57 @@ def generate_junit_xml_report(
         for sid, features in sorted(across_feature_dupes.items()):
             dup_details.append(f"  - {sid}: {', '.join(features)}")
         failure.text = "Duplicated across features:\n" + "\n".join(dup_details)
-
+        dup_failures += 1
+        dup_testcases.append(tc)
     if not within_feature_dupes and not across_feature_dupes:
-        testcase = ET.SubElement(suite2, "testcase")
-        testcase.set("name", "no_duplicate_markers")
-        testcase.set("classname", "coverage.validation")
+        tc = ET.Element("testcase")
+        tc.set("name", "no_duplicate_markers")
+        tc.set("classname", "coverage.validation")
+        dup_testcases.append(tc)
 
-    # Testsuite 3: Orphaned IDs Detection
+    # Section 3: Orphaned IDs testcase
     orphaned_count = len(stats["orphaned_ids"])
-    suite3 = ET.SubElement(testsuites, "testsuite")
-    suite3.set("name", "Orphaned IDs Detection")
-    suite3.set("tests", "1")
-    suite3.set("failures", "1" if orphaned_count > 0 else "0")
-    suite3.set("errors", "0")
-    suite3.set("skipped", "0")
-    suite3.set("timestamp", timestamp)
-
-    testcase = ET.SubElement(suite3, "testcase")
-    testcase.set("name", "no_orphaned_markers")
-    testcase.set("classname", "coverage.validation")
-
+    orphaned_tc = ET.Element("testcase")
+    orphaned_tc.set("name", "no_orphaned_markers")
+    orphaned_tc.set("classname", "coverage.validation")
+    orphaned_failures = 0
     if orphaned_count > 0:
-        failure = ET.SubElement(testcase, "failure")
+        failure = ET.SubElement(orphaned_tc, "failure")
         failure.set("message", f"{orphaned_count} orphaned marker(s)")
         failure.set("type", "OrphanedSettingIDs")
         failure.text = "IDs in tests but not in features:\n" + "\n".join(
             f"  - {sid}" for sid in sorted(stats["orphaned_ids"])
         )
+        orphaned_failures = 1
+
+    all_testcases = feature_testcases + dup_testcases + [orphaned_tc]
+    total_tests = len(all_testcases)
+    total_failures = feature_failures + dup_failures + orphaned_failures
+
+    # --- Build XML tree ---
+
+    testsuites = ET.Element("testsuites")
+    testsuites.set("name", "marker Coverage")
+    testsuites.set("timestamp", timestamp)
+
+    # Single testsuite with <properties> so pytest-multi-results-action can
+    # extract metadata without triggering a metadata-parsing-error.
+    suite = ET.SubElement(testsuites, "testsuite")
+    suite.set("name", "Coverage Report")
+    suite.set("tests", str(total_tests))
+    suite.set("failures", str(total_failures))
+    suite.set("errors", "0")
+    suite.set("skipped", str(feature_skipped))
+    suite.set("time", "0.0")
+    suite.set("timestamp", timestamp)
+
+    properties = ET.SubElement(suite, "properties")
+    prop = ET.SubElement(properties, "property")
+    prop.set("name", "Suite")
+    prop.set("value", "Coverage Report")
+
+    for tc in all_testcases:
+        suite.append(tc)
 
     # Write to file if specified
     if output_file:
