@@ -61,7 +61,7 @@ def test_shell_tmout_file_exists_stig(parse_file: ParseFile):
     timeout configuration file exists.
     Ref: SRG-OS-000755-GPOS-00220
     """
-    assert parse_file.exists(
+    assert parse_file.exists(  # type: ignore
         TMOUT_FILE_STIG
     ), "stigcompliance: shell inactivity timeout configuration file is missing"
 
@@ -110,7 +110,7 @@ def test_shell_tmout_file_exists_cloud(parse_file: ParseFile):
     timeout configuration file exists.
     Ref: SRG-OS-000755-GPOS-00220
     """
-    assert parse_file.exists(
+    assert parse_file.exists(  # type: ignore
         TMOUT_FILE_CLOUD
     ), "stigcompliance: shell inactivity timeout configuration file is missing"
 
