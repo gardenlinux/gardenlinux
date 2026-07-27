@@ -56,7 +56,7 @@ sedcommands=()
 if [ ! ${#whitelist[@]} -eq 0 ]; then
     sedcommands+=("sed")
     sedcommands+=("-E")
-else 
+else
     sedcommands+=("cat")
 fi
 
