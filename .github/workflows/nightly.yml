@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Retry failed build
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
@@ -79,7 +79,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Retry failed test
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
@@ -128,3 +128,32 @@ jobs:
       actions: write  # TODO: 3215 elevated permissions for included workflow
       id-token: write # TODO: 3215 elevated permissions for included workflow
     secrets: inherit
+  create_issue_on_failure:
+    name: Create issue on failure
+    needs:
+      - build
+      - test
+      - upload_workflow_data
+      - publish_ghcr
+      - publish_s3
+    if: ${{ always() && failure() }}
+    runs-on: ubuntu-24.04
+    permissions:
+      issues: write
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install Python dependencies
+        run: pip install requests==2.32.5
+      - name: Create failure issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 hack/create_nightly_issue.py \
+            --repo "${{ github.repository }}" \
+            --run-id "${{ github.run_id }}" \
+            --ref "${{ github.ref }}" \
+            --sha "${{ github.sha }}" \
+            --workflow "${{ github.workflow }}" \
+            --needs '${{ toJson(needs) }}'
