@@ -323,6 +323,20 @@ targets:
         test: true
         test-platform: false
         publish: true
+      - features:
+          - sslfips
+        arch: amd64
+        build: true
+        test: false
+        test-platform: false
+        publish: true
+      - features:
+          - sslfips
+        arch: arm64
+        build: true
+        test: false
+        test-platform: false
+        publish: true
   - name: gcp
     category: public-cloud
     flavors:
