@@ -327,14 +327,14 @@ targets:
           - sslfips
         arch: amd64
         build: true
-        test: false
+        test: true
         test-platform: false
         publish: true
       - features:
           - sslfips
         arch: arm64
         build: true
-        test: false
+        test: true
         test-platform: false
         publish: true
   - name: gcp
