@@ -22,7 +22,7 @@ jobs:
       - name: Generate CPE 
         run: |
           # TEMPORARY FIX for https://github.com/actions/runner-images/issues/14473
-          podman() { command podman "${1}" --runtime "$(command -v crun)" "${@:2}"; }
+          podman() { command podman --runtime "$(command -v crun)" "$@"; }
           podman run -i ghcr.io/gardenlinux/cpe:latest -p "${{ inputs.version }}" | tail -n1 > gardenlinux-cpe.json
 
       - name: Upload asset to release

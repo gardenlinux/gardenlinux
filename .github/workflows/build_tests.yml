@@ -63,7 +63,7 @@ jobs:
       - name: Build tests container (${{ matrix.arch }})
         run: |
           # TEMPORARY FIX for https://github.com/actions/runner-images/issues/14473
-          podman() { command podman "${1}" --runtime "$(command -v crun)" "${@:2}"; }
+          podman() { command podman --runtime "$(command -v crun)" "$@"; }
 
           set -euo pipefail
           arch="${{ matrix.arch }}"
