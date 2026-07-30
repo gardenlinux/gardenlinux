@@ -44,6 +44,9 @@ log_dir="$test_dist_dir/../log"
 log_file_log="chroot.test.log"
 log_file_junit="chroot.test.xml"
 
+# TEMPORARY FIX for https://github.com/actions/runner-images/issues/14473
+function podman() { command podman --runtime "$(command -v crun)" "$@"; }
+
 get_logs() {
 	log_file="$tmpdir/chroot/run/gardenlinux-tests/tests/log/$log_file_junit"
 	if [ -f "$log_file" ]; then
