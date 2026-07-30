@@ -63,7 +63,7 @@ jobs:
       - name: Build tests container (${{ matrix.arch }})
         run: |
           # TEMPORARY FIX for https://github.com/actions/runner-images/issues/14473
-          if [ "$ImageVersion" == 20260726.254.1 ]; then OCI_RUNTIME=$(command -v crun); alias podman="podman --runtime $OCI_RUNTIME"; fi
+          OCI_RUNTIME=$(command -v crun); alias podman="podman --runtime $OCI_RUNTIME";
 
           set -euo pipefail
           arch="${{ matrix.arch }}"
