@@ -51,7 +51,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           # TEMPORARY FIX for https://github.com/actions/runner-images/issues/14473
-          OCI_RUNTIME=$(command -v crun); alias podman="podman --runtime $OCI_RUNTIME";
+          OCI_RUNTIME=$(command -v crun); alias podman="podman --runtime $OCI_RUNTIME"
           commit="$(./get_commit)"
           commit_short="${commit:0:8}"
 
