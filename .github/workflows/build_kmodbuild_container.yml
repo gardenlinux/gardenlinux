@@ -50,6 +50,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # TEMPORARY FIX for https://github.com/actions/runner-images/issues/14473
+          if [ "$ImageVersion" == 20260726.254.1 ]; then OCI_RUNTIME=$(command -v crun); alias podman="podman --runtime $OCI_RUNTIME"; fi
           commit="$(./get_commit)"
           commit_short="${commit:0:8}"
 

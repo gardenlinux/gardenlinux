@@ -20,7 +20,10 @@ jobs:
         run: podman pull ghcr.io/gardenlinux/cpe:latest
 
       - name: Generate CPE 
-        run: podman run -i ghcr.io/gardenlinux/cpe:latest -p "${{ inputs.version }}" | tail -n1 > gardenlinux-cpe.json
+        run: |
+        # TEMPORARY FIX for https://github.com/actions/runner-images/issues/14473
+        if [ "$ImageVersion" == 20260726.254.1 ]; then OCI_RUNTIME=$(command -v crun); alias podman="podman --runtime $OCI_RUNTIME"; fi
+        podman run -i ghcr.io/gardenlinux/cpe:latest -p "${{ inputs.version }}" | tail -n1 > gardenlinux-cpe.json
 
       - name: Upload asset to release
         uses: softprops/action-gh-release@v3
