@@ -2,6 +2,16 @@ from typing import List
 
 import pytest
 
+DISA_STIG_VERSION = "General Purpose Operating System STIG V3R2"
+
+
+def pytest_addoption(parser: pytest.Parser):
+    parser.addini(
+        "disa_stig_version",
+        default=DISA_STIG_VERSION,
+        help="DISA STIG profile version/revision string for diki integration.",
+    )
+
 
 def pytest_configure(config: pytest.Config):
     config.addinivalue_line(
