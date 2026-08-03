@@ -10,7 +10,7 @@ def pytest_configure(config: pytest.Config):
     )
     config.addini(
         "disa_stig_version",
-        default=None,
+        default="General Purpose Operating System STIG V3R2",
         help="DISA STIG profile version/revision string for diki integration.",
     )
 
