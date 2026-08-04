@@ -1,2 +1,2 @@
-requirements_keys+=(secureboot)
+requirements_keys+=(secureboot=false)
 secureboot=true

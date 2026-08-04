@@ -1,2 +1,2 @@
-requirements_keys+=(autoinstall)
+requirements_keys+=(autoinstall=false)
 autoinstall=true

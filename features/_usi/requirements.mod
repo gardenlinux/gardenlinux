@@ -1,2 +1,2 @@
-requirements_keys+=(uefi)
+requirements_keys+=(uefi=false)
 uefi=true
