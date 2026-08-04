@@ -77,3 +77,6 @@ jobs:
           path: |
             test-artifacts/*.test.xml
           retention-days: 30
+          include-hidden-files: true
+          if-no-files-found: ignore
+          archive: true

@@ -217,11 +217,13 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         if: always()
         with:
-          if-no-files-found: ignore
           name: cloud-test-${{ env.CNAME }}
           path: |
             .build/${{ env.CNAME }}.cloud.test.log
             .build/${{ env.CNAME }}.cloud.test.xml
+          include-hidden-files: true
+          if-no-files-found: ignore
+          archive: true
       - name: Cleanup cloud test for ${{ inputs.flavor }} (${{ inputs.arch }})
         if: always()
         run: |

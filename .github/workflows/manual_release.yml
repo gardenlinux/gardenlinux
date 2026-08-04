@@ -140,7 +140,9 @@ jobs:
         with:
           name: workflow-data
           path: workflow_data.json
+          include-hidden-files: true
           if-no-files-found: error
+          archive: false
   publish_ghcr:
     needs: upload_workflow_data
     if: ${{ inputs.publish }}

@@ -109,7 +109,9 @@ jobs:
         with:
           name: flavor-version-data
           path: flavor_version_data.json
+          include-hidden-files: true
           if-no-files-found: error
+          archive: false
   test_distribution_build:
     needs: download_build_requirements
     name: Build and cache test distribution

@@ -121,4 +121,6 @@ jobs:
         with:
           name: ${{ inputs.prefix }}certs
           path: cert/*.*
+          include-hidden-files: true
           if-no-files-found: error
+          archive: true

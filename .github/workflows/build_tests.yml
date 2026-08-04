@@ -74,4 +74,6 @@ jobs:
         with:
           name: tests-container-${{ matrix.arch }}
           path: tests_container_${{ matrix.arch }}.oci
+          include-hidden-files: true
           if-no-files-found: error
+          archive: true
