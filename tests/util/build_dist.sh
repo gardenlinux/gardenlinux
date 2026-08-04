@@ -2,9 +2,6 @@
 
 set -eufo pipefail
 
-# TEMPORARY FIX for https://github.com/actions/runner-images/issues/14473
-function podman() { command podman --runtime "$(command -v crun)" "$@"; }
-
 if [ "$0" != /init ]; then
 	exec podman run --rm -v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" -v "$PWD:/mnt" -w /mnt debian:stable /init "$@"
 fi
