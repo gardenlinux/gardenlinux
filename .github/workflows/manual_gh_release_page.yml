@@ -39,7 +39,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.workflow_data.outputs.commit_id }}
           sparse-checkout: |
@@ -89,7 +89,7 @@ jobs:
     steps:
       - name: Authenticate to cluster
         id: kube_auth
-        uses: gardener/cc-utils/.github/actions/kubernetes-auth@0c0dc641f2f7bb91345ba46d6a07779a47e43665 # 1.2755.0
+        uses: gardener/cc-utils/.github/actions/kubernetes-auth@21819a758366763b094b69f6e7f3f36da9e2e629 # 1.2815.0
         with:
           server: https://api.live.gl-live.shoot.live.k8s-hana.ondemand.com
           server-ca-discovery-url: https://discovery.ingress.garden.live.k8s.ondemand.com/projects/gl-live/shoots/3f2715e7-dc7c-4bf1-a594-dc0d90cd0f1c/cluster-ca
@@ -127,7 +127,7 @@ jobs:
       actions: write
     environment: oidc_aws_s3_upload
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.workflow_data.outputs.commit_id }}
           sparse-checkout: |

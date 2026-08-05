@@ -20,10 +20,12 @@ def test_ssh_kex_algorithms_are_replay_resistant(sshd: Sshd) -> None:
     """Verify SSH KexAlgorithms exclude non-replay-resistant algorithms (diffie-hellman-group1-sha1, diffie-hellman-group14-sha1)."""
     kex = sshd.get_config_section("kexalgorithms") or ""
 
-    assert not re.search(
-        r"diffie-hellman-group1-sha1|diffie-hellman-group14-sha1",
-        str(kex),
-        re.IGNORECASE,
+    assert not bool(
+        re.search(
+            r"diffie-hellman-group1-sha1|diffie-hellman-group14-sha1",
+            str(kex),
+            re.IGNORECASE,
+        )
     ), "stigcompliance: SSH KexAlgorithms contain non-replay-resistant algorithms"
 
 
@@ -36,6 +38,6 @@ def test_ssh_kex_includes_ecdh(sshd: Sshd) -> None:
     """Verify SSH KexAlgorithms include an approved ECDH algorithm (ecdh-sha2-nistp384 or ecdh-sha2-nistp521)."""
     kex = sshd.get_config_section("kexalgorithms") or ""
 
-    assert re.search(
-        r"ecdh-sha2-nistp(384|521)", str(kex), re.IGNORECASE
+    assert bool(
+        re.search(r"ecdh-sha2-nistp(384|521)", str(kex), re.IGNORECASE)
     ), "stigcompliance: no approved ECDH KexAlgorithm configured"
