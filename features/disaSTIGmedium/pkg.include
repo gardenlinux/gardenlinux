@@ -1,3 +1,6 @@
 aide
 aide-common
 auditd
+libpam-systemd
+sudo
+systemd-timesyncd

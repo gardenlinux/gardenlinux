@@ -71,7 +71,7 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
     This cloud-init datasource was designed for use with CentOS 7,
     which uses cloud-init 0.7.9. However, this datasource should
     work with any Linux distribution for which cloud-init is
-    avaialble.
+    available.
 
     The documentation for cloud-init 0.7.9's datasource is
     available at http://bit.ly/cloudinit-datasource-0-7-9. The
@@ -233,7 +233,7 @@ def decode(key, enc_type, data):
     -----
     Given the above conditions the output from zlib.decompress and
     base64.b64decode would be bytes with newer python and str in older
-    version. Thus we would covert the output to str before returning
+    version. Thus we would convert the output to str before returning
     '''
     LOG.debug("Getting encoded data for key=%s, enc=%s", key, enc_type)
 

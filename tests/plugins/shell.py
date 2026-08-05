@@ -51,7 +51,7 @@ def pytest_configure(config: pytest.Config):
 
     default_user_name = config.getoption("--default-user")
     if default_user_name != "":
-        passwd_entry = pwd.getpwnam(default_user_name)
+        passwd_entry = pwd.getpwnam(str(default_user_name))
         default_user = (passwd_entry.pw_uid, passwd_entry.pw_gid)
     if default_user is None and os.geteuid() == 0:
         default_user = (65534, 65534)

@@ -1,5 +1,3 @@
-import pytest
-
 """
 Ref: SRG-OS-000478-GPOS-00223
 
@@ -10,6 +8,10 @@ cryptographic protection in accordance with applicable federal laws, Executive
 Orders, directives, policies, regulations, and standards.
 """
 
+import pytest
 
+
+@pytest.mark.security_id(203776)
 def test_fips():
+    """FIPS-validated cryptography is covered elsewhere."""
     pytest.skip(reason="covered by test_fips.py")

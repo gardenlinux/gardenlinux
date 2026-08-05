@@ -1,3 +1,11 @@
+---
+title: "Feature: ali"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/ali/README.md
+github_target_path: docs/reference/features/ali.md
+---
+
 ## Feature: ali
 ### Description
 <website-feature>
@@ -18,5 +26,5 @@ This platform feature supports unit testing and is based on the `ali` fixture to
 |---|---|
 |type|platform|
 |artifact|`.raw`,`.qcow2`|
-|included_features|cloud|
+|included_features|[`cloud`](/reference/features/cloud)|
 |excluded_features|None|

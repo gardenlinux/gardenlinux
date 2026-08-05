@@ -1,5 +1,5 @@
 markers:
-  "etc/aide/aide.conf":
+  "etc/aide/aide.conf.d/31_aide_audit-tools":
   - "GL-TESTCOV-disaSTIGmedium-config-aide-audit-tools"
   "etc/audit/rules.d/30-disaSTIG.rules":
   - "GL-TESTCOV-disaSTIGmedium-config-audit-rules-d-disaSTIG-rules"

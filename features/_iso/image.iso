@@ -46,8 +46,13 @@ cp "${chroot_dir}/boot/"vmlinuz* "CD_root/boot/images/vmlinuz"
 mv "${chroot_dir}/tmp/"initrd* "CD_root/boot/images/initrd"
 mv "${chroot_dir}/tmp/unified" bootx64.efi
 
-#TODO: determine proper size
-dd if=/dev/zero of=efiboot.img bs=512 count=131072
+# Calculate required EFI boot image size based on UKI file size
+# Add overhead for FAT filesystem metadata and directory structure
+uki_size="$(stat -c %s bootx64.efi)"
+# Round up to MiB and add 16 MiB overhead for FAT metadata/directories
+size_fat_mb=$(( ( ( uki_size + 1048575 ) / 1048576 ) + 16 ))
+
+dd if=/dev/zero of=efiboot.img bs=1M count="$size_fat_mb"
 mkfs.msdos -F 16 -n 'EFIBOOTISO' efiboot.img
 mmd -i efiboot.img ::EFI
 mmd -i efiboot.img ::EFI/BOOT

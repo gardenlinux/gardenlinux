@@ -1,3 +1,11 @@
+---
+title: "Feature: server"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/server/README.md
+github_target_path: docs/reference/features/server.md
+---
+
 ## Feature: server
 ### Description
 <website-feature>
@@ -16,5 +24,5 @@ This features support unit testing and validates the installed packages, sshd co
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|`base`, `ssh`,`_selinux`|
+|included_features|[`base`](/reference/features/base), [`ssh`](/reference/features/ssh), [`_selinux`](/reference/features/_selinux)|
 |excluded_features|None|

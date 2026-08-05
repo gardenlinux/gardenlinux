@@ -1,10 +1,10 @@
-import pytest
-
 """
 Ref: SRG-OS-000256-GPOS-00097
 
 Verify the operating system protects audit tools from unauthorized access.
 """
+
+import pytest
 
 AUDIT_TOOL_PATHS = [
     "/sbin/auditctl",
@@ -14,10 +14,12 @@ AUDIT_TOOL_PATHS = [
 ]
 
 
+@pytest.mark.security_id(203672)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_shadow_permissions(file):
+    """Verify /etc/shadow has mode 0640."""
     actual = file.get_mode("/etc/shadow")
     assert file.has_permissions("/etc/shadow", "0640"), (
         f"stigcompliance: incorrect permissions on /etc/shadow "
@@ -25,10 +27,12 @@ def test_shadow_permissions(file):
     )
 
 
+@pytest.mark.security_id(203672)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_passwd_permissions_numeric(file):
+    """Verify /etc/passwd has numeric mode 0644."""
     actual = file.get_mode("/etc/passwd")
     assert file.has_permissions("/etc/passwd", "0644"), (
         f"stigcompliance: incorrect permissions on /etc/passwd "
@@ -36,10 +40,12 @@ def test_passwd_permissions_numeric(file):
     )
 
 
+@pytest.mark.security_id(203672)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_passwd_permissions_symbolic(file):
+    """Verify /etc/passwd has symbolic mode rw-r--r--."""
     actual = file.get_mode("/etc/passwd")
     assert file.has_permissions("/etc/passwd", "rw-r--r--"), (
         f"stigcompliance: incorrect symbolic permissions on /etc/passwd "
@@ -47,12 +53,14 @@ def test_passwd_permissions_symbolic(file):
     )
 
 
+@pytest.mark.security_id(203672)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 def test_audit_tools_permissions(file):
+    """Verify auditctl, last and journalctl binaries have mode 755."""
     invalid = []
 
     for path in AUDIT_TOOL_PATHS:
@@ -67,10 +75,12 @@ def test_audit_tools_permissions(file):
     )
 
 
+@pytest.mark.security_id(203672)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_sticky_bit_support(file, tmp_path):
+    """Verify a tmp directory chmod-ed to 1777 reports both 1777 and rwxrwxrwt."""
     test_dir = tmp_path / "sticky_test"
     test_dir.mkdir()
     test_dir.chmod(0o1777)

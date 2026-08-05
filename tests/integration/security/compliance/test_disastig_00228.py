@@ -1,7 +1,3 @@
-import glob
-
-import pytest
-
 """
 Ref: SRG-OS-000480-GPOS-00228
 
@@ -9,23 +5,34 @@ Verify the operating system defines default permissions for all authenticated
 users in such a way that the user can only read and modify their own files.
 """
 
+import glob
 
+import pytest
+
+
+@pytest.mark.security_id(203781)
 def test_umask_is_restrictive_enough(parse_file):
+    """Verify UMASK in /etc/login.defs is 027 or 077."""
     config = parse_file.parse("/etc/login.defs", format="spacedelim")
-    assert config["UMASK"] == "027"
+    assert config["UMASK"] in ("027", "077")
 
 
+@pytest.mark.security_id(203781)
 def test_skeleton_directory_is_not_world_writable(file):
+    """Verify /etc/skel has 755 permissions."""
     assert file.has_permissions("/etc/skel", "755")
 
 
+@pytest.mark.security_id(203781)
 def test_skeleton_files_are_not_world_writable(file):
+    """Verify dotfiles under /etc/skel are 640 or 644."""
     for f in glob.glob("/etc/skel/.*"):
         assert file.has_permissions(f, "640") or file.has_permissions(
             f, "644"
         ), f"Wrong file permissions for {f}: {file.get_mode(f)}"
 
 
+@pytest.mark.security_id(203781)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-login-defs-umask"])
 @pytest.mark.feature("disaSTIGmedium", reason="077 umask is enforced by disaSTIGmedium")
 def test_login_defs_umask_is_077(parse_file) -> None:

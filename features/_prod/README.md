@@ -1,3 +1,11 @@
+---
+title: "Feature: _prod"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/_prod/README.md
+github_target_path: docs/reference/features/_prod.md
+---
+
 ## Feature: _prod
 ### Description
 <website-feature>
@@ -15,5 +23,5 @@ This feature does not support unit tests.
 |---|---|
 |type|flag|
 |artifact|None|
-|included_features|_nopkg,_readonly|
+|included_features|[`_nopkg`](/reference/features/_nopkg), [`_readonly`](/reference/features/_readonly)|
 |excluded_features|None|

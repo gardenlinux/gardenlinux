@@ -1,3 +1,11 @@
+---
+title: "Feature: bluefield"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/bluefield/README.md
+github_target_path: docs/reference/features/bluefield.md
+---
+
 ## WARNING! This is at the moment still just a POC and therefore experimental
 
 This guide / readme is providing information on how to get a bare minimum GardenLinux setup running on a bluefield smartnic.

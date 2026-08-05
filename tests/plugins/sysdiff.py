@@ -72,6 +72,9 @@ IGNORED_SYSTEMD_PATTERNS = [
     # runs periodically
     "gce-workload-cert-refresh.service",
     "gce-workload-cert-refresh.timer",
+    # _trustedboot: pcrlogin activates dynamically during boot/test session
+    "systemd-pcrlogin@*.service",
+    "system-systemd*pcrlogin.slice",
 ]
 
 # Units to wait for before taking a snapshot (unit_name: expected_sub_state)

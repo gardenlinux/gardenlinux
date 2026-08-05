@@ -1,20 +1,22 @@
-import pytest
-from plugins.dpkg import Dpkg
-
 """
 Ref: SRG-OS-000393-GPOS-00173
 
 Verify the operating system implements cryptographic mechanisms to protect the
 integrity of nonlocal maintenance and diagnostic communications, when used for
-nonlocal maintenance sessions. 
+nonlocal maintenance sessions.
 """
 
+import pytest
+from plugins.dpkg import Dpkg
 
+
+@pytest.mark.security_id(203736)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"])
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires SSH runtime configuration")
 @pytest.mark.root(reason="requires access to SSH configuration")
 def test_ssh_strong_macs_present(sshd, dpkg: Dpkg):
+    """Verify sshd MACs are limited to strong algorithms (SHA2)."""
     macs = sshd.get_config_section("macs")
 
     if isinstance(macs, str):
@@ -36,11 +38,13 @@ def test_ssh_strong_macs_present(sshd, dpkg: Dpkg):
     ), "stigcompliance: no strong MAC algorithms configured for SSH integrity protection"
 
 
+@pytest.mark.security_id(203736)
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-ssh-sshd-config-d-disaSTIG"])
 @pytest.mark.feature("disaSTIGmedium")
 @pytest.mark.booted(reason="requires SSH runtime configuration")
 @pytest.mark.root(reason="requires access to SSH configuration")
 def test_ssh_weak_macs_not_present(sshd):
+    """Verify sshd does not advertise weak MAC algorithms (hmac-md5)."""
     macs = sshd.get_config_section("macs")
 
     if isinstance(macs, str):
