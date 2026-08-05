@@ -310,7 +310,7 @@ jobs:
       - name: Verify signature
         run: |
           cosign verify --insecure-ignore-tlog=true --key "awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }}" "${{ needs.determine_environment.outputs.repository }}@$(cat digest.txt)"
-      - uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # pin@v5.0.4
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
