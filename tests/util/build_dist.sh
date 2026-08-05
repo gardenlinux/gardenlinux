@@ -43,7 +43,7 @@ export PATH="$script_dir/runtime/$arch/bin:$PATH"
 cd "$script_dir/tests"
 echo "🧪  running tests with args: $0 $@"
 error=0
-COLUMNS=120 OPENSSL_MODULES=/usr/lib/$(arch)-linux-gnu/ossl-modules/ python -m pytest -rA --tb=short --color=yes -p no:cacheprovider "$@" || error=$?
+COLUMNS=120 OPENSSL_MODULES=/usr/lib/$(arch)-linux-gnu/ossl-modules/ python -u -m pytest -rA --tb=short --color=yes -p no:cacheprovider "$@" || error=$?
 if [ "$TEST_NG_EXIT_0" = 1 ]; then
 	error=0
 fi

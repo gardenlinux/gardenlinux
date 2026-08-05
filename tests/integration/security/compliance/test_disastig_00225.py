@@ -1,10 +1,10 @@
-import pytest
-
 """
 Ref: SRG-OS-000480-GPOS-00225
 
 Verify the operating system prevents the use of dictionary words for passwords.
 """
+
+import pytest
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-pam-common-password"])
@@ -14,12 +14,7 @@ Verify the operating system prevents the use of dictionary words for passwords.
 @pytest.mark.security_id(203778)
 @pytest.mark.feature("disaSTIGmedium")
 def test_dictionary_passwords_are_forbidden(pam_config):
-    """
-    passwdqc includes built-in lists of a few thousand common English words
-    mostly of lengths from 3 to 6
-
-    Ref: https://manpages.debian.org/testing/passwdqc/passwdqc.conf.5.en.html
-    """
+    """Verify pam_passwdqc.so is required as a password module in /etc/pam.d/common-password."""
     results = pam_config.find_entries(
         type_="password",
         control_contains="required",

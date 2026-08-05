@@ -1,15 +1,15 @@
-import fileinput
-import os
-import shutil
-
-import pytest
-
 """
 Ref: SRG-OS-000466-GPOS-00210
 
 Verify the operating system generates audit records when
 successful/unsuccessful attempts to delete privileges occur.
 """
+
+import fileinput
+import os
+import shutil
+
+import pytest
 
 
 @pytest.fixture
@@ -27,6 +27,7 @@ def sudoers_edit():
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
 def test_audit_rules_for_logging_attempts_to_delete_privileges(audit_rule):
+    """Verify writes/metadata changes to /etc account and sudoers files are audited."""
     for file in ["passwd", "shadow", "group", "sudoers", "sudoers.d", "pam.d"]:
         assert audit_rule(
             fs_watch_path=f"/etc/{file}", access_types="wa"
@@ -39,6 +40,7 @@ def test_audit_rules_for_logging_attempts_to_delete_privileges(audit_rule):
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
 def test_audit_rules_for_files_capabilities_removal(audit_rule):
+    """Verify the setcap syscall is audited."""
     assert audit_rule(
         syscall="setcap"
     ), "stigcompliance: setcap syscall audit rule is not configured"
@@ -48,6 +50,7 @@ def test_audit_rules_for_files_capabilities_removal(audit_rule):
 @pytest.mark.feature("_selinux")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 def test_audit_rules_for_selinux_policies_changes(audit_rule):
+    """Verify writes/metadata changes under /etc/selinux are audited."""
     assert audit_rule(
         fs_watch_path="/etc/selinux", access_types="wa"
     ), "stigcompliance: changes of selinux configuration files should be audited"
@@ -58,6 +61,7 @@ def test_audit_rules_for_selinux_policies_changes(audit_rule):
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
 def test_audit_rules_for_logging_attempts_to_modify_apparmor_policies(audit_rule):
+    """Verify writes/metadata changes under /etc/apparmor* are audited."""
     for file in ["apparmor", "apparmor.d"]:
         assert audit_rule(
             fs_watch_path=f"/etc/{file}", access_types="wa"
@@ -72,6 +76,7 @@ def test_audit_rules_for_logging_attempts_to_modify_apparmor_policies(audit_rule
 @pytest.mark.security_id(203764)
 @pytest.mark.root(reason="required to query audit logs")
 def test_attempt_to_delete_privileges_event_logged(audit_rule, shell, sudoers_edit):
+    """Verify modifying /etc/sudoers produces an audit event."""
     result = shell(
         cmd="ausearch -f /etc/sudoers --just-one",
         capture_output=True,

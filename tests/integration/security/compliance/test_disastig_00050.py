@@ -1,5 +1,3 @@
-import pytest
-
 """
 Ref: SRG-OS-000096-GPOS-00050
 
@@ -7,6 +5,8 @@ Verify the operating system is configured to prohibit or restrict the use of
 functions, ports, protocols, and/or services, as defined in the PPSM CAL and
 vulnerability assessments.
 """
+
+import pytest
 
 ALLOWED_PORTS = {22, 53}
 
@@ -27,6 +27,7 @@ FORBIDDEN_SERVICES = [
 @pytest.mark.root(reason="requires audit operations")
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_ports_protocols_and_services_restricted(shell, systemd):
+    """Verify only ports 22 and 53 listen and forbidden services (telnet, vsftpd, rsh, avahi-daemon, cups) are not running."""
     result = shell("ss -tuln", capture_output=True)
     assert result.returncode == 0, "stigcompliance: failed to list listening ports"
 

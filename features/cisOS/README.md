@@ -1,3 +1,11 @@
+---
+title: "Feature: cisOS"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/cisOS/README.md
+github_target_path: docs/reference/features/cisOS.md
+---
+
 ## Feature: cisOS
 ### Description
 <website-feature>
@@ -16,5 +24,5 @@ Unit tests are only supported by its parent feature `cis`. See also [../cis/READ
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|cis|
+|included_features|[`cis`](/reference/features/cis)|
 |excluded_features|None|

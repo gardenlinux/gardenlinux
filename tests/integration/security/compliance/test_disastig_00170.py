@@ -1,11 +1,11 @@
-import pytest
-
 """
 Ref: SRG-OS-000720-GPOS-00170
 
 Verify the operating system is configured to require immediate selection of a
 new password upon account recovery for password-based authentication.
 """
+
+import pytest
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-pam-common-account"])
@@ -14,16 +14,7 @@ new password upon account recovery for password-based authentication.
 )
 @pytest.mark.security_id(263654)
 def test_password_expiration_checking_pam_module_is_in_use(pam_config):
-    """
-    man 8 pam_unix:
-
-    The account component performs the task of establishing the status of the
-    user's account and password based on the following shadow elements: expire,
-    last_change, max_change, min_change, warn_change. In the case of the
-    latter, it may offer advice to the user on changing their password or,
-    through the PAM_AUTHTOKEN_REQD return, delay giving service to the user
-    until they have established a new password.
-    """
+    """Verify pam_unix.so account entry with success=1 and new_authtok_reqd=done is in /etc/pam.d/common-account."""
     results = pam_config.find_entries(
         type_="account",
         control_contains={"success": "1", "new_authtok_reqd": "done"},

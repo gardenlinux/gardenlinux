@@ -134,7 +134,7 @@ fi
 
 if [ -n "$ca_base" ]; then
 	if [ -f "$ca_base.chain" ]; then
-		echo "Writting certificate chain for $base.crt ($CERT_CN) -> $base.chain"
+		echo "Writing certificate chain for $base.crt ($CERT_CN) -> $base.chain"
 		cat "$ca_base.chain" "$ca_base.crt" > "$base.chain"
 	else
 		echo "Initialising empty certificate chain (direct root CA successor) for $base.crt ($CERT_CN) -> $base.chain"

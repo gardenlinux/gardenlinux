@@ -1,5 +1,3 @@
-import pytest
-
 """
 Ref: SRG-OS-000118-GPOS-00060
 
@@ -7,6 +5,8 @@ Verify the operating system disables accounts inactive for more than 35 days.
 Setting INACTIVE in /etc/default/useradd ensures new accounts inherit this
 policy automatically.
 """
+
+import pytest
 
 USERADD_DEFAULTS = "/etc/default/useradd"
 

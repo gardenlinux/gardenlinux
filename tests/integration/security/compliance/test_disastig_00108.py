@@ -1,5 +1,3 @@
-import pytest
-
 """
 Ref: SRG-OS-000278-GPOS-00108
 
@@ -7,10 +5,13 @@ Verify the operating system uses cryptographic mechanisms to protect the
 integrity of audit tools.
 """
 
+import pytest
+
 
 @pytest.mark.security_id(203682)
 @pytest.mark.booted(reason="Requires working networking")
 def test_auditd_is_not_tampered(dpkg, dpkg_checksums, shell):
+    """Verify /usr/sbin/{auditd,auditctl,augenrules,aureport,ausearch} match the deb package md5sums."""
     if not dpkg.package_is_installed("auditd"):
         return
 

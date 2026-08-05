@@ -1,3 +1,11 @@
+---
+title: "Feature: _nopkg"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/_nopkg/README.md
+github_target_path: docs/reference/features/_nopkg.md
+---
+
 ## Feature: _nopkg
 ### Description
 <website-feature>

@@ -100,7 +100,7 @@ def _get_default_package_dir() -> Path:
 
     if not interpreter:
         raise RuntimeError(
-            f"Error: Couldn't identify a default python package directory. Please specifiy one using the --package-dir option. Use -h for more information."
+            f"Error: Couldn't identify a default python package directory. Please specify one using the --package-dir option. Use -h for more information."
         )
 
     out = subprocess.run(

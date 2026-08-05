@@ -1,10 +1,10 @@
-import pytest
-
 """
 Ref: SRG-OS-000078-GPOS-00046
 
 Verify the operating system enforces a minimum 15-character password length.
 """
+
+import pytest
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-pam-common-password"])
@@ -14,6 +14,7 @@ Verify the operating system enforces a minimum 15-character password length.
 )
 @pytest.mark.security_id(203634)
 def test_common_password_passwdqc_pam_faillock(pam_config):
+    """Verify pam_passwdqc enforces password strength rules in common-password."""
     results = pam_config.find_entries(
         type_="password",
         control_contains="required",

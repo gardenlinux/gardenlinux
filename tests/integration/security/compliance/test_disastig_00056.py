@@ -1,5 +1,3 @@
-import pytest
-
 """
 Ref: SRG-OS-000109-GPOS-00056
 
@@ -7,6 +5,8 @@ Verify the operating system locks the root account. A locked root account
 prevents direct login as root, forcing administrators to use privilege
 escalation mechanisms instead.
 """
+
+import pytest
 
 
 @pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-root-locked"])

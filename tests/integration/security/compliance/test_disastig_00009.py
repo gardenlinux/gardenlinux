@@ -1,5 +1,3 @@
-import pytest
-
 """
 Ref: SRG-OS-000028-GPOS-00009
 
@@ -8,11 +6,14 @@ reestablishes access using established identification and authentication
 procedures.
 """
 
+import pytest
+
 
 @pytest.mark.security_id(203598)
 @pytest.mark.feature("not container and not lima and not gardener and not baremetal")
 @pytest.mark.root(reason="required to verify PAM authentication enforcement")
 def test_session_lock_requires_reauthentication(lsm):
+    """Verify 'selinux' appears in the active LSM list."""
     assert (
         "selinux" in lsm
     ), "stigcompliance: no LSM (AppArmor/SELinux) present to enforce session lock re-authentication"

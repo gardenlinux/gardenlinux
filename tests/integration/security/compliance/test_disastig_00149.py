@@ -1,12 +1,12 @@
-import pytest
-from plugins.file import File
-
 """
 Ref: SRG-OS-000362-GPOS-00149
 
 Verify the operating system prohibits user installation of system software
 without explicit privileged status.
 """
+
+import pytest
+from plugins.file import File
 
 PKG_BINARIES = [
     "/usr/bin/apt",
@@ -22,6 +22,7 @@ PKG_BINARIES = [
 )
 @pytest.mark.security_id(203716)
 def test_package_manager_requires_privileged_access(file: File):
+    """Verify /usr/bin/apt, apt-get and dpkg are owned by root with mode rwxr-xr-x or stricter."""
     for path in PKG_BINARIES:
         if not file.exists(path):
             continue
@@ -50,6 +51,7 @@ PKG_DB_PATHS = [
 )
 @pytest.mark.security_id(203716)
 def test_package_database_protected(file: File):
+    """Verify /var/lib/dpkg and /var/lib/dpkg/status are owned by root with non-world-writable modes."""
     for path in PKG_DB_PATHS:
         if not file.exists(path):
             continue

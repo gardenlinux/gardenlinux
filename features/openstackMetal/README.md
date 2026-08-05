@@ -1,3 +1,11 @@
+---
+title: "Feature: openstackMetal"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/openstackMetal/README.md
+github_target_path: docs/reference/features/openstackMetal.md
+---
+
 ## Feature: openstackbaremetal
 
 <website-feature> OpenStack bare-metal platform (cloud-init, metal kernel) </website-feature>

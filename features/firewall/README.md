@@ -1,3 +1,11 @@
+---
+title: "Feature: firewall"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/firewall/README.md
+github_target_path: docs/reference/features/firewall.md
+---
+
 ## Feature: firewall
 ### Description
 <website-feature>
