@@ -178,7 +178,7 @@ def test_openssl_FIPS_vendor_name_is_set_correctly(shell):
     We have to ensure that the FIPS provder suffix isn't added by accidentally to it, to ensure
     compliance.
     """
-    GARDENLINUX_CMVP_NAME = "SAP SE Garden Linux 1877 OpenSSL Cryptographic Module"
+    GARDENLINUX_CMVP_NAME = "SAP SE Garden Linux OpenSSL Cryptographic Module"
     OPENSSL_FIPS_PROVIDER_SUFFIX = "FIPS Provider for OpenSSL"
 
     result = shell("openssl list -providers", capture_output=True).stdout
