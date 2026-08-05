@@ -29,11 +29,6 @@ done
 
 args=()
 
-# TEMPORARY FIX for https://github.com/actions/runner-images/issues/14473
-if [ "$container_engine" = "podman" ] && [ "$(uname)" = "Linux" ]; then
-    podman() { command podman --runtime "$(command -v crun)" "$@"; }
-fi
-
 while [ $# -gt 0 ]; do
 	case "$1" in
 		-i|--include|-x|--exclude|--dpkg-include)

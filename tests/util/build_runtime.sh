@@ -17,9 +17,6 @@ verify_checksum() {
 trap cleanup EXIT
 tmpdir="$(mktemp -d)"
 
-# TEMPORARY FIX for https://github.com/actions/runner-images/issues/14473
-function podman() { command podman --runtime "$(command -v crun)" "$@"; }
-
 if [ "$0" != /init ]; then
 	cat >"$tmpdir/Containerfile" <<-'EOF'
 		FROM debian:stable

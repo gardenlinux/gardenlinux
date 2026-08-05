@@ -20,8 +20,8 @@ def test_audit_records_have_valid_timestamps(shell):
 
     timestamp_pattern = r"time->\w{3}\s+\w{3}\s+\d+\s+\d+:\d+:\d+\s+\d{4}"
 
-    assert re.search(
-        timestamp_pattern, result.stdout
+    assert bool(
+        re.search(timestamp_pattern, result.stdout)
     ), "stigcompliance: audit records do not contain valid timestamps"
 
 
