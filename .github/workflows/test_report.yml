@@ -21,7 +21,7 @@ jobs:
       actions: write
       checks: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
 
@@ -70,7 +70,7 @@ jobs:
           metadata-field-mapping: '{"Namespace": "Namespace", "Type": "Type", "Artifact": "Artifact"}'
 
       - name: Upload report artifacts
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         if: always()
         with:
           name: test-report
