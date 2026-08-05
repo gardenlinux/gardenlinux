@@ -65,7 +65,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
-      - uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # pin@v5.0.4
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           path: |
             COMMIT
@@ -73,7 +73,7 @@ jobs:
           key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: Download test distribution
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # pin@v5.0.4
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           path: tests/.build
           key: test-distribution-${{ github.run_id }}
