@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000255-GPOS-00096
 
-Verify the operating system produces audit records containing information to
-establish the identity of any individual or process associated with the event.
+Verify the operating system produces audit records containing information to establish the identity of any individual or process associated with the event.
 """
 
 import re

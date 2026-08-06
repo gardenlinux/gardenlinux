@@ -1,10 +1,7 @@
 """
-Ref: SRG-OS-000057-GPOS-00027, SRG-OS-000120-GPOS-00061,
-     SRG-OS-000122-GPOS-00063, SRG-OS-000329-GPOS-00128
+Ref: SRG-OS-000057-GPOS-00027, SRG-OS-000120-GPOS-00061, SRG-OS-000122-GPOS-00063, SRG-OS-000329-GPOS-00128
 
-Verify the operating system protects audit logs, uses SHA512 as the password
-hashing algorithm, enables the audit daemon, and automatically locks an account
-after three consecutive invalid logon attempts.
+Verify the operating system protects audit logs, uses SHA512 as the password hashing algorithm, enables the audit daemon, and automatically locks an account after three consecutive invalid logon attempts.
 """
 
 import pytest

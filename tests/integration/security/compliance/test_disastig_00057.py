@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000112-GPOS-00057
 
-Verify the operating system implements replay-resistant authentication
-mechanisms for network access to privileged accounts.
+Verify the operating system implements replay-resistant authentication mechanisms for network access to privileged accounts.
 """
 
 import re

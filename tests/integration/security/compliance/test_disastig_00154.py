@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000312-GPOS-00154
 
-As per DISA STIG compliance requirements, the operating system must implement
-mandatory access controls to restrict the ability of subjects and objects from
-accessing resources.
+As per DISA STIG compliance requirements, the operating system must implement mandatory access controls to restrict the ability of subjects and objects from accessing resources.
 """
 
 import pytest

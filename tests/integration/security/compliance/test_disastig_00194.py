@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000437-GPOS-00194
 
-Verify the operating system removes all software components after updated
-versions have been installed.
+Verify the operating system removes all software components after updated versions have been installed.
 """
 
 import pytest

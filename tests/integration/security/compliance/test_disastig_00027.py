@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000057-GPOS-00027
 
-Verify the operating system protects audit information from unauthorized read
-access.
+Verify the operating system protects audit information from unauthorized read access.
 """
 
 import pytest

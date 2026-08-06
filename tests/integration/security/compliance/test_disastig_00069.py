@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000138-GPOS-00069
 
-Verify operating systems prevents unauthorized and unintended information
-transfer via shared system resources.
+Verify operating systems prevents unauthorized and unintended information transfer via shared system resources.
 """
 
 import pytest

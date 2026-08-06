@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000480-GPOS-00226
 
-Verify the operating system enforces a delay of at least 4 seconds between
-logon prompts following a failed logon attempt.
+Verify the operating system enforces a delay of at least 4 seconds between logon prompts following a failed logon attempt.
 """
 
 import pytest

@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000033-GPOS-00014
 
-Verify the operating system implements DoD-approved encryption to protect the
-confidentiality of remote access sessions.
+Verify the operating system implements DoD-approved encryption to protect the confidentiality of remote access sessions.
 """
 
 import pytest

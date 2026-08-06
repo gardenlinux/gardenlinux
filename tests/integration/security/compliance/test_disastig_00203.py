@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000458-GPOS-00203
 
-Verify the operating system generates audit records when
-successful/unsuccessful attempts to access security objects occur.
+Verify the operating system generates audit records when successful/unsuccessful attempts to access security objects occur.
 """
 
 import pytest

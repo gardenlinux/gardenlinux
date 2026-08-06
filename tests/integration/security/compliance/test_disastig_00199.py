@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000445-GPOS-00199
 
-Verify the operating system verifies correct operation of all security
-functions.
+Verify the operating system verifies correct operation of all security functions.
 """
 
 import re

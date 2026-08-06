@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000278-GPOS-00108
 
-Verify the operating system uses cryptographic mechanisms to protect the
-integrity of audit tools.
+Verify the operating system uses cryptographic mechanisms to protect the integrity of audit tools.
 """
 
 import pytest

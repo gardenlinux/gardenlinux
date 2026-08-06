@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000351-GPOS-00138
 
-Verify the operating system provides a report generation capability that
-supports on-demand audit review and analysis.
+Verify the operating system provides a report generation capability that supports on-demand audit review and analysis.
 """
 
 import pytest
