@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000351-GPOS-00137
 
-Verify the operating system provides an audit reduction capability that
-supports after-the-fact investigations of security incidents.
+Verify the operating system provides an audit reduction capability that supports after-the-fact investigations of security incidents.
 """
 
 import pytest

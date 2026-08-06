@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000362-GPOS-00149
 
-Verify the operating system prohibits user installation of system software
-without explicit privileged status.
+Verify the operating system prohibits user installation of system software without explicit privileged status.
 """
 
 import pytest

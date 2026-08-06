@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000254-GPOS-00095
 
-As per DISA STIG compliance requirements, the operating system must begin
-auditing sessions when the system starts up.
+As per DISA STIG compliance requirements, the operating system must begin auditing sessions when the system starts up.
 """
 
 from typing import List

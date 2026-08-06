@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000432-GPOS-00191
 
-Verify the operating system behaves in a predictable and documented manner that
-reflects organizational and system objectives when invalid inputs are received.
+Verify the operating system behaves in a predictable and documented manner that reflects organizational and system objectives when invalid inputs are received.
 """
 
 import time

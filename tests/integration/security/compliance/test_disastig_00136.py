@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000348-GPOS-00136
 
-Verify the operating system provides an audit reduction capability that
-supports on-demand audit review and analysis.
+Verify the operating system provides an audit reduction capability that supports on-demand audit review and analysis.
 """
 
 import pytest

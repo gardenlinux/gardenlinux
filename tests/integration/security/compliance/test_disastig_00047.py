@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000079-GPOS-00047
 
-Verify the operating system obscures feedback of authentication information
-during the authentication process to protect the information from possible
-exploitation/use by unauthorized individuals.
+Verify the operating system obscures feedback of authentication information during the authentication process to protect the information from possible exploitation/use by unauthorized individuals.
 """
 
 import pytest

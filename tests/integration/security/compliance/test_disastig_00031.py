@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000062-GPOS-00031
 
-Verify the operating system provides audit record generation capability for
-DoD-defined auditable events for all operating system components.
+Verify the operating system provides audit record generation capability for DoD-defined auditable events for all operating system components.
 """
 
 import pytest

@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000055-GPOS-00026
 
-Verify the operating system uses internal system clocks to generate time stamps
-for audit records.
+Verify the operating system uses internal system clocks to generate time stamps for audit records.
 """
 
 import re

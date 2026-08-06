@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000471-GPOS-00215
 
-Verify the operating system generates audit records for privileged activities
-or other system-level access.
+Verify the operating system generates audit records for privileged activities or other system-level access.
 """
 
 import pytest

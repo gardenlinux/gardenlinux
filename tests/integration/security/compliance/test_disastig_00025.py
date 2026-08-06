@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000054-GPOS-00025
 
-Verify the operating system provides the capability to filter audit records for
-events of interest based upon all audit fields within audit records.
+Verify the operating system provides the capability to filter audit records for events of interest based upon all audit fields within audit records.
 """
 
 import pytest

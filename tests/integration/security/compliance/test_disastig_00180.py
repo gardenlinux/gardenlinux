@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000725-GPOS-00180
 
-Verify he operating system is configured to allow user selection of long
-passwords and passphrases, including spaces and all printable characters for
-password-based authentication.
+Verify he operating system is configured to allow user selection of long passwords and passphrases, including spaces and all printable characters for password-based authentication.
 """
 
 import glob

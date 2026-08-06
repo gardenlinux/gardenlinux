@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000329-GPOS-00128
 
-Verify the operating system automatically locks an account until the locked
-account is released by an administrator when three unsuccessful logon attempts
-in 15 minutes are made.
+Verify the operating system automatically locks an account until the locked account is released by an administrator when three unsuccessful logon attempts in 15 minutes are made.
 """
 
 import pytest

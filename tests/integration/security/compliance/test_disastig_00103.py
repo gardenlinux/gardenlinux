@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000269-GPOS-00103
 
-Verify, in the event of a system failure, the operating system preserves any
-information necessary to determine cause of failure and any information
-necessary to return to operations with least disruption to mission processes.
+Verify, in the event of a system failure, the operating system preserves any information necessary to determine cause of failure and any information necessary to return to operations with least disruption to mission processes.
 """
 
 import pytest

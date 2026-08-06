@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000037-GPOS-00015
 
-Verify the operating system produces audit records containing information to
-establish what type of events occurred.
+Verify the operating system produces audit records containing information to establish what type of events occurred.
 """
 
 import pytest

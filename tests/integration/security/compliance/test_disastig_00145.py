@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000358-GPOS-00145
 
-Verify the operating system records time stamps for audit records that meet a
-minimum granularity of one second for a minimum degree of precision.
+Verify the operating system records time stamps for audit records that meet a minimum granularity of one second for a minimum degree of precision.
 """
 
 import re

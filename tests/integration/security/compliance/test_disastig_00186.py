@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000420-GPOS-00186
 
-Verify the operating system protects against or limits the effects of Denial of
-Service (DoS) attacks by ensuring the operating system is implementing
-rate-limiting measures on impacted network interfaces.
+Verify the operating system protects against or limits the effects of Denial of Service (DoS) attacks by ensuring the operating system is implementing rate-limiting measures on impacted network interfaces.
 """
 
 import pytest
