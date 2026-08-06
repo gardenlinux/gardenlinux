@@ -257,7 +257,7 @@ jobs:
           mkdir "$CNAME"
           tar -C "$CNAME" -xzf "$CNAME.tar.gz"
       - name: Set up Python 3.12
-        uses: actions/setup-python@5fda3b95b3d0f1e0ee5a1dc4ab4f9ee57dfef386 # v7.0.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
       - name: Install glcli util
@@ -364,7 +364,7 @@ jobs:
             oci-manifests-${{ github.run_id }}-
           fail-on-cache-miss: true
       - name: Set up Python 3.12
-        uses: actions/setup-python@5fda3b95b3d0f1e0ee5a1dc4ab4f9ee57dfef386 # v7.0.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
       - name: Install glcli util
