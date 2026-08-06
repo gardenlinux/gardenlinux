@@ -1,4 +1,8 @@
-"""Ref: SRG-OS-000471-GPOS-00216"""
+"""
+Ref: SRG-OS-000471-GPOS-00216
+
+The audit system must be configured to audit the loading and unloading of dynamic kernel modules.
+"""
 
 import pytest
 from plugins.audit import AuditRule
