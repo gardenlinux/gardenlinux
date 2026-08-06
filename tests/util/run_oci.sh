@@ -28,9 +28,6 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-# TEMPORARY FIX for https://github.com/actions/runner-images/issues/14473
-function podman() { command podman --runtime "$(command -v crun)" "$@"; }
-
 image="$2"
 image_basename="$(basename -- "$image")"
 image_name=${image_basename/.*/}
