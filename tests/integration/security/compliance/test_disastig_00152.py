@@ -1,7 +1,7 @@
 """
 Ref: SRG-OS-000365-GPOS-00152
 
-The operating system must audit the enforcement actions used to restrict access associated with changes to the system.
+Verify the operating system audits the enforcement actions used to restrict access associated with changes to the system.
 """
 
 import pytest
