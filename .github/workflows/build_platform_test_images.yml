@@ -115,7 +115,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       - name: Set build reference
@@ -129,7 +129,7 @@ jobs:
           podman tag "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${GL_VERSION}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${ARCH}-${PLATFORM_TEST_TAG}"
       - name: Save base image (${{ matrix.arch }})
         run: podman save "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${ARCH}-${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${GL_VERSION}" -o "${IMAGE_BASE}-base-${ARCH}.tar"
-      - uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           path: ${{ env.IMAGE_BASE }}-base-${{ matrix.arch }}.tar
           key: platform_test_base_${{ matrix.arch }}-${{ github.run_id }}
@@ -150,7 +150,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       - name: Set build reference
@@ -159,7 +159,7 @@ jobs:
           echo "$version" | tee VERSION
           echo "GL_VERSION=$version" >> ${GITHUB_ENV}
       - name: Load base image (${{ matrix.arch }})
-        uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           key: platform_test_base_${{ matrix.arch }}-${{ github.run_id }}
           path: ${{ env.IMAGE_BASE }}-base-${{ matrix.arch }}.tar
@@ -177,13 +177,13 @@ jobs:
           echo "$GL_VERSION" | tee -a "platform-test.oci-version.txt"
           echo "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${ARCH}-${PLATFORM_TEST_TAG}" | tee -a "platform-test.oci-tag.txt"
       - name: Upload image artifact for ${{ matrix.platform }} (${{ matrix.arch }})
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         with:
           name: platform-test-${{ matrix.platform }}-${{ matrix.arch }}
           path: ${{ env.IMAGE_BASE }}-${{ matrix.platform }}-${{ matrix.arch }}.tar
           if-no-files-found: error
       - name: Upload local OCI metadata for ${{ matrix.platform }} (${{ matrix.arch }})
-        uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           key: platform_test_container:${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
           path: |
@@ -203,7 +203,7 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       - name: Load images (${{ matrix.platform }})
@@ -270,7 +270,7 @@ jobs:
       commit_id: ${{ steps.version_reference.outputs.commit_id }}
       version: ${{ steps.version_reference.outputs.version }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       - name: Prepare reference from GLRD
@@ -304,7 +304,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       - name: Login to ghcr.io
@@ -319,7 +319,7 @@ jobs:
           echo "$GL_VERSION" | tee -a "platform-test.oci-version.txt"
           echo "${PLATFORM_TEST_IMAGE_TAG}" | tee -a "platform-test.oci-tag.txt"
       - name: Upload local OCI metadata for ${{ matrix.platform }} (${{ matrix.arch }})
-        uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           key: platform_test_container:${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
           path: |

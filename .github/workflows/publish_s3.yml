@@ -29,7 +29,7 @@ jobs:
     outputs:
       flavors_matrix: ${{ steps.matrix.outputs.flavors_matrix }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       - id: matrix
@@ -56,7 +56,7 @@ jobs:
     outputs:
       flavors_matrix: ${{ steps.matrix.outputs.flavors_matrix }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       - id: matrix
@@ -89,7 +89,7 @@ jobs:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           github-token: ${{ github.token }}
           run-id: ${{ needs.workflow_data.outputs.run_id }}
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           overwrite: true
@@ -109,7 +109,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       - name: Set flavor version reference
@@ -145,7 +145,7 @@ jobs:
           popd
 
           tar -cSzvf "$CNAME.tar.gz" -C $CNAME .
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           overwrite: true
@@ -218,7 +218,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Retry failed publishing
         uses: actions/github-script@v7
         with:

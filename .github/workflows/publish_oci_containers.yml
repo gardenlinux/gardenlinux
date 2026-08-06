@@ -74,7 +74,7 @@ jobs:
           - flavor: "container-sslfips"
             subpath: "/gardenlinux-fips"
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       - name: Set flavor version reference
@@ -158,7 +158,7 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
@@ -231,7 +231,7 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 8
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       - uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # pin@v4
@@ -257,7 +257,7 @@ jobs:
           mkdir "$CNAME"
           tar -C "$CNAME" -xzf "$CNAME.tar.gz"
       - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
       - name: Install glcli util
@@ -300,7 +300,7 @@ jobs:
       - name: Verify signature
         run: |
           cosign verify --insecure-ignore-tlog=true --key "awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }}" "${{ needs.determine_repository.outputs.repository }}@$(cat digest.txt)"
-      - uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
@@ -317,7 +317,7 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 1
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       - name: Set flavor version reference
@@ -329,13 +329,13 @@ jobs:
           cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
           echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
       - name: Cache OCI manifests
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           path: manifests
           key: oci-manifests-${{ github.run_id }}-${{ matrix.flavor }}-${{ matrix.arch }}
           restore-keys: |
             oci-manifests-${{ github.run_id }}-
-      - uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
@@ -356,7 +356,7 @@ jobs:
       actions: write
     steps:
       - name: Restore OCI manifests
-        uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           path: manifests
           key: oci-manifests-${{ github.run_id }}
@@ -364,7 +364,7 @@ jobs:
             oci-manifests-${{ github.run_id }}-
           fail-on-cache-miss: true
       - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
       - name: Install glcli util
@@ -387,7 +387,7 @@ jobs:
       matrix:
         arch: [amd64, arm64]
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       - name: Download test distribution artifact
@@ -409,7 +409,7 @@ jobs:
           repo="ghcr.io/${{ github.repository_owner }}/test-ng"
           podman build --arch ${arch} --build-context dist_ctx=.build -t ${repo}:${arch}-${VERSION} tests-ng/util/container
           podman save --format oci-archive ${repo}:${arch}-${VERSION} > tests_container_${arch}.oci
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         with:
           name: tests-container-${{ matrix.arch }}
           path: tests_container_${{ matrix.arch }}.oci
@@ -425,7 +425,7 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
       - name: Download built tests archives
