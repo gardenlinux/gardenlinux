@@ -32,7 +32,7 @@ jobs:
           cd tests
           make -f util/build.makefile
           touch .build/.gh_artifact
-      - uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # pin@v5.0.4
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           path: tests/.build
           key: test-distribution-${{ github.run_id }}
@@ -52,7 +52,7 @@ jobs:
         with:
           submodules: true
       - name: Download test distribution
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # pin@v5.0.4
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           path: tests/.build
           key: test-distribution-${{ github.run_id }}
