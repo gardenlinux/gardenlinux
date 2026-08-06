@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000425-GPOS-00189
 
-Verify the operating system maintains the confidentiality and integrity of
-information during preparation for transmission.
+Verify the operating system maintains the confidentiality and integrity of information during preparation for transmission.
 """
 
 import pytest

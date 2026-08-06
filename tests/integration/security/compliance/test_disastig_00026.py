@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000055-GPOS-00026
 
-Verify the operating system uses internal system clocks to generate time stamps
-for audit records.
+Verify the operating system uses internal system clocks to generate time stamps for audit records.
 """
 
 import re
@@ -20,8 +19,8 @@ def test_audit_records_have_valid_timestamps(shell):
 
     timestamp_pattern = r"time->\w{3}\s+\w{3}\s+\d+\s+\d+:\d+:\d+\s+\d{4}"
 
-    assert re.search(
-        timestamp_pattern, result.stdout
+    assert bool(
+        re.search(timestamp_pattern, result.stdout)
     ), "stigcompliance: audit records do not contain valid timestamps"
 
 

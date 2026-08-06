@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000043-GPOS-00022
 
-Verify the operating system alerts the ISSO and SA (at a minimum) in the event
-of an audit processing failure.
+Verify the operating system alerts the ISSO and SA (at a minimum) in the event of an audit processing failure.
 """
 
 import re

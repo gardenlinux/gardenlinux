@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000259-GPOS-00100
 
-Verify the operating system limits privileges to change software resident
-within software libraries.
+Verify the operating system limits privileges to change software resident within software libraries.
 """
 
 import fileinput

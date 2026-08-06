@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000480-GPOS-00227
 
-As per DISA STIG compliance requirements, the operating system must be configured
-so that the SSH daemon does not allow X11 Forwarding.
+As per DISA STIG compliance requirements, the operating system must be configured so that the SSH daemon does not allow X11 Forwarding.
 """
 
 import pytest

@@ -1,10 +1,7 @@
 """
 Ref: SRG-OS-000424-GPOS-00188
 
-Verify the operating system implements cryptographic mechanisms to prevent
-unauthorized disclosure of information and/or detect changes to information
-during transmission unless otherwise protected by alternative physical
-safeguards, such as, at a minimum, a Protected Distribution System (PDS).
+Verify the operating system implements cryptographic mechanisms to prevent unauthorized disclosure of information and/or detect changes to information during transmission unless otherwise protected by alternative physical safeguards, such as, at a minimum, a Protected Distribution System (PDS).
 """
 
 import re

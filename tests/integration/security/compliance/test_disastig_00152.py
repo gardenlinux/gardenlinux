@@ -1,6 +1,4 @@
-"""
-Ref: SRG-OS-000365-GPOS-00152
-"""
+"""Ref: SRG-OS-000365-GPOS-00152"""
 
 import pytest
 

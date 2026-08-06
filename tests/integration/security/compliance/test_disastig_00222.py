@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000477-GPOS-00222
 
-Verify the operating system generates audit records for all kernel module load,
-unload, and restart actions, and also for all program initiations.
+Verify the operating system generates audit records for all kernel module load, unload, and restart actions, and also for all program initiations.
 """
 
 import pytest

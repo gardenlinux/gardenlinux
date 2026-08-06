@@ -1,6 +1,4 @@
-"""
-Ref: SRG-OS-000471-GPOS-00216
-"""
+"""Ref: SRG-OS-000471-GPOS-00216"""
 
 import pytest
 from plugins.audit import AuditRule

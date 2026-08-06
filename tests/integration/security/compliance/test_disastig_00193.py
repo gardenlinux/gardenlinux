@@ -1,6 +1,4 @@
-"""
-Ref: SRG-OS-000433-GPOS-00193
-"""
+"""Ref: SRG-OS-000433-GPOS-00193"""
 
 import pytest
 from plugins.sysctl import Sysctl

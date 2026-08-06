@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000351-GPOS-00139
 
-Verify the operating system provides a report generation capability that
-supports on-demand reporting requirements.
+Verify the operating system provides a report generation capability that supports on-demand reporting requirements.
 """
 
 import pytest

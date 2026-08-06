@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000326-GPOS-00126
 
-Verify that the operating system prevents all software from executing at higher
-privilege levels than users executing the software.
+Verify that the operating system prevents all software from executing at higher privilege levels than users executing the software.
 """
 
 import pytest
