@@ -20,6 +20,7 @@ def test_audit_event_contains_audit_processing_failures(shell):
         capture_output=True,
     )
 
-    assert bool(
-        re.search(r"audit.*(fail|error|lost=|backlog)", result.stdout)
+    match_found = bool(re.search(r"audit.*(fail|error|lost=|backlog)", result.stdout))
+    assert (
+        match_found
     ), "stigcompliance: audit records do not indicate alerting or detection of audit processing failures"
