@@ -39,7 +39,7 @@ variable "instance_type_amd64" {
 variable "instance_type_arm64" {
   description = "Default instance type for arm64"
   type        = string
-  default     = "m6g.medium"
+  default     = "m6g.large"
 }
 
 variable "image_requirements" {
