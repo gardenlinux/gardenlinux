@@ -1,18 +1,20 @@
 ---
-title: "ADR 0031: S3 Artifact and Metadata Publishing Contract Between Builder and GLCI"
+title: "ADR 0037: S3 Artifact and Metadata Publishing Contract Between Builder and GLCI"
 github_org: gardenlinux
 github_repo: gardenlinux
-github_source_path: docs/reference/adr/0031-builder-glci-interface.md
-github_target_path: docs/reference/adr/0031-builder-glci-interface.md
+github_source_path: docs/reference/adr/0037-builder-glci-interface.md
+github_target_path: docs/reference/adr/0037-builder-glci-interface.md
 ---
 
-# ADR 0031: S3 Artifact and Metadata Publishing Contract Between Builder and GLCI
+# ADR 0037: S3 Artifact and Metadata Publishing Contract Between Builder and GLCI
 
-Date: 2026-02-05
+Date: 2026-08-04
 
 ## Status
 
-Superseded by [ADR 37](./0037-builder-glci-interface.md)
+Accepted
+
+Supersedes [ADR 31](./0031-builder-glci-interface.md)
 
 ## Context
 
@@ -27,9 +29,13 @@ Superseded by [ADR 37](./0037-builder-glci-interface.md)
   + Which builder outputs are authoritative inputs for that metadata
 - Currently, the upload to S3 and metadata generation is handled by `python-gardenlinux-lib`.
 - Misalignment between builder output and how metadata is derived has caused issues, most notably while consolidating `openstack` / `openstackbaremetal` into `openstack` and `openstack-metal`.
+- [ADR 31](./0031-builder-glci-interface.md) established this interface. It assumed a one-to-one relationship between a build and a published artifact, and it defined the default value of any non-required requirements field as `false`.
+- Two needs have since emerged that the ADR 31 contract cannot express:
+  + Some artifacts must be published as a single combined artifact assembled from several builds — the motivating case being container images, published as one multi-architecture image. The interface must carry abuild-provided signal of which builds belong together.
+  + Expressing that signal requires an optional field that is not a boolean, but the ADR 31 default-value rule only defines a default for booleans.
 - A clear documented interface between **build artifacts** and **GLCI inputs** is required to avoid future ambiguity and regressions.
 
-This ADR defines that interface.
+This ADR supersedes ADR 31 and restates the interface in full so that it remains the single authoritative document.
 
 ## Decision
 
@@ -88,14 +94,15 @@ It must **not**:
 
 #### Fields
 
-| Field        | Type   | Required | Meaning                                                                                       |
-| ------------ | ------ | -------- | --------------------------------------------------------------------------------------------- |
-| `arch`       | string | yes      | Architecture of the image                                                                     |
-| `uefi`       | bool   | no       | UEFI is required (not merely supported, for hybrid legacy and UEFI images this must be false) |
-| `secureboot` | bool   | no       | Secure Boot is required                                                                       |
-| `tpm2`       | bool   | no       | TPM 2.0 is required                                                                           |
+| Field              | Type   | Required | Meaning                                                                                               |
+| ------------------ | ------ | -------- |-------------------------------------------------------------------------------------------------------|
+| `arch`             | string | yes      | Architecture of the image                                                                             |
+| `publishing_group` | string | no       | Opaque group identifier, builds sharing a value are published as one artifact, empty means standalone |
+| `secureboot`       | bool   | no       | Secure Boot is required                                                                               |
+| `tpm2`             | bool   | no       | TPM 2.0 is required                                                                                   |
+| `uefi`             | bool   | no       | UEFI is required (not merely supported, for hybrid legacy and UEFI images this must be false)         |
 
-For non-required fields, the default value is `false`.
+For non-required fields, the default value is the zero value of the field's type: `false` for a `bool`, the empty string for a `string`.
 
 ### 1.3 Artifact Files
 
@@ -111,22 +118,23 @@ Exactly one metadata document is produced per build, referred to as the *singles
 
 The metadata document contains the following information:
 
-| Metadata Key        | Type            | Source                                           |
-| ------------------- | --------------- | ------------------------------------------------ |
-| `platform`          | string          | `GARDENLINUX_PLATFORM`                           |
-| `platform_variant`  | string          | `GARDENLINUX_PLATFORM_VARIANT` (if present)      |
-| `architecture`      | string          | `arch` from requirements file                    |
-| `version`           | string          | `GARDENLINUX_VERSION`                            |
-| `gardenlinux_epoch` | int             | Major version component of `GARDENLINUX_VERSION` |
-| `build_committish`  | string          | `GARDENLINUX_COMMIT_ID_LONG`                     |
-| `build_timestamp`   | timestamp[^1]   | Filesystem timestamp of the release file         |
-| `modifiers`         | List of strings | Parsed list from `GARDENLINUX_FEATURES`          |
-| `require_uefi`      | bool            | `uefi` from requirements file                    |
-| `secureboot`        | bool            | `secureboot` from requirements file              |
-| `tpm2`              | bool            | `tpm2` from requirements file                    |
-| `paths`             | *(see below)*   | List of uploaded artifact descriptors            |
-| `s3_bucket`         | string          | Target S3 bucket                                 |
-| `s3_key`            | string          | S3 path of the metadata document                 |
+| Metadata Key        | Type            | Source                                              |
+| ------------------- | --------------- | --------------------------------------------------- |
+| `platform`          | string          | `GARDENLINUX_PLATFORM`                              |
+| `platform_variant`  | string          | `GARDENLINUX_PLATFORM_VARIANT` (if present)         |
+| `architecture`      | string          | `arch` from requirements file                       |
+| `version`           | string          | `GARDENLINUX_VERSION`                               |
+| `gardenlinux_epoch` | int             | Major version component of `GARDENLINUX_VERSION`    |
+| `build_committish`  | string          | `GARDENLINUX_COMMIT_ID_LONG`                        |
+| `build_timestamp`   | timestamp[^1]   | Filesystem timestamp of the release file            |
+| `modifiers`         | List of strings | Parsed list from `GARDENLINUX_FEATURES`             |
+| `require_uefi`      | bool            | `uefi` from requirements file                       |
+| `secureboot`        | bool            | `secureboot` from requirements file                 |
+| `tpm2`              | bool            | `tpm2` from requirements file                       |
+| `publishing_group`  | string          | `publishing_group` from requirements file (if present) |
+| `paths`             | *(see below)*   | List of uploaded artifact descriptors               |
+| `s3_bucket`         | string          | Target S3 bucket                                    |
+| `s3_key`            | string          | S3 path of the metadata document                    |
 
 The artifact descriptors in `paths` are of the form:
 
@@ -169,12 +177,14 @@ No additional interpretation or normalization of these values is performed beyon
 - Enforcing assumptions about naming conventions beyond documented extraction rules.
 - Inferring architecture from the canonical name or any other source than the requirements file.
 - Inferring platform semantics from feature graphs.
+- Inferring publishing group membership from any source other than the `publishing_group` value in the requirements file.
 
 ## Consequences
 
 - The interface between builder output and GLCI input is explicit and stable.
 - Architecture handling is unambiguous and future-proof.
 - Platform handling is unambiguous and future-proof.
+- Build grouping is unambiguous and future-proof.
 - Builder semantics are preserved without reinterpretation.
 - Future refactors of publishing logic can be validated against this ADR.
 - Ambiguity and hidden assumptions in metadata generation are eliminated.
