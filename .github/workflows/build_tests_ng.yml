@@ -63,6 +63,9 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Build tests container (${{ matrix.arch }})
         run: |
+          # TEMPORARY FIX for https://github.com/actions/runner-images/issues/14473
+          podman() { command podman --runtime "$(command -v crun)" "$@"; }
+
           set -euo pipefail
           arch="${{ matrix.arch }}"
           echo "Building tests for arch=$arch"
