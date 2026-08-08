@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -eufo pipefail
+
+overlay_dir="/sysroot/var/etc.overlay"
+workdir="/sysroot/var/etc.overlay.workdir"
+os_release_marker="$overlay_dir/os-release"
+os_release_source="/sysroot/etc/os-release"
+
+if [ -d "$overlay_dir" ] && [ -d "$workdir" ] && [ -e "$os_release_marker" ] && cmp -s "$os_release_marker" "$os_release_source"; then
+	exit 0
+fi
+
+if [ -e "$os_release_marker" ]; then
+	chattr -i "$os_release_marker" || true
+fi
+
+rm -rf "$overlay_dir" "$workdir"
+mkdir -p "$overlay_dir" "$workdir"
+
+cp "$os_release_source" "$os_release_marker"
+chmod 0444 "$os_release_marker"
+chattr +i "$os_release_marker"
+
+echo > /run/gardenlinux-etc-reset
