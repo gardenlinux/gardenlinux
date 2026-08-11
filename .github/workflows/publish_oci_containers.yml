@@ -98,7 +98,7 @@ jobs:
           ref: ${{ inputs.commit_id }}
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@6ce43c5ef209aad94bdfee29cc302e04d1e6f54f # pin@0.10.23
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7b3c8e74746b20863c760f259bf1208982f51d97 # pin@0.10.24
       - name: Set container version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -279,7 +279,7 @@ jobs:
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@6ce43c5ef209aad94bdfee29cc302e04d1e6f54f # pin@0.10.23
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7b3c8e74746b20863c760f259bf1208982f51d97 # pin@0.10.24
       - name: Install cosign
         uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
         with:
@@ -345,7 +345,7 @@ jobs:
           ref: ${{ inputs.commit_id }}
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@6ce43c5ef209aad94bdfee29cc302e04d1e6f54f # pin@0.10.23
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7b3c8e74746b20863c760f259bf1208982f51d97 # pin@0.10.24
       - name: Set CNAME
         run: |
           echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"

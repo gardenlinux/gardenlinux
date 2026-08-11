@@ -48,7 +48,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@6ce43c5ef209aad94bdfee29cc302e04d1e6f54f # pin@0.10.23
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7b3c8e74746b20863c760f259bf1208982f51d97 # pin@0.10.24
       - name: Set build reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -73,7 +73,7 @@ jobs:
       - name: Build
         run: make ${{ inputs.flavor }}-${{ inputs.arch }}-build
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@6ce43c5ef209aad94bdfee29cc302e04d1e6f54f # pin@0.10.23
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7b3c8e74746b20863c760f259bf1208982f51d97 # pin@0.10.24
       - name: Set CNAME
         run: |
           echo "CNAME=$(gl-features-parse --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname)" | tee -a "$GITHUB_ENV"
