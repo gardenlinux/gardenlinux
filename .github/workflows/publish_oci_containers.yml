@@ -97,40 +97,31 @@ jobs:
         with:
           ref: ${{ inputs.commit_id }}
           submodules: true
-      - id: build_container_cache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
-        with:
-          path: |
-            COMMIT
-            VERSION
-          key: build-${{ matrix.flavor }}-amd64-${{ github.run_id }}
-          lookup-only: true
-      - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
-        name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@9aaf32aec5513e15a089fcfe12baf505299ffbb3 # pin@0.10.22
-      - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
-        name: Set container version reference
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@6ce43c5ef209aad94bdfee29cc302e04d1e6f54f # pin@0.10.23
+      - name: Set container version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
-      - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
+      - name: Set CNAMEs
+        run: |
+          if [[ -n "$(gl-flavors-parse --include-only "${{ matrix.flavor }}-amd64" --publish)" ]]; then
+            echo "CNAME_AMD64=$(gl-features-parse --cname "${{ matrix.flavor }}" --arch amd64 --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
+            echo "CNAME_ARM64=$(gl-features-parse --cname "${{ matrix.flavor }}" --arch arm64 --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
+          fi
+      - if: ${{ env.CNAME_AMD64 != '' }}
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
         with:
           name: build-${{ matrix.flavor }}-amd64
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
+      - if: ${{ env.CNAME_ARM64 != '' }}
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
         with:
           name: build-${{ matrix.flavor }}-arm64
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
-        name: Set CNAMEs
-        run: |
-          echo "CNAME_AMD64=$(gl-features-parse --cname ${{ matrix.flavor }} --arch amd64 --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
-          echo "CNAME_ARM64=$(gl-features-parse --cname ${{ matrix.flavor }} --arch arm64 --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
-      - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
+      - if: ${{ env.CNAME_AMD64 != '' }}
         name: Publish container images
         run: |
           if [ "${{ inputs.target }}" = "nightly" ]; then
@@ -288,7 +279,7 @@ jobs:
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@9aaf32aec5513e15a089fcfe12baf505299ffbb3 # pin@0.10.22
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@6ce43c5ef209aad94bdfee29cc302e04d1e6f54f # pin@0.10.23
       - name: Install cosign
         uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
         with:
@@ -354,7 +345,7 @@ jobs:
           ref: ${{ inputs.commit_id }}
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@9aaf32aec5513e15a089fcfe12baf505299ffbb3 # pin@0.10.22
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@6ce43c5ef209aad94bdfee29cc302e04d1e6f54f # pin@0.10.23
       - name: Set CNAME
         run: |
           echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
