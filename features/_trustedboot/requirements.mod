@@ -1,1 +1,1 @@
-secureboot=true
+requirements["secureboot"]=true
