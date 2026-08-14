@@ -9,7 +9,7 @@ FLAVORS := $(shell $(ROOT_DIR)/bin/flavors_parse.py --exclude "bare-*" --build -
 FLAVORS_BARE := $(shell $(ROOT_DIR)/bin/flavors_parse.py --include-only "bare-*" --build --test)
 
 # Base commands
-CMD_BUILD := $(ROOT_DIR)/build
+CMD_BUILD := $(ROOT_DIR)/build --allow-frankenstein
 FLAG_KMS := --kms
 CMD_BUILD_BARE := $(ROOT_DIR)/build_bare_flavors
 
