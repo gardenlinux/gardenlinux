@@ -1,0 +1,5 @@
+requirements["autoinstall"]=false
+requirements["publishing_group"]=""
+requirements["secureboot"]=false
+requirements["tpm2"]=false
+requirements["uefi"]=false

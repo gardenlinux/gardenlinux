@@ -1,1 +1,1 @@
-uefi=true
+requirements["uefi"]=true

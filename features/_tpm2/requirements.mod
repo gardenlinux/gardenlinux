@@ -1,1 +1,1 @@
-tpm2=true
+requirements["tpm2"]=true
