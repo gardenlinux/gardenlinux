@@ -1,9 +1,6 @@
 ARG base
 FROM $base
-# pin the repo to the snapshot from 13th of July, day before python 3.14 was migrated to testing
-# TODO: revisit this
-COPY --chown=root:root --chmod=0644 repokey.asc /etc/apt/keyrings/snapshot-repo.asc
-RUN echo "deb [signed-by=/etc/apt/keyrings/snapshot-repo.asc] https://dqf78g7gefsor.cloudfront.net/debian-snapshot 1783973338 main" > /etc/apt/sources.list && rm /etc/apt/sources.list.d/debian.sources && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates build-essential git libpython3-dev openssh-client python3 python3-venv
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates build-essential git libpython3-dev openssh-client python3 python3-venv
 
 # Prepare virtual environment
 ENV VIRTUAL_ENV=/opt/venv
