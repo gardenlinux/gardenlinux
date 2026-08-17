@@ -78,7 +78,7 @@ cat > index.json << EOF
       "digest": "sha256:$manifest_sha256",
       "size": $manifest_size,
       "annotations": {
-        "org.opencontainers.image.ref.name": "$BUILDER_CNAME_BASE-$BUILDER_ARCH"
+        "org.opencontainers.image.ref.name": "$(tr '[:upper:]' '[:lower:]' <<< "$BUILDER_CNAME_BASE-$BUILDER_ARCH")"
       }
     }
   ]
