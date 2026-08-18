@@ -22,7 +22,7 @@ container_cmd=()
 
 use_kms=0
 resolve_cname=0
-allow_frankenstein=0
+allow_frankenstein=1
 apparmor_profile=
 
 while [ $# -gt 0 ]; do
@@ -98,7 +98,7 @@ default_version="$(./get_version)"
 
 if [ "$resolve_cname" = 1 ]; then
 	arch="$("$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" dpkg --print-architecture)"
-	cname="$("$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" /builder/parse_features --feature-dir /builder/features --default-arch "$arch" --default-version "$default_version" --cname "$1")"
+	cname="$("$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" /builder/parse_features --allow-frankenstein --feature-dir /builder/features --default-arch "$arch" --default-version "$default_version" --cname "$1")"
 	short_commit="$(head -c 8 <<< "$commit")"
 	echo "$cname-$short_commit" >&3
 	exit 0

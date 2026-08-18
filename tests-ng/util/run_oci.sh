@@ -60,15 +60,26 @@ if [ -z "$image" ]; then
     exit 1
 fi
 
+image_sha=""
+
 cleanup() {
     echo "⚙️  cleaning up containers and images $image_name"
-    podman rmi -f "$image_sha" 2>/dev/null || true
+    if [ -n "$image_sha" ]; then
+        podman rmi -f "$image_sha" 2>/dev/null || true
+    fi
 }
 
 trap cleanup EXIT
 
 echo "⚙️  loading OCI image $image_name"
-image_sha="$(podman load -q --input "$image" 2>/dev/null | awk '{ print $NF }')"
+# Load non-quiet so podman errors surface on stderr (to the terminal), while
+# stdout ("Loaded image: sha256:...") is captured to extract the image id.
+image_sha="$(podman load --input "$image" | awk '{ print $NF }')"
+
+if [ -z "$image_sha" ]; then
+    echo "❌  failed to load OCI image $image_name: no image id returned by 'podman load'" >&2
+    exit 1
+fi
 
 test_args+=(
     "--allow-system-modifications"
