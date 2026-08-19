@@ -98,12 +98,21 @@ class Lines:
     def _check_string_literal(self, pattern: str) -> bool:
         """Check if a string literal exists in lines (with comment filtering)."""
         comment_chars = _resolve_comment_chars(self.format, self.comment_char)
+        # Normalize the pattern as well to match normalized lines
+        normalized_pattern = re.sub(r"\s+", " ", pattern)
+
+        # Check if pattern starts with a comment character - if so, don't strip comments
+        pattern_is_comment = any(
+            pattern.lstrip().startswith(char) for char in comment_chars
+        )
 
         for line in self.content.splitlines():
-            line = _strip_comments_from_line(line, comment_chars)
+            # Only strip comments if the pattern itself is not a comment
+            if not pattern_is_comment:
+                line = _strip_comments_from_line(line, comment_chars)
             line = line.rstrip()
-            normalized = re.sub(r"\s+", " ", line)
-            if normalized.find(pattern) != -1:
+            normalized_line = re.sub(r"\s+", " ", line)
+            if normalized_line.find(normalized_pattern) != -1:
                 return True
         return False
 
@@ -165,6 +174,54 @@ class Lines:
                 f"Expected str, re.Pattern, or list of str."
             )
 
+    def __eq__(self, other: object) -> bool:
+        """Check if Lines content matches a list of expected lines exactly.
+
+        Args:
+            other: List of expected lines to compare against.
+
+        Returns:
+            bool: True if all lines match in order, False otherwise.
+        """
+        if not isinstance(other, list):
+            return NotImplemented
+
+        comment_chars = _resolve_comment_chars(self.format, self.comment_char)
+
+        # Get actual lines from content, stripping full-line comments but keeping inline comments
+        actual_lines = []
+        for line in self.content.splitlines():
+            line = line.rstrip()
+            if not line:  # Skip empty lines
+                continue
+            # Skip lines that are purely comments (start with comment char after whitespace)
+            stripped = line.lstrip()
+            if comment_chars and any(
+                stripped.startswith(char) for char in comment_chars
+            ):
+                continue
+            actual_lines.append(line)
+
+        return actual_lines == other
+
+    def __repr__(self) -> str:
+        """Return representation of Lines for debugging."""
+        comment_chars = _resolve_comment_chars(self.format, self.comment_char)
+
+        actual_lines = []
+        for line in self.content.splitlines():
+            line = line.rstrip()
+            if not line:  # Skip empty lines
+                continue
+            # Skip lines that are purely comments
+            stripped = line.lstrip()
+            if comment_chars and any(
+                stripped.startswith(char) for char in comment_chars
+            ):
+                continue
+            actual_lines.append(line)
+        return repr(actual_lines)
+
 
 @dataclass
 class Parse:
@@ -208,12 +265,16 @@ class Parse:
         """
         return cls(content, label)
 
-    def _parse_keyval(self, content: str) -> Dict[str, str]:
-        cfg = configparser.ConfigParser(allow_no_value=True)
-        cfg.optionxform = lambda optionstr: optionstr
+    def _parse_keyval(
+        self, content: str, forbid_duplicates: bool = False
+    ) -> Dict[str, str]:
+        cfg = configparser.ConfigParser(allow_no_value=True, strict=forbid_duplicates)
+        cfg.optionxform = lambda optionstr: optionstr  # type: ignore[assignment]
         wrapped = "[default]\n" + content
         cfg.read_file(StringIO(wrapped))
-        return dict(cfg.items("default")) if "default" in cfg else {}
+        result = dict(cfg.items("default")) if "default" in cfg else {}
+        # Strip quotes from values (both single and double quotes)
+        return {k: v.strip('"').strip("'") if v else v for k, v in result.items()}
 
     def _parse_spacedelim(self, content: str) -> Dict[str, str]:
         result = {}
@@ -229,6 +290,7 @@ class Parse:
 
     def _parse_ini(self, content: str) -> Dict[str, Any]:
         cfg = configparser.ConfigParser()
+        cfg.optionxform = str  # type: ignore[method-assign] # Preserve case of option names
         cfg.read_file(StringIO(content))
         return {section: dict(cfg[section]) for section in cfg.sections()}
 
@@ -255,11 +317,13 @@ class Parse:
             )
         return tomllib.loads(content)
 
-    def _parse_content(self, format: str, ignore_comments: bool = True) -> Any:
+    def _parse_content(
+        self, format: str, ignore_comments: bool = True, forbid_duplicates: bool = True
+    ) -> Any:
         fmt = format.lower()
         match fmt:
             case "keyval":
-                return self._parse_keyval(self.content)
+                return self._parse_keyval(self.content, forbid_duplicates)
             case "spacedelim":
                 return self._parse_spacedelim(self.content)
             case "ini":
@@ -276,13 +340,16 @@ class Parse:
                     f"Supported formats: {', '.join(SUPPORTED_FORMATS)}."
                 )
 
-    def parse(self, format: str, ignore_comments: bool = True) -> Any:
+    def parse(
+        self, format: str, ignore_comments: bool = True, forbid_duplicates: bool = True
+    ) -> Any:
         """Parse content and return data structure based on format.
 
 
         Args:
             format: One of the supported format identifiers (json, yaml, toml, ini, keyval).
             ignore_comments: (optional, default=True) If True, strip comments where applicable.
+            forbid_duplicates: If False, won't raise an exception if duplicate key (where applicable) is found.
 
         Returns:
             Parsed data structure (dict, list, etc.) based on format.
@@ -294,7 +361,7 @@ class Parse:
             >>> assert config["database"]["port"] == 5432
             >>> assert "missing" not in config["database"]
         """
-        return self._parse_content(format, ignore_comments)
+        return self._parse_content(format, ignore_comments, forbid_duplicates)
 
     def lines(
         self,
