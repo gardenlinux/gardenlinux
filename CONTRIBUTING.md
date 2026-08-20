@@ -36,7 +36,7 @@ You are welcome to contribute code to Garden Linux in order to fix a bug or to i
 
 The following rules govern code contributions:
 
-1. Contributions must be licensed under the MIT License.
+1. Contributions must be licensed under the Apache-2.0 License.
 1. You need to sign the Developer Certificate of Origin.
 
 ## Contributing Documentation

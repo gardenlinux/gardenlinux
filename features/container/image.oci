@@ -76,7 +76,10 @@ cat > index.json << EOF
     {
       "mediaType": "application/vnd.oci.image.manifest.v1+json",
       "digest": "sha256:$manifest_sha256",
-      "size": $manifest_size
+      "size": $manifest_size,
+      "annotations": {
+        "org.opencontainers.image.ref.name": "$(tr '[:upper:]' '[:lower:]' <<< "$BUILDER_CNAME_BASE-$BUILDER_ARCH")"
+      }
     }
   ]
 }

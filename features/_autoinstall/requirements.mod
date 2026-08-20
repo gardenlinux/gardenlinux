@@ -1,2 +1,1 @@
-requirements_keys+=(autoinstall)
-autoinstall=true
+requirements["autoinstall"]=true
