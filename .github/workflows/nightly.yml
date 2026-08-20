@@ -136,7 +136,11 @@ jobs:
       - upload_workflow_data
       - publish_ghcr
       - publish_s3
-    if: ${{ always() && failure() }}
+    # TODO: fix this
+    # temporarily disable the issue creating on failure as it doesn't work as expected, it creates an issue on first failure
+    # retries have to be taken into account
+    # if: ${{ always() && failure() }}
+    if: false
     runs-on: ubuntu-24.04
     permissions:
       issues: write
