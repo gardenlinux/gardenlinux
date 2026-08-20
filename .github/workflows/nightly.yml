@@ -128,32 +128,3 @@ jobs:
       actions: write # TODO: 3215 elevated permissions for included workflow
       id-token: write # TODO: 3215 elevated permissions for included workflow
     secrets: inherit
-  create_issue_on_failure:
-    name: Create issue on failure
-    needs:
-      - build
-      - test
-      - upload_workflow_data
-      - publish_ghcr
-      - publish_s3
-    if: ${{ always() && failure() }}
-    runs-on: ubuntu-24.04
-    permissions:
-      issues: write
-      actions: read
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Install Python dependencies
-        run: pip install requests==2.32.5
-      - name: Create failure issue
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          python3 hack/create_nightly_issue.py \
-            --repo "${{ github.repository }}" \
-            --run-id "${{ github.run_id }}" \
-            --ref "${{ github.ref }}" \
-            --sha "${{ github.sha }}" \
-            --workflow "${{ github.workflow }}" \
-            --needs '${{ toJson(needs) }}'
