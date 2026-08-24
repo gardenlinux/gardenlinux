@@ -1,7 +1,7 @@
 ---
 title: Creating OS Releases
 description: Complete guide to creating Garden Linux OS major and minor releases
-order: 3
+order: 4
 related_topics:
   - /explanation/release-hierarchy.md
   - /explanation/packaging.md
@@ -60,7 +60,7 @@ Verify that the system is ready for a release. This means all tests pass and the
 
 ### Step 2: Check previous tiers
 
-Be sure to have complete [Packaging](/how-to/packaging/) and [Created a APT Repository](/how-to/releases/apt-repos) before proceeding.
+Be sure to have completed all [Packaging](/how-to/packaging/) tasks and [Created an APT Repository minor release](/how-to/releases/apt-repos#creating-a-minor-release) before proceeding.
 
 ## Phase 1: Creating the release
 
@@ -107,26 +107,28 @@ Use the [manual release workflow](https://github.com/gardenlinux/gardenlinux/act
 
 ```bash
 # Using gh CLI:
-gh workflow run "Build and publish a release" \
---ref rel-MAJOR \
--f target=release \
--f version=MAJOR.MINOR.0
+gh workflow -R gardenlinux/gardenlinux \
+  run "Build and publish a release" \
+  --ref rel-MAJOR \
+  -f target=release \
+  -f version=MAJOR.MINOR.0
 
 # Example:
-gh workflow run "Build and publish a release" \
---ref rel-2150 \
--f target=release \
--f version=2150.1.0
+gh workflow -R gardenlinux/gardenlinux \
+  run "Build and publish a release" \
+  --ref rel-2150 \
+  -f target=release \
+  -f version=2150.1.0
 ```
 
 Or via the GitHub UI:
 
 1. Go to [Actions → Build and publish a release](https://github.com/gardenlinux/gardenlinux/actions/workflows/manual_release.yml)
-2. Click "Run workflow"
-3. Select the `rel-MAJOR` branch
-4. Set version to `MAJOR.MINOR.0`
-5. Leave target `release`
-6. Leave other parameters at defaults
+2. Select the `rel-MAJOR` branch
+3. Set version to `MAJOR.MINOR.0`
+4. Leave target `release`
+5. Leave other parameters at defaults
+6. Click "Run workflow"
 
 **For older releases (1443, 1592 using non-SemVer):**
 
@@ -134,14 +136,16 @@ Use the [nightly workflow](https://github.com/gardenlinux/gardenlinux/actions/wo
 
 ```bash
 # Using gh CLI:
-gh workflow run nightly.yml \
---ref rel-MAJOR \
--f version=MAJOR.MINOR
+gh workflow -R gardenlinux/gardenlinux \
+  run nightly.yml \
+  --ref rel-MAJOR \
+  -f version=MAJOR.MINOR
 
 # Example for 1443:
-gh workflow run nightly.yml \
---ref rel-1443 \
--f version=1443.3
+gh workflow -R gardenlinux/gardenlinux \
+  run nightly.yml \
+  --ref rel-1443 \
+  -f version=1443.3
 ```
 
 **Monitor the Build:**
@@ -150,37 +154,44 @@ gh workflow run nightly.yml \
 - Verify all build jobs complete successfully
 - Check that artifacts are published
 
-### Step 2: Create GitHub release
+### Step 2: GLCI (internal)
 
-After the build completes, create the official GitHub release page:
+:::warning For Garden Linux maintainers
+The additional internal release step "GLCI" is mandatory. This requires authentication; see the [Internal Step Phase 1 Step 2: Run GLCI Workflow](https://pages.github.tools.sap/gardenlinux/docs-ng-internal/how-to/releases/os-releases-internal.html#internal-step-phase-1-step-2-run-glci-workflow) documentation for details.
+:::
+
+### Step 3: Create GitHub release
+
+After the build completes and the internal release steps ran, create the official GitHub release page:
 
 ```bash
 # Run from main branch (not the release branch!)
-git checkout main
-
 # Using gh CLI:
-gh workflow run "release page" \
---ref main \
--f run_id=<BUILD-RUN-ID>
--f is_latest=true # if this is the latest major.minor.0 version
+gh workflow -R gardenlinux/gardenlinux \
+  run "release page" \
+  --ref main \
+  -f run_id=<BUILD-RUN-ID>
+  -f is_latest=true # if this is the latest major.minor.0 version
 
 # Example:
-gh workflow run "release page" \
---ref main \
--f run_id=23802291489 \
--f is_latest=true # if this is the latest major.minor.0 version
+gh workflow -R gardenlinux/gardenlinux \
+  run "release page" \
+  --ref main \
+  -f run_id=23802291489 \
+  -f is_latest=true # if this is the latest major.minor.0 version
 ```
 
 :::tip
 Get the "Run ID" from the URL of the "Build and publish a release" workflow run, e.g. https://github.com/gardenlinux/gardenlinux/actions/runs/23802291489
+It is found in the `workflow-data` artifact as well as under `Store workflow data`, `Store data in JSON file` as `id` of the output. This ensures consistent and as a safe guard for correct commit resolution.
 :::
 
 Or via the GitHub UI:
 
 1. Go to [Actions → release page](https://github.com/gardenlinux/gardenlinux/actions/workflows/manual_gh_release_page.yml)
-2. Click "Run workflow"
-3. Select `main` branch
-4. Set Build workflow run ID to `BUILD-RUN-ID` (e.g. `23802291489`)
+2. Select `main` branch
+3. Set Build workflow run ID to `BUILD-RUN-ID` (e.g. `23802291489`)
+4. Click "Run workflow"
 
 :::warning
 Always review the generated release notes before publishing, especially the "Changes" section.
@@ -210,62 +221,53 @@ oras tag ghcr.io/gardenlinux/gardenlinux:1877.5 1877.5.0
 
 :::
 
-### Step 3: [ONLY FOR MAJOR RELEASES] Create rel-MAJOR Branch in repo
-
-:::danger
-This step only applies to new major releases, not minor releases.
-:::
-
-Create a release branch in the `gardenlinux/repo` repository based on the new release tag:
-
-```bash
-cd /path/to/repo
-git pull --tags
-git checkout MAJOR.0.0
-git checkout -b rel-MAJOR
-git push -u origin rel-MAJOR
-```
-
-Example:
-
-```bash
-cd /path/to/repo
-git pull --tags
-git checkout 2150.0.0
-git checkout -b rel-2150
-git push -u origin rel-2150
-```
-
-This branch is used for creating future minor releases of the APT repository.
-
 ### Step 4: Generate CPE file
 
 Generate the Common Platform Enumeration (CPE) file for the new release:
 
 ```bash
-# Run from main branch
-gh workflow run "Generate and upload CPE to a release" \
---ref main \
--f version=MAJOR.MINOR.0
+# Using gh CLI:
+gh workflow -R gardenlinux/gardenlinux \
+  run "Generate and upload CPE to a release" \
+  --ref main \
+  -f version=MAJOR.MINOR.0
 
 # Example:
-gh workflow run "Generate and upload CPE to a release" \
---ref main \
--f version=2150.1.0
+gh workflow -R gardenlinux/gardenlinux \
+  run "Generate and upload CPE to a release" \
+  --ref main \
+  -f version=2150.1.0
 ```
 
 Or via GitHub UI:
 
 1. Go to [Actions → Generate and upload CPE](https://github.com/gardenlinux/gardenlinux/actions/workflows/cpe.yml)
-2. Click "Run workflow"
-3. Select `main` branch
-4. Set version to `MAJOR.MINOR.0`
+2. Select `main` branch
+3. Set version to `MAJOR.MINOR.0`
+4. Click "Run workflow"
 
-### Step 5: Update Garden Linux documentation
+### Step 5: Notify Security Stakeholders (internal)
 
-:::info
-TODO: add steps on how to update the documentation
+:::warning For Garden Linux maintainers
+The additional internal release step "Notify Security Stakeholders" is mandatory. This requires authentication; see the [Internal Step Phase 1 Step 5: Notify Security Stakeholders](https://pages.github.tools.sap/gardenlinux/docs-ng-internal/how-to/releases/os-releases-internal.html#internal-step-phase-1-step-5-notify-security-stakeholders) documentation for details.
 :::
+
+### Step 6: Update Garden Linux documentation
+
+Trigger a manual docs deployment to gather the latest release notes for the documentation:
+
+```bash
+# Using gh CLI:
+gh workflow -R gardenlinux/docs \
+  run "Netlify Deployment" \
+  --ref main
+```
+
+Or via GitHub UI:
+
+1. Go to [Actions → Netlify Deployment](https://github.com/gardenlinux/gardenlinux/actions/workflows/netlify-deployment.yml)
+2. Select `main` branch
+3. Click "Run workflow"
 
 ## Phase 2: Post-release work
 
