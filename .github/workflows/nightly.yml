@@ -128,3 +128,52 @@ jobs:
       actions: write # TODO: 3215 elevated permissions for included workflow
       id-token: write # TODO: 3215 elevated permissions for included workflow
     secrets: inherit
+
+  create_issue_on_publish_failure:
+    name: Create issue on publish/upload failure
+    needs:
+      - upload_workflow_data
+      - publish_ghcr
+      - publish_s3
+    if: |
+      ${{ always() &&
+          (needs.upload_workflow_data.result == 'failure' ||
+           needs.publish_ghcr.result == 'failure' ||
+           needs.publish_s3.result == 'failure') }}
+    uses: ./.github/workflows/nightly_create_issue.yml
+    with:
+      needs_context: ${{ toJson(needs) }}
+    permissions:
+      issues: write
+      actions: read
+      contents: read
+    secrets: inherit
+
+  create_issue_on_test_failure:
+    name: Create issue on test failure
+    needs:
+      - build
+      - test
+    if: ${{ always() && failure() && github.run_attempt == 3 }}
+    uses: ./.github/workflows/nightly_create_issue.yml
+    with:
+      needs_context: ${{ toJson(needs) }}
+    permissions:
+      issues: write
+      actions: read
+      contents: read
+    secrets: inherit
+
+  create_issue_on_build_failure:
+    name: Create issue on build failure
+    needs:
+      - build
+    if: ${{ always() && failure() && github.run_attempt == 5 }}
+    uses: ./.github/workflows/nightly_create_issue.yml
+    with:
+      needs_context: ${{ toJson(needs) }}
+    permissions:
+      issues: write
+      actions: read
+      contents: read
+    secrets: inherit
