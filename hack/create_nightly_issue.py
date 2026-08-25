@@ -24,6 +24,7 @@ from pathlib import Path
 import requests
 
 REPO_ROOT = Path(__file__).parent.parent
+NIGHTLY_FAILURE_TRACKING_ISSUE = 4952
 
 
 def garden_version(date_str):
@@ -74,6 +75,42 @@ def get_last_job_log_lines(session, owner, repo, job_id):
         return f"Error retrieving logs: {e}"
 
 
+def add_sub_issue(session, owner, repo, parent_number, child_node_id):
+    parent = gh(session, f"/repos/{owner}/{repo}/issues/{parent_number}")
+    parent_node_id = parent["node_id"]
+    resp = session.post(
+        "https://api.github.com/graphql",
+        json={
+            "query": """
+                mutation($parentId: ID!, $childId: ID!) {
+                    addSubIssue(input: {issueId: $parentId, subIssueId: $childId}) {
+                        issue { url }
+                    }
+                }
+            """,
+            "variables": {"parentId": parent_node_id, "childId": child_node_id},
+        },
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    if "errors" in data:
+        print(f"Warning: failed to link sub-issue: {data['errors']}", file=sys.stderr)
+
+
+def get_or_create_milestone(session, owner, repo, title):
+    milestones = gh(session, f"/repos/{owner}/{repo}/milestones",
+                    params={"state": "open", "per_page": 100})
+    for m in milestones:
+        if m["title"] == title:
+            return m["number"]
+    resp = session.post(
+        f"https://api.github.com/repos/{owner}/{repo}/milestones",
+        json={"title": title},
+    )
+    resp.raise_for_status()
+    return resp.json()["number"]
+
+
 def create_nightly_failure_issue(
     session, owner, repo, run_id, ref, sha, workflow, needs, dry_run=False
 ):
@@ -81,7 +118,14 @@ def create_nightly_failure_issue(
         (name, data) for name, data in needs.items() if data.get("result") == "failure"
     ]
 
-    date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    run_data = gh(session, f"/repos/{owner}/{repo}/actions/runs/{run_id}")
+    run_date = datetime.fromisoformat(run_data["created_at"].replace("Z", "+00:00"))
+    date = run_date.strftime("%Y-%m-%d")
+    today = run_date.strftime("%Y%m%d")
+    yesterday = (run_date - timedelta(days=1)).strftime("%Y%m%d")
+    new_version = garden_version(today)
+    old_version = garden_version(yesterday)
+
     title = f"Nightly workflow failed on {date} (run #{run_id})"
     run_url = f"https://github.com/{owner}/{repo}/actions/runs/{run_id}"
 
@@ -90,6 +134,7 @@ def create_nightly_failure_issue(
     body += "| | |\n|---|---|\n"
     body += f"| **Workflow** | {workflow} |\n"
     body += f"| **Run** | {run_url} |\n"
+    body += f"| **Version** | {new_version} |\n"
     body += f"| **Ref** | {ref} |\n"
     body += f"| **SHA** | {sha} |\n\n"
 
@@ -100,14 +145,8 @@ def create_nightly_failure_issue(
     else:
         body += "- No individual job reported a failure result, but the overall workflow failed.\n"
 
-    jobs_data = (
-        gh(session, f"/repos/{owner}/{repo}/actions/runs/{run_id}/jobs")
-        if not dry_run
-        else {"jobs": []}
-    )
-    failed_jobs = [
-        j for j in jobs_data.get("jobs", []) if j.get("conclusion") == "failure"
-    ]
+    jobs_data = gh(session, f"/repos/{owner}/{repo}/actions/runs/{run_id}/jobs")
+    failed_jobs = [j for j in jobs_data.get("jobs", []) if j.get("conclusion") == "failure"]
 
     if failed_jobs:
         body += "\n### Failed job logs (last 10 lines)\n\n"
@@ -133,7 +172,7 @@ def create_nightly_failure_issue(
             print(f"NOTICE: Issue already exists for this run: {duplicate['html_url']}")
             return
 
-    one_day_ago = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+    one_day_ago = (run_date - timedelta(days=1)).strftime("%Y-%m-%d")
     merged_prs_url = (
         f"https://github.com/{owner}/{repo}/pulls"
         f"?q=is%3Apr+is%3Amerged+merged%3A%3E{one_day_ago}"
@@ -161,12 +200,16 @@ def create_nightly_failure_issue(
         print(body)
         return
 
+    milestone_title = run_date.strftime("%Y-%m")
+    milestone_number = get_or_create_milestone(session, owner, repo, milestone_title)
+
     resp = session.post(
         f"https://api.github.com/repos/{owner}/{repo}/issues",
-        json={"title": title, "body": body},
+        json={"title": title, "body": body, "milestone": milestone_number},
     )
     resp.raise_for_status()
     issue = resp.json()
+    add_sub_issue(session, owner, repo, NIGHTLY_FAILURE_TRACKING_ISSUE, issue["node_id"])
     print(f"Created issue: {issue['html_url']}")
 
 
@@ -178,8 +221,14 @@ def main():
         "--repo", required=True, help="owner/repo, e.g. gardenlinux/gardenlinux"
     )
     parser.add_argument("--run-id", required=True, type=int)
-    parser.add_argument("--ref", default=None, help="git ref, e.g. refs/heads/main (default: current branch from git)")
-    parser.add_argument("--sha", default=None, help="commit SHA (default: current HEAD from git)")
+    parser.add_argument(
+        "--ref",
+        default=None,
+        help="git ref, e.g. refs/heads/main (default: current branch from git)",
+    )
+    parser.add_argument(
+        "--sha", default=None, help="commit SHA (default: current HEAD from git)"
+    )
     parser.add_argument(
         "--workflow", default="nightly", help="workflow name (default: nightly)"
     )
@@ -194,27 +243,35 @@ def main():
     if args.ref is None:
         result = subprocess.run(
             ["git", "-C", REPO_ROOT, "symbolic-ref", "HEAD"],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
         if result.returncode == 0:
             args.ref = result.stdout.strip()
         else:
-            print("Error: --ref not supplied and could not determine ref from git.", file=sys.stderr)
+            print(
+                "Error: --ref not supplied and could not determine ref from git.",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
     if args.sha is None:
         result = subprocess.run(
             ["git", "-C", REPO_ROOT, "rev-parse", "HEAD"],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
         if result.returncode == 0:
             args.sha = result.stdout.strip()
         else:
-            print("Error: --sha not supplied and could not determine SHA from git.", file=sys.stderr)
+            print(
+                "Error: --sha not supplied and could not determine SHA from git.",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
     token = os.environ.get("GITHUB_TOKEN")
-    if not token and not args.dry_run:
+    if not token:
         print("Error: GITHUB_TOKEN environment variable is not set.", file=sys.stderr)
         sys.exit(1)
 
