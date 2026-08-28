@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000462-GPOS-00206
 
-Verify the operating system generates audit records when
-successful/unsuccessful attempts to modify privileges occur.
+Verify the operating system generates audit records when successful/unsuccessful attempts to modify privileges occur.
 """
 
 import pytest

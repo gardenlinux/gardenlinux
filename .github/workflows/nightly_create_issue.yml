@@ -1,0 +1,31 @@
+name: Create nightly failure issue
+on:
+  workflow_call:
+    inputs:
+      needs_context:
+        description: 'Serialized needs context from the calling workflow (toJson(needs))'
+        type: string
+        required: true
+jobs:
+  create_issue:
+    name: Create failure issue
+    runs-on: ubuntu-24.04
+    permissions:
+      issues: write
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Python dependencies
+        run: pip install requests==2.32.5
+      - name: Create failure issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 hack/create_nightly_issue.py \
+            --repo "${{ github.repository }}" \
+            --run-id "${{ github.run_id }}" \
+            --ref "${{ github.ref }}" \
+            --sha "${{ github.sha }}" \
+            --workflow "${{ github.workflow }}" \
+            --needs '${{ inputs.needs_context }}'

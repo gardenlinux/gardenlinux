@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000423-GPOS-00187
 
-Verify the operating system protects the confidentiality and integrity of
-transmitted information.
+Verify the operating system protects the confidentiality and integrity of transmitted information.
 """
 
 import pytest

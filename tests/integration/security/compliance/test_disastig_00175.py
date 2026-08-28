@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000395-GPOS-00175
 
-Verify the operating system verifies remote disconnection at the termination of
-nonlocal maintenance and diagnostic sessions, when used for nonlocal
-maintenance sessions.
+Verify the operating system verifies remote disconnection at the termination of nonlocal maintenance and diagnostic sessions, when used for nonlocal maintenance sessions.
 """
 
 import pytest

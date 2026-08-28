@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000370-GPOS-00155
 
-Verify the operating system employs a deny-all, permit-by-exception policy to
-allow the execution of authorized software programs.
+Verify the operating system employs a deny-all, permit-by-exception policy to allow the execution of authorized software programs.
 """
 
 import pytest

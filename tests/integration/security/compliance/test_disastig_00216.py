@@ -1,5 +1,7 @@
 """
 Ref: SRG-OS-000471-GPOS-00216
+
+Verify the audit system is configured to audit the loading and unloading of dynamic kernel modules.
 """
 
 import pytest

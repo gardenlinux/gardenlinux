@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000426-GPOS-00190
 
-Verify the operating system maintains the confidentiality and integrity of
-information during reception.
+Verify the operating system maintains the confidentiality and integrity of information during reception.
 """
 
 import pytest

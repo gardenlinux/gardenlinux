@@ -1,3 +1,11 @@
+---
+title: "Feature: ssh"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/ssh/README.md
+github_target_path: docs/reference/features/ssh.md
+---
+
 ## Feature: ssh
 ### Description
 <website-feature>
@@ -7,8 +15,8 @@ This ssh layer adds the OpenSSH server with sshguard.
 ### Features
 This ssh layer adds the OpenSSH server with sshguard.
 
-Sshguard uses `nftables` which is installed and managed by the [`firewall`](../firewall/) feature.
-If the `firewall` feature is excluded, but `iptables` is available, sshguard will use `iptables`.
+Sshguard uses `nftables` which is installed and managed by the [`firewall`](/reference/features/firewall) feature.
+If the [`firewall`](/reference/features/firewall) feature is excluded, but `iptables` is available, sshguard will use `iptables`.
 If neither are available, sshguard is disabled.
 
 #### Configs
@@ -24,5 +32,5 @@ This feature supports unit tests that will validate the correct configuration of
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|`firewall`|
+|included_features|[`firewall`](/reference/features/firewall)|
 |excluded_features|None|

@@ -16,8 +16,8 @@ def test_python_environment_is_installed(shell: ShellRunner):
         "python3-pip"
     ), "python3-pip package is not installed"
     assert dpkg.package_is_installed(
-        "python3.13-venv"
-    ), "python3.13-venv package is not installed"
+        "python3.14-venv"
+    ), "python3.14-venv package is not installed"
 
 
 dependencies = {
@@ -28,7 +28,6 @@ dependencies = {
         "/required_libs_test/usr/lib/aarch64-linux-gnu",
         "/required_libs_test/usr/lib/aarch64-linux-gnu/libpthread.so.0",
         "/required_libs_test/usr/lib/aarch64-linux-gnu/libc.so.6",
-        "/required_libs_test/usr/lib/aarch64-linux-gnu/libm.so.6",
         "/required_libs_test/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
     },
     "amd64": {
@@ -38,7 +37,6 @@ dependencies = {
         "/required_libs_test/usr/lib/x86_64-linux-gnu",
         "/required_libs_test/usr/lib/x86_64-linux-gnu/libpthread.so.0",
         "/required_libs_test/usr/lib/x86_64-linux-gnu/libc.so.6",
-        "/required_libs_test/usr/lib/x86_64-linux-gnu/libm.so.6",
         "/required_libs_test/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
     },
 }

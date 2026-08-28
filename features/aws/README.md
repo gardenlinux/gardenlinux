@@ -1,3 +1,11 @@
+---
+title: "Feature: aws"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/aws/README.md
+github_target_path: docs/reference/features/aws.md
+---
+
 ## Feature: aws
 ### Description
 <website-feature>
@@ -18,5 +26,5 @@ This platform feature supports unit testing and is based on the `aws` fixture to
 |---|---|
 |type|platform|
 |artifact|`.raw`|
-|included_features|cloud|
+|included_features|[`cloud`](/reference/features/cloud)|
 |excluded_features|None|

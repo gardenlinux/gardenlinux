@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000461-GPOS-00205
 
-Verify the operating system generates audit records when
-successful/unsuccessful attempts to access categories of information (e.g.,
-classification levels) occur.
+Verify the operating system generates audit records when successful/unsuccessful attempts to access categories of information (e.g., classification levels) occur.
 """
 
 import pytest

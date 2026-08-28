@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000356-GPOS-00144
 
-Verify the operating system synchronizes internal information system clocks to
-the authoritative time source when the time difference is greater than one
-second.
+Verify the operating system synchronizes internal information system clocks to the authoritative time source when the time difference is greater than one second.
 """
 
 import pytest

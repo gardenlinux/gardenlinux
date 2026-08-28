@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000142-GPOS-00071
 
-Verify the operating system is configured to prevent unauthorized connection
-of devices. The disaSTIG sysctl configuration file must be present to ensure
-kernel parameter hardening is applied.
+Verify the operating system is configured to prevent unauthorized connection of devices. The disaSTIG sysctl configuration file must be present to ensure kernel parameter hardening is applied.
 """
 
 import pytest

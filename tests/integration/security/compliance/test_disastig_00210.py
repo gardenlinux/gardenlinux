@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000466-GPOS-00210
 
-Verify the operating system generates audit records when
-successful/unsuccessful attempts to delete privileges occur.
+Verify the operating system generates audit records when successful/unsuccessful attempts to delete privileges occur.
 """
 
 import fileinput

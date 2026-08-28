@@ -1,0 +1,27 @@
+{
+  "ignition": {
+    "version": "3.2.0"
+  },
+  "storage": {
+    "files": [
+      {
+        "overwrite": true,
+        "path": "/opt/install/partitions",
+        "contents": {
+          "compression": "",
+          "source": "data:,label%3A%20gpt%0Atype%3DC12A7328-F81F-11D2-BA4B-00A0C93EC93B%2C%20name%3D%22EFI%22%2C%20size%3D510MiB%0Atype%3D4f68bce3-e8cd-4db1-96e7-fbcaf984b709%2C%20name%3D%22ROOT%22%0A"
+        },
+        "mode": 493
+      },
+      {
+        "overwrite": true,
+        "path": "/opt/install/target",
+        "contents": {
+          "compression": "",
+          "source": "data:,disk%3D%2Fdev%2Fvda%0A"
+        },
+        "mode": 493
+      }
+    ]
+  }
+}

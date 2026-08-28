@@ -1,2 +1,1 @@
-requirements_keys+=(uefi)
-uefi=true
+requirements["uefi"]=true

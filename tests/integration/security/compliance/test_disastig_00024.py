@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000051-GPOS-00024
 
-Verify the operating system provides the capability to centrally review and
-analyze audit records from multiple components within the system.
+Verify the operating system provides the capability to centrally review and analyze audit records from multiple components within the system.
 """
 
 import re

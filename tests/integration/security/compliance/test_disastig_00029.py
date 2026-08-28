@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000059-GPOS-00029
 
-Verify the operating system protects audit information from unauthorized
-deletion.
+Verify the operating system protects audit information from unauthorized deletion.
 """
 
 import pytest
