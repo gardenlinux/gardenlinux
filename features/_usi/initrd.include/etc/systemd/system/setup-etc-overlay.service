@@ -2,6 +2,7 @@
 After=sysroot-var.mount
 Requires=sysroot-var.mount
 Before=sysroot-etc.mount
+DefaultDependencies=no
 
 [Service]
 Type=oneshot
