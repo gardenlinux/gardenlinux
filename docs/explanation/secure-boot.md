@@ -21,6 +21,35 @@ github_target_path: docs/explanation/secure-boot.md
 
 # Secure Boot and Trusted Boot
 
+## Trust domains
+
+Each Garden Linux security feature extends the boundary of what is
+cryptographically verified at boot. The diagram below shows how
+[`_secureboot`](/reference/features/_secureboot),
+[`_trustedboot`](/reference/features/_trustedboot), and
+[`_tpm2`](/reference/features/_tpm2) nest as progressively wider trust
+domains — see [Secure Boot](#secure-boot) and [Trusted Boot](#trusted-boot)
+for details on each feature.
+
+```mermaid
+flowchart TD
+    subgraph tpm2 ["_trustedboot + _tpm2"]
+        firmware["Firmware"]
+        subgraph tb ["_trustedboot"]
+            rootfs["Root filesystem (EROFS)"]
+            subgraph sb ["_secureboot"]
+                bootloader["Bootloader (systemd-boot)"]
+                subgraph uki ["UKI"]
+                    cmdline["cmdline"]
+                    initramfs["initramfs"]
+                    kernel["kernel"]
+                end
+            end
+        end
+        persistent["Persistent state (/var)"]
+    end
+```
+
 ## Secure Boot
 
 [UEFI Secure Boot](https://en.wikipedia.org/wiki/UEFI#Secure_Boot) validates
