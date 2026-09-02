@@ -4,7 +4,7 @@ concurrency:
   cancel-in-progress: true
 on:
   schedule:
-    - cron: '0 4 * * *'
+    - cron: '0 5 * * *'
       timezone: "Europe/Berlin"
 jobs:
   build:
