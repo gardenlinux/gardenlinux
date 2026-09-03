@@ -15,6 +15,7 @@ Usage:
 
 import argparse
 import json
+import logging
 import os
 import subprocess
 import sys
@@ -74,9 +75,84 @@ def get_last_job_log_lines(session, owner, repo, job_id):
         return f"Error retrieving logs: {e}"
 
 
+def find_quarterly_epic(session, owner, repo, logger):
+    """
+    Find the quarterly epic issue for the current quarter.
+    Returns (issue_number, title) or (None, None).
+    """
+    try:
+        dt = datetime.now(timezone.utc)
+        year = dt.strftime("%y")  # two-digit year
+        quarter = (dt.month - 1) // 3 + 1
+        quarter_str = f"{year}Q{quarter}"
+        search_title = f"Deliver nightly release candidates ({quarter_str})"
+        logger.debug(f"Searching for quarterly epic: '{search_title}'")
+
+        repo_name = f"{owner}/{repo}"
+        resp = session.get(
+            "https://api.github.com/search/issues",
+            params={
+                "q": f'"{search_title}" in:title repo:{repo_name} is:open is:issue',
+                "per_page": 10,
+            },
+        )
+        resp.raise_for_status()
+        items = resp.json().get("items", [])
+        matches = [i for i in items if i["title"].strip() == search_title]
+        if len(matches) == 1:
+            logger.debug(f"Found epic: #{matches[0]['number']}")
+            return matches[0]["number"], matches[0]["title"]
+        elif len(matches) > 1:
+            logger.warning(f"Multiple epics matched '{search_title}', omitting link.")
+        else:
+            logger.info(f"No open epic found for '{search_title}'.")
+    except Exception as exc:
+        logger.warning(f"Quarterly epic lookup failed: {exc}")
+    return None, None
+
+
+def find_existing_issue(session, owner, repo, run_id, logger):
+    """
+    Search for an existing issue that contains the dedup marker for this run.
+    Returns a dict with 'number' and 'html_url', or None.
+    """
+    marker = f"nightly-issue: run_id={run_id}"
+    repo_name = f"{owner}/{repo}"
+    try:
+        resp = session.get(
+            "https://api.github.com/search/issues",
+            params={
+                "q": f'"{marker}" in:body repo:{repo_name} is:issue',
+                "per_page": 5,
+            },
+        )
+        resp.raise_for_status()
+        items = resp.json().get("items", [])
+        if items:
+            logger.debug(f"Found existing issue #{items[0]['number']} for run {run_id}")
+            return {"number": items[0]["number"], "html_url": items[0]["html_url"]}
+    except Exception as exc:
+        logger.warning(f"Dedup search failed: {exc}")
+    return None
+
+
+def add_sub_issue(session, owner, repo, epic_number, sub_issue_id, logger):
+    """Register sub_issue_id as a sub-issue of epic_number."""
+    try:
+        resp = session.post(
+            f"https://api.github.com/repos/{owner}/{repo}/issues/{epic_number}/sub_issues",
+            json={"sub_issue_id": sub_issue_id},
+        )
+        resp.raise_for_status()
+        logger.debug(f"Linked issue id={sub_issue_id} as sub-issue of #{epic_number}")
+    except Exception as exc:
+        logger.warning(f"Sub-issue linking failed: {exc}")
+
+
 def create_nightly_failure_issue(
-    session, owner, repo, run_id, ref, sha, workflow, needs, dry_run=False
+    session, owner, repo, run_id, ref, sha, workflow, needs, dry_run=False, update=False
 ):
+    logger = logging.getLogger(__name__)
     failed_needs = [
         (name, data) for name, data in needs.items() if data.get("result") == "failure"
     ]
@@ -156,18 +232,57 @@ def create_nightly_failure_issue(
     body += "\n```\n\n"
     body += "</details>\n\n"
 
+    epic_number, epic_title = find_quarterly_epic(session, owner, repo, logger)
+    if epic_number is not None:
+        body += "\n### Quarterly epic\n\n"
+        body += f"- #{epic_number} {epic_title}\n"
+
+    labels = ["kind/epic", "theme/release-plan"]
+
     if dry_run:
+        existing = find_existing_issue(session, owner, repo, run_id, logger)
+        if existing:
+            action = f"UPDATE #{existing['number']}" if update else f"SKIP (existing issue #{existing['number']})"
+        else:
+            action = "CREATE new issue"
+        if epic_number is not None:
+            print(f"Quarterly epic: #{epic_number} {epic_title}\n")
+        else:
+            print("Quarterly epic: none found\n")
+        print(f"=== INTENDED ACTION ===\n{action}\n")
+        if epic_number is not None:
+            print(f"=== EPIC SUB-ISSUE ===\nWould link as sub-issue of #{epic_number}\n")
+        else:
+            print("=== EPIC SUB-ISSUE ===\nNo quarterly epic found\n")
         print(f"title: {title}\n")
         print(body)
         return
 
+    existing = find_existing_issue(session, owner, repo, run_id, logger)
+
+    if existing:
+        if update:
+            resp = session.patch(
+                f"https://api.github.com/repos/{owner}/{repo}/issues/{existing['number']}",
+                json={"title": title, "body": body, "labels": labels},
+            )
+            resp.raise_for_status()
+            print(f"Updated issue: {existing['html_url']}")
+            if epic_number is not None:
+                add_sub_issue(session, owner, repo, epic_number, existing["id"], logger)
+        else:
+            print(f"NOTICE: Issue already exists for this run: {existing['html_url']}")
+        return
+
     resp = session.post(
         f"https://api.github.com/repos/{owner}/{repo}/issues",
-        json={"title": title, "body": body},
+        json={"title": title, "body": body, "labels": labels},
     )
     resp.raise_for_status()
     issue = resp.json()
     print(f"Created issue: {issue['html_url']}")
+    if epic_number is not None:
+        add_sub_issue(session, owner, repo, epic_number, issue["id"], logger)
 
 
 def main():
@@ -217,6 +332,12 @@ def main():
     if not token and not args.dry_run:
         print("Error: GITHUB_TOKEN environment variable is not set.", file=sys.stderr)
         sys.exit(1)
+
+    logging.basicConfig(
+        level=logging.DEBUG if args.dry_run else logging.WARNING,
+        format="%(levelname)s: %(message)s",
+        stream=sys.stderr,
+    )
 
     try:
         needs = json.loads(args.needs)
