@@ -146,7 +146,7 @@ def create_nightly_failure_issue(
     yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y%m%d")
     new_version = garden_version(today)
     old_version = garden_version(yesterday)
-    compare_output = apt_compare_output(new_version, old_version)
+    compare_output = apt_compare_output(old_version, new_version)
 
     body += "\n### Apt packages updated since yesterday's nightly run\n\n"
     body += "<details>\n"
