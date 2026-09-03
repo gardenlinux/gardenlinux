@@ -113,24 +113,25 @@ def find_quarterly_epic(session, owner, repo, logger):
 
 def find_existing_issue(session, owner, repo, run_id, logger):
     """
-    Search for an existing issue that contains the dedup marker for this run.
-    Returns a dict with 'number' and 'html_url', or None.
+    Search for an existing issue whose title contains the run ID.
+    Returns a dict with 'number', 'id', and 'html_url', or None.
     """
-    marker = f"nightly-issue: run_id={run_id}"
     repo_name = f"{owner}/{repo}"
+    query = f'"run #{run_id}" in:title repo:{repo_name} is:issue'
     try:
         resp = session.get(
             "https://api.github.com/search/issues",
-            params={
-                "q": f'"{marker}" in:body repo:{repo_name} is:issue',
-                "per_page": 5,
-            },
+            params={"q": query, "per_page": 5},
         )
         resp.raise_for_status()
         items = resp.json().get("items", [])
         if items:
             logger.debug(f"Found existing issue #{items[0]['number']} for run {run_id}")
-            return {"number": items[0]["number"], "html_url": items[0]["html_url"]}
+            return {
+                "number": items[0]["number"],
+                "id": items[0]["id"],
+                "html_url": items[0]["html_url"],
+            }
     except Exception as exc:
         logger.warning(f"Dedup search failed: {exc}")
     return None
@@ -196,19 +197,6 @@ def create_nightly_failure_issue(
             body += "\n```\n\n"
             body += "</details>\n\n"
 
-    if not dry_run:
-        existing_issues = gh(
-            session,
-            f"/repos/{owner}/{repo}/issues",
-            params={"state": "open", "per_page": 100},
-        )
-        duplicate = next(
-            (i for i in existing_issues if f"run #{run_id}" in i.get("title", "")), None
-        )
-        if duplicate:
-            print(f"NOTICE: Issue already exists for this run: {duplicate['html_url']}")
-            return
-
     one_day_ago = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
     merged_prs_url = (
         f"https://github.com/{owner}/{repo}/pulls"
@@ -218,11 +206,14 @@ def create_nightly_failure_issue(
     body += "\n### Pull requests merged in the last 24 hours\n\n"
     body += f"[View on GitHub]({merged_prs_url})\n"
 
-    today = datetime.now(timezone.utc).strftime("%Y%m%d")
-    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y%m%d")
-    new_version = garden_version(today)
-    old_version = garden_version(yesterday)
-    compare_output = apt_compare_output(old_version, new_version)
+    if not dry_run:
+        today = datetime.now(timezone.utc).strftime("%Y%m%d")
+        yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y%m%d")
+        new_version = garden_version(today)
+        old_version = garden_version(yesterday)
+        compare_output = apt_compare_output(old_version, new_version)
+    else:
+        compare_output = "(skipped in dry-run mode)"
 
     body += "\n### Apt packages updated since yesterday's nightly run\n\n"
     body += "<details>\n"
@@ -304,6 +295,11 @@ def main():
         action="store_true",
         help="print the issue title and body without creating it",
     )
+    parser.add_argument(
+        "--update",
+        action="store_true",
+        help="update an existing issue for this run instead of skipping",
+    )
     args = parser.parse_args()
 
     if args.ref is None:
@@ -366,6 +362,7 @@ def main():
         workflow=args.workflow,
         needs=needs,
         dry_run=args.dry_run,
+        update=args.update,
     )
 
 
