@@ -442,7 +442,7 @@ jobs:
             podman manifest create ghcr.io/${{ github.repository_owner }}/test:${stable_tag}
             podman manifest add ghcr.io/${{ github.repository_owner }}/test:${stable_tag} ghcr.io/${{ github.repository_owner }}/test:amd64-${version}
             podman manifest add ghcr.io/${{ github.repository_owner }}/test:${stable_tag} ghcr.io/${{ github.repository_owner }}/test:arm64-${version}
-            podman manifest push --rm ghcr.io/${{ github.repository_owner }}/test:${stable_tag}
+            podman manifest push ghcr.io/${{ github.repository_owner }}/test:${stable_tag}
 
             echo "Floating stable tag updated: ghcr.io/${{ github.repository_owner }}/test:${stable_tag} → ${version}"
           fi
