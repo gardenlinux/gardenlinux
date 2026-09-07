@@ -6,6 +6,15 @@ minimumLimaVersion: 2.2.0
 #   Debian: apt-get install swtpm
 #
 # Only supported with vmType: qemu.
+#
+# NOTE: On Apple Silicon (aarch64) with HVF acceleration, QEMU's tpm-tis-device
+# is not supported by Hypervisor.framework and the VM will fail to start.
+# Use accel=tcg (software emulation, slower) as a workaround until Lima/QEMU
+# add tpm-tis-i2c support for the virt machine on Apple Silicon:
+#   vmOpts:
+#     qemu:
+#       extraArgs: ["-machine", "virt,accel=tcg"]
+# On x86_64 Linux hosts with KVM, tpm: true works without any extra options.
 vmType: qemu
 tpm: true
 
