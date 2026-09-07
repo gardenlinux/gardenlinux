@@ -429,3 +429,20 @@ jobs:
           podman manifest add ghcr.io/${{ github.repository_owner }}/test:${version} ghcr.io/${{ github.repository_owner }}/test:amd64-${version}
           podman manifest add ghcr.io/${{ github.repository_owner }}/test:${version} ghcr.io/${{ github.repository_owner }}/test:arm64-${version}
           podman manifest push ghcr.io/${{ github.repository_owner }}/test:${version}
+
+          # Publish a floating stable tag per release branch (e.g. rel-2150-latest).
+          # Consumers such as the diki compliance scanner can pin to this tag to
+          # always get the latest patch of a given release series (e.g. 2150.9.0 →
+          # 2150.10.0) without following nightly/main which introduces unreviewed CVEs.
+          # The tag is only created/updated on non-nightly (release) builds.
+          if [ "$is_nightly" = false ]; then
+            branch_series="${version%%.*}"
+            stable_tag="rel-${branch_series}-latest"
+
+            podman manifest create ghcr.io/${{ github.repository_owner }}/test:${stable_tag}
+            podman manifest add ghcr.io/${{ github.repository_owner }}/test:${stable_tag} ghcr.io/${{ github.repository_owner }}/test:amd64-${version}
+            podman manifest add ghcr.io/${{ github.repository_owner }}/test:${stable_tag} ghcr.io/${{ github.repository_owner }}/test:arm64-${version}
+            podman manifest push --rm ghcr.io/${{ github.repository_owner }}/test:${stable_tag}
+
+            echo "Floating stable tag updated: ghcr.io/${{ github.repository_owner }}/test:${stable_tag} → ${version}"
+          fi
