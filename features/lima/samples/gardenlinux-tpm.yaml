@@ -1,0 +1,24 @@
+minimumLimaVersion: 2.2.0
+
+# Expose an emulated TPM 2.0 device to the guest via swtpm.
+# Requires swtpm to be installed on the host:
+#   macOS:  brew install swtpm
+#   Debian: apt-get install swtpm
+#
+# Only supported with vmType: qemu.
+vmType: qemu
+tpm: true
+
+base:
+- _images/gardenlinux-2150.yaml
+
+provision:
+- mode: system
+  script: |
+    #!/bin/bash
+    set -eux -o pipefail
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get -y install tpm2-tools
+    # Verify the TPM device is accessible
+    tpm2_getcap properties-fixed | grep -E 'TPM2_PT_MANUFACTURER|TPM2_PT_FIRMWARE_VERSION'
