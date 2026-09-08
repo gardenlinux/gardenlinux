@@ -15,6 +15,8 @@ markers:
   - "GL-TESTCOV-checkbox-script-virtualization_disabled"
   "usr/local/bin/generate-report.sh":
   - "GL-TESTCOV-checkbox-script-generate-report"
+  "var/www/html/index.html":
+  - "GL-TESTCOV-checkbox-web-report-placeholder"
   "usr/share/checkbox-provider-base/units/gardenlinux/category.pxu":
   - "GL-TESTCOV-checkbox-config-checkbox-units-category"
   "usr/share/checkbox-provider-base/units/gardenlinux/jobs.pxu":
@@ -23,3 +25,7 @@ markers:
   - "GL-TESTCOV-checkbox-config-checkbox-units-manifest"
   "usr/share/checkbox-provider-base/units/gardenlinux/test-plan.pxu":
   - "GL-TESTCOV-checkbox-config-checkbox-test-plan"
+  "usr/lib/checkbox-provider-base/bin/ipmi_check.sh":
+  - "GL-TESTCOV-checkbox-script-ipmi_check"
+  "usr/lib/checkbox-provider-base/bin/bios_info_check.sh":
+  - "GL-TESTCOV-checkbox-script-bios_info_check"
