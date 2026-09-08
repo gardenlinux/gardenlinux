@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Requirements: fzf, yq, jq
 #   Installation of fzf documented here: https://github.com/junegunn/fzf#installation
