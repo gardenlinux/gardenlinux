@@ -1,0 +1,11 @@
+[Unit]
+Description=Run /etc reset hooks after etc overlay was reset
+ConditionPathExists=/run/gardenlinux-etc-reset
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/run-etc-setup-hooks
+
+[Install]
+WantedBy=multi-user.target
