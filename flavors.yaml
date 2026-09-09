@@ -18,24 +18,6 @@ targets:
         test: false
         test-platform: false
         publish: false
-      - features:
-          - gardener
-          - _prod
-          - _fips
-        arch: amd64
-        build: true
-        test: true
-        test-platform: true
-        publish: true
-      - features:
-          - gardener
-          - _prod
-          - _fips
-        arch: arm64
-        build: false
-        test: false
-        test-platform: false
-        publish: false
   - name: aws
     category: public-cloud
     flavors:
@@ -93,9 +75,9 @@ targets:
         publish: true
       - features:
           - gardener
+          - _fips
           - _prod
           - _usi
-          - _fips
         arch: amd64
         build: true
         test: true
@@ -103,9 +85,9 @@ targets:
         publish: true
       - features:
           - gardener
+          - _fips
           - _prod
           - _usi
-          - _fips
         arch: arm64
         build: true
         test: true
@@ -162,8 +144,8 @@ targets:
         publish: true
       - features:
           - gardener
-          - _prod
           - _fips
+          - _prod
         arch: amd64
         build: true
         test: true
@@ -179,8 +161,8 @@ targets:
         publish: true
       - features:
           - gardener
-          - _prod
           - _fips
+          - _prod
         arch: arm64
         build: true
         test: true
@@ -197,10 +179,20 @@ targets:
         publish: true
       - features:
           - gardener
+          - _fips
           - _prod
           - _usi
-          - _fips
         arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _fips
+          - _prod
+          - _usi
+        arch: arm64
         build: true
         test: true
         test-platform: true
@@ -353,8 +345,8 @@ targets:
         publish: true
       - features:
           - gardener
-          - _prod
           - _fips
+          - _prod
         arch: amd64
         build: true
         test: true
@@ -370,8 +362,8 @@ targets:
         publish: true
       - features:
           - gardener
-          - _prod
           - _fips
+          - _prod
         arch: arm64
         build: true
         test: true
@@ -388,6 +380,26 @@ targets:
         publish: true
       - features:
           - gardener
+          - _prod
+          - _usi
+        arch: arm64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _fips
+          - _prod
+          - _usi
+        arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _fips
           - _prod
           - _usi
         arch: arm64
@@ -744,24 +756,6 @@ targets:
       - features:
           - gardener
           - _prod
-          - _fips
-        arch: amd64
-        build: true
-        test: true
-        test-platform: false
-        publish: true
-      - features:
-          - gardener
-          - _prod
-          - _fips
-        arch: arm64
-        build: true
-        test: true
-        test-platform: false
-        publish: true
-      - features:
-          - gardener
-          - _prod
           - _usi
         arch: amd64
         build: true
@@ -772,26 +766,6 @@ targets:
           - gardener
           - _prod
           - _usi
-        arch: arm64
-        build: true
-        test: true
-        test-platform: false
-        publish: true
-      - features:
-          - gardener
-          - _prod
-          - _usi
-          - _fips
-        arch: amd64
-        build: true
-        test: true
-        test-platform: false
-        publish: true
-      - features:
-          - gardener
-          - _prod
-          - _usi
-          - _fips
         arch: arm64
         build: true
         test: true
