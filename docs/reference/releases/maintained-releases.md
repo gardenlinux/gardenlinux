@@ -20,7 +20,7 @@ github_target_path: docs/reference/releases/maintained-releases.md
 The table below provides the current list of actively maintained Garden Linux releases. For details about the release lifecycle phases, see [Release Lifecycle](release-lifecycle.md).
 
 :::tip
-All data is sourced from [GLRD](/reference/supporting_tools/glrd)
+All data is sourced from [GLRD](/reference/supporting_tools/glrd/)
 :::
 
 ## Active releases
