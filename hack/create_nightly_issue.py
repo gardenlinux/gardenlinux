@@ -14,17 +14,158 @@ Usage:
 """
 
 import argparse
+import io
 import json
 import logging
 import os
 import subprocess
 import sys
+import zipfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from xml.etree import ElementTree
 
 import requests
 
 REPO_ROOT = Path(__file__).parent.parent
+
+# Maximum failed/errored testcase lines to include in the issue body.
+MAX_FAILED_TESTS = 100
+
+
+def get_test_report_artifact(session, owner, repo, run_id, logger):
+    """
+    Find the newest non-expired test-report artifact for the run.
+    Returns (artifact_id, artifact_name) or (None, None).
+    """
+    url = f"https://api.github.com/repos/{owner}/{repo}/actions/runs/{run_id}/artifacts?per_page=100"
+    resp = session.get(url, timeout=30)
+    resp.raise_for_status()
+    artifacts = resp.json().get("artifacts", [])
+
+    candidates = [
+        a for a in artifacts
+        if a["name"] == "test-report" and not a.get("expired", False)
+    ]
+    if not candidates:
+        logger.info("No non-expired 'test-report' artifact found for this run.")
+        return None, None
+
+    # Pick newest by created_at
+    candidates.sort(key=lambda a: a["created_at"], reverse=True)
+    chosen = candidates[0]
+    logger.debug(f"Using test-report artifact id={chosen['id']} created={chosen['created_at']}")
+    return chosen["id"], chosen["name"]
+
+
+def download_artifact_zip(session, owner, repo, artifact_id, logger):
+    """Download artifact zip; returns raw bytes or None on error."""
+    url = f"https://api.github.com/repos/{owner}/{repo}/actions/artifacts/{artifact_id}/zip"
+    resp = session.get(url, timeout=120, allow_redirects=True)
+    if resp.status_code == 410:
+        logger.warning("Artifact download returned 410 Gone (expired after listing).")
+        return None
+    resp.raise_for_status()
+    return resp.content
+
+
+def parse_junit_xml(xml_bytes, source_name):
+    """
+    Parse a junit XML file. Returns a dict:
+      {tests, failures, errors, skipped, failed_cases: [{name, classname, message}]}
+    """
+    result = {"tests": 0, "failures": 0, "errors": 0, "skipped": 0, "failed_cases": []}
+    try:
+        root = ElementTree.fromstring(xml_bytes)
+    except ElementTree.ParseError:
+        return result
+
+    # Handle both <testsuites><testsuite> and bare <testsuite>
+    if root.tag == "testsuites":
+        suites = list(root.iter("testsuite"))
+    elif root.tag == "testsuite":
+        suites = list(root.iter("testsuite"))
+    else:
+        suites = list(root.iter("testsuite"))
+
+    # Aggregate at testcase level to avoid double-counting nested suites
+    seen_cases = set()
+    for suite in suites:
+        for tc in suite.findall("testcase"):
+            # Build unique key to avoid double-counting
+            tc_name = tc.get("name", "")
+            tc_class = tc.get("classname", "")
+            tc_time = tc.get("time", "")
+            key = (tc_class, tc_name, tc_time)
+            if key in seen_cases:
+                continue
+            seen_cases.add(key)
+            result["tests"] += 1
+
+            failure = tc.find("failure")
+            error = tc.find("error")
+            skipped = tc.find("skipped")
+
+            if skipped is not None:
+                result["skipped"] += 1
+            elif failure is not None:
+                result["failures"] += 1
+                msg = (failure.get("message") or failure.text or "").strip()
+                msg = msg[:200] if len(msg) > 200 else msg
+                result["failed_cases"].append({
+                    "name": tc_name,
+                    "classname": tc_class,
+                    "message": msg,
+                    "source": source_name,
+                    "kind": "failure",
+                })
+            elif error is not None:
+                result["errors"] += 1
+                msg = (error.get("message") or error.text or "").strip()
+                msg = msg[:200] if len(msg) > 200 else msg
+                result["failed_cases"].append({
+                    "name": tc_name,
+                    "classname": tc_class,
+                    "message": msg,
+                    "source": source_name,
+                    "kind": "error",
+                })
+
+    return result
+
+
+def parse_test_report_zip(zip_bytes, logger):
+    """
+    Parse all *.test.xml files in the artifact zip.
+    Returns aggregated totals and list of all failed/errored cases.
+    """
+    totals = {"tests": 0, "failures": 0, "errors": 0, "skipped": 0}
+    all_failed = []
+
+    try:
+        zf = zipfile.ZipFile(io.BytesIO(zip_bytes))
+    except zipfile.BadZipFile:
+        logger.warning("Downloaded artifact is not a valid zip file.")
+        return totals, all_failed
+
+    xml_members = [m for m in zf.namelist() if m.endswith(".test.xml")]
+    logger.debug(f"Found {len(xml_members)} *.test.xml files in artifact")
+
+    for member in xml_members:
+        source_name = member.split("/")[-1].replace(".test.xml", "")
+        try:
+            xml_bytes = zf.read(member)
+        except Exception as exc:
+            logger.warning(f"Could not read {member}: {exc}")
+            continue
+        parsed = parse_junit_xml(xml_bytes, source_name)
+        totals["tests"] += parsed["tests"]
+        totals["failures"] += parsed["failures"]
+        totals["errors"] += parsed["errors"]
+        totals["skipped"] += parsed["skipped"]
+        all_failed.extend(parsed["failed_cases"])
+
+    return totals, all_failed
 
 
 def garden_version(date_str):
@@ -177,11 +318,7 @@ def create_nightly_failure_issue(
     else:
         body += "- No individual job reported a failure result, but the overall workflow failed.\n"
 
-    jobs_data = (
-        gh(session, f"/repos/{owner}/{repo}/actions/runs/{run_id}/jobs")
-        if not dry_run
-        else {"jobs": []}
-    )
+    jobs_data = gh(session, f"/repos/{owner}/{repo}/actions/runs/{run_id}/jobs")
     failed_jobs = [
         j for j in jobs_data.get("jobs", []) if j.get("conclusion") == "failure"
     ]
@@ -197,6 +334,59 @@ def create_nightly_failure_issue(
             body += "\n```\n\n"
             body += "</details>\n\n"
 
+    # Test results from test-report artifact
+    test_totals = None
+    all_failed = []
+    logger.info("Looking for test-report artifact ...")
+    artifact_id, _ = get_test_report_artifact(session, owner, repo, run_id, logger)
+    if artifact_id:
+        logger.info(f"Downloading artifact {artifact_id} ...")
+        try:
+            zip_bytes = download_artifact_zip(session, owner, repo, artifact_id, logger)
+            if zip_bytes:
+                logger.info("Parsing junit XML from artifact ...")
+                test_totals, all_failed = parse_test_report_zip(zip_bytes, logger)
+                logger.info(
+                    f"Test results: {test_totals['tests']} tests, "
+                    f"{test_totals['failures']} failures, "
+                    f"{test_totals['errors']} errors, "
+                    f"{test_totals['skipped']} skipped"
+                )
+        except Exception as exc:
+            logger.warning(f"Test report processing failed: {exc}")
+
+    body += "\n## Test results\n\n"
+    if test_totals is None:
+        body += "_Test report artifact was not found or has expired._\n\n"
+    else:
+        passed = (
+            test_totals["tests"]
+            - test_totals["failures"]
+            - test_totals["errors"]
+            - test_totals["skipped"]
+        )
+        body += "| Total | Passed | Failed | Errors | Skipped |\n"
+        body += "|---|---|---|---|---|\n"
+        body += (
+            f"| {test_totals['tests']} | {passed} | {test_totals['failures']} "
+            f"| {test_totals['errors']} | {test_totals['skipped']} |\n\n"
+        )
+
+        if all_failed:
+            truncated = all_failed[:MAX_FAILED_TESTS]
+            body += "<details>\n"
+            body += f"<summary>Failed/errored test cases ({len(all_failed)} total)</summary>\n\n"
+            for tc in truncated:
+                source = tc.get("source", "")
+                classname = tc.get("classname", "")
+                name = tc.get("name", "")
+                msg = tc.get("message", "").replace("\n", " ").replace("|", "\\|")
+                test_id = f"{classname}::{name}" if classname else name
+                body += f"- **`{source}`** `{test_id}`: {msg}\n"
+            if len(all_failed) > MAX_FAILED_TESTS:
+                body += f"\n_... and {len(all_failed) - MAX_FAILED_TESTS} more (truncated)._\n"
+            body += "\n</details>\n\n"
+
     one_day_ago = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
     merged_prs_url = (
         f"https://github.com/{owner}/{repo}/pulls"
@@ -206,14 +396,11 @@ def create_nightly_failure_issue(
     body += "\n### Pull requests merged in the last 24 hours\n\n"
     body += f"[View on GitHub]({merged_prs_url})\n"
 
-    if not dry_run:
-        today = datetime.now(timezone.utc).strftime("%Y%m%d")
-        yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y%m%d")
-        new_version = garden_version(today)
-        old_version = garden_version(yesterday)
-        compare_output = apt_compare_output(old_version, new_version)
-    else:
-        compare_output = "(skipped in dry-run mode)"
+    today = datetime.now(timezone.utc).strftime("%Y%m%d")
+    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y%m%d")
+    new_version = garden_version(today)
+    old_version = garden_version(yesterday)
+    compare_output = apt_compare_output(old_version, new_version)
 
     body += "\n### Apt packages updated since yesterday's nightly run\n\n"
     body += "<details>\n"
@@ -325,7 +512,7 @@ def main():
             sys.exit(1)
 
     token = os.environ.get("GITHUB_TOKEN")
-    if not token and not args.dry_run:
+    if not token:
         print("Error: GITHUB_TOKEN environment variable is not set.", file=sys.stderr)
         sys.exit(1)
 
