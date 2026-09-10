@@ -14,17 +14,161 @@ Usage:
 """
 
 import argparse
+import io
 import json
 import logging
 import os
 import subprocess
 import sys
+import zipfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from xml.etree import ElementTree
 
 import requests
 
 REPO_ROOT = Path(__file__).parent.parent
+
+# Maximum failed/errored testcase lines to include in the issue body.
+MAX_FAILED_TESTS = 100
+
+# GitHub issue body character limit.
+GITHUB_BODY_LIMIT = 65536
+
+
+def get_test_report_artifact(session, owner, repo, run_id, logger):
+    """
+    Find the newest non-expired test-report artifact for the run.
+    Returns (artifact_id, artifact_name) or (None, None).
+    """
+    url = f"https://api.github.com/repos/{owner}/{repo}/actions/runs/{run_id}/artifacts?per_page=100"
+    resp = session.get(url, timeout=30)
+    resp.raise_for_status()
+    artifacts = resp.json().get("artifacts", [])
+
+    candidates = [
+        a for a in artifacts
+        if a["name"] == "test-report" and not a.get("expired", False)
+    ]
+    if not candidates:
+        logger.info("No non-expired 'test-report' artifact found for this run.")
+        return None, None
+
+    # Pick newest by created_at
+    candidates.sort(key=lambda a: a["created_at"], reverse=True)
+    chosen = candidates[0]
+    logger.debug(f"Using test-report artifact id={chosen['id']} created={chosen['created_at']}")
+    return chosen["id"], chosen["name"]
+
+
+def download_artifact_zip(session, owner, repo, artifact_id, logger):
+    """Download artifact zip; returns raw bytes or None on error."""
+    url = f"https://api.github.com/repos/{owner}/{repo}/actions/artifacts/{artifact_id}/zip"
+    resp = session.get(url, timeout=120, allow_redirects=True)
+    if resp.status_code == 410:
+        logger.warning("Artifact download returned 410 Gone (expired after listing).")
+        return None
+    resp.raise_for_status()
+    return resp.content
+
+
+def parse_junit_xml(xml_bytes, source_name):
+    """
+    Parse a junit XML file. Returns a dict:
+      {tests, failures, errors, skipped, failed_cases: [{name, classname, message}]}
+    """
+    result = {"tests": 0, "failures": 0, "errors": 0, "skipped": 0, "failed_cases": []}
+    try:
+        root = ElementTree.fromstring(xml_bytes)
+    except ElementTree.ParseError:
+        return result
+
+    # Handle both <testsuites><testsuite> and bare <testsuite>
+    if root.tag == "testsuites":
+        suites = list(root.iter("testsuite"))
+    elif root.tag == "testsuite":
+        suites = list(root.iter("testsuite"))
+    else:
+        suites = list(root.iter("testsuite"))
+
+    # Aggregate at testcase level to avoid double-counting nested suites
+    seen_cases = set()
+    for suite in suites:
+        for tc in suite.findall("testcase"):
+            # Build unique key to avoid double-counting
+            tc_name = tc.get("name", "")
+            tc_class = tc.get("classname", "")
+            tc_time = tc.get("time", "")
+            key = (tc_class, tc_name, tc_time)
+            if key in seen_cases:
+                continue
+            seen_cases.add(key)
+            result["tests"] += 1
+
+            failure = tc.find("failure")
+            error = tc.find("error")
+            skipped = tc.find("skipped")
+
+            if skipped is not None:
+                result["skipped"] += 1
+            elif failure is not None:
+                result["failures"] += 1
+                msg = (failure.get("message") or failure.text or "").strip()
+                msg = msg[:200] if len(msg) > 200 else msg
+                result["failed_cases"].append({
+                    "name": tc_name,
+                    "classname": tc_class,
+                    "message": msg,
+                    "source": source_name,
+                    "kind": "failure",
+                })
+            elif error is not None:
+                result["errors"] += 1
+                msg = (error.get("message") or error.text or "").strip()
+                msg = msg[:200] if len(msg) > 200 else msg
+                result["failed_cases"].append({
+                    "name": tc_name,
+                    "classname": tc_class,
+                    "message": msg,
+                    "source": source_name,
+                    "kind": "error",
+                })
+
+    return result
+
+
+def parse_test_report_zip(zip_bytes, logger):
+    """
+    Parse all *.test.xml files in the artifact zip.
+    Returns aggregated totals and list of all failed/errored cases.
+    """
+    totals = {"tests": 0, "failures": 0, "errors": 0, "skipped": 0}
+    all_failed = []
+
+    try:
+        zf = zipfile.ZipFile(io.BytesIO(zip_bytes))
+    except zipfile.BadZipFile:
+        logger.warning("Downloaded artifact is not a valid zip file.")
+        return totals, all_failed
+
+    xml_members = [m for m in zf.namelist() if m.endswith(".test.xml")]
+    logger.debug(f"Found {len(xml_members)} *.test.xml files in artifact")
+
+    for member in xml_members:
+        source_name = member.split("/")[-1].replace(".test.xml", "")
+        try:
+            xml_bytes = zf.read(member)
+        except Exception as exc:
+            logger.warning(f"Could not read {member}: {exc}")
+            continue
+        parsed = parse_junit_xml(xml_bytes, source_name)
+        totals["tests"] += parsed["tests"]
+        totals["failures"] += parsed["failures"]
+        totals["errors"] += parsed["errors"]
+        totals["skipped"] += parsed["skipped"]
+        all_failed.extend(parsed["failed_cases"])
+
+    return totals, all_failed
 
 
 def garden_version(date_str):
@@ -162,40 +306,48 @@ def create_nightly_failure_issue(
     title = f"Nightly workflow failed on {date} (run #{run_id})"
     run_url = f"https://github.com/{owner}/{repo}/actions/runs/{run_id}"
 
-    body = "## Nightly workflow failed\n\n"
-    body += f"A summary of the failure is provided below. See the [workflow run]({run_url}) for full details.\n\n"
-    body += "| | |\n|---|---|\n"
-    body += f"| **Workflow** | {workflow} |\n"
-    body += f"| **Run** | {run_url} |\n"
-    body += f"| **Ref** | {ref} |\n"
-    body += f"| **SHA** | {sha} |\n\n"
+    # --- Phase A: collect all data (runs once) ---
 
-    body += "### Failed jobs\n\n"
-    if failed_needs:
-        for name, data in failed_needs:
-            body += f"- **{name}**: {data['result']}\n"
-    else:
-        body += "- No individual job reported a failure result, but the overall workflow failed.\n"
+    all_jobs = []
+    page = 1
+    while True:
+        jobs_data = gh(
+            session,
+            f"/repos/{owner}/{repo}/actions/runs/{run_id}/jobs?per_page=100&page={page}",
+        )
+        batch = jobs_data.get("jobs", [])
+        all_jobs.extend(batch)
+        if len(batch) < 100:
+            break
+        page += 1
+    logger.debug(f"Fetched {len(all_jobs)} jobs for run {run_id}")
+    failed_jobs = [j for j in all_jobs if j.get("conclusion") == "failure"]
 
-    jobs_data = (
-        gh(session, f"/repos/{owner}/{repo}/actions/runs/{run_id}/jobs")
-        if not dry_run
-        else {"jobs": []}
-    )
-    failed_jobs = [
-        j for j in jobs_data.get("jobs", []) if j.get("conclusion") == "failure"
-    ]
+    # Fetch job logs once and cache them
+    log_lines_map = {}
+    for job in failed_jobs:
+        log_lines_map[job["id"]] = get_last_job_log_lines(session, owner, repo, job["id"])
 
-    if failed_jobs:
-        body += "\n### Failed job logs (last 10 lines)\n\n"
-        for job in failed_jobs:
-            log_lines = get_last_job_log_lines(session, owner, repo, job["id"])
-            body += "<details>\n"
-            body += f"<summary><b>{job['name']}</b></summary>\n\n"
-            body += "```\n"
-            body += log_lines
-            body += "\n```\n\n"
-            body += "</details>\n\n"
+    # Test results from test-report artifact
+    test_totals = None
+    all_failed = []
+    logger.info("Looking for test-report artifact ...")
+    artifact_id, _ = get_test_report_artifact(session, owner, repo, run_id, logger)
+    if artifact_id:
+        logger.info(f"Downloading artifact {artifact_id} ...")
+        try:
+            zip_bytes = download_artifact_zip(session, owner, repo, artifact_id, logger)
+            if zip_bytes:
+                logger.info("Parsing junit XML from artifact ...")
+                test_totals, all_failed = parse_test_report_zip(zip_bytes, logger)
+                logger.info(
+                    f"Test results: {test_totals['tests']} tests, "
+                    f"{test_totals['failures']} failures, "
+                    f"{test_totals['errors']} errors, "
+                    f"{test_totals['skipped']} skipped"
+                )
+        except Exception as exc:
+            logger.warning(f"Test report processing failed: {exc}")
 
     one_day_ago = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
     merged_prs_url = (
@@ -203,30 +355,118 @@ def create_nightly_failure_issue(
         f"?q=is%3Apr+is%3Amerged+merged%3A%3E{one_day_ago}"
     )
 
-    body += "\n### Pull requests merged in the last 24 hours\n\n"
-    body += f"[View on GitHub]({merged_prs_url})\n"
-
-    if not dry_run:
-        today = datetime.now(timezone.utc).strftime("%Y%m%d")
-        yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y%m%d")
-        new_version = garden_version(today)
-        old_version = garden_version(yesterday)
-        compare_output = apt_compare_output(old_version, new_version)
-    else:
-        compare_output = "(skipped in dry-run mode)"
-
-    body += "\n### Apt packages updated since yesterday's nightly run\n\n"
-    body += "<details>\n"
-    body += "<summary>Click to expand</summary>\n\n"
-    body += "```\n"
-    body += compare_output or "(no output)"
-    body += "\n```\n\n"
-    body += "</details>\n\n"
+    today = datetime.now(timezone.utc).strftime("%Y%m%d")
+    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y%m%d")
+    new_version = garden_version(today)
+    old_version = garden_version(yesterday)
+    compare_output = apt_compare_output(old_version, new_version)
 
     epic_number, epic_title = find_quarterly_epic(session, owner, repo, logger)
-    if epic_number is not None:
-        body += "\n### Quarterly epic\n\n"
-        body += f"- #{epic_number} {epic_title}\n"
+
+    # --- Phase B: render body (may run multiple times to fit within limit) ---
+
+    def _render_body(failed_test_limit):
+        b = "## Nightly workflow failed\n\n"
+        b += f"A summary of the failure is provided below. See the [workflow run]({run_url}) for full details.\n\n"
+        b += "| | |\n|---|---|\n"
+        b += f"| **Workflow** | {workflow} |\n"
+        b += f"| **Run** | {run_url} |\n"
+        b += f"| **Ref** | {ref} |\n"
+        b += f"| **SHA** | {sha} |\n\n"
+
+        b += "### Failed jobs\n\n"
+        if failed_needs:
+            for name, data in failed_needs:
+                b += f"- **{name}**: {data['result']}\n"
+        elif failed_jobs:
+            for job in failed_jobs:
+                job_name = job.get("name", "unknown")
+                job_url = job.get("html_url", "")
+                job_conclusion = job.get("conclusion", "unknown")
+                if job_url:
+                    b += f"- [{job_name}]({job_url}) — `{job_conclusion}`\n"
+                else:
+                    b += f"- {job_name} — `{job_conclusion}`\n"
+        else:
+            b += "- No failed jobs detected.\n"
+
+        if failed_jobs:
+            b += "\n### Failed job logs (last 10 lines)\n\n"
+            for job in failed_jobs:
+                log_lines = log_lines_map.get(job["id"], "(no log output)")
+                b += "<details>\n"
+                b += f"<summary><b>{job['name']}</b></summary>\n\n"
+                b += "```\n"
+                b += log_lines
+                b += "\n```\n\n"
+                b += "</details>\n\n"
+
+        b += "\n## Test results\n\n"
+        if test_totals is None:
+            b += "_Test report artifact was not found or has expired._\n\n"
+        else:
+            passed = (
+                test_totals["tests"]
+                - test_totals["failures"]
+                - test_totals["errors"]
+                - test_totals["skipped"]
+            )
+            b += "| Total | Passed | Failed | Errors | Skipped |\n"
+            b += "|---|---|---|---|---|\n"
+            b += (
+                f"| {test_totals['tests']} | {passed} | {test_totals['failures']} "
+                f"| {test_totals['errors']} | {test_totals['skipped']} |\n\n"
+            )
+
+            if all_failed:
+                effective_limit = max(0, failed_test_limit)
+                truncated = all_failed[:effective_limit]
+                b += "<details>\n"
+                b += f"<summary>Failed/errored test cases ({len(all_failed)} total)</summary>\n\n"
+                for tc in truncated:
+                    source = tc.get("source", "")
+                    classname = tc.get("classname", "")
+                    name = tc.get("name", "")
+                    msg = tc.get("message", "").replace("\n", " ").replace("|", "\\|")
+                    test_id = f"{classname}::{name}" if classname else name
+                    b += f"- **`{source}`** `{test_id}`: {msg}\n"
+                if len(all_failed) > effective_limit:
+                    b += f"\n_... and {len(all_failed) - effective_limit} more (truncated)._\n"
+                b += "\n</details>\n\n"
+
+        b += "\n### Pull requests merged in the last 24 hours\n\n"
+        b += f"[View on GitHub]({merged_prs_url})\n"
+
+        b += "\n### Apt packages updated since yesterday's nightly run\n\n"
+        b += "<details>\n"
+        b += "<summary>Click to expand</summary>\n\n"
+        b += "```\n"
+        b += compare_output or "(no output)"
+        b += "\n```\n\n"
+        b += "</details>\n\n"
+
+        if epic_number is not None:
+            b += "\n### Quarterly epic\n\n"
+            b += f"- #{epic_number} {epic_title}\n"
+
+        return b
+
+    # Render and trim until within GitHub's body limit
+    limit = MAX_FAILED_TESTS
+    body = _render_body(limit)
+    while len(body) > GITHUB_BODY_LIMIT and limit > 0:
+        limit = max(0, limit - 10)
+        logger.warning(
+            f"Issue body exceeds {GITHUB_BODY_LIMIT} chars; "
+            f"reducing failed test cases to {limit}"
+        )
+        body = _render_body(limit)
+    if len(body) > GITHUB_BODY_LIMIT:
+        logger.warning(
+            f"Issue body still exceeds {GITHUB_BODY_LIMIT} chars ({len(body)}) "
+            "after reducing failed test cases to 0; proceeding anyway"
+        )
+    logger.info(f"Final issue body length: {len(body)} chars")
 
     labels = ["kind/epic", "theme/release-plan"]
 
@@ -325,7 +565,7 @@ def main():
             sys.exit(1)
 
     token = os.environ.get("GITHUB_TOKEN")
-    if not token and not args.dry_run:
+    if not token:
         print("Error: GITHUB_TOKEN environment variable is not set.", file=sys.stderr)
         sys.exit(1)
 
