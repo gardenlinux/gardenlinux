@@ -32,6 +32,9 @@ REPO_ROOT = Path(__file__).parent.parent
 # Maximum failed/errored testcase lines to include in the issue body.
 MAX_FAILED_TESTS = 100
 
+# GitHub issue body character limit.
+GITHUB_BODY_LIMIT = 65536
+
 
 def get_test_report_artifact(session, owner, repo, run_id, logger):
     """
@@ -303,36 +306,17 @@ def create_nightly_failure_issue(
     title = f"Nightly workflow failed on {date} (run #{run_id})"
     run_url = f"https://github.com/{owner}/{repo}/actions/runs/{run_id}"
 
-    body = "## Nightly workflow failed\n\n"
-    body += f"A summary of the failure is provided below. See the [workflow run]({run_url}) for full details.\n\n"
-    body += "| | |\n|---|---|\n"
-    body += f"| **Workflow** | {workflow} |\n"
-    body += f"| **Run** | {run_url} |\n"
-    body += f"| **Ref** | {ref} |\n"
-    body += f"| **SHA** | {sha} |\n\n"
-
-    body += "### Failed jobs\n\n"
-    if failed_needs:
-        for name, data in failed_needs:
-            body += f"- **{name}**: {data['result']}\n"
-    else:
-        body += "- No individual job reported a failure result, but the overall workflow failed.\n"
+    # --- Phase A: collect all data (runs once) ---
 
     jobs_data = gh(session, f"/repos/{owner}/{repo}/actions/runs/{run_id}/jobs")
     failed_jobs = [
         j for j in jobs_data.get("jobs", []) if j.get("conclusion") == "failure"
     ]
 
-    if failed_jobs:
-        body += "\n### Failed job logs (last 10 lines)\n\n"
-        for job in failed_jobs:
-            log_lines = get_last_job_log_lines(session, owner, repo, job["id"])
-            body += "<details>\n"
-            body += f"<summary><b>{job['name']}</b></summary>\n\n"
-            body += "```\n"
-            body += log_lines
-            body += "\n```\n\n"
-            body += "</details>\n\n"
+    # Fetch job logs once and cache them
+    log_lines_map = {}
+    for job in failed_jobs:
+        log_lines_map[job["id"]] = get_last_job_log_lines(session, owner, repo, job["id"])
 
     # Test results from test-report artifact
     test_totals = None
@@ -355,46 +339,11 @@ def create_nightly_failure_issue(
         except Exception as exc:
             logger.warning(f"Test report processing failed: {exc}")
 
-    body += "\n## Test results\n\n"
-    if test_totals is None:
-        body += "_Test report artifact was not found or has expired._\n\n"
-    else:
-        passed = (
-            test_totals["tests"]
-            - test_totals["failures"]
-            - test_totals["errors"]
-            - test_totals["skipped"]
-        )
-        body += "| Total | Passed | Failed | Errors | Skipped |\n"
-        body += "|---|---|---|---|---|\n"
-        body += (
-            f"| {test_totals['tests']} | {passed} | {test_totals['failures']} "
-            f"| {test_totals['errors']} | {test_totals['skipped']} |\n\n"
-        )
-
-        if all_failed:
-            truncated = all_failed[:MAX_FAILED_TESTS]
-            body += "<details>\n"
-            body += f"<summary>Failed/errored test cases ({len(all_failed)} total)</summary>\n\n"
-            for tc in truncated:
-                source = tc.get("source", "")
-                classname = tc.get("classname", "")
-                name = tc.get("name", "")
-                msg = tc.get("message", "").replace("\n", " ").replace("|", "\\|")
-                test_id = f"{classname}::{name}" if classname else name
-                body += f"- **`{source}`** `{test_id}`: {msg}\n"
-            if len(all_failed) > MAX_FAILED_TESTS:
-                body += f"\n_... and {len(all_failed) - MAX_FAILED_TESTS} more (truncated)._\n"
-            body += "\n</details>\n\n"
-
     one_day_ago = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
     merged_prs_url = (
         f"https://github.com/{owner}/{repo}/pulls"
         f"?q=is%3Apr+is%3Amerged+merged%3A%3E{one_day_ago}"
     )
-
-    body += "\n### Pull requests merged in the last 24 hours\n\n"
-    body += f"[View on GitHub]({merged_prs_url})\n"
 
     today = datetime.now(timezone.utc).strftime("%Y%m%d")
     yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y%m%d")
@@ -402,18 +351,103 @@ def create_nightly_failure_issue(
     old_version = garden_version(yesterday)
     compare_output = apt_compare_output(old_version, new_version)
 
-    body += "\n### Apt packages updated since yesterday's nightly run\n\n"
-    body += "<details>\n"
-    body += "<summary>Click to expand</summary>\n\n"
-    body += "```\n"
-    body += compare_output or "(no output)"
-    body += "\n```\n\n"
-    body += "</details>\n\n"
-
     epic_number, epic_title = find_quarterly_epic(session, owner, repo, logger)
-    if epic_number is not None:
-        body += "\n### Quarterly epic\n\n"
-        body += f"- #{epic_number} {epic_title}\n"
+
+    # --- Phase B: render body (may run multiple times to fit within limit) ---
+
+    def _render_body(failed_test_limit):
+        b = "## Nightly workflow failed\n\n"
+        b += f"A summary of the failure is provided below. See the [workflow run]({run_url}) for full details.\n\n"
+        b += "| | |\n|---|---|\n"
+        b += f"| **Workflow** | {workflow} |\n"
+        b += f"| **Run** | {run_url} |\n"
+        b += f"| **Ref** | {ref} |\n"
+        b += f"| **SHA** | {sha} |\n\n"
+
+        b += "### Failed jobs\n\n"
+        if failed_needs:
+            for name, data in failed_needs:
+                b += f"- **{name}**: {data['result']}\n"
+        else:
+            b += "- No individual job reported a failure result, but the overall workflow failed.\n"
+
+        if failed_jobs:
+            b += "\n### Failed job logs (last 10 lines)\n\n"
+            for job in failed_jobs:
+                log_lines = log_lines_map.get(job["id"], "(no log output)")
+                b += "<details>\n"
+                b += f"<summary><b>{job['name']}</b></summary>\n\n"
+                b += "```\n"
+                b += log_lines
+                b += "\n```\n\n"
+                b += "</details>\n\n"
+
+        b += "\n## Test results\n\n"
+        if test_totals is None:
+            b += "_Test report artifact was not found or has expired._\n\n"
+        else:
+            passed = (
+                test_totals["tests"]
+                - test_totals["failures"]
+                - test_totals["errors"]
+                - test_totals["skipped"]
+            )
+            b += "| Total | Passed | Failed | Errors | Skipped |\n"
+            b += "|---|---|---|---|---|\n"
+            b += (
+                f"| {test_totals['tests']} | {passed} | {test_totals['failures']} "
+                f"| {test_totals['errors']} | {test_totals['skipped']} |\n\n"
+            )
+
+            if all_failed:
+                effective_limit = max(0, failed_test_limit)
+                truncated = all_failed[:effective_limit]
+                b += "<details>\n"
+                b += f"<summary>Failed/errored test cases ({len(all_failed)} total)</summary>\n\n"
+                for tc in truncated:
+                    source = tc.get("source", "")
+                    classname = tc.get("classname", "")
+                    name = tc.get("name", "")
+                    msg = tc.get("message", "").replace("\n", " ").replace("|", "\\|")
+                    test_id = f"{classname}::{name}" if classname else name
+                    b += f"- **`{source}`** `{test_id}`: {msg}\n"
+                if len(all_failed) > effective_limit:
+                    b += f"\n_... and {len(all_failed) - effective_limit} more (truncated)._\n"
+                b += "\n</details>\n\n"
+
+        b += "\n### Pull requests merged in the last 24 hours\n\n"
+        b += f"[View on GitHub]({merged_prs_url})\n"
+
+        b += "\n### Apt packages updated since yesterday's nightly run\n\n"
+        b += "<details>\n"
+        b += "<summary>Click to expand</summary>\n\n"
+        b += "```\n"
+        b += compare_output or "(no output)"
+        b += "\n```\n\n"
+        b += "</details>\n\n"
+
+        if epic_number is not None:
+            b += "\n### Quarterly epic\n\n"
+            b += f"- #{epic_number} {epic_title}\n"
+
+        return b
+
+    # Render and trim until within GitHub's body limit
+    limit = MAX_FAILED_TESTS
+    body = _render_body(limit)
+    while len(body) > GITHUB_BODY_LIMIT and limit > 0:
+        limit = max(0, limit - 10)
+        logger.warning(
+            f"Issue body exceeds {GITHUB_BODY_LIMIT} chars; "
+            f"reducing failed test cases to {limit}"
+        )
+        body = _render_body(limit)
+    if len(body) > GITHUB_BODY_LIMIT:
+        logger.warning(
+            f"Issue body still exceeds {GITHUB_BODY_LIMIT} chars ({len(body)}) "
+            "after reducing failed test cases to 0; proceeding anyway"
+        )
+    logger.info(f"Final issue body length: {len(body)} chars")
 
     labels = ["kind/epic", "theme/release-plan"]
 
