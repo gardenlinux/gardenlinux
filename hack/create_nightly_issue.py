@@ -308,10 +308,20 @@ def create_nightly_failure_issue(
 
     # --- Phase A: collect all data (runs once) ---
 
-    jobs_data = gh(session, f"/repos/{owner}/{repo}/actions/runs/{run_id}/jobs")
-    failed_jobs = [
-        j for j in jobs_data.get("jobs", []) if j.get("conclusion") == "failure"
-    ]
+    all_jobs = []
+    page = 1
+    while True:
+        jobs_data = gh(
+            session,
+            f"/repos/{owner}/{repo}/actions/runs/{run_id}/jobs?per_page=100&page={page}",
+        )
+        batch = jobs_data.get("jobs", [])
+        all_jobs.extend(batch)
+        if len(batch) < 100:
+            break
+        page += 1
+    logger.debug(f"Fetched {len(all_jobs)} jobs for run {run_id}")
+    failed_jobs = [j for j in all_jobs if j.get("conclusion") == "failure"]
 
     # Fetch job logs once and cache them
     log_lines_map = {}
@@ -368,8 +378,17 @@ def create_nightly_failure_issue(
         if failed_needs:
             for name, data in failed_needs:
                 b += f"- **{name}**: {data['result']}\n"
+        elif failed_jobs:
+            for job in failed_jobs:
+                job_name = job.get("name", "unknown")
+                job_url = job.get("html_url", "")
+                job_conclusion = job.get("conclusion", "unknown")
+                if job_url:
+                    b += f"- [{job_name}]({job_url}) — `{job_conclusion}`\n"
+                else:
+                    b += f"- {job_name} — `{job_conclusion}`\n"
         else:
-            b += "- No individual job reported a failure result, but the overall workflow failed.\n"
+            b += "- No failed jobs detected.\n"
 
         if failed_jobs:
             b += "\n### Failed job logs (last 10 lines)\n\n"
