@@ -17,6 +17,7 @@ def test_password_length_is_not_limited_in_pam_configs():
     search_str = r"^\s*password\s+requisite\s+pam_passwdqc.so\s+[^#]*max=\d+"
     pattern = re.compile(search_str)
     found = False
+    offender = ""
 
     for config in glob.glob("/etc/pam.d/*"):
         with open(config) as f:
