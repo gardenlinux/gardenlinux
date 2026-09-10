@@ -1,0 +1,130 @@
+name: Sync STIG tests from main to rel-2150
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "tests/integration/security/compliance/**"
+      - "tests/plugins/**"
+      - "tests/handlers/**"
+      - "tests/pytest.ini"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Sync compliance tests to rel-2150
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          path: main
+
+      - name: Checkout rel-2150
+        uses: actions/checkout@v4
+        with:
+          ref: rel-2150
+          fetch-depth: 0
+          path: rel-2150
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine changed files in compliance dir
+        id: changed
+        run: |
+          cd main
+          # Get files changed in this push within the compliance and support dirs
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- \
+            tests/integration/security/compliance/ \
+            tests/plugins/ \
+            tests/handlers/ \
+            tests/pytest.ini \
+            2>/dev/null || true)
+
+          if [ -z "$CHANGED" ]; then
+            echo "No relevant files changed."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Changed files:"
+            echo "$CHANGED"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "files<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$CHANGED" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Copy changed files into rel-2150 checkout
+        if: steps.changed.outputs.skip != 'true'
+        run: |
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            if [ -f "main/$f" ]; then
+              dest="rel-2150/$f"
+              mkdir -p "$(dirname "$dest")"
+              cp "main/$f" "$dest"
+              echo "Copied: $f"
+            else
+              echo "Deleted (skipping removal): $f"
+            fi
+          done <<< "${{ steps.changed.outputs.files }}"
+
+      - name: Check if rel-2150 actually differs
+        id: diff
+        run: |
+          cd rel-2150
+          git diff --quiet && echo "empty=true" >> "$GITHUB_OUTPUT" || echo "empty=false" >> "$GITHUB_OUTPUT"
+
+      - name: Create PR branch and open draft PR
+        if: steps.changed.outputs.skip != 'true' && steps.diff.outputs.empty != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="sync/stig-compliance-$(date +%Y%m%d-%H%M%S)"
+
+          cd rel-2150
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "$BRANCH"
+          git add -A
+          git commit -m "sync: update STIG compliance tests from main
+
+          Auto-synced by sync_stig_tests_to_rel.yml workflow.
+          Source commit: ${{ github.sha }}
+          Source ref: ${{ github.ref }}"
+
+          git push origin "$BRANCH"
+
+          # Build PR body listing changed files
+          FILES_LIST="${{ steps.changed.outputs.files }}"
+          BODY="## Automated STIG test sync from \`main\` → \`rel-2150\`
+
+          This draft PR was opened automatically by the \`sync_stig_tests_to_rel\` workflow
+          after a push to \`main\` modified files under \`tests/integration/security/compliance/\`.
+
+          **Source commit:** [\`$(echo "${{ github.sha }}" | cut -c1-8)\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+
+          ### Changed files
+          \`\`\`
+          ${FILES_LIST}
+          \`\`\`
+
+          ### Checklist
+          - [ ] Review each changed test for rel-2150 compatibility
+          - [ ] Ensure no main-only plugins or fixtures are referenced
+          - [ ] Run tests locally against a 2150.x image
+          - [ ] Merge when validated"
+
+          gh pr create \
+            --repo "${{ github.repository }}" \
+            --base rel-2150 \
+            --head "$BRANCH" \
+            --title "sync: STIG compliance tests from main ($(date +%Y-%m-%d))" \
+            --body "$BODY" \
+            --draft \
+            --label "automated,stig,rel-2150"
