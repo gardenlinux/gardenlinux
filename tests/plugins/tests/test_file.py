@@ -3,7 +3,6 @@
 import grp
 import os
 import pwd
-import stat
 from pathlib import Path
 
 import pytest
