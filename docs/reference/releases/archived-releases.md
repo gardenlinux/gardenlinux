@@ -18,7 +18,7 @@ github_target_path: docs/reference/releases/archived-releases.md
 The table below lists releases that have reached their end of maintenance and are no longer actively supported. If you use one of these versions, migrate to the latest maintained release as soon as possible. For details about the release lifecycle, see [Release Lifecycle](release-lifecycle.md).
 
 :::tip
-All data is sourced from [GLRD](/reference/supporting_tools/glrd)
+All data is sourced from [GLRD](/reference/supporting_tools/glrd/)
 :::
 
 ## Out of maintenance releases
