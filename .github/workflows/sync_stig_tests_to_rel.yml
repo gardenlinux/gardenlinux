@@ -17,17 +17,20 @@ permissions:
 jobs:
   sync:
     name: Sync compliance tests to rel-2150
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout main
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
           fetch-depth: 0
           path: main
 
       - name: Checkout rel-2150
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: rel-2150
           fetch-depth: 0
@@ -38,7 +41,6 @@ jobs:
         id: changed
         run: |
           cd main
-          # Get files changed in this push within the compliance and support dirs
           CHANGED=$(git diff --name-only HEAD~1 HEAD -- \
             tests/integration/security/compliance/ \
             tests/plugins/ \
@@ -100,7 +102,6 @@ jobs:
 
           git push origin "$BRANCH"
 
-          # Build PR body listing changed files
           FILES_LIST="${{ steps.changed.outputs.files }}"
           BODY="## Automated STIG test sync from \`main\` → \`rel-2150\`
 
