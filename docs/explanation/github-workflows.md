@@ -351,14 +351,12 @@ flowchart TD
 
 **Trigger:** `workflow_call` (called by [`nightly.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/nightly.yml) and [`manual_release.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/manual_release.yml)) or `workflow_dispatch` (can be run standalone).
 
-**Purpose:** Uploads all built flavor artifacts to Amazon S3 buckets and registers the release in the Garden Linux Release Database (GLRD). Two separate S3 regions are supported: the global bucket and a China-region bucket.
+**Purpose:** Uploads all built flavor artifacts to an Amazon S3 bucket and registers the release in the Garden Linux Release Database (GLRD).
 
 **Flavors are split into two groups before upload:**
 
 - **Trustedboot flavors** (name contains `trustedboot`): uploaded with `with_certs: true` so that Secure Boot certificates are included alongside the image.
 - **Non-trustedboot flavors**: uploaded without certificates.
-
-Both groups are uploaded to both the global and China S3 buckets in parallel.
 
 **GLRD registration:**
 
@@ -384,21 +382,19 @@ flowchart TD
     TBS --> NTBS
 
     TBM --> US3T["upload_trustedboot_flavors_to_s3\nupload_to_s3.yml\nglobal S3, with_certs=true"]
-    TBM --> US3TC["upload_trustedboot_flavors_to_s3_china\nupload_to_s3.yml\nChina S3, with_certs=true"]
     NTBS --> US3N["upload_non_trustedboot_flavors_to_s3\nupload_to_s3.yml\nglobal S3"]
-    NTBS --> US3NC["upload_non_trustedboot_flavors_to_s3_china\nupload_to_s3.yml\nChina S3"]
 
     US3T & US3N --> GLRD
 
     GLRD["glrd\nCreate GLRD release entry\nnightly entry on main branch\nminor entry on other branches"]
 
-    US3T & US3TC & US3N & US3NC & GLRD -->|any failure| RETRY
+    US3T & US3N & GLRD -->|any failure| RETRY
 
     RETRY["publish_retry\nre-dispatch publish_s3 workflow\nmax 5 retries"]
 
     class CALL input
     class WD,WDA,TBS,NTBS,TBM decision
-    class US3T,US3TC,US3N,US3NC,GLRD output
+    class US3T,US3N,GLRD output
     class RETRY process
 ```
 
@@ -435,7 +431,7 @@ The following reusable workflows are called by the entry-point workflows and do 
 | Workflow | Purpose |
 |---|---|
 | [`publish.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish.yml) | Orchestrates publishing to ghcr.io. Calls [`download_workflow_data.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/download_workflow_data.yml), then [`publish_oci_containers.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish_oci_containers.yml) and [`publish_kmodbuild_container.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish_kmodbuild_container.yml) in parallel. Can be triggered standalone via `workflow_dispatch` against an existing build run. |
-| [`publish_s3.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish_s3.yml) | Orchestrates publishing to Amazon S3. Calls [`download_workflow_data.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/download_workflow_data.yml) and [`build_flavors_matrix.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/build_flavors_matrix.yml), then [`upload_to_s3.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/upload_to_s3.yml) (four times: trustedboot/non-trustedboot flavors, each to global and China S3 buckets), and registers a GLRD release entry. Can be triggered standalone via `workflow_dispatch`. |
+| [`publish_s3.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish_s3.yml) | Orchestrates publishing to Amazon S3. Calls [`download_workflow_data.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/download_workflow_data.yml) and [`build_flavors_matrix.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/build_flavors_matrix.yml), then [`upload_to_s3.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/upload_to_s3.yml) (twice: trustedboot and non-trustedboot flavors), and registers a GLRD release entry. Can be triggered standalone via `workflow_dispatch`. |
 | [`publish_oci_containers.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish_oci_containers.yml) | Publishes container base images (`container`, `container-pythonDev`), bare flavor images (libc, python, nodejs, sapmachine), and all regular flavor OCI images to ghcr.io. Signs each manifest with cosign using an AWS KMS key. Updates the OCI manifest index. |
 | [`publish_kmodbuild_container.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish_kmodbuild_container.yml) | Loads and pushes the kmodbuild dev container to `ghcr.io/{org}/gardenlinux/kmodbuild:{version}`. |
 | [`upload_to_s3.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/upload_to_s3.yml) | Uploads a set of flavor artifacts (selected by the flavors matrix) to an S3 bucket. Optionally includes Secure Boot certificates (`with_certs`). |
