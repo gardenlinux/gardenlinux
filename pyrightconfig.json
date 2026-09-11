@@ -1,0 +1,7 @@
+{
+    "typeCheckingMode": "basic",
+    "reportUnusedImport": "error",
+    "exclude": [
+        "tests/test_*.py"
+    ]
+}
