@@ -35,14 +35,14 @@ following volunteers:
 The Garden Linux community asks that all suspected vulnerabilities be privately and
 responsibly disclosed. If you've found a vulnerability or a potential
 vulnerability in Garden Linux, let us know by writing an e-mail to
-[secure@sap.com](mailto:secure@sap.com). We'll send a confirmation e-mail to
+[gardenlinux-security@lists.neonephos.org](mailto:gardenlinux-security@lists.neonephos.org). We'll send a confirmation e-mail to
 acknowledge your report, and we'll send an additional e-mail when we've
 identified the issue positively or negatively.
 
 ### Public Disclosure Processes
 
 If you know of a publicly disclosed vulnerability, IMMEDIATELY e-mail
-[secure@sap.com](mailto:secure@sap.com) to inform the Garden Linux Security Team
+[gardenlinux-security@lists.neonephos.org](mailto:gardenlinux-security@lists.neonephos.org) to inform the Garden Linux Security Team
 about the vulnerability, so they may start the patch, release, and communication
 process.
 
@@ -115,8 +115,8 @@ The Release Managers will ensure all the binaries are built, publicly
 available, and functional before the Release Date.
 The Release Managers will create a new patch release branch from the latest
 patch release tag + the fix from the security branch. As a practical example
-if v184.0 is the latest patch release in Garden Linux, a new branch will be
-created called v184.1 which includes only patches required to fix the issue.
+if 1877.0 is the latest patch release in Garden Linux, a new branch will be
+created called 1877.1 which includes only patches required to fix the issue.
 The Fix Lead will cherry-pick the patches onto the master branch and all
 relevant release branches. The Fix Team will
 [LGTM](https://github.com/lgtmco/lgtm) and merge.
@@ -124,9 +124,7 @@ The Release Managers will merge these PRs as quickly as possible. Changes
 shouldn't be made to the commits even for a typo in the CHANGELOG as this will
 change the git sha of the already built and commits leading to confusion and
 potentially conflicts as the fix is cherry-picked around branches.
-The Fix Lead will request a CVE from the SAP Product Security Response Team
-via email to [cna@sap.com](mailto:cna@sap.com) with all the relevant
-information (description, potential impact, affected version, fixed version,
+The Fix Lead will request a CVE via the [GitHub Security advisory process](https://docs.github.com/en/code-security/security-advisories) with all the relevant information (description, potential impact, affected version, fixed version,
 CVSS v3 base score and supporting documentation for the CVSS score) for every
 vulnerability. The Fix Lead will inform the
 [Garden Linux mailing list](#communication-channel) and announce the new
@@ -147,33 +145,33 @@ process
 [should be blameless](https://landing.google.com/sre/book/chapters/postmortem-culture.html).
 
 The Fix Lead will send a retrospective of the process to the
-[Garden Linux mailing list](#communication-channel) including details on everyone
+[Garden Linux mailing list](mailto:gardenlinux-discussion@lists.neonephos.org) including details on everyone
 involved, the time line of the process, links to relevant PRs that introduced
 the issue, if relevant, and any critiques of the response and release process.
 The Release Managers and Fix Team are also encouraged to send their own
-feedback on the process to the [Garden Linux mailing list](#communication-channel).
+feedback on the process to the [Garden Linux mailing list](mailto:gardenlinux-discussion@lists.neonephos.org).
 Honest critique is the only way we are going to get good at this as a community.
 
 
 ### Communication Channel
 
-The [private](#private-disclosure-process) or
-[public disclosure process(#public-disclosure-process) should be triggered
-exclusively by writing an e-mail to [secure@sap.com](mailto:secure@sap.com).
+The [private](#private-disclosure-process) or [public disclosure process](#public-disclosure-process) should be triggered
+exclusively by writing an e-mail to [gardenlinux-security@lists.neonephos.org](mailto:gardenlinux-security@lists.neonephos.org).
 
 Garden Linux security announcements will be communicated by the Fix Lead
 sending an e-mail to the
-[Garden Linux mailing list](https://groups.google.com/forum/#!forum/gardenlinux)
-(reachable via [gardenlinux@googlegroups.com](mailto:gardenlinux@googlegroups.com))
-as well as posting a link in the
-[Garden Linux Slack channel](https://sap-ti.slack.com/archives/CV1SWRHR6).
+[Garden Linux mailing list](mailto:gardenlinux-discussion@lists.neonephos.org)
 Public discussions about Garden Linux security announcements and retrospectives,
 will primarily happen in the Garden Linux mailing list. Thus Garden Linux community
 members who are interested in participating in discussions related to the
 Garden Linux Security Release Process are encouraged to join the Garden Linux mailing
-list ([how to find and join a group](https://support.google.com/groups/answer/1067205?hl=en))
+list.
 
 The members of the [Garden Linux Security Team](#gardenlinux-security-team) are
-subscribed to the private
-[Garden Linux Security mailing list](https://groups.google.com/forum/#!forum/gardenlinux-security
-(reachable via [gardenlinux-security@googlegroups.com](mailto:gardenlinux-security@googlegroups.com).
+subscribed to Garden Linux Security mailing list [gardenlinux-security@lists.neonephos.org](mailto:gardenlinux-security@lists.neonephos.org).
+
+### Open-Source-Steward
+
+CRA stewardship: This project is supported under the Linux Foundation CRA stewardship framework. Our project CRA steward is the Linux Foundation Europe and its policy is available at https://www.linuxfoundation.org/security. Security vulnerabilities should be reported through Garden Linux security reporting which we will coordinate with our CRA steward. For actively exploited vulnerabilities or other security matters that may require CRA escalation, please use Garden Linux security emergency reporting channels as appropriate.
+
+
