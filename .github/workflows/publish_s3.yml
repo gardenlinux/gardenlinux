@@ -166,22 +166,6 @@ jobs:
       aws_role: ${{ secrets.AWS_IAM_ROLE }}
       aws_session: ${{ secrets.AWS_OIDC_SESSION }}
       aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
-  upload_to_s3_cn:
-    needs: [ copy_artifacts, prepare_certs, workflow_data ]
-    name: Upload to S3 (China)
-    permissions:
-      id-token: write
-    uses: ./.github/workflows/upload_to_s3.yml
-    with:
-      commit_id: ${{ needs.workflow_data.outputs.commit_id }}
-      version: ${{ needs.workflow_data.outputs.version }}
-      flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
-      run_id: ${{ github.run_id }}
-    secrets:
-      aws_region: ${{ secrets.AWS_CN_REGION }}
-      aws_role: ${{ secrets.AWS_CN_IAM_ROLE }}
-      aws_session: ${{ secrets.AWS_CN_OIDC_SESSION }}
-      aws_s3_bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
   glrd:
     needs: [ workflow_data, upload_to_s3 ]
     name: create GLRD release
@@ -211,8 +195,8 @@ jobs:
         with:
           cmd: glrd --type nightly --latest
   publish_retry:
-    needs: [ upload_to_s3, upload_to_s3_cn, glrd ]
-    if: ${{ failure() && ( needs.upload_to_s3.result == 'failure' || needs.upload_to_s3_cn.result == 'failure' || needs.glrd.result == 'failure' ) }}
+    needs: [ upload_to_s3, glrd ]
+    if: ${{ failure() && ( needs.upload_to_s3.result == 'failure' || needs.glrd.result == 'failure' ) }}
     name: 'Retry checkpoint: Publish to S3'
     runs-on: ubuntu-24.04
     permissions:
