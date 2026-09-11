@@ -1,8 +1,8 @@
 os: Linux
 images:
-- location: https://gardenlinux-github-releases.s3.amazonaws.com/objects/lima-amd64-2150.0.0-eb8696b9/lima-amd64-2150.0.0-eb8696b9.qcow2
+- location: https://gardenlinux-github-releases.s3.amazonaws.com/objects/lima-amd64-2150.9.0-a6e35cf0/lima-amd64-2150.9.0-a6e35cf0.qcow2
   arch: x86_64
-- location: https://gardenlinux-github-releases.s3.amazonaws.com/objects/lima-arm64-2150.0.0-eb8696b9/lima-arm64-2150.0.0-eb8696b9.qcow2
+- location: https://gardenlinux-github-releases.s3.amazonaws.com/objects/lima-arm64-2150.9.0-a6e35cf0/lima-arm64-2150.9.0-a6e35cf0.qcow2
   arch: aarch64
 containerd:
   system: false
