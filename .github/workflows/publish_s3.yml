@@ -118,23 +118,6 @@ jobs:
       aws_role: ${{ secrets.AWS_IAM_ROLE }}
       aws_session: ${{ secrets.AWS_OIDC_SESSION }}
       aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
-  upload_trustedboot_flavors_to_s3_china:
-    needs: [trustedboot_flavors_matrix, workflow_data]
-    name: Upload flavors supporting trustedboot to S3 (China)
-    permissions:
-      id-token: write
-    uses: ./.github/workflows/upload_to_s3.yml
-    with:
-      commit_id: ${{ needs.workflow_data.outputs.commit_id }}
-      version: ${{ needs.workflow_data.outputs.version }}
-      flavors_matrix: ${{ needs.trustedboot_flavors_matrix.outputs.flavors_matrix }}
-      run_id: ${{ needs.workflow_data.outputs.run_id }}
-      with_certs: true
-    secrets:
-      aws_region: ${{ secrets.AWS_CN_REGION }}
-      aws_role: ${{ secrets.AWS_CN_IAM_ROLE }}
-      aws_session: ${{ secrets.AWS_CN_OIDC_SESSION }}
-      aws_s3_bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
   upload_non_trustedboot_flavors_to_s3:
     needs: [non_trustedboot_flavors_matrix, workflow_data]
     name: Upload flavors not supporting trustedboot to S3
@@ -151,22 +134,6 @@ jobs:
       aws_role: ${{ secrets.AWS_IAM_ROLE }}
       aws_session: ${{ secrets.AWS_OIDC_SESSION }}
       aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
-  upload_non_trustedboot_flavors_to_s3_china:
-    needs: [non_trustedboot_flavors_matrix, workflow_data]
-    name: Upload flavors not supporting trustedboot to S3 (China)
-    permissions:
-      id-token: write
-    uses: ./.github/workflows/upload_to_s3.yml
-    with:
-      commit_id: ${{ needs.workflow_data.outputs.commit_id }}
-      version: ${{ needs.workflow_data.outputs.version }}
-      flavors_matrix: ${{ needs.non_trustedboot_flavors_matrix.outputs.flavors_matrix }}
-      run_id: ${{ needs.workflow_data.outputs.run_id }}
-    secrets:
-      aws_region: ${{ secrets.AWS_CN_REGION }}
-      aws_role: ${{ secrets.AWS_CN_IAM_ROLE }}
-      aws_session: ${{ secrets.AWS_CN_OIDC_SESSION }}
-      aws_s3_bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
   glrd:
     needs:
       [
@@ -204,12 +171,10 @@ jobs:
     needs:
       [
         upload_trustedboot_flavors_to_s3,
-        upload_trustedboot_flavors_to_s3_china,
         upload_non_trustedboot_flavors_to_s3,
-        upload_non_trustedboot_flavors_to_s3_china,
         glrd,
       ]
-    if: ${{ failure() && ( needs.upload_trustedboot_flavors_to_s3.result == 'failure' || needs.upload_trustedboot_flavors_to_s3_china.result == 'failure' || needs.upload_non_trustedboot_flavors_to_s3.result == 'failure' || needs.upload_non_trustedboot_flavors_to_s3_china.result == 'failure' || needs.glrd.result == 'failure' ) }}
+    if: ${{ failure() && ( needs.upload_trustedboot_flavors_to_s3.result == 'failure' || needs.upload_non_trustedboot_flavors_to_s3.result == 'failure' || needs.glrd.result == 'failure' ) }}
     name: "Retry checkpoint: Publish to S3"
     runs-on: ubuntu-24.04
     permissions:
