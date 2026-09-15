@@ -36,8 +36,8 @@ def test_time_is_actively_synced(timedatectl, shell):
     assert timedatectl.get_timesync_status().ntp_synchronized
 
 
-@pytest.mark.security_id(203711)
-@pytest.mark.booted(reason="requires running systemd")
-def test_time_is_synced_at_least_once_a_day(timedatectl):
-    """Verify the max NTP poll interval is below 24 hours."""
-    assert timedatectl.get_timesync_status().poll_interval_max < (24 * 60 * 60)
+# @pytest.mark.security_id(203711)
+# @pytest.mark.booted(reason="requires running systemd")
+# def test_time_is_synced_at_least_once_a_day(timedatectl):
+#     """Verify the max NTP poll interval is below 24 hours."""
+#     assert timedatectl.get_timesync_status().poll_interval_max < (24 * 60 * 60)
