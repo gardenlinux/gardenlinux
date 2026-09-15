@@ -1,5 +1,6 @@
+import fnmatch
 import os
-from typing import Iterator, Union
+from typing import Iterator, Optional, Union
 
 import pytest
 
@@ -20,10 +21,13 @@ class Find:
                 If a list is provided, all paths will be searched.
             entry_type (str):
                 Specifies the type of entries to search for (files, directories, or both).
+            pattern (str):
+                Specifies the pattern to search for. If None, all files and directories will be searched.
         """
         self.same_mnt_only: bool = False
         self.root_paths: Union[str, list[str]] = "/"
         self.entry_type: str = FIND_RESULT_TYPE_FILE
+        self.pattern: Optional[str] = None
 
     def __iter__(self) -> Iterator[str]:
         return iter(list(self._find()))
@@ -43,6 +47,9 @@ class Find:
                     FIND_RESULT_TYPE_FILE_AND_DIR,
                 ):
                     for dirname in dirnames:
+                        # Apply pattern matching if pattern is specified
+                        if self.pattern and not fnmatch.fnmatch(dirname, self.pattern):
+                            continue
                         full_path = os.path.join(dirpath, dirname)
                         if self.same_mnt_only:
                             try:
@@ -58,6 +65,9 @@ class Find:
                     FIND_RESULT_TYPE_FILE_AND_DIR,
                 ):
                     for filename in filenames:
+                        # Apply pattern matching if pattern is specified
+                        if self.pattern and not fnmatch.fnmatch(filename, self.pattern):
+                            continue
                         full_path = os.path.join(dirpath, filename)
                         if self.same_mnt_only:
                             try:
