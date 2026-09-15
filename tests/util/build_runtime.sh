@@ -48,8 +48,8 @@ mkdir -p "$cache_dir"
 
 for arch in x86_64 aarch64; do
 	mkdir "$tmpdir/runtime/$arch"
-	archive_url="${PYTHON_SOURCE}/${RELEASE_DATE}/cpython-${PYTHON_VERSION}%2B${RELEASE_DATE}-${arch}-unknown-linux-gnu-install_only.tar.gz"
-	archive_name="cpython-${PYTHON_VERSION}+${RELEASE_DATE}-${arch}-unknown-linux-gnu-install_only.tar.gz"
+	archive_url="${PYTHON_SOURCE}/${RELEASE_DATE}/cpython-${PYTHON_VERSION}-${arch}-unknown-linux-gnu-install_only-${PYTHON_ARCHIVE_SUFFIX}.tar.gz"
+	archive_name="cpython-${PYTHON_VERSION}-${arch}-unknown-linux-gnu-install_only-${PYTHON_ARCHIVE_SUFFIX}.tar.gz"
 	archive_file_cached="$cache_dir/$archive_name"
 
 	case "$arch" in
