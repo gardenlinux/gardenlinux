@@ -1,0 +1,11 @@
+markers:
+  "etc/audit/auditd.conf":
+  - "GL-TESTCOV-disaSTIGlow-config-audit-auditd-conf"
+  "etc/security/faillock.conf":
+  - "GL-TESTCOV-disaSTIGlow-config-security-faillock"
+  "etc/security/limits.conf":
+  - "GL-TESTCOV-disaSTIGlow-config-security-limits"
+  "etc/security/pwquality.conf":
+  - "GL-TESTCOV-disaSTIGlow-config-security-pwquality"
+  "etc/sysctl.d/99-disaSTIG.conf":
+  - "GL-TESTCOV-disaSTIGlow-config-sysctl-disaSTIG"
