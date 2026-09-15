@@ -164,4 +164,3 @@ class TimeDateCtl:
 @pytest.fixture
 def timedatectl(systemd: Systemd, shell: ShellRunner) -> TimeDateCtl:
     return TimeDateCtl(systemd=systemd, shell=shell)
-
