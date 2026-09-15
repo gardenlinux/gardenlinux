@@ -18,6 +18,25 @@ class TimeSyncStatus:
 
     ntp: bool
     ntp_synchronized: bool
+    poll_interval_max: float
+
+
+def _parse_duration(s: str) -> float:
+    """Parse a duration string like '34min 8s' or '1h 2min 3s' into seconds."""
+    total = 0.0
+    for match in re.finditer(r"(\d+(?:\.\d+)?)\s*(h|min|s|ms|us)", s):
+        value, unit = float(match.group(1)), match.group(2)
+        if unit == "h":
+            total += value * 3600
+        elif unit == "min":
+            total += value * 60
+        elif unit == "s":
+            total += value
+        elif unit == "ms":
+            total += value / 1000
+        elif unit == "us":
+            total += value / 1_000_000
+    return total
 
 
 class TimeDateCtl:
@@ -107,7 +126,30 @@ class TimeDateCtl:
         return TimeSyncStatus(
             ntp=(output["NTP"] == "yes"),
             ntp_synchronized=(output["NTPSynchronized"] == "yes"),
+            poll_interval_max=self._get_poll_interval_max(),
         )
+
+    def _get_poll_interval_max(self) -> float:
+        """
+        Parse max poll interval from timedatectl timesync-status output like:
+            Poll interval: 2min 8s (min: 32s; max 34min 8s)
+        Returns the max poll interval in seconds.
+        """
+        result = self._shell(
+            cmd="timedatectl timesync-status",
+            capture_output=True,
+            ignore_exit_code=True,
+        )
+        if result.returncode != 0:
+            raise ValueError(f"timedatectl timesync-status failed: {result.stderr}")
+
+        for line in result.stdout.splitlines():
+            if line.strip().startswith("Poll interval:"):
+                match = re.search(r"max\s+([^)]+)\)", line)
+                if match:
+                    return _parse_duration(match.group(1).strip())
+
+        raise ValueError(f"Could not parse poll interval from: {result.stdout}")
 
 
 @pytest.fixture
