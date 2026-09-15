@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass
+from pathlib import Path
 
 import pytest
 from plugins.shell import ShellRunner
@@ -18,25 +19,29 @@ class TimeSyncStatus:
 
     ntp: bool
     ntp_synchronized: bool
-    poll_interval_max: float
+    poll_interval_max: int
 
 
-def _parse_duration(s: str) -> float:
-    """Parse a duration string like '34min 8s' or '1h 2min 3s' into seconds."""
-    total = 0.0
-    for match in re.finditer(r"(\d+(?:\.\d+)?)\s*(h|min|s|ms|us)", s):
-        value, unit = float(match.group(1)), match.group(2)
-        if unit == "h":
-            total += value * 3600
-        elif unit == "min":
-            total += value * 60
-        elif unit == "s":
-            total += value
-        elif unit == "ms":
-            total += value / 1000
-        elif unit == "us":
-            total += value / 1_000_000
-    return total
+UNITS = {
+    "s": 1,
+    "sec": 1,
+    "second": 1,
+    "seconds": 1,
+    "m": 60,
+    "min": 60,
+    "minute": 60,
+    "minutes": 60,
+    "h": 3600,
+    "hr": 3600,
+    "hour": 3600,
+    "hours": 3600,
+    "d": 86400,
+    "day": 86400,
+    "days": 86400,
+    "w": 604800,
+    "week": 604800,
+    "weeks": 604800,
+}
 
 
 class TimeDateCtl:
@@ -110,48 +115,53 @@ class TimeDateCtl:
         TimeUSec=Tue 2025-09-16 07:01:33 UTC
         RTCTimeUSec=Tue 2025-09-16 07:01:33 UTC
         """
+        cmd = (
+            "timedatectl show; timedatectl show-timesync"
+            if Path("/sbin/systemd-timesyncd").exists()
+            else "timedatectl show"
+        )
         result = self._shell(
-            cmd="timedatectl show", capture_output=True, ignore_exit_code=True
+            cmd=cmd,
+            capture_output=True,
+            ignore_exit_code=True,
         )
         if result.returncode != 0:
             raise ValueError(f"timedatectl failed: {result.stderr}")
 
         output = dict(
             [
-                line.strip().split("=")
+                line.strip().split("=", maxsplit=1)
                 for line in result.stdout.splitlines()
                 if len(line.strip()) > 0
             ]
         )
+        if "PollIntervalMaxUSec" in output:
+            poll_interval_max = self._human_time_to_seconds(
+                output["PollIntervalMaxUSec"]
+            )
+        else:
+            poll_interval_max = -1
         return TimeSyncStatus(
             ntp=(output["NTP"] == "yes"),
             ntp_synchronized=(output["NTPSynchronized"] == "yes"),
-            poll_interval_max=self._get_poll_interval_max(),
+            poll_interval_max=poll_interval_max,
         )
 
-    def _get_poll_interval_max(self) -> float:
+    def _human_time_to_seconds(self, time_span: str) -> int:
         """
-        Parse max poll interval from timedatectl timesync-status output like:
-            Poll interval: 2min 8s (min: 32s; max 34min 8s)
-        Returns the max poll interval in seconds.
+        Converts human-readable time description
+        like "34min 8s" into integer seconds value like 2048.
+        Human-readable time spec: https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html#Parsing%20Time%20Spans
         """
-        result = self._shell(
-            cmd="timedatectl timesync-status",
-            capture_output=True,
-            ignore_exit_code=True,
-        )
-        if result.returncode != 0:
-            raise ValueError(f"timedatectl timesync-status failed: {result.stderr}")
+        matches = re.findall(r"(\d+)([a-z]+)", time_span.lower())
 
-        for line in result.stdout.splitlines():
-            if line.strip().startswith("Poll interval:"):
-                match = re.search(r"max\s+([^)]+)\)", line)
-                if match:
-                    return _parse_duration(match.group(1).strip())
+        if not matches and time_span.strip():
+            raise ValueError(f"Invalid time format: '{time_span}'")
 
-        raise ValueError(f"Could not parse poll interval from: {result.stdout}")
+        return sum([int(value) * UNITS[unit] for (value, unit) in matches])
 
 
 @pytest.fixture
 def timedatectl(systemd: Systemd, shell: ShellRunner) -> TimeDateCtl:
     return TimeDateCtl(systemd=systemd, shell=shell)
+
