@@ -1,11 +1,11 @@
 #define _GNU_SOURCE
+#include <fcntl.h>
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mount.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <unistd.h>
 
 #define check(X) if ((X) == -1) { perror(#X); exit(1); }
