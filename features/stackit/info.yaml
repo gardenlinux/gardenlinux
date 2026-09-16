@@ -1,0 +1,5 @@
+description: "STACKiT platform (cloud-init, KVM)"
+type: platform
+features:
+  include:
+    - cloud
