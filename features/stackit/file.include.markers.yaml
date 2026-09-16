@@ -1,0 +1,20 @@
+markers:
+  "etc/chrony/chrony.conf":
+  - "GL-TESTCOV-stackit-config-chrony"
+  "etc/cloud/cloud.cfg.d/01_debian-cloud.cfg":
+  - "GL-TESTCOV-stackit-config-cloud-apt-sources"
+  - "GL-TESTCOV-stackit-config-cloud-manage-hosts"
+  - "GL-TESTCOV-stackit-config-cloud-user-name"
+  - "GL-TESTCOV-stackit-config-cloud-user-shell"
+  - "GL-TESTCOV-stackit-config-cloud-user-lock-passwd"
+  - "GL-TESTCOV-stackit-config-cloud-user-sudo"
+  "etc/cloud/cloud.cfg.d/50-datasource.cfg":
+  - "GL-TESTCOV-stackit-config-cloud-datasource"
+  "etc/cloud/cloud.cfg.d/99_disable-network-config.cfg":
+  - "GL-TESTCOV-stackit-config-cloud-network-config-disable"
+  "etc/cloud/ds-identify.cfg":
+  - "GL-TESTCOV-stackit-config-cloud-datasource-identify"
+  "etc/kernel/cmdline.d/10-console.cfg":
+  - "GL-TESTCOV-stackit-config-kernel-cmdline-console"
+"etc/systemd/system-preset/00-chrony-disable.preset":
+  - "GL-TESTCOV-stackit-service-chrony-preset-disable"
