@@ -18,5 +18,3 @@ markers:
   - "GL-TESTCOV-stackit-config-kernel-cmdline-console"
 "etc/systemd/system-preset/00-chrony-disable.preset":
   - "GL-TESTCOV-stackit-service-chrony-preset-disable"
-  "etc/systemd/system/chronyd.service.d/10-after_dev-ptp0.device.conf":
-  - "GL-TESTCOV-stackit-service-chrony-after-ptp-device"
