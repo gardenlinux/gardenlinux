@@ -3,12 +3,12 @@
 ### Description
 
 <website-feature>
-This platform feature creates an artifact for STACKiT — SAP's cloud platform built on OpenStack.
+This platform feature creates an artifact for STACKIT — a cloud platform by Schwarz Digits Cloud GmbH & Co. KG, built on OpenStack.
 </website-feature>
 
 ### Features
 
-This feature creates a STACKiT-compatible image artifact as a `.raw` file.
+This feature creates a STACKIT-compatible image artifact as a `.raw` file.
 
 The image uses cloud-init with OpenStack/ConfigDrive as the primary datasource. Time synchronisation
 is provided by chrony using the KVM PTP hardware clock (`/dev/ptp0`) via the `ptp_kvm` kernel module,
