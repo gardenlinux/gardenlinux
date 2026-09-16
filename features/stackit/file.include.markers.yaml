@@ -16,9 +16,7 @@ markers:
   - "GL-TESTCOV-stackit-config-cloud-datasource-identify"
   "etc/kernel/cmdline.d/10-console.cfg":
   - "GL-TESTCOV-stackit-config-kernel-cmdline-console"
-  "etc/modules-load.d/ptp_kvm.conf":
-  - "GL-TESTCOV-stackit-config-modules-load-ptp-kvm"
-  "etc/systemd/system-preset/00-chrony-disable.preset":
+"etc/systemd/system-preset/00-chrony-disable.preset":
   - "GL-TESTCOV-stackit-service-chrony-preset-disable"
   "etc/systemd/system/chronyd.service.d/10-after_dev-ptp0.device.conf":
   - "GL-TESTCOV-stackit-service-chrony-after-ptp-device"
