@@ -1,0 +1,11 @@
+[Unit]
+Description=Initialize AIDE database on first boot
+ConditionPathExists=!/var/lib/aide/aide.db
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sh -c "grep -q '^/var/log/faillog' /etc/aide/aide.conf || echo '/var/log/faillog Full' >> /etc/aide/aide.conf"
+ExecStart=/usr/local/sbin/aide-init-onboot.sh
+
+[Install]
+WantedBy=multi-user.target
