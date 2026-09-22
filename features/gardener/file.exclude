@@ -1,2 +1,4 @@
+# GL-TESTCOV-gardener-config-containerd-no-config
 /etc/containerd/config.toml
-/etc/sysctl.d/40-restric-dmesg.conf
+# GL-TESTCOV-gardener-config-sysctl-no-restrict-dmesg
+/etc/sysctl.d/40-restrict-dmesg.conf
