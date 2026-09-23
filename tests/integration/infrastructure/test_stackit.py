@@ -43,7 +43,7 @@ def test_stackit_datasource_config_exists(file: File):
 def test_stackit_datasource_config_content(parse_file: ParseFile):
     """Test that STACKIT cloud-init datasource list contains ConfigDrive"""
     lines = parse_file.lines("/etc/cloud/cloud.cfg.d/50-datasource.cfg")
-    assert any("ConfigDrive" in line for line in lines)
+    assert "ConfigDrive" in lines
 
 
 @pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-network-config-disable"])
@@ -70,7 +70,9 @@ def test_stackit_cloud_network_config_disabled_content(parse_file: ParseFile):
 @pytest.mark.feature("stackit")
 def test_stackit_cloud_apt_preserve_sources(parse_file: ParseFile):
     """Test that STACKIT cloud-init preserves apt sources list"""
-    config = parse_file.parse("/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg", format="yaml")
+    config = parse_file.parse(
+        "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg", format="yaml"
+    )
     assert config["apt_preserve_sources_list"] is True
 
 
@@ -78,7 +80,9 @@ def test_stackit_cloud_apt_preserve_sources(parse_file: ParseFile):
 @pytest.mark.feature("stackit")
 def test_stackit_cloud_manage_etc_hosts(parse_file: ParseFile):
     """Test that STACKIT cloud-init manages /etc/hosts"""
-    config = parse_file.parse("/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg", format="yaml")
+    config = parse_file.parse(
+        "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg", format="yaml"
+    )
     assert config["manage_etc_hosts"] is True
 
 
@@ -113,7 +117,7 @@ def test_stackit_kernel_cmdline_console_config_exists(file: File):
 def test_stackit_kernel_cmdline_console_config_content(parse_file: ParseFile):
     """Test that STACKIT kernel cmdline enables serial console"""
     lines = parse_file.lines("/etc/kernel/cmdline.d/10-console.cfg", comment_char=[])
-    assert any("console=ttyS0" in line for line in lines)
+    assert "console=ttyS0" in lines
 
 
 # =============================================================================
@@ -133,9 +137,7 @@ def test_stackit_chrony_config_exists(file: File):
 def test_stackit_chrony_config_uses_ptp0(parse_file: ParseFile):
     """Test that STACKIT chrony uses KVM PTP hardware clock at /dev/ptp0"""
     lines = parse_file.lines("/etc/chrony/chrony.conf")
-    assert any(
-        "refclock PHC /dev/ptp0" in line for line in lines
-    ), "chrony must use KVM PTP clock source /dev/ptp0"
+    assert "refclock PHC /dev/ptp0" in lines
 
 
 @pytest.mark.testcov(["GL-TESTCOV-stackit-service-chrony-preset-disable"])
