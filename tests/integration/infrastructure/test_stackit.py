@@ -17,10 +17,17 @@ def test_stackit_ds_identify_exists(file: File):
 
 @pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-datasource-identify"])
 @pytest.mark.feature("stackit")
-def test_stackit_ds_identify_content(parse_file: ParseFile):
-    """Test that STACKIT cloud-init datasource identification config is correct"""
+def test_stackit_ds_identify_datasource(parse_file: ParseFile):
+    """Test that STACKIT cloud-init ds-identify.cfg sets datasource to OpenStack"""
     lines = parse_file.lines("/etc/cloud/ds-identify.cfg")
     assert "datasource: OpenStack" in lines
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-datasource-identify"])
+@pytest.mark.feature("stackit")
+def test_stackit_ds_identify_policy(parse_file: ParseFile):
+    """Test that STACKIT cloud-init ds-identify.cfg sets policy to enabled"""
+    lines = parse_file.lines("/etc/cloud/ds-identify.cfg")
     assert "policy: enabled" in lines
 
 
@@ -57,6 +64,22 @@ def test_stackit_cloud_network_config_disabled_content(parse_file: ParseFile):
 # =============================================================================
 # stackit Feature - Cloud Init User Configuration
 # =============================================================================
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-apt-sources"])
+@pytest.mark.feature("stackit")
+def test_stackit_cloud_apt_preserve_sources(parse_file: ParseFile):
+    """Test that STACKIT cloud-init preserves apt sources list"""
+    config = parse_file.parse("/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg", format="yaml")
+    assert config["apt_preserve_sources_list"] is True
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-manage-hosts"])
+@pytest.mark.feature("stackit")
+def test_stackit_cloud_manage_etc_hosts(parse_file: ParseFile):
+    """Test that STACKIT cloud-init manages /etc/hosts"""
+    config = parse_file.parse("/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg", format="yaml")
+    assert config["manage_etc_hosts"] is True
 
 
 @pytest.mark.testcov(
@@ -145,11 +168,28 @@ def test_stackit_chrony_restricted_service_disabled(systemd: Systemd):
 
 @pytest.mark.testcov(["GL-TESTCOV-stackit-service-no-systemd-timesyncd"])
 @pytest.mark.feature("stackit")
+@pytest.mark.booted(reason="Requires systemd")
+def test_stackit_no_timesyncd_service(systemd: Systemd):
+    """Test that systemd-timesyncd is not installed on STACKIT"""
+    assert not any(
+        u.unit == "systemd-timesyncd.service" for u in systemd.list_installed_units()
+    )
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-service-no-systemd-timesyncd-override"])
+@pytest.mark.feature("stackit")
 def test_stackit_no_timesyncd_override(file: File):
     """Test that STACKIT does not have systemd-timesyncd override (uses chrony instead)"""
     assert not file.exists(
         "/etc/systemd/system/systemd-timesyncd.service.d/override.conf"
     )
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-modprobe-no-udf-disable"])
+@pytest.mark.feature("stackit")
+def test_stackit_no_modprobe_udf_disable(file: File):
+    """Test that STACKIT does not have UDF modprobe disable config"""
+    assert not file.exists("/etc/modprobe.d/disabled_udf.conf")
 
 
 # =============================================================================
