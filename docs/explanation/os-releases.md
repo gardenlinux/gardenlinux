@@ -89,7 +89,6 @@ An Amazon S3 bucket serves as the primary distribution channel for OS images, pr
 
 - Direct access for automation and CI/CD pipelines
 - High availability and durability
-- Regional distribution (global and China-specific buckets)
 
 Artifact organization follows the CNAME hierarchy:
 
