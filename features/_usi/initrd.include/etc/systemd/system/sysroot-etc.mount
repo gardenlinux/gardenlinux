@@ -1,6 +1,5 @@
 [Unit]
-After=setup-etc-overlay.service
-Requires=setup-etc-overlay.service
+After=sysroot-var.mount
 
 [Mount]
 What=overlay
