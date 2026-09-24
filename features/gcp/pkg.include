@@ -2,5 +2,6 @@
 # cloud-init
 google-compute-engine-oslogin
 google-compute-engine
+# GL-TESTCOV-gcp-service-google-guest-agent-manager-enable
 google-guest-agent
 nvme-cli
