@@ -4,6 +4,5 @@ features:
   include:
     - base
     - ssh
-    - sap
     - log
     - _selinux
