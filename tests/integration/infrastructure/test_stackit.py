@@ -134,10 +134,10 @@ def test_stackit_chrony_config_exists(file: File):
 
 @pytest.mark.testcov(["GL-TESTCOV-stackit-config-chrony"])
 @pytest.mark.feature("stackit")
-def test_stackit_chrony_config_uses_ptp0(parse_file: ParseFile):
-    """Test that STACKIT chrony uses KVM PTP hardware clock at /dev/ptp0"""
+def test_stackit_chrony_config_uses_ptp_kvm(parse_file: ParseFile):
+    """Test that STACKIT chrony uses KVM PTP hardware clock via /dev/ptp_kvm symlink"""
     lines = parse_file.lines("/etc/chrony/chrony.conf")
-    assert "refclock PHC /dev/ptp0" in lines
+    assert "refclock PHC /dev/ptp_kvm" in lines
 
 
 @pytest.mark.testcov(["GL-TESTCOV-stackit-service-chrony-preset-disable"])
@@ -161,6 +161,55 @@ def test_stackit_chrony_wait_service_disabled(systemd: Systemd):
 def test_stackit_chrony_restricted_service_disabled(systemd: Systemd):
     """Test that chronyd-restricted.service is disabled by preset on STACKIT"""
     assert systemd.is_disabled("chronyd-restricted.service")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-modules-load-ptp-kvm"])
+@pytest.mark.feature("stackit")
+def test_stackit_modules_load_ptp_kvm_exists(file: File):
+    """Test that ptp_kvm is configured to load at boot"""
+    assert file.is_regular_file("/etc/modules-load.d/ptp_kvm.conf")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-modules-load-ptp-kvm"])
+@pytest.mark.feature("stackit")
+def test_stackit_modules_load_ptp_kvm_content(parse_file: ParseFile):
+    """Test that ptp_kvm modules-load.d config contains ptp_kvm"""
+    lines = parse_file.lines("/etc/modules-load.d/ptp_kvm.conf")
+    assert "ptp_kvm" in lines
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-udev-kvm-ptp"])
+@pytest.mark.feature("stackit")
+def test_stackit_udev_kvm_ptp_rule_exists(file: File):
+    """Test that KVM PTP udev rule file exists"""
+    assert file.is_regular_file("/etc/udev/rules.d/60-kvm-ptp.rules")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-udev-kvm-ptp"])
+@pytest.mark.feature("stackit")
+def test_stackit_udev_kvm_ptp_rule_content(parse_file: ParseFile):
+    """Test that KVM PTP udev rule creates ptp_kvm symlink"""
+    lines = parse_file.lines("/etc/udev/rules.d/60-kvm-ptp.rules")
+    assert 'SYMLINK+="ptp_kvm"' in lines
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-chronyd-after-ptp-device"])
+@pytest.mark.feature("stackit")
+def test_stackit_chronyd_drop_in_exists(file: File):
+    """Test that chronyd systemd drop-in binding it to ptp_kvm device exists"""
+    assert file.is_regular_file(
+        "/etc/systemd/system/chronyd.service.d/10-after_dev-ptp_kvm.device.conf"
+    )
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-chronyd-after-ptp-device"])
+@pytest.mark.feature("stackit")
+def test_stackit_chronyd_drop_in_binds_to_ptp_device(parse_file: ParseFile):
+    """Test that chronyd drop-in binds chronyd to dev-ptp_kvm.device"""
+    lines = parse_file.lines(
+        "/etc/systemd/system/chronyd.service.d/10-after_dev-ptp_kvm.device.conf"
+    )
+    assert "BindsTo=dev-ptp_kvm.device" in lines
 
 
 # =============================================================================
