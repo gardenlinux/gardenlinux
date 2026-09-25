@@ -22,7 +22,7 @@ def sudoers_edit():
 
 
 @pytest.mark.security_id(203764)
-@pytest.mark.feature("not lima")
+@pytest.mark.feature("sap and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
 def test_audit_rules_for_logging_attempts_to_delete_privileges(audit_rule):
@@ -35,7 +35,7 @@ def test_audit_rules_for_logging_attempts_to_delete_privileges(audit_rule):
 
 @pytest.mark.security_id(203764)
 @pytest.mark.skip("not implemented")
-@pytest.mark.feature("not lima")
+@pytest.mark.feature("sap and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
 def test_audit_rules_for_files_capabilities_removal(audit_rule):
@@ -46,7 +46,7 @@ def test_audit_rules_for_files_capabilities_removal(audit_rule):
 
 
 @pytest.mark.security_id(203764)
-@pytest.mark.feature("_selinux")
+@pytest.mark.feature("_selinux and sap")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 def test_audit_rules_for_selinux_policies_changes(audit_rule):
     """Verify writes/metadata changes under /etc/selinux are audited."""
@@ -56,7 +56,7 @@ def test_audit_rules_for_selinux_policies_changes(audit_rule):
 
 
 @pytest.mark.security_id(203764)
-@pytest.mark.feature("not lima")
+@pytest.mark.feature("sap and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
 def test_audit_rules_for_logging_attempts_to_modify_apparmor_policies(audit_rule):
@@ -67,7 +67,7 @@ def test_audit_rules_for_logging_attempts_to_modify_apparmor_policies(audit_rule
         ), f"stigcompliance: writing to or changing metadata of /etc/{file} should be audited"
 
 
-@pytest.mark.feature("not lima")
+@pytest.mark.feature("sap and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.modify(
     reason="changing /etc/sudoers file to check if audit works on a running system"
