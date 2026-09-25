@@ -209,7 +209,7 @@ def test_stackit_chronyd_drop_in_binds_to_ptp_device(parse_file: ParseFile):
     lines = parse_file.lines(
         "/etc/systemd/system/chronyd.service.d/10-after_dev-ptp_kvm.device.conf"
     )
-    assert "BindsTo=dev-ptp_kvm.device" in lines
+    assert "Wants=dev-ptp_kvm.device" in lines
 
 
 # =============================================================================
