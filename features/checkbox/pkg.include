@@ -1,4 +1,11 @@
 checkbox-ng
 checkbox-provider-base
 #checkbox-provider-resource
+python3-urwid
+python3-pip
 nginx
+ipmitool
+dmidecode
+stress-ng
+smartmontools
+ethtool

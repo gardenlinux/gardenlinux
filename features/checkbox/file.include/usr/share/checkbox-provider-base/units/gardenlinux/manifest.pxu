@@ -2,3 +2,43 @@ unit: manifest entry
 id: _has_ccloud
 _name: Converged Cloud
 value-type: bool
+
+unit: manifest entry
+id: _has_storage
+_name: Storage subsystem
+value-type: bool
+
+unit: manifest entry
+id: _has_network
+_name: Network subsystem
+value-type: bool
+
+unit: manifest entry
+id: _has_cpu
+_name: CPU subsystem
+value-type: bool
+
+unit: manifest entry
+id: _has_memory
+_name: Memory subsystem
+value-type: bool
+
+unit: manifest entry
+id: _has_usb
+_name: USB subsystem
+value-type: bool
+
+unit: manifest entry
+id: _has_ipmi
+_name: IPMI/BMC interface
+value-type: bool
+
+unit: manifest entry
+id: _has_bios_info
+_name: BIOS/Firmware/DMI information
+value-type: bool
+
+unit: manifest entry
+id: _has_stress
+_name: Longevity stress tests
+value-type: bool
