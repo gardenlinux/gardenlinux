@@ -114,6 +114,9 @@ def test_cloud_init_debian_cloud_manage_etc_hosts(parse_file: ParseFile):
         "GL-TESTCOV-aws-config-cloud-no-ntp",
         "GL-TESTCOV-aws-config-cloud-no-resizefs",
         "GL-TESTCOV-aws-config-cloud-no-growpart",
+        "GL-TESTCOV-azure-config-cloud-no-ntp",
+        "GL-TESTCOV-azure-config-cloud-no-resizefs",
+        "GL-TESTCOV-azure-config-cloud-no-growpart",
         "GL-TESTCOV-openstack-config-cloud-no-ntp",
         "GL-TESTCOV-openstack-config-cloud-no-resizefs",
         "GL-TESTCOV-openstack-config-cloud-no-growpart",
@@ -122,7 +125,7 @@ def test_cloud_init_debian_cloud_manage_etc_hosts(parse_file: ParseFile):
         "GL-TESTCOV-vmware-config-cloud-no-growpart",
     ]
 )
-@pytest.mark.feature("ali or aws or openstack or vmware")
+@pytest.mark.feature("ali or aws or azure or openstack or vmware")
 @pytest.mark.parametrize("module", ["ntp", "resizefs", "growpart"])
 def test_cloud_cfg_excludes_modules(parse_file: ParseFile, module: str):
     file = "/etc/cloud/cloud.cfg"
