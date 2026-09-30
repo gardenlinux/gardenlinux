@@ -1,3 +1,11 @@
+---
+title: "Feature: base"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/base/README.md
+github_target_path: docs/reference/features/base.md
+---
+
 ## Feature: base
 ### Description
 <website-feature>
@@ -17,5 +25,5 @@ Representing the base layer for Garden Linux requires many additional unit tests
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|`_slim`|
+|included_features|[`_slim`](/reference/features/_slim)|
 |excluded_features|None|

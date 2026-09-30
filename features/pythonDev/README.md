@@ -1,3 +1,11 @@
+---
+title: "Feature: pythonDev"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/pythonDev/README.md
+github_target_path: docs/reference/features/pythonDev.md
+---
+
 ## Feature: pythonDev
 ### Description
 <website-feature>
@@ -16,5 +24,5 @@ For production, we recommend using a [multistage build with bare-python](https:/
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|python|
+|included_features|[`python`](/reference/features/python)|
 |excluded_features|None|

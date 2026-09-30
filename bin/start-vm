@@ -318,7 +318,7 @@ qemu_opt_ignition () {
         ${bin_sed} -i "s/PATHGOESHERE//g;s/IPADDRESSGOESHERE/10.0.2.2/g" $CURR_DIR/$mac.ipxe
         QEMU_OPTS+=( -boot order=nc )
     else
-	# add neccessary ignfile config for qemu start
+	# add necessary ignfile config for qemu start
 	# https://docs.fedoraproject.org/en-US/fedora-coreos/provisioning-qemu/#_setting_up_a_new_vm
 	if [ "$ignfile" ]; then
 	    QEMU_OPTS+=( -fw_cfg name=opt/com.coreos/config,file=${ignfile} )
@@ -469,7 +469,7 @@ qemu_opt_disk () {
 
 # Validate and set UEFI related options
 qemu_opt_uefi () {
-    # Evaluate UEFI code and vars files for realted architecture and OS
+    # Evaluate UEFI code and vars files for related architecture and OS
     if [ "$arch" = amd64 ]; then
         # UEFI is optional on x86_64
         if [ $uefi ]; then
@@ -820,7 +820,7 @@ qemu_status () {
 
 # Start QEMU with QEMU_OPTS
 qemu_execute () {
-    # Execute Arch/Distro realted binary with according QEMU opts
+    # Execute Arch/Distro related binary with according QEMU opts
     $bin_qemu ${QEMU_OPTS[@]}
 }
 

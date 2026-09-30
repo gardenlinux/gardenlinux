@@ -20,6 +20,15 @@ for plugin in pytest_plugins:
     pytest.register_assert_rewrite(plugin)
 
 
+def pytest_assertrepr_compare(op, left, right):
+    if op == "in" and isinstance(right, str) and len(right) > 200:
+        return [
+            f"Assertion failed: '{left}' not found in comparison string.",
+            f"Comparison string (truncated): {right[:200]}...",
+        ]
+    return None
+
+
 @pytest.fixture(scope="session", autouse=True)
 def include_metadata_in_junit_xml_session(include_metadata_in_junit_xml):
     """Session-scoped fixture that uses pytest-metadata's include_metadata_in_junit_xml fixture."""

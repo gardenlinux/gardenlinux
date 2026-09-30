@@ -19,7 +19,7 @@ def pytest_addoption(parser: pytest.Parser):
 
 def pytest_configure(config: pytest.Config):
     global run_mutating_tests
-    run_mutating_tests = config.getoption("--allow-system-modifications")
+    run_mutating_tests = bool(config.getoption("--allow-system-modifications"))
 
     config.addinivalue_line(
         "markers",

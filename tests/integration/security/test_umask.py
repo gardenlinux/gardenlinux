@@ -8,12 +8,18 @@ from plugins.shell import ShellRunner
 
 
 @pytest.mark.testcov(["GL-TESTCOV-base-config-login-defs"])
+@pytest.mark.feature(
+    "not disaSTIGmedium", reason="disaSTIGmedium intentionally sets UMASK to 077"
+)
 def test_umask_file(parse_file: ParseFile):
     config = parse_file.parse("/etc/login.defs", format="spacedelim")
     assert config["UMASK"] == "027"
 
 
 @pytest.mark.testcov(["GL-TESTCOV-base-config-login-defs"])
+@pytest.mark.feature(
+    "not disaSTIGmedium", reason="disaSTIGmedium intentionally sets UMASK to 077"
+)
 @pytest.mark.root
 def test_umask_cmd(shell: ShellRunner):
     result = shell("su --login --command 'umask'", capture_output=True)

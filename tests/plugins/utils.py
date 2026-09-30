@@ -38,7 +38,7 @@ T = TypeVar("T")
 
 def check_for_duplicates(entries: List[T]) -> List[T]:
     """
-    checks for duplicates, to change equality comparision, add a compare field to the dataclass.
+    checks for duplicates, to change equality comparison, add a compare field to the dataclass.
     """
     duplicates = list[T]()
     visited_entries = list[T]()

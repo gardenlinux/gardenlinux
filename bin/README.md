@@ -15,7 +15,7 @@ By the given directory, we distinguish between scripts that are mandatory for th
 | garden-chroot | Performs all necessary steps to integrate Garden Linux features |
 | garden-config | Performs adjustments by activated `features` |
 | garden-feat.go | Helper script to validate defined `features` (include, exclude, depends) |
-| garden-fixup | Helper script to clean up uneeded files after build process |
+| garden-fixup | Helper script to clean up unneeded files after build process |
 | garden-fs | Creates the filesystem layout by `features` (creates: `fstab`) |
 | garden-init | Debootstraps Garden Linux |
 | garden-slimify | Creates a slimifyed version of Garden Linux |

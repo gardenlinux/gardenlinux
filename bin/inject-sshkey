@@ -52,7 +52,7 @@ def main():
     # Inject SSH pubkey into specific image type
     if type == "raw" or "qcow2":
         logging.info(f"Using image format: {type}")
-        # Eveluate userid from image
+        # Evaluate userid from image
         userid = raw_eval_userid(user,image)
         ssh_dir = raw_validate(image,path_home)
         raw_inject(image,path_home,user,key,ssh_dir,userid)

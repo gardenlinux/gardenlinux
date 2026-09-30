@@ -301,14 +301,22 @@ def test_libssl_is_in_fips_mode():
 
 
 @pytest.mark.feature("_fips")
-def test_openssl_FIPS_vendor_is_set(shell):
+def test_openssl_FIPS_vendor_name_is_set_correctly(shell):
     """
-    This validates that we have the FIPS provider loadable AND that the vendor name is set.
+    In this test, we check what provider name was registered by the fips.so module. The name was
+    submitted to the NIST's CMVP. Garden Linux has submitted the SAP SE Garden Linux [RELEASE]
+    OpenSSL Cryptographic Module to the IUT listing.
+
+    We have to ensure that the FIPS provder suffix isn't added by accidentally to it, to ensure
+    compliance.
     """
-    GARDENLINUX_FIPS_NAME = "SAP SE Garden Linux nightly OpenSSL Cryptographic Module FIPS Provider for OpenSSL"
+    GARDENLINUX_CMVP_NAME = "SAP SE Garden Linux nightly OpenSSL Cryptographic Module"
+    OPENSSL_FIPS_PROVIDER_SUFFIX = "FIPS Provider for OpenSSL"
+
+    result = shell("openssl list -providers", capture_output=True).stdout
+
     assert (
-        GARDENLINUX_FIPS_NAME
-        in shell("openssl list -providers", capture_output=True).stdout
+        GARDENLINUX_CMVP_NAME in result and OPENSSL_FIPS_PROVIDER_SUFFIX not in result
     ), "FIPS Vendor Name for OpenSSL is incorrect!"
 
 
@@ -435,7 +443,7 @@ def test_kernel_has_fips_entry_in_procfs(parse_file: ParseFile):
 def test_kernel_module_tcrypt_available_for_dracut(kernel_module: KernelModule):
     """
     Test that the tcrypt kernel module is available as loadable module. This will be invoke by
-    the dracut FIPS module. Since there where a bug in the kernel, we missed the configuraiton
+    the dracut FIPS module. Since there where a bug in the kernel, we missed the configuration
     """
     kernel_modules = ["tcrypt"]
     for module in kernel_modules:
@@ -491,3 +499,20 @@ def test_kernel_hmac_file_is_correct(
     assert (
         result.stdout.strip() == f"{kernel_file}: OK"
     ), f"sha512hmac command failed for {kernel_hmac_file}"
+
+
+@pytest.mark.feature("_fips")
+def test_kernel_configs_FIPS_vendor_is_set(
+    parse_file: ParseFile, kernel_configs: KernelConfigs
+):
+    """
+    Ensure that the FIPS module name is set correctly for the kernel.
+    It should look like as follows:
+       - SAP SE Garden Linux [RELEASE] Kernel Cryptographic Module
+    """
+    for config in kernel_configs.get_installed():
+        parsed_config = parse_file.parse(config.path, format="keyval")
+        assert (
+            parsed_config["CONFIG_CRYPTO_FIPS_NAME"]
+            == "SAP SE Garden Linux nightly Kernel Cryptographic Module"
+        ), f"CONFIG_CRYPTO_BENCHMARK not set to 'm' in {config.path}"

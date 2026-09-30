@@ -53,6 +53,7 @@ ARTIFACT TYPES
   tar                             For chroot testing (extracted image filesystem)
   raw                             For QEMU VM testing or cloud provider testing
   pxe.tar.gz                      For QEMU VM with PXE boot testing (extracted PXE archive)
+  iso                             For QEMU VM with ISO/CDROM boot testing (live system)
   oci                             For OCI image testing
 
 EXAMPLES
@@ -83,11 +84,15 @@ EXAMPLES
   # Run QEMU VM with PXE boot testing
   ./test .build/metal_pxe-amd64-today-local.pxe.tar.gz
 
+  # Run QEMU VM with ISO boot testing
+  ./test .build/baremetal-gardener_iso_prod-amd64-today-local.iso
+
 ENVIRONMENTS
   Chroot Testing: Runs tests directly in extracted image filesystem (fastest, filesystem-level only)
   QEMU Testing: Boots image in local QEMU virtual machine (full system testing, SSH on localhost:2222)
   Cloud Testing: Deploys image to cloud infrastructure using OpenTofu (real-world environment)
   PXE Testing: Boots PXE archive via QEMU network boot (full system testing)
+  ISO Testing: Boots ISO image via QEMU CDROM (live system testing)
   OCI Testing: Runs tests in container from OCI image (very fast, limited to base image and an unbooted system)
 
 For more information, see tests/README.md
@@ -177,6 +182,10 @@ while [ $# -gt 0 ]; do
 		qemu_args+=("$1")
 		shift
 		;;
+	--autoinstall)
+		qemu_args+=("$1")
+		shift
+		;;
 	*)
 		break
 		;;
@@ -262,7 +271,7 @@ else
 	tar)
 		"./util/run_chroot.sh" "${chroot_args[@]}" .build "$artifact"
 		;;
-	raw | pxe.tar.gz)
+	raw | pxe.tar.gz | iso)
 		if ! ((watch)); then
 			"./util/run_qemu.sh" "${qemu_args[@]}" .build "$artifact"
 		else

@@ -1,3 +1,11 @@
+---
+title: "Feature: _slim"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/_slim/README.md
+github_target_path: docs/reference/features/_slim.md
+---
+
 ## Feature: _slim
 ### Description
 <website-feature>
@@ -15,5 +23,5 @@ This feature does not support unit tests.
 |---|---|
 |type|flag|
 |artifact|None|
-|included_features|server|
+|included_features|[`server`](/reference/features/server)|
 |excluded_features|None|

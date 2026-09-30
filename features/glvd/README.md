@@ -1,3 +1,11 @@
+---
+title: "Feature: glvd"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/glvd/README.md
+github_target_path: docs/reference/features/glvd.md
+---
+
 ## Feature: glvd
 ### Description
 <website-feature>

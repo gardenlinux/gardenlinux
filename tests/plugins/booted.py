@@ -19,7 +19,7 @@ def pytest_addoption(parser: pytest.Parser):
 
 def pytest_configure(config: pytest.Config):
     global system_booted
-    system_booted = config.getoption("--system-booted")
+    system_booted = bool(config.getoption("--system-booted"))
 
     config.addinivalue_line(
         "markers",

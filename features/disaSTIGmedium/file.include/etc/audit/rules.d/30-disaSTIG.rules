@@ -26,7 +26,7 @@
 -a always,exit -F path=/usr/bin/setfacl -F perm=x -F auid>=1000 -F auid!=-1 -k perm-change
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/passwd -F perm=x -F auid>=1000 -F auid!=-1 -k passwd
+-w /usr/bin/passwd -p x -k passwd
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -S delete_module -F auid>=1000 -F auid!=-1 -k kernel-module
@@ -41,13 +41,13 @@
 -a always,exit -F path=/usr/bin/crontab -F perm=x -F auid>=1000 -F auid!=-1 -k crontab
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/sbin/usermod -F perm=x -F auid>=1000 -F auid!=-1 -k usermod
+-w /usr/sbin/usermod -p x -k usermod
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/chage -F perm=x -F auid>=1000 -F auid!=-1 -k suid-binary
+-w /usr/bin/chage -p x -k suid-binary
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/gpasswd -F perm=x -F auid>=1000 -F auid!=-1 -k suid-binary
+-w /usr/bin/gpasswd -p x -k suid-binary
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000004-GPOS-00004/
 -w /etc/passwd -p wa -k usergroup-modification
@@ -68,8 +68,8 @@
 -w /etc/security/opasswd -p wa -k usergroup-modification
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000468-GPOS-00212/
-# Note: rmdir syscall does not exist on arm64; unlinkat covers directory removal
--a always,exit -S unlink,unlinkat,rename,renameat -F auid>=1000 -F auid!=-1 -k file-delete
+# Note: rmdir syscall exists on amd64 only; arm64 uses 30-disaSTIG.rules.arm64 without it
+-a always,exit -S unlink,unlinkat,rename,renameat,rmdir -F auid>=1000 -F auid!=-1 -k file-delete
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000472-GPOS-00217/
 -w /var/run/utmp -p wa -k logins
@@ -87,7 +87,7 @@
 -w /bin/kmod -p x -k kernel-module
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/chfn -F perm=x -F auid>=1000 -F auid!=-1 -k suid-binary
+-w /usr/bin/chfn -p x -k suid-binary
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/bin/su -F perm=x -F auid>=1000 -F auid!=-1 -k suid-binary
@@ -107,7 +107,7 @@
 -a always,exit -S chmod,fchmodat -F auid>=1000 -F auid!=-1 -k perm-change
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
--a always,exit -F path=/usr/bin/chsh -F perm=x -F auid>=1000 -F auid!=-1 -k suid-binary
+-w /usr/bin/chsh -p x -k suid-binary
 
 # https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000064-GPOS-00033/
 -a always,exit -F path=/usr/bin/sudoedit -F perm=x -F auid>=1000 -F auid!=-1 -k suid-binary
@@ -137,3 +137,6 @@
 -w /usr/sbin/userdel -p x -k usermgmt
 -w /usr/sbin/vipw -p x -k usermgmt
 -w /usr/sbin/vigr -p x -k usermgmt
+
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000467-GPOS-00211/
+-w /sys/fs/selinux -p wa -k selinux-policy

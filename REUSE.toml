@@ -6,8 +6,8 @@ SPDX-PackageDownloadLocation = "https://github.com/gardenlinux/gardenlinux"
 [[annotations]]
 path = "**"
 precedence = "aggregate"
-SPDX-FileCopyrightText = "2020-2025 SAP SE or an SAP affiliate company and Gardenlinux contributors"
-SPDX-License-Identifier = "MIT"
+SPDX-FileCopyrightText = "2020-2026 SAP SE or an SAP affiliate company and Gardenlinux contributors"
+SPDX-License-Identifier = "Apache-2.0"
 
 [[annotations]]
 path = "**.md"

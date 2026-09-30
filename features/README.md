@@ -24,8 +24,8 @@ To initiate a build, navigate to the root directory of the `gardenlinux/gardenli
 Where:
 
 - `${platform}` denotes the desired platform (e.g., kvm, metal, aws). It should be the first part of the flavor that is built.
-- `${featureX}` represents one or more specific features from the `features/` folder. Features are appended and seperated by a hyphen `-` or (if the feature starts with an underscore `_`) by an underscore.
-- `${arch}` optinally you can reference a certain architecture `amd64` or `arm64`. It should be the last part of the flavor that is built.
+- `${featureX}` represents one or more specific features from the `features/` folder. Features are appended and separated by a hyphen `-` or (if the feature starts with an underscore `_`) by an underscore.
+- `${arch}` optionally you can reference a certain architecture `amd64` or `arm64`. It should be the last part of the flavor that is built.
 
 You can combine multiple platforms and features as needed.
 
@@ -89,7 +89,7 @@ The table can be created like this:
 
 The `flavors.yaml` file is used to define which flavors are to be build, tested and published.
 
-To e.g. build an the AWS image `aws-gardener_prod_trustedboot_tpm2-amd64`, you have to define the coresponding features and architecture like this.
+To e.g. build an the AWS image `aws-gardener_prod_trustedboot_tpm2-amd64`, you have to define the corresponding features and architecture like this.
 
 ```
 ---

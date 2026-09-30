@@ -1,3 +1,11 @@
+---
+title: "Feature: _selinux"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/_selinux/README.md
+github_target_path: docs/reference/features/_selinux.md
+---
+
 ## Feature: _selinux
 ### Description
 <website-feature>

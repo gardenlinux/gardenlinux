@@ -1,4 +1,6 @@
 # shellcheck shell=sh disable=SC2148
-TMOUT=900
-readonly TMOUT
-export TMOUT
+if [ -z "${TMOUT+x}" ]; then
+    TMOUT=900
+    readonly TMOUT
+    export TMOUT
+fi

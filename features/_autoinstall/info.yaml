@@ -1,0 +1,4 @@
+description: "auto-install to first block device (non-interactive)"
+type: flag
+features:
+  include: [ _install ]

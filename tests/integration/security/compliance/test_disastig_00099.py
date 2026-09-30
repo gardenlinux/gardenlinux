@@ -1,12 +1,12 @@
-from pathlib import Path
-
-import pytest
-
 """
 Ref: SRG-OS-000258-GPOS-00099
 
 Verify the operating system protects audit tools from unauthorized deletion.
 """
+
+from pathlib import Path
+
+import pytest
 
 AUDIT_TOOL_PATHS = [
     "/sbin/auditctl",
@@ -16,10 +16,12 @@ AUDIT_TOOL_PATHS = [
 ]
 
 
+@pytest.mark.security_id(203674)
 @pytest.mark.feature("not container")
 @pytest.mark.booted(reason="audit tools check requires booted system")
 @pytest.mark.root(reason="required to execute privileged tools")
 def test_audit_tools_parent_dirs_not_writable(file):
+    """Verify the parent directories of auditctl/last/journalctl are not rwxrwxrwx, rwxrwxr-x or rwxrwx---."""
     checked = set()
     for path in AUDIT_TOOL_PATHS:
         if not file.exists(path):

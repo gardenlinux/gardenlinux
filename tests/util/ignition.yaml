@@ -1,0 +1,19 @@
+---
+variant: fcos
+version: 1.3.0
+storage:
+  files:
+    - path: /opt/install/partitions
+      overwrite: yes
+      mode: 0755
+      contents:
+        inline: |
+          label: gpt
+          type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, name="EFI", size=510MiB
+          type=4f68bce3-e8cd-4db1-96e7-fbcaf984b709, name="ROOT"
+    - path: /opt/install/target
+      overwrite: yes
+      mode: 0755
+      contents:
+        inline: |
+          disk=/dev/vda

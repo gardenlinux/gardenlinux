@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Parameter 1: garden linux version
 # Parameter 2: ARCH (arm64, amd64, all)
