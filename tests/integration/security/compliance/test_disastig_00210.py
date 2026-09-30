@@ -4,21 +4,7 @@ Ref: SRG-OS-000466-GPOS-00210
 Verify the operating system generates audit records when successful/unsuccessful attempts to delete privileges occur.
 """
 
-import fileinput
-import os
-import shutil
-
 import pytest
-
-
-@pytest.fixture
-def sudoers_edit():
-    for line in fileinput.input("/etc/sudoers", inplace=True, backup=".bak"):
-        if not line.startswith("# Host alias specification"):
-            print(line, end="")
-    yield
-    shutil.copy2("/etc/sudoers.bak", "/etc/sudoers")
-    os.remove("/etc/sudoers.bak")
 
 
 @pytest.mark.security_id(203764)
