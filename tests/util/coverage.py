@@ -1060,6 +1060,103 @@ def generate_json_report(
     return report
 
 
+def generate_markdown_report(
+    markers_by_feature: Dict[str, List[str]],
+    found_markers: Set[str],
+    all_features: Set[str],
+    excluded_features: Set[str],
+    test_counts: Dict[str, int],
+    output_file: Optional[Path] = None,
+) -> str:
+    """
+    Generate a GitHub-flavoured Markdown coverage summary.
+
+    Always includes a summary table with key metrics.  When untested or
+    orphaned markers exist, adds collapsed <details> sections listing them.
+
+    Args:
+        markers_by_feature: Dict mapping feature names to their markers
+        found_markers: Set of markers found in test files
+        all_features: Set of all feature names (excludes excluded features)
+        excluded_features: Set of excluded feature names
+        test_counts: Dict with test function counts
+        output_file: Optional path to write the markdown report
+
+    Returns:
+        The markdown string.
+    """
+    stats = calculate_coverage_stats(markers_by_feature, found_markers)
+    cov = stats["coverage_percentage"]
+
+    if cov == 100.0:
+        status = "✅"
+    elif cov >= 80.0:
+        status = "⚠️"
+    else:
+        status = "❌"
+
+    lines: List[str] = []
+    lines.append("## Marker Coverage Summary")
+    lines.append("")
+    lines.append("| Metric | Value |")
+    lines.append("|--------|-------|")
+    lines.append(f"| Coverage | {status} {cov:.1f}% |")
+    lines.append(f"| Total markers | {stats['total_markers']} |")
+    lines.append(f"| Tested markers | {stats['covered_count']} |")
+    lines.append(f"| Untested markers | {stats['untested_count']} |")
+    lines.append(f"| Orphaned markers | {len(stats['orphaned_ids'])} |")
+    lines.append(
+        f"| Features with markers | {len(markers_by_feature)} / {len(all_features)} |"
+    )
+    lines.append(f"| Excluded features | {len(excluded_features)} |")
+    lines.append(f"| Total test functions | {test_counts['total_tests']} |")
+    lines.append(
+        f"| Tests referencing markers | {test_counts['tests_with_markers']} / {test_counts['total_tests']} |"
+    )
+    lines.append("")
+
+    # Untested markers details (collapsed)
+    if stats["untested_by_feature"]:
+        lines.append("<details>")
+        lines.append("<summary>Untested markers by feature</summary>")
+        lines.append("")
+        for feature in sorted(stats["untested_by_feature"].keys()):
+            untested = stats["untested_by_feature"][feature]
+            total = len(markers_by_feature[feature])
+            lines.append(f"**{feature}** ({len(untested)} untested / {total} total)")
+            lines.append("")
+            for tid in untested:
+                lines.append(f"- `{tid}`")
+            lines.append("")
+        lines.append("</details>")
+        lines.append("")
+
+    # Orphaned markers details (collapsed)
+    if stats["orphaned_ids"]:
+        lines.append("<details>")
+        lines.append(
+            "<summary>Orphaned markers (in tests but not in features)</summary>"
+        )
+        lines.append("")
+        for tid in sorted(stats["orphaned_ids"]):
+            lines.append(f"- `{tid}`")
+        lines.append("")
+        lines.append("</details>")
+        lines.append("")
+
+    content = "\n".join(lines)
+
+    if output_file:
+        try:
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+            output_file.write_text(content)
+            print(f"✓ Markdown report written to: {output_file}")
+        except Exception as e:
+            print(f"⚠ Warning: Could not write Markdown report to {output_file}: {e}")
+
+    return content
+
+
 def main():
     """Generate static coverage report by matching markers from features with test files."""
     features_dir = repo_root / "features"
@@ -1085,7 +1182,35 @@ def main():
         repo_root, excluded_features
     )
 
-    # Report all validation errors at once
+    # Detect duplicate markers before deduplication
+    within_feature_dupes, across_feature_dupes = detect_duplicate_markers(
+        markers_by_feature_raw
+    )
+
+    # Collect test data early so it is always available for the summary
+    found_markers = find_markers_in_test_files(repo_root)
+    test_counts = count_test_functions(repo_root)
+
+    # Get all feature names (including those without markers)
+    all_features = set()
+    if features_dir.exists():
+        for feature_dir in features_dir.iterdir():
+            if feature_dir.is_dir():
+                all_features.add(feature_dir.name)
+
+    # Remove excluded features from all_features for reporting
+    all_features = all_features - excluded_features
+
+    # Deduplicate markers for coverage analysis (after duplicate check)
+    markers_by_feature = {}
+    for feature, markers in markers_by_feature_raw.items():
+        markers_by_feature[feature] = sorted(set(markers))
+
+    # Track whether a hard error was encountered; report generation still runs
+    # so that the summary and all report artefacts are always produced.
+    hard_error = False
+
+    # Report all validation errors
     if validation_errors:
         print("\n" + "=" * 80)
         print("❌ ERROR: Markers defined for non-existent files")
@@ -1110,47 +1235,24 @@ def main():
             "Please ensure all files referenced in markers YAML files actually exist."
         )
         print("=" * 80 + "\n")
-        return 1
-
-    # Detect duplicate markers before deduplication
-    within_feature_dupes, across_feature_dupes = detect_duplicate_markers(
-        markers_by_feature_raw
-    )
+        hard_error = True
 
     # Report duplicate errors
     if within_feature_dupes or across_feature_dupes:
         report_duplicate_errors(
             markers_by_feature_raw, within_feature_dupes, across_feature_dupes
         )
-        return 1
-
-    # Deduplicate markers for coverage analysis (after duplicate check)
-    markers_by_feature = {}
-    for feature, markers in markers_by_feature_raw.items():
-        markers_by_feature[feature] = sorted(set(markers))
-
-    # Get all feature names (including those without markers)
-    all_features = set()
-    if features_dir.exists():
-        for feature_dir in features_dir.iterdir():
-            if feature_dir.is_dir():
-                all_features.add(feature_dir.name)
-
-    # Remove excluded features from all_features for reporting
-    all_features = all_features - excluded_features
+        hard_error = True
 
     total_features_with_ids = len(markers_by_feature)
     total_markers = sum(len(ids) for ids in markers_by_feature.values())
 
-    found_markers = find_markers_in_test_files(repo_root)
-    test_counts = count_test_functions(repo_root)
-
-    # Generate human-readable CLI coverage report
+    # Generate human-readable CLI coverage report (always)
     untested_count, orphaned_count = generate_cli_report(
         markers_by_feature, found_markers, all_features, test_counts
     )
 
-    # Generate JSON report
+    # Generate JSON report (always)
     json_output = repo_root / "tests" / "coverage_report.json"
     generate_json_report(
         markers_by_feature,
@@ -1161,7 +1263,7 @@ def main():
         json_output,
     )
 
-    # Generate JUnit XML report
+    # Generate JUnit XML report (always)
     junit_output = repo_root / "tests" / "coverage_report.xml"
     generate_junit_xml_report(
         markers_by_feature,
@@ -1172,11 +1274,25 @@ def main():
         junit_output,
     )
 
+    # Generate Markdown report (always)
+    md_output = repo_root / "tests" / "coverage_report.md"
+    generate_markdown_report(
+        markers_by_feature,
+        found_markers,
+        all_features,
+        excluded_features,
+        test_counts,
+        md_output,
+    )
+
     # Determine exit code based on results
+    # Exit 1: Hard error - validation errors or duplicate markers
     # Exit 0: Success - all markers properly covered, no orphans
     # Exit 2: Warning - Has untested markers (features not covered by tests)
     # Exit 3: Warning - Has orphaned markers (tests reference non-existent features)
     # Exit 4: Warning - Both untested AND orphaned markers exist
+    if hard_error:
+        return 1
     if untested_count > 0 and orphaned_count > 0:
         return 4
     elif orphaned_count > 0:
