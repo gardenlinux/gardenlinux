@@ -52,11 +52,7 @@ class Find:
                             continue
                         full_path = os.path.join(dirpath, dirname)
                         if self.same_mnt_only:
-                            try:
-                                if os.stat(full_path).st_dev != root_dev:
-                                    continue
-                            # Skip dead symlinks
-                            except FileNotFoundError:
+                            if os.lstat(full_path).st_dev != root_dev:
                                 continue
                         yield full_path
 
@@ -70,11 +66,7 @@ class Find:
                             continue
                         full_path = os.path.join(dirpath, filename)
                         if self.same_mnt_only:
-                            try:
-                                if os.stat(full_path).st_dev != root_dev:
-                                    continue
-                            # Skip dead symlinks
-                            except FileNotFoundError:
+                            if os.lstat(full_path).st_dev != root_dev:
                                 continue
                         yield full_path
 
