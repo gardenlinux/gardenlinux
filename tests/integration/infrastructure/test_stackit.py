@@ -165,6 +165,7 @@ def test_stackit_chrony_restricted_service_disabled(systemd: Systemd):
 
 @pytest.mark.testcov(["GL-TESTCOV-stackit-config-modules-load-ptp-kvm"])
 @pytest.mark.feature("stackit")
+@pytest.mark.arch("amd64", reason="ptp_kvm is built-in on arm64, modules-load.d not needed")
 def test_stackit_modules_load_ptp_kvm_exists(file: File):
     """Test that ptp_kvm is configured to load at boot"""
     assert file.is_regular_file("/etc/modules-load.d/ptp_kvm.conf")
@@ -172,6 +173,7 @@ def test_stackit_modules_load_ptp_kvm_exists(file: File):
 
 @pytest.mark.testcov(["GL-TESTCOV-stackit-config-modules-load-ptp-kvm"])
 @pytest.mark.feature("stackit")
+@pytest.mark.arch("amd64", reason="ptp_kvm is built-in on arm64, modules-load.d not needed")
 def test_stackit_modules_load_ptp_kvm_content(parse_file: ParseFile):
     """Test that ptp_kvm modules-load.d config contains ptp_kvm"""
     lines = parse_file.lines("/etc/modules-load.d/ptp_kvm.conf")
