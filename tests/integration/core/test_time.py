@@ -251,7 +251,7 @@ def test_server_systemd_timesyncd_override_exists(file: File):
 @pytest.mark.testcov(["GL-TESTCOV-server-service-systemd-timesyncd-enable"])
 @pytest.mark.flaky(reruns=10, reruns_delay=30, only_rerun="AssertionError")
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
-@pytest.mark.feature("not azure and not aws and not gcp and not gdch")
+@pytest.mark.feature("not azure and not aws and not gcp and not gdch and not stackit")
 def test_ntp(timedatectl: TimeDateCtl):
     """
     Validate that systemd-timesyncd is installed and active.
