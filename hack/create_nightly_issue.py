@@ -205,18 +205,89 @@ def gh(session, path, **kwargs):
     return resp.json()
 
 
-def get_last_job_log_lines(session, owner, repo, job_id):
+def _parse_log_ts(token):
+    """
+    Parse a GitHub Actions log timestamp token (e.g. '2026-09-30T03:31:40.2844016Z')
+    into a timezone-aware datetime.  Returns None if the token is not a valid
+    ISO-8601 timestamp.
+    """
+    try:
+        # Python < 3.11 does not accept trailing 'Z'; normalise to '+00:00'.
+        return datetime.fromisoformat(token.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _whole_log_tail(full_log, step_name=None):
+    lines = [l for l in full_log.splitlines() if l]
+    last = lines[-20:] if lines else []
+    return ("\n".join(last) if last else "(no log output)"), step_name
+
+
+def get_first_failed_step_log_lines(session, owner, repo, job_id, steps):
+    """
+    Return (log_text, step_name): the last 20 non-empty lines of the first
+    failing step's output.
+
+    Strategy:
+    1. Find the first step with conclusion == 'failure'; use its started_at as
+       the lower timestamp bound (started_at - 1s).
+    2. Fetch the full job log.
+    3. Collect lines from the lower bound onward, stopping before the first
+       'Post job cleanup.' line — the part of the log that
+       immediately follows the ##[error] line ending a failed step.
+    4. Return the last 20 matched lines + the step name.
+
+    Falls back to the whole-job last 20 lines on any error path.
+    Returns a (log_text, step_name) tuple.
+    """
+    failed_steps = sorted(
+        [s for s in steps if s.get("conclusion") == "failure"],
+        key=lambda s: s.get("number", 0),
+    )
+
     try:
         resp = session.get(
             f"https://api.github.com/repos/{owner}/{repo}/actions/jobs/{job_id}/logs",
             allow_redirects=True,
+            timeout=120,
         )
         resp.raise_for_status()
-        lines = [l for l in resp.text.splitlines() if l]
-        last = lines[-10:] if lines else []
-        return "\n".join(last) if last else "(no log output)"
+        full_log = resp.text
     except Exception as e:
-        return f"Error retrieving logs: {e}"
+        return f"Error retrieving logs: {e}", None
+
+    if not failed_steps:
+        return _whole_log_tail(full_log)
+
+    step = failed_steps[0]
+    step_name = step.get("name")
+    start_dt = _parse_log_ts(step.get("started_at") or "")
+
+    if start_dt is None:
+        return _whole_log_tail(full_log, step_name)
+
+    lo = start_dt - timedelta(seconds=1)
+
+    matched = []
+    for raw in full_log.splitlines():
+        if not raw:
+            continue
+        if "Post job cleanup." in raw:
+            break
+        token = raw.split(" ", 1)[0]
+        ts = _parse_log_ts(token)
+        if ts is None or ts < lo:
+            continue
+        matched.append(raw)
+        if "##[error]" in raw:
+            break
+
+    if not matched:
+        return _whole_log_tail(full_log, step_name)
+
+    last = matched[-20:]
+    return "\n".join(last), step_name
 
 
 def find_quarterly_epic(session, owner, repo, logger):
@@ -323,10 +394,13 @@ def create_nightly_failure_issue(
     logger.debug(f"Fetched {len(all_jobs)} jobs for run {run_id}")
     failed_jobs = [j for j in all_jobs if j.get("conclusion") == "failure"]
 
-    # Fetch job logs once and cache them
+    # Fetch job logs once and cache them (log text + failing step name)
     log_lines_map = {}
     for job in failed_jobs:
-        log_lines_map[job["id"]] = get_last_job_log_lines(session, owner, repo, job["id"])
+        log_text, step_name = get_first_failed_step_log_lines(
+            session, owner, repo, job["id"], job.get("steps", [])
+        )
+        log_lines_map[job["id"]] = (log_text, step_name)
 
     # Test results from test-report artifact
     test_totals = None
@@ -391,11 +465,14 @@ def create_nightly_failure_issue(
             b += "- No failed jobs detected.\n"
 
         if failed_jobs:
-            b += "\n### Failed job logs (last 10 lines)\n\n"
+            b += "\n### Failed job logs (last 20 lines)\n\n"
             for job in failed_jobs:
-                log_lines = log_lines_map.get(job["id"], "(no log output)")
+                log_lines, step_name = log_lines_map.get(job["id"], ("(no log output)", None))
                 b += "<details>\n"
-                b += f"<summary><b>{job['name']}</b></summary>\n\n"
+                if step_name:
+                    b += f"<summary><b>{job['name']}</b> — step: {step_name}</summary>\n\n"
+                else:
+                    b += f"<summary><b>{job['name']}</b></summary>\n\n"
                 b += "```\n"
                 b += log_lines
                 b += "\n```\n\n"
