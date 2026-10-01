@@ -498,6 +498,18 @@ def test_correct_ntp_on_aws(timedatectl: TimeDateCtl):
     # Test implementation
 ```
 
+#### `@pytest.mark.gl_version("<expr>", mode="warning")`
+
+Gates a test on the running Garden Linux version (from `GARDENLINUX_VERSION` in `/etc/os-release`), for cross-version testing where a newer suite runs against older maintained releases. `<expr>` is one of `>`, `<`, or `=` followed by a version, e.g. `">1592.0.0"`. `>=` and `<=` are rejected. Versions are compared as `(major, minor, patch)` per [ADR-0011](/reference/adr/0011-garden-linux-versioning); legacy two-segment versions (e.g. `1443.2`) are accepted with patch treated as `0`.
+
+`mode` controls behavior when the constraint is NOT satisfied: `skip` (do not run), `warning` (run; a failure becomes a warning, default), `xfail` (run; a failure becomes an expected failure). When the constraint IS satisfied the test runs normally. A non-numeric `GARDENLINUX_VERSION` (nightly/dev `today`) is treated as satisfied and emits a warning. See [ADR-0039](/reference/adr/0039-gl-version-marker-cross-version-testing).
+
+```python
+@pytest.mark.gl_version(">1592.0.0", mode="skip")
+def test_new_networking_behavior(client):
+    ...
+```
+
 ### Common filtering patterns
 
 **Environment-specific filtering:**
