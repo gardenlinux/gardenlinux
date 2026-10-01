@@ -242,7 +242,7 @@ def test_fedramp_chrony_service_active(systemd: Systemd):
         "GL-TESTCOV-server-config-service-systemd-timesyncd-override",
     ]
 )
-@pytest.mark.feature("server and not azure")
+@pytest.mark.feature("server and not azure and not stackit")
 def test_server_systemd_timesyncd_override_exists(file: File):
     """Test that systemd-timesyncd service override exists"""
     assert file.exists("/etc/systemd/system/systemd-timesyncd.service.d/override.conf")
