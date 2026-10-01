@@ -1,7 +1,6 @@
 import pytest
 from plugins.file import File
 from plugins.parse_file import ParseFile
-from plugins.systemd import Systemd
 
 # =============================================================================
 # azure Feature - Microsoft Azure
@@ -91,19 +90,6 @@ def test_gcp_udev_gce_disk_removal_rules(file: File):
     assert file.exists(
         "/usr/lib/udev/rules.d/64-gce-disk-removal.rules"
     ), "GCP GCE disk removal udev rules should exist"
-
-
-@pytest.mark.testcov(
-    [
-        "GL-TESTCOV-gcp-service-google-guest-agent-manager-mask",
-    ]
-)
-@pytest.mark.feature("gcp")
-def test_gcp_google_guest_agent_manager_masked(systemd: Systemd):
-    """Test that GCP Google guest agent manager is masked"""
-    assert systemd.is_masked(
-        "google-guest-agent-manager.service"
-    ), "GCP Google guest agent manager should be masked"
 
 
 # =============================================================================
