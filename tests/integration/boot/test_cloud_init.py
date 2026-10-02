@@ -529,3 +529,103 @@ def test_vmware_cloud_init_local_service_enabled(systemd: Systemd):
 def test_vmware_cloud_init_local_service_inactive(systemd: Systemd):
     """Test that cloud-init-local.service is inactive"""
     assert systemd.is_inactive("cloud-init-local.service")
+
+
+# =============================================================================
+# stackit Feature - Cloud Init Configuration
+# =============================================================================
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-datasource-identify"])
+@pytest.mark.feature("stackit")
+def test_stackit_ds_identify_exists(file: File):
+    """Test that STACKIT cloud-init datasource identification config exists"""
+    assert file.is_regular_file("/etc/cloud/ds-identify.cfg")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-datasource-identify"])
+@pytest.mark.feature("stackit")
+def test_stackit_ds_identify_datasource(parse_file: ParseFile):
+    """Test that STACKIT cloud-init ds-identify.cfg sets datasource to OpenStack"""
+    lines = parse_file.lines("/etc/cloud/ds-identify.cfg")
+    assert "datasource: OpenStack" in lines
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-datasource-identify"])
+@pytest.mark.feature("stackit")
+def test_stackit_ds_identify_policy(parse_file: ParseFile):
+    """Test that STACKIT cloud-init ds-identify.cfg sets policy to enabled"""
+    lines = parse_file.lines("/etc/cloud/ds-identify.cfg")
+    assert "policy: enabled" in lines
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-datasource"])
+@pytest.mark.feature("stackit")
+def test_stackit_datasource_config_exists(file: File):
+    """Test that STACKIT cloud-init datasource list config exists"""
+    assert file.is_regular_file("/etc/cloud/cloud.cfg.d/50-datasource.cfg")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-datasource"])
+@pytest.mark.feature("stackit")
+def test_stackit_datasource_config_content(parse_file: ParseFile):
+    """Test that STACKIT cloud-init datasource list contains ConfigDrive"""
+    lines = parse_file.lines("/etc/cloud/cloud.cfg.d/50-datasource.cfg")
+    assert "ConfigDrive" in lines
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-network-config-disable"])
+@pytest.mark.feature("stackit")
+def test_stackit_cloud_network_config_disabled(file: File):
+    """Test that STACKIT cloud-init network config is disabled"""
+    assert file.is_regular_file("/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-network-config-disable"])
+@pytest.mark.feature("stackit")
+def test_stackit_cloud_network_config_disabled_content(parse_file: ParseFile):
+    """Test that STACKIT cloud-init network config disable content is correct"""
+    lines = parse_file.lines("/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg")
+    assert "network: {config: disabled}" in lines
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-apt-sources"])
+@pytest.mark.feature("stackit")
+def test_stackit_cloud_apt_preserve_sources(parse_file: ParseFile):
+    """Test that STACKIT cloud-init preserves apt sources list"""
+    config = parse_file.parse(
+        "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg", format="yaml"
+    )
+    assert config["apt_preserve_sources_list"] is True
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-manage-hosts"])
+@pytest.mark.feature("stackit")
+def test_stackit_cloud_manage_etc_hosts(parse_file: ParseFile):
+    """Test that STACKIT cloud-init manages /etc/hosts"""
+    config = parse_file.parse(
+        "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg", format="yaml"
+    )
+    assert config["manage_etc_hosts"] is True
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-stackit-config-cloud-user-name",
+        "GL-TESTCOV-stackit-config-cloud-user-shell",
+        "GL-TESTCOV-stackit-config-cloud-user-lock-passwd",
+        "GL-TESTCOV-stackit-config-cloud-user-sudo",
+    ]
+)
+@pytest.mark.feature("stackit")
+def test_stackit_cloud_default_user_config_exists(file: File):
+    """Test that STACKIT cloud-init default user config exists"""
+    assert file.is_regular_file("/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-service-cloud-init-local-enable"])
+@pytest.mark.feature("stackit")
+@pytest.mark.booted(reason="Requires systemd")
+def test_stackit_cloud_init_local_enabled(systemd: Systemd):
+    """Test that cloud-init-local.service is enabled on STACKIT"""
+    assert systemd.is_enabled("cloud-init-local.service")
