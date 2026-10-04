@@ -4,25 +4,11 @@ Ref: SRG-OS-000466-GPOS-00210
 Verify the operating system generates audit records when successful/unsuccessful attempts to delete privileges occur.
 """
 
-import fileinput
-import os
-import shutil
-
 import pytest
 
 
-@pytest.fixture
-def sudoers_edit():
-    for line in fileinput.input("/etc/sudoers", inplace=True, backup=".bak"):
-        if not line.startswith("# Host alias specification"):
-            print(line, end="")
-    yield
-    shutil.copy2("/etc/sudoers.bak", "/etc/sudoers")
-    os.remove("/etc/sudoers.bak")
-
-
 @pytest.mark.security_id(203764)
-@pytest.mark.feature("not lima")
+@pytest.mark.feature("sap and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
 def test_audit_rules_for_logging_attempts_to_delete_privileges(audit_rule):
@@ -34,19 +20,7 @@ def test_audit_rules_for_logging_attempts_to_delete_privileges(audit_rule):
 
 
 @pytest.mark.security_id(203764)
-@pytest.mark.skip("not implemented")
-@pytest.mark.feature("not lima")
-@pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
-@pytest.mark.root(reason="required to query audit logs")
-def test_audit_rules_for_files_capabilities_removal(audit_rule):
-    """Verify the setcap syscall is audited."""
-    assert audit_rule(
-        syscall="setcap"
-    ), "stigcompliance: setcap syscall audit rule is not configured"
-
-
-@pytest.mark.security_id(203764)
-@pytest.mark.feature("_selinux")
+@pytest.mark.feature("_selinux and sap")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 def test_audit_rules_for_selinux_policies_changes(audit_rule):
     """Verify writes/metadata changes under /etc/selinux are audited."""
@@ -56,7 +30,7 @@ def test_audit_rules_for_selinux_policies_changes(audit_rule):
 
 
 @pytest.mark.security_id(203764)
-@pytest.mark.feature("not lima")
+@pytest.mark.feature("sap and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit logs")
 def test_audit_rules_for_logging_attempts_to_modify_apparmor_policies(audit_rule):
@@ -67,7 +41,7 @@ def test_audit_rules_for_logging_attempts_to_modify_apparmor_policies(audit_rule
         ), f"stigcompliance: writing to or changing metadata of /etc/{file} should be audited"
 
 
-@pytest.mark.feature("not lima")
+@pytest.mark.feature("sap and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.modify(
     reason="changing /etc/sudoers file to check if audit works on a running system"

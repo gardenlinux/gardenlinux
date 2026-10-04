@@ -265,7 +265,7 @@ gh workflow -R gardenlinux/docs \
 
 Or via GitHub UI:
 
-1. Go to [Actions → Netlify Deployment](https://github.com/gardenlinux/gardenlinux/actions/workflows/netlify-deployment.yml)
+1. Go to [Actions → Netlify Deployment](https://github.com/gardenlinux/docs/actions/workflows/netlify-deploy.yml)
 2. Select `main` branch
 3. Click "Run workflow"
 
