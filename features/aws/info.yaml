@@ -1,5 +1,6 @@
 description: "aws platform (cloudinit)"
 type: platform
+artifact: [".raw"]
 features:
   include: 
     - cloud
