@@ -1,0 +1,313 @@
+#!/usr/bin/env python3
+"""Scaffold a feature README's ### Files table and ### Related features section.
+
+Usage:
+    bin/gl-feature-readme-scaffold features/<name>
+
+Prints to stdout:
+  - A ### Files markdown table with pre-populated links and stub Purpose entries.
+  - A ### Related features skeleton from info.yaml include/exclude lists.
+  - A suggested artifact: line for info.yaml (if image.*/convert.* scripts exist).
+
+This script is a scaffolding aid, not a live generator. Run it once per feature
+during the README rollout, then edit the output manually.
+"""
+
+import os
+import sys
+import re
+
+
+# Map from file name (or prefix pattern) to (anchor_slug, stub_purpose_template)
+# For patterns ending with '/**', matched by prefix.
+FILE_MAP = [
+    ("info.yaml",
+     "/reference/features/#info-yaml-file-structure",
+     None),  # purpose built dynamically from info.yaml
+    ("pkg.include",
+     "/reference/features/#pkg-include",
+     None),  # purpose built from file contents
+    ("pkg.exclude",
+     "/reference/features/#pkg-exclude",
+     None),  # purpose built from file contents
+    ("file.include.stat",
+     "/reference/features/#file-include-stat",
+     "Sets owner/permissions for files in `file.include`."),
+    ("file.exclude",
+     "/reference/features/#file-exclude",
+     None),  # purpose built from file contents
+    ("file.include.markers.yaml",
+     "/reference/testing/test-coverage-markers",
+     "Maps files to test-coverage marker IDs."),
+    ("initrd.include.markers.yaml",
+     "/reference/testing/test-coverage-markers",
+     "Maps initrd files to test-coverage marker IDs."),
+    ("exec.config",
+     "/reference/features/#exec-config-exec-early-exec-late-exec-post",
+     "(describe what this script configures)"),
+    ("exec.early",
+     "/reference/features/#exec-config-exec-early-exec-late-exec-post",
+     "(describe early-stage setup)"),
+    ("exec.late",
+     "/reference/features/#exec-config-exec-early-exec-late-exec-post",
+     "(describe late-stage setup)"),
+    ("exec.post",
+     "/reference/features/#exec-config-exec-early-exec-late-exec-post",
+     "(describe post-build step)"),
+    ("fstab.mod",
+     "/reference/features/#fstab-fstab-mod",
+     "Modifies the base fstab."),
+    ("fstab",
+     "/reference/features/#fstab-fstab-mod",
+     "Defines partition layout."),
+    ("requirements.mod",
+     None,
+     "(describe kernel module requirements)"),
+]
+
+# Patterns matched by prefix (the entry covers a directory tree)
+PREFIX_MAP = [
+    ("file.include/",
+     "/reference/features/#file-include",
+     "(describe what this file configures)"),
+    ("initrd.include/",
+     None,
+     "(describe what this initrd file does)"),
+    ("convert.",
+     "/reference/features/#image-image-ext-convert-ext-convert-exta-extb",
+     "(describe image format conversion)"),
+    ("image.",
+     "/reference/features/#image-image-ext-convert-ext-convert-exta-extb",
+     "(describe image format)"),
+]
+
+
+def read_pkg_file(path):
+    """Read a pkg.include/pkg.exclude file, return non-comment lines joined."""
+    with open(path) as f:
+        lines = [l.strip() for l in f if l.strip() and not l.startswith("#")]
+    if not lines:
+        return None
+    joined = ", ".join(f"`{p}`" for p in lines)
+    if len(joined) > 80:
+        joined = joined[:77] + "..."
+    return joined
+
+
+def read_file_exclude(path):
+    """Read file.exclude, return non-comment lines joined."""
+    with open(path) as f:
+        lines = [l.strip() for l in f if l.strip() and not l.startswith("#")]
+    if not lines:
+        return None
+    joined = ", ".join(f"`{p}`" for p in lines[:5])
+    if len(lines) > 5:
+        joined += f", ... ({len(lines)} total)"
+    return joined
+
+
+def load_info_yaml(feature_dir):
+    """Load info.yaml if present; return dict (may be empty)."""
+    info_path = os.path.join(feature_dir, "info.yaml")
+    if not os.path.exists(info_path):
+        return {}
+    try:
+        import yaml
+        with open(info_path) as f:
+            data = yaml.safe_load(f) or {}
+        return data
+    except ImportError:
+        # Fall back to minimal manual parsing for type only
+        data = {}
+        with open(info_path) as f:
+            for line in f:
+                m = re.match(r'^type:\s*(\S+)', line)
+                if m:
+                    data["type"] = m.group(1)
+        return data
+
+
+def collect_files(feature_dir):
+    """Return sorted list of relative paths for all files under feature_dir,
+    excluding README.md."""
+    result = []
+    for dirpath, dirnames, filenames in os.walk(feature_dir):
+        # Sort for deterministic output
+        dirnames.sort()
+        for fname in sorted(filenames):
+            fpath = os.path.join(dirpath, fname)
+            rel = os.path.relpath(fpath, feature_dir)
+            if rel == "README.md":
+                continue
+            result.append(rel)
+    return result
+
+
+def classify_file(rel_path, info_data):
+    """Return (link_text, anchor, purpose) for a relative file path."""
+    basename = os.path.basename(rel_path)
+
+    # Check exact matches first
+    for name, anchor, stub in FILE_MAP:
+        if rel_path == name or basename == name:
+            if name == "info.yaml":
+                ftype = info_data.get("type", "<type>")
+                purpose = f"Declares `type: {ftype}` and included/excluded features."
+            elif name == "pkg.include":
+                pkgs = None
+                # We can't read file here; caller will handle
+                purpose = stub  # overridden below
+            elif name == "pkg.exclude":
+                purpose = stub
+            elif name == "file.exclude":
+                purpose = stub
+            else:
+                purpose = stub
+            return anchor, purpose
+
+    # Check prefix matches (directory trees and prefixes)
+    for prefix, anchor, stub in PREFIX_MAP:
+        if rel_path.startswith(prefix) or basename.startswith(prefix.rstrip("/")):
+            return anchor, stub
+
+    # Unknown file
+    return None, "(describe this file)"
+
+
+def github_url(feature_name, rel_path):
+    """Return the GitHub blob (file) or tree (directory) URL for a relative path."""
+    base = f"https://github.com/gardenlinux/gardenlinux"
+    kind = "tree" if rel_path.endswith("/") else "blob"
+    return f"{base}/{kind}/main/features/{feature_name}/{rel_path}"
+
+
+def format_file_row(rel_path, anchor, purpose, feature_dir, feature_name):
+    """Format a single table row for the ### Files table."""
+    basename = os.path.basename(rel_path)
+
+    # Populate pkg.include / pkg.exclude / file.exclude stubs from file content
+    if rel_path in ("pkg.include", "pkg.exclude"):
+        pkgs = read_pkg_file(os.path.join(feature_dir, rel_path))
+        if rel_path == "pkg.include":
+            purpose = f"Installs: {pkgs}." if pkgs else "Installs packages."
+        else:
+            purpose = f"Prevents installation of: {pkgs}." if pkgs else "Excludes packages."
+    elif rel_path == "file.exclude":
+        paths = read_file_exclude(os.path.join(feature_dir, rel_path))
+        if paths:
+            purpose = f"Removes from rootfs: {paths}."
+
+    gh = github_url(feature_name, rel_path)
+
+    # Build the file cell text.
+    # Primary link is always the GitHub source URL.
+    # The builder file-type reference (if any) follows as ([ref](...)).
+    if rel_path.startswith("file.include/") or rel_path.startswith("initrd.include/"):
+        # Subtree path: path becomes GitHub link; type-ref in parens after.
+        parts = rel_path.split("/", 1)
+        parent = parts[0]
+        if anchor:
+            ref_part = f"([`{parent}`]({anchor}))"
+        else:
+            ref_part = f"(`{parent}`)"
+        link_text = f"[`{rel_path}`]({gh}) {ref_part}"
+    elif anchor:
+        # Top-level file with a builder-ref anchor: GitHub link primary, ref in parens.
+        link_text = f"[`{rel_path}`]({gh}) ([ref]({anchor}))"
+    else:
+        # No builder-ref anchor: just the GitHub link.
+        link_text = f"[`{rel_path}`]({gh})"
+
+    return f"| {link_text} | {purpose} |"
+
+
+def build_related_features(info_data, feature_name):
+    """Build ### Related features section from info.yaml."""
+    features = info_data.get("features", {}) or {}
+    includes = features.get("include", []) or []
+    excludes = features.get("exclude", []) or []
+
+    lines = ["### Related features", ""]
+    if not includes and not excludes:
+        lines.append("This feature has no include or exclude relationships.")
+    else:
+        if includes:
+            lines.append("**Includes:**")
+            lines.append("")
+            for f in includes:
+                lines.append(f"- [`{f}`](/reference/features/{f}) — (describe why this feature is included)")
+            lines.append("")
+        if excludes:
+            lines.append("**Excludes (incompatible with):**")
+            lines.append("")
+            for f in excludes:
+                lines.append(f"- [`{f}`](/reference/features/{f}) — (describe why these are incompatible)")
+            lines.append("")
+    return lines
+
+
+def suggest_artifact(files):
+    """Derive possible artifact extensions from image.* / convert.* script names."""
+    exts = set()
+    for rel in files:
+        basename = os.path.basename(rel)
+        if basename.startswith("image."):
+            suffix = basename[len("image."):]
+            if suffix:
+                exts.add(f".{suffix}")
+        elif basename.startswith("convert."):
+            suffix = basename[len("convert."):]
+            # convert.raw~esp.tar → output ext is esp.tar
+            if "~" in suffix:
+                output_ext = suffix.split("~", 1)[1]
+                exts.add(f".{output_ext}")
+            elif suffix:
+                exts.add(f".{suffix}")
+    return sorted(exts)
+
+
+def main():
+    if len(sys.argv) != 2:
+        print("Usage: bin/gl-feature-readme-scaffold features/<name>", file=sys.stderr)
+        sys.exit(1)
+
+    feature_dir = sys.argv[1].rstrip("/")
+    if not os.path.isdir(feature_dir):
+        print(f"Error: directory not found: {feature_dir}", file=sys.stderr)
+        sys.exit(1)
+
+    feature_name = os.path.basename(feature_dir)
+    info_data = load_info_yaml(feature_dir)
+    files = collect_files(feature_dir)
+
+    # ── ### Files table ────────────────────────────────────────────────────────
+    print("### Files")
+    print("")
+    print("Files present in this feature and their purpose.")
+    print("See the [feature file reference](/reference/features/) for the semantics of each file type.")
+    print("")
+    print("| File | Purpose |")
+    print("|---|---|")
+
+    for rel in files:
+        anchor, purpose = classify_file(rel, info_data)
+        row = format_file_row(rel, anchor, purpose, feature_dir, feature_name)
+        print(row)
+
+    print("")
+
+    # ── ### Related features ──────────────────────────────────────────────────
+    related_lines = build_related_features(info_data, feature_name)
+    print("\n".join(related_lines))
+
+    # ── Suggested artifact for info.yaml ──────────────────────────────────────
+    artifact_exts = suggest_artifact(files)
+    if artifact_exts:
+        formatted = "[" + ", ".join(f'"{e}"' for e in artifact_exts) + "]"
+        print("# Suggested addition to info.yaml (verify before applying):")
+        print(f"# artifact: {formatted}")
+        print("")
+
+
+if __name__ == "__main__":
+    main()
