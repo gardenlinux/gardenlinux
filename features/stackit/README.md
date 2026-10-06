@@ -1,3 +1,11 @@
+---
+title: "Feature: stackit"
+github_org: gardenlinux
+github_repo: gardenlinux
+github_source_path: features/stackit/README.md
+github_target_path: docs/reference/features/stackit.md
+---
+
 ## Feature: stackit
 
 ### Description
