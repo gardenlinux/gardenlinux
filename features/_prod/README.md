@@ -23,5 +23,5 @@ This feature does not support unit tests.
 |---|---|
 |type|flag|
 |artifact|None|
-|included_features|[`_nopkg`](/reference/features/_nopkg), [`_readonly`](/reference/features/_readonly)|
+|included_features|None|
 |excluded_features|None|
