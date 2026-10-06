@@ -22,10 +22,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python3 hack/create_nightly_issue.py \
-            --repo "${{ github.repository }}" \
-            --run-id "${{ github.run_id }}" \
-            --ref "${{ github.ref }}" \
-            --sha "${{ github.sha }}" \
-            --workflow "${{ github.workflow }}" \
-            --needs '${{ inputs.needs_context }}'
+          set -u
+          max_attempts=3
+          attempt=1
+          while true; do
+            echo "Attempt ${attempt}/${max_attempts} to create nightly failure issue"
+            if python3 hack/create_nightly_issue.py \
+                --repo "${{ github.repository }}" \
+                --run-id "${{ github.run_id }}" \
+                --ref "${{ github.ref }}" \
+                --sha "${{ github.sha }}" \
+                --workflow "${{ github.workflow }}" \
+                --needs '${{ inputs.needs_context }}'; then
+              echo "Issue creation succeeded on attempt ${attempt}"
+              break
+            fi
+            if [ "${attempt}" -ge "${max_attempts}" ]; then
+              echo "Issue creation failed after ${max_attempts} attempts" >&2
+              exit 1
+            fi
+            echo "Attempt ${attempt} failed; retrying in 60s..." >&2
+            sleep 60
+            attempt=$((attempt + 1))
+          done
