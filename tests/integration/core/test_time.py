@@ -242,7 +242,7 @@ def test_fedramp_chrony_service_active(systemd: Systemd):
         "GL-TESTCOV-server-config-service-systemd-timesyncd-override",
     ]
 )
-@pytest.mark.feature("server and not azure")
+@pytest.mark.feature("server and not azure and not stackit")
 def test_server_systemd_timesyncd_override_exists(file: File):
     """Test that systemd-timesyncd service override exists"""
     assert file.exists("/etc/systemd/system/systemd-timesyncd.service.d/override.conf")
@@ -251,7 +251,7 @@ def test_server_systemd_timesyncd_override_exists(file: File):
 @pytest.mark.testcov(["GL-TESTCOV-server-service-systemd-timesyncd-enable"])
 @pytest.mark.flaky(reruns=10, reruns_delay=30, only_rerun="AssertionError")
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
-@pytest.mark.feature("not azure and not aws and not gcp and not gdch")
+@pytest.mark.feature("not azure and not aws and not gcp and not gdch and not stackit")
 def test_ntp(timedatectl: TimeDateCtl):
     """
     Validate that systemd-timesyncd is installed and active.
@@ -418,3 +418,112 @@ def test_gcp_or_gdch_timezone_utc(file: File):
     assert file.is_symlink(
         "/usr/share/zoneinfo/localtime", "/etc/localtime"
     ), "GCP or GDCH timezone should be set to UTC"
+
+
+# =============================================================================
+# stackit Feature - Chrony / Time Sync (KVM PTP)
+# =============================================================================
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-chrony"])
+@pytest.mark.feature("stackit")
+def test_stackit_chrony_config_exists(file: File):
+    """Test that STACKIT chrony configuration exists"""
+    assert file.is_regular_file("/etc/chrony/chrony.conf")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-chrony"])
+@pytest.mark.feature("stackit")
+def test_stackit_chrony_config_uses_ptp_kvm(parse_file: ParseFile):
+    """Test that STACKIT chrony uses KVM PTP hardware clock via /dev/ptp_kvm symlink"""
+    lines = parse_file.lines("/etc/chrony/chrony.conf")
+    assert "refclock PHC /dev/ptp_kvm" in lines
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-udev-kvm-ptp"])
+@pytest.mark.feature("stackit")
+def test_stackit_udev_kvm_ptp_rule_exists(file: File):
+    """Test that KVM PTP udev rule file exists"""
+    assert file.is_regular_file("/etc/udev/rules.d/60-kvm-ptp.rules")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-udev-kvm-ptp"])
+@pytest.mark.feature("stackit")
+def test_stackit_udev_kvm_ptp_rule_content(parse_file: ParseFile):
+    """Test that KVM PTP udev rule creates ptp_kvm symlink"""
+    lines = parse_file.lines("/etc/udev/rules.d/60-kvm-ptp.rules")
+    assert 'SYMLINK+="ptp_kvm"' in lines
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-modules-load-ptp-kvm"])
+@pytest.mark.feature("stackit")
+@pytest.mark.arch(
+    "amd64",
+    reason="ptp_kvm is built-in on arm64, modules-load.d not needed",
+)
+def test_stackit_modules_load_ptp_kvm_exists(file: File):
+    """Test that ptp_kvm is configured to load at boot"""
+    assert file.is_regular_file("/etc/modules-load.d/ptp_kvm.conf")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-modules-load-ptp-kvm"])
+@pytest.mark.feature("stackit")
+@pytest.mark.arch(
+    "amd64",
+    reason="ptp_kvm is built-in on arm64, modules-load.d not needed",
+)
+def test_stackit_modules_load_ptp_kvm_content(parse_file: ParseFile):
+    """Test that ptp_kvm modules-load.d config contains ptp_kvm"""
+    lines = parse_file.lines("/etc/modules-load.d/ptp_kvm.conf")
+    assert "ptp_kvm" in lines
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-chronyd-after-ptp-device"])
+@pytest.mark.feature("stackit")
+def test_stackit_chronyd_drop_in_exists(file: File):
+    """Test that chronyd systemd drop-in ordering it after ptp_kvm device exists"""
+    assert file.is_regular_file(
+        "/etc/systemd/system/chronyd.service.d/10-after_dev-ptp_kvm.device.conf"
+    )
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-chronyd-after-ptp-device"])
+@pytest.mark.feature("stackit")
+def test_stackit_chronyd_drop_in_wants_ptp_device(parse_file: ParseFile):
+    """Test that chronyd drop-in declares Wants= for dev-ptp_kvm.device"""
+    lines = parse_file.lines(
+        "/etc/systemd/system/chronyd.service.d/10-after_dev-ptp_kvm.device.conf"
+    )
+    assert "Wants=dev-ptp_kvm.device" in lines
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-service-chrony-preset-disable"])
+@pytest.mark.feature("stackit")
+def test_stackit_chrony_preset_disable_exists(file: File):
+    """Test that STACKIT chrony preset disable file exists"""
+    assert file.is_regular_file("/etc/systemd/system-preset/00-chrony-disable.preset")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-service-chrony-preset-disable"])
+@pytest.mark.feature("stackit")
+@pytest.mark.booted(reason="Requires systemd")
+def test_stackit_chrony_wait_service_disabled(systemd: Systemd):
+    """Test that chrony-wait.service is disabled by preset on STACKIT"""
+    assert systemd.is_disabled("chrony-wait.service")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-service-chrony-preset-disable"])
+@pytest.mark.feature("stackit")
+@pytest.mark.booted(reason="Requires systemd")
+def test_stackit_chrony_restricted_service_disabled(systemd: Systemd):
+    """Test that chronyd-restricted.service is disabled by preset on STACKIT"""
+    assert systemd.is_disabled("chronyd-restricted.service")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-service-no-systemd-timesyncd-override"])
+@pytest.mark.feature("stackit")
+def test_stackit_no_timesyncd_override(file: File):
+    """Test that STACKIT does not have systemd-timesyncd override (uses chrony instead)"""
+    assert not file.exists(
+        "/etc/systemd/system/systemd-timesyncd.service.d/override.conf"
+    )
