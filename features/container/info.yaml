@@ -1,5 +1,6 @@
 description: "Container platform"
 type: platform
+artifact: [".tar.gz"]
 features:
   include:
     - base
