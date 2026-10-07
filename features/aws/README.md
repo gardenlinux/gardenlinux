@@ -15,7 +15,7 @@ github_target_path: docs/reference/features/aws.md
 ### Description
 
 A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux
-image for Amazon Web Services (AWS). The image is delivered as a `.raw` file
+image for [Amazon Web Services (AWS)](/reference/glossary#aws). The image is delivered as a `.raw` file
 suitable for import into AWS.
 
 ### What it does
@@ -23,11 +23,11 @@ suitable for import into AWS.
 Installs `cloud-init` and `amazon-ec2-utils` to handle instance initialization,
 metadata retrieval, and EC2-specific utilities. The feature configures:
 
+- **DNS resolver**: configures `systemd-resolved` with AWS-specific settings.
+- **Time synchronization**: configures `systemd-timesyncd` to use the
 - **Clocksource**: enables a systemd service (`aws-clocksource.service`) that
   selects the appropriate clocksource for the EC2 hypervisor.
-- **Time synchronization**: configures `systemd-timesyncd` to use the
   AWS-provided NTP endpoint.
-- **DNS resolver**: configures `systemd-resolved` with AWS-specific settings.
 - **Cloud-init**: removes the `growpart`, `resizefs`, and `ntp` modules from
   the cloud-init configuration (partition growth is handled in the initramfs;
   NTP is managed by `systemd-timesyncd`).

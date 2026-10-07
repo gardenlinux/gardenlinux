@@ -1,5 +1,6 @@
 description: "OpenStack platform"
 type: platform
+artifact: [".raw"]
 features:
   include:
   # This set of includes gets auto adjusted depend on if we build as openstack or openstack-metal
