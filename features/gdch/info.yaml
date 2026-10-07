@@ -1,5 +1,6 @@
 description: Google Distributed Cloud Hosted (gdch environment)"
 type: platform
+artifact: [".raw"]
 features:
   include: 
     - cloud

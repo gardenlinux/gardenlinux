@@ -1,5 +1,6 @@
 description: "iso"
 type: flag
+artifact: [".iso"]
 features:
   include: [ _install ]
   exclude: [ _selinux ]

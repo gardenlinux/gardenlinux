@@ -4,6 +4,9 @@ related_topics:
   - /how-to/custom-feature
   - /reference/features/
   - /explanation/features
+  - /tutorials/on-premises/first-boot-bare-metal
+  - /how-to/installation/on-premises/iso
+  - /how-to/installation/on-premises/pxe-boot
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: features/_autoinstall/README.md

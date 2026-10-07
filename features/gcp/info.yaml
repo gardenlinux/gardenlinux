@@ -1,5 +1,6 @@
 description: "Google Compute Engine platform (gce guest environment)"
 type: platform
+artifact: [".raw"]
 features:
   include: 
     - cloud

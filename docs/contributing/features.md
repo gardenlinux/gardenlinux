@@ -15,13 +15,14 @@ github_target_path: docs/contributing/features.md
 
 Every feature under `features/` must have a `README.md` that describes what the
 feature does, which files it provides, and how it relates to other features. This
-page defines the authoring standard for those READMEs and for the accompanying
-`info.yaml` metadata file.
+page defines the authoring standard for those READMEs.
 
-For the file-type semantics of `pkg.include`, `exec.config`, `file.include`, and
-the other builder file types, see the [feature file reference](/reference/features/).
-For the builder feature `info.yaml`, see the [`info.yaml` file structure](/reference/features/#info-yaml-file-structure).
-For feature types (`platform`, `element`, `flag`), the dependency graph, and
+It does not talk in-depth about the builder feature `info.yaml`, read the
+[`info.yaml` file structure](/reference/features/#info-yaml-file-structure) to get
+familiar.
+For the file-type semantics of `pkg.include`, `exec.config`, `file.include` and
+the other builder file types, see the [feature file reference](/reference/features/)
+To get to know feature types (`platform`, `element`, `flag`), the dependency graph and
 composition rules, see [Features](/explanation/features).
 
 ## Scaffolding the Files table
@@ -47,6 +48,10 @@ applicable, follows as `([ref](…))`.
 ```markdown
 ---
 title: "Feature: <name>"
+related_topics:
+  - /how-to/custom-feature
+  - /reference/features/
+  - /explanation/features
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: features/<name>/README.md
@@ -92,9 +97,11 @@ each file type.
      relationships." -->
 
 ### Further reading
-- [Feature file reference](/reference/features/) — file-type semantics
-- [Features explanation](/explanation/features) — types, DAG, composition rules
 <!-- Add platform how-to, ADR, explanation, or compliance reference as relevant -->
+
+## Related topics
+
+<RelatedTopics />
 ```
 
 ## Section rules

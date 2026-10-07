@@ -1,5 +1,6 @@
 description: "azure platform (waagent)"
 type: platform
+artifact: [".raw", ".vhd"]
 features:
   include: 
     - cloud
