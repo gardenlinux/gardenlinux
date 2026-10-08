@@ -860,6 +860,14 @@ def generate_junit_xml_report(
     """
     Generate a JUnit XML report compatible with pytest and CI/CD systems.
 
+    The report uses a single <testsuite> element (with a <properties> section
+    containing a Suite property) so that pytest-multi-results-action can parse
+    metadata correctly without triggering a metadata-parsing-error.
+
+    Test cases use classname to distinguish sections:
+    - coverage.features   — one testcase per feature (pass/skip/fail)
+    - coverage.validation — duplicate detection and orphaned ID checks
+
     Args:
         markers_by_feature: Dict mapping feature names to their markers
         found_markers: Set of markers found in test files
@@ -873,74 +881,52 @@ def generate_junit_xml_report(
     """
     stats = calculate_coverage_stats(markers_by_feature, found_markers)
 
-    # Create root testsuites element
-    testsuites = ET.Element("testsuites")
-    testsuites.set("name", "marker Coverage")
     timestamp = datetime.now().isoformat()
-    testsuites.set("timestamp", timestamp)
 
-    # Testsuite 1: Feature Coverage
-    total_tests = len(markers_by_feature) + len(
-        all_features - set(markers_by_feature.keys())
-    )
-    failures = len(stats["untested_by_feature"])
-    skipped = len(all_features - set(markers_by_feature.keys()))
+    # --- Collect all testcases ---
 
-    suite1 = ET.SubElement(testsuites, "testsuite")
-    suite1.set("name", "Feature Coverage")
-    suite1.set("tests", str(total_tests))
-    suite1.set("failures", str(failures))
-    suite1.set("errors", "0")
-    suite1.set("skipped", str(skipped))
-    suite1.set("timestamp", timestamp)
-
-    # Add test cases for each feature
+    # Section 1: Feature Coverage testcases
+    feature_testcases: List[ET.Element] = []
+    feature_failures = 0
+    feature_skipped = 0
     for feature in sorted(all_features):
-        testcase = ET.SubElement(suite1, "testcase")
-        testcase.set("name", feature)
-        testcase.set("classname", "coverage.features")
-
+        tc = ET.Element("testcase")
+        tc.set("name", feature)
+        tc.set("classname", "coverage.features")
         if feature not in markers_by_feature:
-            # Feature has no markers - skip
-            skipped_elem = ET.SubElement(testcase, "skipped")
+            skipped_elem = ET.SubElement(tc, "skipped")
             skipped_elem.set("message", "No markers defined")
+            feature_skipped += 1
         elif feature in stats["untested_by_feature"]:
-            # Feature has untested IDs - failure
             untested = stats["untested_by_feature"][feature]
-            failure = ET.SubElement(testcase, "failure")
+            failure = ET.SubElement(tc, "failure")
             failure.set("message", f"{len(untested)} untested marker(s)")
             failure.set("type", "UntestedSettingIDs")
             failure.text = "Untested IDs:\n" + "\n".join(
                 f"  - {sid}" for sid in untested
             )
+            feature_failures += 1
+        feature_testcases.append(tc)
 
-    # Testsuite 2: Duplicate Detection
-    dup_failures = len(within_feature_dupes) + (1 if across_feature_dupes else 0)
-    suite2 = ET.SubElement(testsuites, "testsuite")
-    suite2.set("name", "Duplicate Detection")
-    suite2.set("tests", "1")
-    suite2.set("failures", str(dup_failures))
-    suite2.set("errors", "0")
-    suite2.set("skipped", "0")
-    suite2.set("timestamp", timestamp)
-
-    # Test for within-feature duplicates
+    # Section 2: Duplicate Detection testcases
+    dup_testcases: List[ET.Element] = []
+    dup_failures = 0
     if within_feature_dupes:
         for feature, dupes in within_feature_dupes.items():
-            testcase = ET.SubElement(suite2, "testcase")
-            testcase.set("name", f"no_duplicate_ids_within_{feature}")
-            testcase.set("classname", "coverage.validation")
-            failure = ET.SubElement(testcase, "failure")
+            tc = ET.Element("testcase")
+            tc.set("name", f"no_duplicate_ids_within_{feature}")
+            tc.set("classname", "coverage.validation")
+            failure = ET.SubElement(tc, "failure")
             failure.set("message", f"{len(dupes)} duplicate marker(s) in {feature}")
             failure.set("type", "DuplicateSettingIDs")
             failure.text = "Duplicate IDs:\n" + "\n".join(f"  - {sid}" for sid in dupes)
-
-    # Test for across-feature duplicates
+            dup_failures += 1
+            dup_testcases.append(tc)
     if across_feature_dupes:
-        testcase = ET.SubElement(suite2, "testcase")
-        testcase.set("name", "no_duplicate_ids_across_features")
-        testcase.set("classname", "coverage.validation")
-        failure = ET.SubElement(testcase, "failure")
+        tc = ET.Element("testcase")
+        tc.set("name", "no_duplicate_ids_across_features")
+        tc.set("classname", "coverage.validation")
+        failure = ET.SubElement(tc, "failure")
         failure.set(
             "message",
             f"{len(across_feature_dupes)} marker(s) duplicated across features",
@@ -950,33 +936,57 @@ def generate_junit_xml_report(
         for sid, features in sorted(across_feature_dupes.items()):
             dup_details.append(f"  - {sid}: {', '.join(features)}")
         failure.text = "Duplicated across features:\n" + "\n".join(dup_details)
-
+        dup_failures += 1
+        dup_testcases.append(tc)
     if not within_feature_dupes and not across_feature_dupes:
-        testcase = ET.SubElement(suite2, "testcase")
-        testcase.set("name", "no_duplicate_markers")
-        testcase.set("classname", "coverage.validation")
+        tc = ET.Element("testcase")
+        tc.set("name", "no_duplicate_markers")
+        tc.set("classname", "coverage.validation")
+        dup_testcases.append(tc)
 
-    # Testsuite 3: Orphaned IDs Detection
+    # Section 3: Orphaned IDs testcase
     orphaned_count = len(stats["orphaned_ids"])
-    suite3 = ET.SubElement(testsuites, "testsuite")
-    suite3.set("name", "Orphaned IDs Detection")
-    suite3.set("tests", "1")
-    suite3.set("failures", "1" if orphaned_count > 0 else "0")
-    suite3.set("errors", "0")
-    suite3.set("skipped", "0")
-    suite3.set("timestamp", timestamp)
-
-    testcase = ET.SubElement(suite3, "testcase")
-    testcase.set("name", "no_orphaned_markers")
-    testcase.set("classname", "coverage.validation")
-
+    orphaned_tc = ET.Element("testcase")
+    orphaned_tc.set("name", "no_orphaned_markers")
+    orphaned_tc.set("classname", "coverage.validation")
+    orphaned_failures = 0
     if orphaned_count > 0:
-        failure = ET.SubElement(testcase, "failure")
+        failure = ET.SubElement(orphaned_tc, "failure")
         failure.set("message", f"{orphaned_count} orphaned marker(s)")
         failure.set("type", "OrphanedSettingIDs")
         failure.text = "IDs in tests but not in features:\n" + "\n".join(
             f"  - {sid}" for sid in sorted(stats["orphaned_ids"])
         )
+        orphaned_failures = 1
+
+    all_testcases = feature_testcases + dup_testcases + [orphaned_tc]
+    total_tests = len(all_testcases)
+    total_failures = feature_failures + dup_failures + orphaned_failures
+
+    # --- Build XML tree ---
+
+    testsuites = ET.Element("testsuites")
+    testsuites.set("name", "marker Coverage")
+    testsuites.set("timestamp", timestamp)
+
+    # Single testsuite with <properties> so pytest-multi-results-action can
+    # extract metadata without triggering a metadata-parsing-error.
+    suite = ET.SubElement(testsuites, "testsuite")
+    suite.set("name", "Coverage Report")
+    suite.set("tests", str(total_tests))
+    suite.set("failures", str(total_failures))
+    suite.set("errors", "0")
+    suite.set("skipped", str(feature_skipped))
+    suite.set("time", "0.0")
+    suite.set("timestamp", timestamp)
+
+    properties = ET.SubElement(suite, "properties")
+    prop = ET.SubElement(properties, "property")
+    prop.set("name", "Suite")
+    prop.set("value", "Coverage Report")
+
+    for tc in all_testcases:
+        suite.append(tc)
 
     # Write to file if specified
     if output_file:
@@ -1050,6 +1060,103 @@ def generate_json_report(
     return report
 
 
+def generate_markdown_report(
+    markers_by_feature: Dict[str, List[str]],
+    found_markers: Set[str],
+    all_features: Set[str],
+    excluded_features: Set[str],
+    test_counts: Dict[str, int],
+    output_file: Optional[Path] = None,
+) -> str:
+    """
+    Generate a GitHub-flavoured Markdown coverage summary.
+
+    Always includes a summary table with key metrics.  When untested or
+    orphaned markers exist, adds collapsed <details> sections listing them.
+
+    Args:
+        markers_by_feature: Dict mapping feature names to their markers
+        found_markers: Set of markers found in test files
+        all_features: Set of all feature names (excludes excluded features)
+        excluded_features: Set of excluded feature names
+        test_counts: Dict with test function counts
+        output_file: Optional path to write the markdown report
+
+    Returns:
+        The markdown string.
+    """
+    stats = calculate_coverage_stats(markers_by_feature, found_markers)
+    cov = stats["coverage_percentage"]
+
+    if cov == 100.0:
+        status = "✅"
+    elif cov >= 80.0:
+        status = "⚠️"
+    else:
+        status = "❌"
+
+    lines: List[str] = []
+    lines.append("## Marker Coverage Summary")
+    lines.append("")
+    lines.append("| Metric | Value |")
+    lines.append("|--------|-------|")
+    lines.append(f"| Coverage | {status} {cov:.1f}% |")
+    lines.append(f"| Total markers | {stats['total_markers']} |")
+    lines.append(f"| Tested markers | {stats['covered_count']} |")
+    lines.append(f"| Untested markers | {stats['untested_count']} |")
+    lines.append(f"| Orphaned markers | {len(stats['orphaned_ids'])} |")
+    lines.append(
+        f"| Features with markers | {len(markers_by_feature)} / {len(all_features)} |"
+    )
+    lines.append(f"| Excluded features | {len(excluded_features)} |")
+    lines.append(f"| Total test functions | {test_counts['total_tests']} |")
+    lines.append(
+        f"| Tests referencing markers | {test_counts['tests_with_markers']} / {test_counts['total_tests']} |"
+    )
+    lines.append("")
+
+    # Untested markers details (collapsed)
+    if stats["untested_by_feature"]:
+        lines.append("<details>")
+        lines.append("<summary>Untested markers by feature</summary>")
+        lines.append("")
+        for feature in sorted(stats["untested_by_feature"].keys()):
+            untested = stats["untested_by_feature"][feature]
+            total = len(markers_by_feature[feature])
+            lines.append(f"**{feature}** ({len(untested)} untested / {total} total)")
+            lines.append("")
+            for tid in untested:
+                lines.append(f"- `{tid}`")
+            lines.append("")
+        lines.append("</details>")
+        lines.append("")
+
+    # Orphaned markers details (collapsed)
+    if stats["orphaned_ids"]:
+        lines.append("<details>")
+        lines.append(
+            "<summary>Orphaned markers (in tests but not in features)</summary>"
+        )
+        lines.append("")
+        for tid in sorted(stats["orphaned_ids"]):
+            lines.append(f"- `{tid}`")
+        lines.append("")
+        lines.append("</details>")
+        lines.append("")
+
+    content = "\n".join(lines)
+
+    if output_file:
+        try:
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+            output_file.write_text(content)
+            print(f"✓ Markdown report written to: {output_file}")
+        except Exception as e:
+            print(f"⚠ Warning: Could not write Markdown report to {output_file}: {e}")
+
+    return content
+
+
 def main():
     """Generate static coverage report by matching markers from features with test files."""
     features_dir = repo_root / "features"
@@ -1075,7 +1182,35 @@ def main():
         repo_root, excluded_features
     )
 
-    # Report all validation errors at once
+    # Detect duplicate markers before deduplication
+    within_feature_dupes, across_feature_dupes = detect_duplicate_markers(
+        markers_by_feature_raw
+    )
+
+    # Collect test data early so it is always available for the summary
+    found_markers = find_markers_in_test_files(repo_root)
+    test_counts = count_test_functions(repo_root)
+
+    # Get all feature names (including those without markers)
+    all_features = set()
+    if features_dir.exists():
+        for feature_dir in features_dir.iterdir():
+            if feature_dir.is_dir():
+                all_features.add(feature_dir.name)
+
+    # Remove excluded features from all_features for reporting
+    all_features = all_features - excluded_features
+
+    # Deduplicate markers for coverage analysis (after duplicate check)
+    markers_by_feature = {}
+    for feature, markers in markers_by_feature_raw.items():
+        markers_by_feature[feature] = sorted(set(markers))
+
+    # Track whether a hard error was encountered; report generation still runs
+    # so that the summary and all report artefacts are always produced.
+    hard_error = False
+
+    # Report all validation errors
     if validation_errors:
         print("\n" + "=" * 80)
         print("❌ ERROR: Markers defined for non-existent files")
@@ -1100,47 +1235,24 @@ def main():
             "Please ensure all files referenced in markers YAML files actually exist."
         )
         print("=" * 80 + "\n")
-        return 1
-
-    # Detect duplicate markers before deduplication
-    within_feature_dupes, across_feature_dupes = detect_duplicate_markers(
-        markers_by_feature_raw
-    )
+        hard_error = True
 
     # Report duplicate errors
     if within_feature_dupes or across_feature_dupes:
         report_duplicate_errors(
             markers_by_feature_raw, within_feature_dupes, across_feature_dupes
         )
-        return 1
-
-    # Deduplicate markers for coverage analysis (after duplicate check)
-    markers_by_feature = {}
-    for feature, markers in markers_by_feature_raw.items():
-        markers_by_feature[feature] = sorted(set(markers))
-
-    # Get all feature names (including those without markers)
-    all_features = set()
-    if features_dir.exists():
-        for feature_dir in features_dir.iterdir():
-            if feature_dir.is_dir():
-                all_features.add(feature_dir.name)
-
-    # Remove excluded features from all_features for reporting
-    all_features = all_features - excluded_features
+        hard_error = True
 
     total_features_with_ids = len(markers_by_feature)
     total_markers = sum(len(ids) for ids in markers_by_feature.values())
 
-    found_markers = find_markers_in_test_files(repo_root)
-    test_counts = count_test_functions(repo_root)
-
-    # Generate human-readable CLI coverage report
+    # Generate human-readable CLI coverage report (always)
     untested_count, orphaned_count = generate_cli_report(
         markers_by_feature, found_markers, all_features, test_counts
     )
 
-    # Generate JSON report
+    # Generate JSON report (always)
     json_output = repo_root / "tests" / "coverage_report.json"
     generate_json_report(
         markers_by_feature,
@@ -1151,7 +1263,7 @@ def main():
         json_output,
     )
 
-    # Generate JUnit XML report
+    # Generate JUnit XML report (always)
     junit_output = repo_root / "tests" / "coverage_report.xml"
     generate_junit_xml_report(
         markers_by_feature,
@@ -1162,11 +1274,25 @@ def main():
         junit_output,
     )
 
+    # Generate Markdown report (always)
+    md_output = repo_root / "tests" / "coverage_report.md"
+    generate_markdown_report(
+        markers_by_feature,
+        found_markers,
+        all_features,
+        excluded_features,
+        test_counts,
+        md_output,
+    )
+
     # Determine exit code based on results
+    # Exit 1: Hard error - validation errors or duplicate markers
     # Exit 0: Success - all markers properly covered, no orphans
     # Exit 2: Warning - Has untested markers (features not covered by tests)
     # Exit 3: Warning - Has orphaned markers (tests reference non-existent features)
     # Exit 4: Warning - Both untested AND orphaned markers exist
+    if hard_error:
+        return 1
     if untested_count > 0 and orphaned_count > 0:
         return 4
     elif orphaned_count > 0:

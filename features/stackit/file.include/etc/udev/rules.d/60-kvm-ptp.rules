@@ -1,0 +1,3 @@
+# Create a stable symlink for the KVM PTP hardware clock and expose it as a
+# systemd device unit (dev-ptp_kvm.device) so chronyd can depend on it.
+SUBSYSTEM=="ptp", ATTR{clock_name}=="kvm-ptp", SYMLINK+="ptp_kvm", TAG+="systemd"

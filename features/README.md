@@ -6,7 +6,7 @@ Each folder represents a usable Garden Linux `feature` that can be added to a fi
 | Feature Type | Feature Name |
 |---|---|
 | platform | `ali`, `aws`, `azure`, `gcp`, `kvm`, `metal`, ... |
-| flag | `firewall`, `gardener`, `ssh`, `_prod`, `_slim`, `_readonly`, `_pxe`, `_iso`, ... |
+| flag | `firewall`, `gardener`, `ssh`, `_prod`, `_slim`, `_pxe`, `_iso`, ... |
 | Element | `cis`, `fedramp`, ... |
 
 *Keep in mind that `not all features` may be combined together. However, features may in-/exclude other features or block the build process by given exclusive/incompatible feature combinations.*

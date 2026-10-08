@@ -1,10 +1,10 @@
-FROM ghcr.io/gardenlinux/gardenlinux:2150 AS compile
+FROM ghcr.io/gardenlinux/gardenlinux:latest AS compile
 RUN apt-get update && apt-get install --no-install-recommends -y build-essential
 WORKDIR /work
 COPY enter_host_ns.c ./
 RUN gcc -Wall -Wextra -Werror -std=c23 -O2 -static -o enter_host_ns enter_host_ns.c
 
-FROM ghcr.io/gardenlinux/gardenlinux:2150 AS extract
+FROM ghcr.io/gardenlinux/gardenlinux:latest AS extract
 ARG DIST_FILE=dist.tar.gz
 WORKDIR /work
 COPY --from=dist_ctx $DIST_FILE ./
