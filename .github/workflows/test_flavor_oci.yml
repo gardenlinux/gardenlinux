@@ -73,7 +73,7 @@ jobs:
         if: always()
         with:
           if-no-files-found: ignore
-          name: oci-test-${{ env.CNAME }}
+          name: oci-test-${{ env.CNAME }}-attempt${{ github.run_attempt }}
           path: |
             .build/${{ env.CNAME }}.oci.test.log
             .build/${{ env.CNAME }}.oci.test.xml

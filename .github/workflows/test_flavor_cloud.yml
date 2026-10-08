@@ -218,7 +218,7 @@ jobs:
         if: always()
         with:
           if-no-files-found: ignore
-          name: cloud-test-${{ env.CNAME }}
+          name: cloud-test-${{ env.CNAME }}-attempt${{ github.run_attempt }}
           path: |
             .build/${{ env.CNAME }}.cloud.test.log
             .build/${{ env.CNAME }}.cloud.test.xml
