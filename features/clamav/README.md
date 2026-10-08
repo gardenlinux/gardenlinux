@@ -1,5 +1,9 @@
 ---
 title: "Feature: clamav"
+related_topics:
+  - /how-to/custom-feature
+  - /reference/features/
+  - /explanation/features
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: features/clamav/README.md
@@ -7,25 +11,32 @@ github_target_path: docs/reference/features/clamav.md
 ---
 
 ## Feature: clamav
+
 ### Description
-<website-feature>
-This feature installs and configures clamAV antivirus.
-</website-feature>
 
-### Features
-Virus definitions will be updated by freshclam. A nightly virus scan is triggered by a cronjob which can be modified by editing:
+Installs and configures [ClamAV antivirus](/reference/glossary#clamav-antivirus).
 
-```
-file.include/var/spool/cron/crontabs/root
-```
+### What it does
 
-### Unit testing
-Unit tests will ensure that the needed packages are present as well as a configured cronjob to run daily.
+Installs `clamav`. Configures `freshclam` to keep virus definitions up to date. Schedules a nightly virus scan via a cron job in `/var/spool/cron/crontabs/root`. The cron schedule can be adjusted by editing that file.
 
-### Meta
-|||
+### Files
+
+Files present in this feature and their purpose.
+See the [feature file reference](/reference/features/) for the semantics of each file type.
+
+| File | Purpose |
 |---|---|
-|type|element|
-|artifact|None|
-|included_features|None|
-|excluded_features|None|
+| [`file.include.markers.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/clamav/file.include.markers.yaml) ([ref](/reference/testing/test-coverage-markers)) | Maps files to test-coverage marker IDs. |
+| [`info.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/clamav/info.yaml) ([ref](/reference/features/#info-yaml-file-structure)) | Declares `type: element` and included/excluded features. |
+| [`pkg.include`](https://github.com/gardenlinux/gardenlinux/blob/main/features/clamav/pkg.include) ([ref](/reference/features/#pkg-include)) | Installs `clamav`. |
+| [`file.include/var/spool/cron/crontabs/root`](https://github.com/gardenlinux/gardenlinux/blob/main/features/clamav/file.include/var/spool/cron/crontabs/root) ([`file.include`](/reference/features/#file-include)) | Cron job that triggers a nightly ClamAV virus scan. |
+
+### Related features
+
+This feature has no include or exclude relationships.
+
+## Related topics
+
+<RelatedTopics />
+

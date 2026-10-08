@@ -1,5 +1,9 @@
 ---
 title: "Feature: glvd"
+related_topics:
+  - /how-to/custom-feature
+  - /reference/features/
+  - /explanation/features
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: features/glvd/README.md
@@ -7,38 +11,38 @@ github_target_path: docs/reference/features/glvd.md
 ---
 
 ## Feature: glvd
+
 ### Description
-<website-feature>
-The glvd feature provides the client for [Garden Linux Vulnerability Database](https://github.com/gardenlinux/glvd)
-</website-feature>
 
-### Features
+Provides the [Garden Linux Vulnerability Database (GLVD)](/reference/glossary#glvd) client for checking Garden Linux instances against known Vulnerabilities.
 
-This cli tool called `glvd` allows you to check your instance of Garden Linux for potential security issues.
+### What it does
 
-> [!WARNING] 
-> glvd is in development as of now and might not display accurate information on CVEs.
-> Always double check if you are exposed to security risks.
+Installs the `glvd` CLI tool. Run `glvd check` to see potential security issues for your Garden Linux version and installed packages. Also adds a MOTD script that displays a vulnerability summary at login.
 
-If you included this feature, you can run `glvd check` to see which issues might apply for your Garden Linux version with the set of packages you installed.
+Note: `glvd` is in development and requires an HTTPS connection to the `glvd` backend, which may delay SSH login.
 
-Also, this feature enables a summary of potential issues in the Message of the Day.
+### Files
 
-> [!IMPORTANT]  
-> This requires the glvd client to make an HTTPS request to the glvd backend.
-> This might delay your ssh login on the machine.
-> If you don't want this to happen, don't use this feature.
+Files present in this feature and their purpose.
+See the [feature file reference](/reference/features/) for the semantics of each file type.
 
-For more information on what the `glvd` cli can do and how to use it, see [its GitHub Repo](https://github.com/gardenlinux/package-glvd).
-
-#### Configs
-
-### Unit testing
-
-### Meta
-|||
+| File | Purpose |
 |---|---|
-|type|element|
-|artifact|None|
-|included_features|None|
-|excluded_features|None|
+| [`file.include.markers.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/glvd/file.include.markers.yaml) ([ref](/reference/testing/test-coverage-markers)) | Maps files to test-coverage marker IDs. |
+| [`info.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/glvd/info.yaml) ([ref](/reference/features/#info-yaml-file-structure)) | Declares `type: element` and included/excluded features. |
+| [`pkg.include`](https://github.com/gardenlinux/gardenlinux/blob/main/features/glvd/pkg.include) ([ref](/reference/features/#pkg-include)) | Installs `glvd`. |
+| [`file.include/etc/update-motd.d/99-glvd`](https://github.com/gardenlinux/gardenlinux/blob/main/features/glvd/file.include/etc/update-motd.d/99-glvd) ([`file.include`](/reference/features/#file-include)) | MOTD script that displays a summary of potential security issues from the glvd vulnerability database. |
+
+### Related features
+
+This feature has no include or exclude relationships.
+
+### Further reading
+
+- [GLVD](https://github.com/gardenlinux/glvd)
+
+## Related topics
+
+<RelatedTopics />
+

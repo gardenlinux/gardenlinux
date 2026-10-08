@@ -1,5 +1,6 @@
 description: "kvm and qemu platform"
 type: platform
+artifact: [".raw", ".qcow2"]
 features:
   include: 
     - cloud
