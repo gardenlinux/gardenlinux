@@ -72,7 +72,8 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         if: always()
         with:
-          if-no-files-found: ignore
+          if-no-files-found: ignore # in case test fails before writing a log
+          overwrite: true # overwrite logs from previous attempt
           name: oci-test-${{ env.CNAME }}
           path: |
             .build/${{ env.CNAME }}.oci.test.log
