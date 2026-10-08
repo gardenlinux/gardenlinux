@@ -29,9 +29,9 @@ export function excludeFlavorsMatrix(matrixA, matrixB) {
     let resultMatrix = [];
 
     for (const arch in matrixA) {
-        for (const flavor of matrixA[arch]) {
-            if (!matrixB.hasOwnProperty(arch) || !matrixB[arch].includes(flavor)) {
-                resultMatrix.push({ "arch": arch, "flavor": flavor });
+        for (const cname of matrixA[arch]) {
+            if (!matrixB.hasOwnProperty(arch) || !matrixB[arch].includes(cname)) {
+                resultMatrix.push({ "arch": arch, "cname": cname });
             }
         }
     }
@@ -95,7 +95,7 @@ export function flattenFlavorsMatrixByArch(matrix) {
             matrixByArch[flavor["arch"]] = [];
         }
 
-        matrixByArch[flavor["arch"]].push(flavor["flavor"]);
+        matrixByArch[flavor["arch"]].push(flavor["cname"]);
     }
 
     return matrixByArch;
@@ -111,9 +111,9 @@ export function intersectFlavorsMatrix(matrixA, matrixB) {
             continue;
         }
 
-        for (const flavor of matrixA[arch]) {
-            if (matrixB[arch].includes(flavor)) {
-                intersectMatrix.push({ "arch": arch, "flavor": flavor });
+        for (const cname of matrixA[arch]) {
+            if (matrixB[arch].includes(cname)) {
+                intersectMatrix.push({ "arch": arch, "cname": cname });
             }
         }
     }
