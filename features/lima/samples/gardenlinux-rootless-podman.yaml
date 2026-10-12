@@ -1,4 +1,4 @@
-minimumLimaVersion: 2.0.0
+minimumLimaVersion: 2.2.0
 
 base:
 - _images/gardenlinux-2150.yaml

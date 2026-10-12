@@ -13,7 +13,7 @@
 # NAME                   STATUS   ROLES           AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE                KERNEL-VERSION        CONTAINER-RUNTIME
 # lima-gardenlinux-k8s   Ready    control-plane   75s   v1.35.1   10.x.y.z       <none>        Garden Linux 2150.0.0   6.18.12-cloud-arm64   containerd://2.2.1
 
-minimumLimaVersion: 2.0.0
+minimumLimaVersion: 2.2.0
 
 base:
 - _images/gardenlinux-2150.yaml
