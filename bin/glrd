@@ -4,6 +4,11 @@ args="$*"
 if [ -z "${GARDENLINUX_BUILD_CRE}" ]; then
     GARDENLINUX_BUILD_CRE="podman"
 fi
+# TEMPORARY FIX for https://github.com/actions/runner-images/issues/14473
+if [ "$GARDENLINUX_BUILD_CRE" = "podman" ] && [ "$(uname)" = "Linux" ]; then
+    podman() { command podman --runtime "$(command -v crun)" "$@"; }
+fi
+
 ${GARDENLINUX_BUILD_CRE} run -it --rm \
     --pull always -q \
     -e AWS_DEFAULT_REGION \
