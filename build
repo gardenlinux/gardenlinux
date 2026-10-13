@@ -6,7 +6,7 @@ shopt -s nullglob
 exec 3>&1
 exec 1>&2
 
-container_image=ghcr.io/gardenlinux/builder:0196add0ce875ac0b7721c19b2ee3ac37cf84387
+container_image=ghcr.io/gardenlinux/builder:f7cf91087f7580c6c3aefb26af6cee7df89a9938
 container_engine=podman
 target_dir=.build
 
