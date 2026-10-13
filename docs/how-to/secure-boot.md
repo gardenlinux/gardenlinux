@@ -28,7 +28,7 @@ Before deploying a Secure Boot or Trusted Boot image:
 1. **Build the image** with [`_trustedboot`](/reference/features/_trustedboot) enabled.
 2. **Generate the signing certificates** by running `./cert/build` before the
    build. See
-   [Building Images: Secureboot / Trustedboot / TPM2](/how-to/building-images#secureboot-trustedboot-tpm2)
+   [Building Images: Secureboot, Trustedboot and TPM2](/how-to/building-images#build-secureboot-trustedboot-and-tpm2-images)
    for full build instructions including local and AWS KMS key storage.
 
 ## Key Handling

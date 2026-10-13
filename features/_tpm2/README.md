@@ -131,7 +131,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 
 - [Boot Modes: Mutable Data Modes](/explanation/boot-modes#mutable-data-modes) — comparison of [`_nocrypt`](/reference/features/_nocrypt), [`_ephemeral`](/reference/features/_ephemeral), and `_tpm2`
 - [Secure Boot and Trusted Boot](/explanation/secure-boot) — trust model, PCR binding, build and deploy instructions
-- [Building Images: Secureboot / Trustedboot / TPM2](/how-to/building-images#secureboot-trustedboot-tpm2) — build prerequisites and steps
+- [Building Images: Secureboot, Trustedboot and TPM2](/how-to/building-images#build-secureboot-trustedboot-and-tpm2-images) — build prerequisites and steps
 - [systemd-pcrextend documentation](https://www.freedesktop.org/software/systemd/man/latest/systemd-pcrextend.html)
 
 ## Related topics

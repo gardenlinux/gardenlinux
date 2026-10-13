@@ -12,4 +12,4 @@ See the documentation for details:
 - **`flavors.yaml` format and `bin/gl-flavors-parse`** →
   [Flavors Configuration Reference](/reference/flavors)
 - **Writing a feature README and `info.yaml`** →
-  [Contributing Features](/contributing/features)
+  [Contributing Features](/contributing/documentation/features)
