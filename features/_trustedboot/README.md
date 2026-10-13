@@ -93,7 +93,7 @@ and rootfs path as arguments:
    `EFI/Linux/$BUILDER_CNAME.efi` in the ESP.
 
 For certificate generation and build instructions, see
-[Building Images: Secureboot / Trustedboot / TPM2](/how-to/building-images#secureboot-trustedboot-tpm2).
+[Building Images: Secureboot, Trustedboot and TPM2](/how-to/building-images#build-secureboot-trustedboot-and-tpm2-images).
 
 #### Testing on macOS
 
@@ -171,7 +171,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 - [Secure Boot and Trusted Boot](/explanation/secure-boot) — trust model, security guarantees,
   feature dependency table, mutable data modes, build and deploy instructions
 - [Boot Modes](/explanation/boot-modes) — USI vs. Legacy comparison, mutable data mode overview
-- [Building Images: Secureboot / Trustedboot / TPM2](/how-to/building-images#secureboot-trustedboot-tpm2) — certificate generation and build steps
+- [Building Images: Secureboot, Trustedboot and TPM2](/how-to/building-images#build-secureboot-trustedboot-and-tpm2-images) — certificate generation and build steps
 - [Deploying Secure Boot Images](/how-to/secure-boot) — cloud-provider enrollment steps
 - [Unified Kernel Image specification](https://uapi-group.org/specifications/specs/unified_kernel_image/)
 - [Lennart Poettering: Fitting Everything Together](https://web.archive.org/web/20260714124711/https://0pointer.net/blog/fitting-everything-together.html) — design background for UKI-based OS images
