@@ -4,13 +4,31 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-
-permissions:
-  contents: read
+    # No paths: filter — must run on every PR to always produce the gate check
 
 jobs:
+  detect-changes:
+    name: Detect ADR path changes
+    runs-on: ubuntu-24.04
+    outputs:
+      adr: ${{ steps.filter.outputs.adr }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check for ADR path changes
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            adr:
+              - 'docs/reference/adr/**'
+
   check-adr:
+    name: Check ADR Numbering
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.adr == 'true'
     runs-on: ubuntu-slim
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # pin@v7.0.0
@@ -53,3 +71,24 @@ jobs:
           if __name__ == "__main__":
               sys.exit(main())
         shell: python
+
+  check-adr-numbering-gate:
+    name: Check ADR Numbering gate
+    needs: [detect-changes, check-adr]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Evaluate ADR check result
+        run: |
+          ADR_CHANGED="${{ needs.detect-changes.outputs.adr }}"
+          CHECK_RESULT="${{ needs.check-adr.result }}"
+          if [[ "$ADR_CHANGED" != "true" ]]; then
+            echo "ADR paths not changed; skipping ADR check — gate passes."
+            exit 0
+          fi
+          if [[ "$CHECK_RESULT" == "success" ]]; then
+            echo "ADR check passed."
+            exit 0
+          fi
+          echo "ADR check result: $CHECK_RESULT"
+          exit 1
