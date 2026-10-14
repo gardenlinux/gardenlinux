@@ -37,11 +37,14 @@ resource "alicloud_instance" "instance" {
   key_name = alicloud_ecs_key_pair.ssh_key.key_pair_name
   user_data = file(var.user_data_script_path)
 
-  data_disks {
-    size = 20
-    category = "cloud_auto"
-    delete_with_instance = true
-    snapshot_id = data.alicloud_ecs_snapshots.image_test.snapshots.0.id
+  dynamic "data_disks" {
+    for_each = var.skip_tests ? [] : [true]
+    content {
+      size = 20
+      category = "cloud_auto"
+      delete_with_instance = true
+      snapshot_id = data.alicloud_ecs_snapshots.image_test.0.snapshots.0.id
+    }
   }
 
   tags = merge(
