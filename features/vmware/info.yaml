@@ -1,5 +1,6 @@
 description: "VMware platform (cloud-init, open-vm-tools)"
 type: platform
+artifact: [".vmdk", ".ova"]
 features:
   include: 
     - cloud

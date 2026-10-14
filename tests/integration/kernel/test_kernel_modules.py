@@ -21,8 +21,8 @@ from plugins.kernel_module import KernelModule
     ]
 )
 @pytest.mark.feature("cisModprobe")
-def test_cismodprobe_blacklist_exists(file: File):
-    """Test that kernel modules are blacklisted"""
+def test_cismodprobe_denylist_exists(file: File):
+    """Test that kernel modules are denylisted"""
     paths = [
         "/etc/modprobe.d/cramfs.conf",
         "/etc/modprobe.d/dccp.conf",

@@ -17,6 +17,7 @@ github_source_path: docs/explanation/os-releases.md
 github_target_path: docs/explanation/os-releases.md
 ---
 
+
 # OS Releases
 
 OS releases are deployable operating system images distributed to end users.
@@ -60,7 +61,7 @@ These specialized formats ensure optimal performance and integration with each p
 
 ### The CNAME system
 
-For the full naming hierarchy, worked example, and the `/etc/os-release` keys written by the builder, see [Canonical Names in Flavors Reference](/reference/flavors#canonical-names) and [Feature resolution in `/etc/os-release`](/reference/features/#feature-resolution-in-etcos-release).
+For the full naming hierarchy, worked example, and the `/etc/os-release` keys written by the builder, see [Canonical Names in Flavors Reference](/reference/flavors#feature-list) and [Feature resolution in `/etc/os-release`](/reference/features/#feature-resolution-in-etcos-release).
 
 ```
 {target}-{features}-{arch}-{version}-{commit}
