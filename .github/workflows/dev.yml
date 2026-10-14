@@ -15,17 +15,35 @@ on:
       - 'CONTRIBUTING.md'
       - 'SECURITY.md'
   pull_request:
-    paths-ignore:
-      - ".gitignore"
-      - ".github/docs*.yml"
-      - 'docs/**'
-      - 'features/*/README.md'
-      - 'features/*/info.yaml'
-      - 'CONTRIBUTING.md'
-      - 'SECURITY.md'
+    # No paths-ignore on pull_request — workflow must run on every PR so that
+    # build_and_test_gate always produces a check result for branch protection.
+    # detect-changes skips the expensive build/test jobs on docs-only PRs.
 jobs:
+  detect-changes:
+    name: Detect code path changes
+    runs-on: ubuntu-24.04
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check for code path changes
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            code:
+              - '!.gitignore'
+              - '!.github/docs*.yml'
+              - '!docs/**'
+              - '!features/*/README.md'
+              - '!features/*/info.yaml'
+              - '!CONTRIBUTING.md'
+              - '!SECURITY.md'
+
   set_version:
     name: Set VERSION
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -59,3 +77,28 @@ jobs:
       id-token: write # TODO: 3215 elevated permissions for included workflow
       actions: write # TODO: 3215 elevated permissions for included workflow
       checks: write # Required for test_report job to write workflow summary
+
+  build_and_test_gate:
+    name: Build and test gate
+    needs: [detect-changes, build, test]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Evaluate build and test result
+        run: |
+          CODE_CHANGED="${{ needs.detect-changes.outputs.code }}"
+          BUILD_RESULT="${{ needs.build.result }}"
+          TEST_RESULT="${{ needs.test.result }}"
+          if [[ "$CODE_CHANGED" != "true" ]]; then
+            echo "No code paths changed; skipping build and test — gate passes."
+            exit 0
+          fi
+          if [[ "$BUILD_RESULT" != "success" ]]; then
+            echo "Build result: $BUILD_RESULT"
+            exit 1
+          fi
+          if [[ "$TEST_RESULT" != "success" ]]; then
+            echo "Test result: $TEST_RESULT"
+            exit 1
+          fi
+          echo "Build and test passed."

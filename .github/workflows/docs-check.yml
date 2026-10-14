@@ -4,13 +4,7 @@ on:
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, closed]
-    paths:
-      - 'docs/**'
-      - 'features/*/README.md'
-      - 'features/*/info.yaml'
-      - 'flavors.yaml'
-      - 'CONTRIBUTING.md'
-      - 'SECURITY.md'
+    # No paths: filter — must run on every PR to always produce the gate check
   push:
     branches: [main]
     paths:
@@ -22,14 +16,57 @@ on:
       - 'SECURITY.md'
 
 jobs:
-  docs-checks:
-    # Skip checks on closed PRs (only need the notification)
+  detect-changes:
+    name: Detect docs path changes
+    # Skip on closed PRs (only need the notification) and push events (handled by paths: above)
     if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-24.04
+    outputs:
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check for docs path changes
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            docs:
+              - 'docs/**'
+              - 'features/*/README.md'
+              - 'features/*/info.yaml'
+              - 'flavors.yaml'
+              - 'CONTRIBUTING.md'
+              - 'SECURITY.md'
+
+  docs-checks:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.docs == 'true'
     uses: gardenlinux/docs/.github/workflows/docs-checks.yml@main
     with:
       override-repo: ${{ github.event.repository.name }}
       override-ref: ${{ github.head_ref || github.ref_name }}
       override-commit: ${{ github.event.pull_request.head.sha || github.sha }}
+
+  docs-checks-gate:
+    name: Docs checks gate
+    needs: [detect-changes, docs-checks]
+    if: always() && (github.event_name != 'pull_request' || github.event.action != 'closed')
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Evaluate docs checks result
+        run: |
+          DOCS_CHANGED="${{ needs.detect-changes.outputs.docs }}"
+          DOCS_RESULT="${{ needs.docs-checks.result }}"
+          if [[ "$DOCS_CHANGED" != "true" ]]; then
+            echo "Docs paths not changed; skipping docs checks — gate passes."
+            exit 0
+          fi
+          if [[ "$DOCS_RESULT" == "success" ]]; then
+            echo "Docs checks passed."
+            exit 0
+          fi
+          echo "Docs checks result: $DOCS_RESULT"
+          exit 1
 
   notify-docs:
     name: Notify docs
