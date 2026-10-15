@@ -15,7 +15,7 @@ terraform {
     }
     google = {
       source  = "hashicorp/google"
-      version = "~> 6.42.0"
+      version = "~> 8.7.0"
     }
     openstack = {
       source = "terraform-provider-openstack/openstack"
