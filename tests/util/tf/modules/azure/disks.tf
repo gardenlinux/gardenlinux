@@ -36,7 +36,7 @@ resource "azurerm_storage_account" "storage_account" {
 
   # The tag enables ignoring the policy that blocks public access.
   # This is fine as we only allow the IP address that uploads the image.
-  public_network_access_enabled = true
+  public_network_access         = "Enabled"
   tags                          = merge(local.labels, { sec-by-def-public-storage-exception = "enabled" })
 }
 
@@ -50,8 +50,7 @@ resource "azurerm_storage_blob" "image" {
   count = var.existing_root_disk != "" ? 0 : 1
 
   name                   = local.image_name
-  storage_account_name   = azurerm_storage_account.storage_account.name
-  storage_container_name = azurerm_storage_container.blob.name
+  storage_container_id   = azurerm_storage_container.blob.id
   type                   = "Page"
   source = replace(var.root_disk_path, ".raw", ".vhd")
 
@@ -143,8 +142,7 @@ resource "azurerm_storage_blob" "image_test" {
   count = var.skip_tests ? 0 : 1
 
   name = "${local.image_name}-test"
-  storage_account_name   = azurerm_storage_account.storage_account.name
-  storage_container_name = azurerm_storage_container.blob.name
+  storage_container_id   = azurerm_storage_container.blob.id
   type                   = "Page"
   source = replace(var.test_disk_path, ".raw", ".vhd")
 
