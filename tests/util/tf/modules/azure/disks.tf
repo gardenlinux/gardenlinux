@@ -119,7 +119,7 @@ resource "azurerm_shared_image_version" "shared_image_version" {
   tags = local.labels
 
 
-  dynamic "uefi_settings" {
+  dynamic "uefi" {
     for_each = var.image_requirements.secureboot ? [true] : []
     content {
       signature_template_names = [
@@ -128,11 +128,11 @@ resource "azurerm_shared_image_version" "shared_image_version" {
       additional_signatures {
         db {
           type = "x509"
-          certificate_base64 = [ filebase64("cert/secureboot.db.der") ]
+          values_base64 = [ filebase64("cert/secureboot.db.der") ]
         }
         kek {
           type = "x509"
-          certificate_base64 = [ filebase64("cert/secureboot.kek.der") ]
+          values_base64 = [ filebase64("cert/secureboot.kek.der") ]
         }
       }
     }
