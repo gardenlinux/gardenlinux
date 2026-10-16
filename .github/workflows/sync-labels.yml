@@ -1,0 +1,57 @@
+name: Sync Labels Across Org
+
+on:
+  label:
+    types: [created, edited, deleted]
+  workflow_dispatch:
+    inputs:
+      source_repo:
+        description: "Source repo name (default: this repo)"
+        required: false
+        default: ""
+
+jobs:
+  sync-labels:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+
+    steps:
+      - name: Sync labels to all other repos in org
+        env:
+          GH_TOKEN: ${{ secrets.MILESTONES_SYNC_TOKEN }}
+          ORG: ${{ github.repository_owner }}
+          SOURCE_REPO: ${{ inputs.source_repo || github.event.repository.name }}
+        run: |
+          set -euo pipefail
+
+          # Fetch all labels from the source repo
+          labels=$(gh api --paginate "repos/$ORG/$SOURCE_REPO/labels?per_page=100")
+
+          # Fetch all other repos in the org
+          repos=$(gh api --paginate "orgs/$ORG/repos?per_page=100" --jq '.[].name' | grep -v "^$SOURCE_REPO$")
+
+          for repo in $repos; do
+            echo "--- $repo ---"
+            existing=$(gh api --paginate "repos/$ORG/$repo/labels?per_page=100" --jq '.[].name')
+
+            echo "$labels" | jq -c '.[]' | while read -r label; do
+              name=$(echo "$label" | jq -r '.name')
+              color=$(echo "$label" | jq -r '.color')
+              description=$(echo "$label" | jq -r '.description // ""')
+
+              if echo "$existing" | grep -qxF "$name"; then
+                gh api --method PATCH "repos/$ORG/$repo/labels/$name" \
+                  --field new_name="$name" \
+                  --field color="$color" \
+                  --field description="$description" \
+                  --jq '"  [updated] \(.name)"'
+              else
+                gh api --method POST "repos/$ORG/$repo/labels" \
+                  --field name="$name" \
+                  --field color="$color" \
+                  --field description="$description" \
+                  --jq '"  [created] \(.name)"'
+              fi
+            done
+          done
