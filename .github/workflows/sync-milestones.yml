@@ -1,0 +1,64 @@
+name: Sync Milestones Across Org
+
+on:
+  milestone:
+    types: [created, edited, deleted, closed, opened]
+  workflow_dispatch:
+    inputs:
+      source_repo:
+        description: "Source repo name (default: this repo)"
+        required: false
+        default: ""
+
+jobs:
+  sync-milestones:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+
+    steps:
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Sync milestones to all other repos in org
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          ORG: ${{ github.repository_owner }}
+          SOURCE_REPO: ${{ inputs.source_repo || github.event.repository.name }}
+        run: |
+          set -euo pipefail
+
+          # Fetch all milestones from the source repo
+          milestones=$(gh api --paginate "repos/$ORG/$SOURCE_REPO/milestones?state=all&per_page=100")
+
+          # Fetch all other repos in the org
+          repos=$(gh api --paginate "orgs/$ORG/repos?per_page=100" --jq '.[].name' | grep -v "^$SOURCE_REPO$")
+
+          for repo in $repos; do
+            echo "--- $repo ---"
+            existing=$(gh api --paginate "repos/$ORG/$repo/milestones?state=all&per_page=100" --jq '.[].title')
+
+            echo "$milestones" | jq -c '.[]' | while read -r milestone; do
+              title=$(echo "$milestone" | jq -r '.title')
+              description=$(echo "$milestone" | jq -r '.description // ""')
+              due_on=$(echo "$milestone" | jq -r '.due_on // ""')
+              state=$(echo "$milestone" | jq -r '.state')
+
+              if echo "$existing" | grep -qxF "$title"; then
+                echo "  [skip]    $title"
+                continue
+              fi
+
+              gh api --method POST "repos/$ORG/$repo/milestones" \
+                --field title="$title" \
+                --field description="$description" \
+                --field state="$state" \
+                --field due_on="$due_on" \
+                --jq '"  [created] \(.title)"'
+            done
+          done
