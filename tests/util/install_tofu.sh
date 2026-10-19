@@ -36,56 +36,9 @@ function test_for_supported_cpu_architecture() {
     esac
 }
 
-function install_custom_azure_resource_manager() {
-    # We have to install the custom Resource Manager to use Secure Boot.
+function cleanup_custom_providers() {
     TF_CLI_CONFIG_FILE="$tf_dir/.terraformrc"
-    export TF_CLI_CONFIG_FILE
-    TOFU_PROVIDERS_CUSTOM="$tf_dir/.terraform/providers/custom"
-    TOFU_PROVIDER_AZURERM_VERSION="v5.9.0"
-    TOFU_PROVIDER_AZURERM_VERSION_LONG="${TOFU_PROVIDER_AZURERM_VERSION}-post1-secureboot3"
-    TOFU_PROVIDER_AZURERM_BIN="terraform-provider-azurerm_${TOFU_PROVIDER_AZURERM_VERSION}_${host_os}_${host_arch}"
-    TOFU_PROVIDER_AZURERM_URL="https://github.com/gardenlinux/terraform-provider-azurerm/releases/download/$TOFU_PROVIDER_AZURERM_VERSION_LONG/$TOFU_PROVIDER_AZURERM_BIN"
-    TOFU_PROVIDER_AZURERM_CHECKSUM_linux_amd64="990a7c1e0a75d9bfa40b101b12ff9180c5cf71efa91ac6a46c0c1b3aa07a3031"
-    TOFU_PROVIDER_AZURERM_CHECKSUM_linux_arm64="d7515da7458cf1c263d0741a3b8b244bd0501b9327609ec1c06aa754e4525c41"
-    TOFU_PROVIDER_AZURERM_CHECKSUM_darwin_amd64="ab8e9e8531dba49969b01deb0a70c13e427333500d2455d5ad2ada464aab2815"
-    TOFU_PROVIDER_AZURERM_CHECKSUM_darwin_arm64="3c64fc76c14843082933c0e2cd0c68b604cdef0b182c1559febda71dde078352"
-
-    cat >"$TF_CLI_CONFIG_FILE" <<EOF
-provider_installation {
-  dev_overrides {
-    "hashicorp/azurerm" = "$TOFU_PROVIDERS_CUSTOM"
-  }
-  direct {}
-}
-EOF
-    if [ ! -f "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" ] || ! (cd "${TOFU_PROVIDERS_CUSTOM}" && sha256sum -c checksum.txt >/dev/null 2>&1); then
-        echo "Downloading terraform-provider-azurerm"
-        mkdir -p "${TOFU_PROVIDERS_CUSTOM}"
-        curl -LO --create-dirs --output-dir "${TOFU_PROVIDERS_CUSTOM}" "${TOFU_PROVIDER_AZURERM_URL}"
-        mv "${TOFU_PROVIDERS_CUSTOM}/${TOFU_PROVIDER_AZURERM_BIN}" "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm"
-
-        case "${host_os}_${host_arch}" in
-        linux_amd64)
-            checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_linux_amd64"
-            ;;
-        linux_arm64)
-            checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_linux_arm64"
-            ;;
-        darwin_amd64)
-            checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_darwin_amd64"
-            ;;
-        darwin_arm64)
-            checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_darwin_arm64"
-            ;;
-        *)
-            die "Unsupported OS/arch combination: ${host_os}_${host_arch}" >&2
-            ;;
-        esac
-
-        echo "$checksum  terraform-provider-azurerm" >"${TOFU_PROVIDERS_CUSTOM}/checksum.txt"
-        (cd "${TOFU_PROVIDERS_CUSTOM}" && sha256sum -c checksum.txt)
-        chmod +x "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm"
-    fi
+    rm -rf "$TF_CLI_CONFIG_FILE"
 }
 
 install_tofu() {
@@ -110,7 +63,7 @@ install_tofu() {
     tofuenv use latest-allowed
     popd
 
-    install_custom_azure_resource_manager
+    cleanup_custom_providers
 }
 
 # If script is sourced, don't run main function automatically
