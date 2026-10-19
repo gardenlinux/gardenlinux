@@ -48,7 +48,7 @@ process.
 
 If possible the Garden Linux Security Team will ask the person making the public
 report if the issue can be handled via a
-[private disclosure process](#private-disclosure-process) (for example if the
+[private disclosure process](#private-disclosure-processes) (for example if the
 full exploit details have not yet been published). If the reporter denies the
 request for private disclosure, the Garden Linux Security Team will move swiftly
 with the fix and release process. In extreme cases GitHub can be asked to
@@ -155,7 +155,7 @@ Honest critique is the only way we are going to get good at this as a community.
 
 ### Communication Channel
 
-The [private](#private-disclosure-process) or [public disclosure process](#public-disclosure-process) should be triggered
+The [private](#private-disclosure-processes) or [public disclosure process](#public-disclosure-processes) should be triggered
 exclusively by writing an e-mail to [gardenlinux-security@lists.neonephos.org](mailto:gardenlinux-security@lists.neonephos.org).
 
 Garden Linux security announcements will be communicated by the Fix Lead
@@ -167,7 +167,7 @@ members who are interested in participating in discussions related to the
 Garden Linux Security Release Process are encouraged to join the Garden Linux mailing
 list.
 
-The members of the [Garden Linux Security Team](#gardenlinux-security-team) are
+The members of the [Garden Linux Security Team](#garden-linux-security-team) are
 subscribed to Garden Linux Security mailing list [gardenlinux-security@lists.neonephos.org](mailto:gardenlinux-security@lists.neonephos.org).
 
 ### Open-Source-Steward
