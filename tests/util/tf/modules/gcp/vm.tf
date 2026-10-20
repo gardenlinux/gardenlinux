@@ -7,12 +7,10 @@ resource "google_compute_instance" "instance" {
 
   boot_disk {
     initialize_params {
-      # image = (
-      #   local.image_source_type == "file" ? google_compute_image.image.0.name :
-      #   local.image_source_type == "cloud" ? "projects/sap-se-gcp-gardenlinux/global/images/${local.image}" :
-      #   null
-      # )
-      image = google_compute_image.image.0.name
+      image = (
+        var.existing_root_disk == "" ? google_compute_image.image.0.name :
+        "projects/sap-se-gcp-gardenlinux/global/images/${var.existing_root_disk}"
+      )
       type  = "pd-ssd"
       size  = 16
     }
@@ -41,10 +39,13 @@ resource "google_compute_instance" "instance" {
     }
   }
 
-  attached_disk {
-    source = google_compute_disk.test_disk.self_link
-    device_name = "test-disk"
-    mode = "READ_WRITE"
+  dynamic "attached_disk" {
+    for_each = var.skip_tests ? [] : [true]
+    content {
+      source = google_compute_disk.test_disk.0.self_link
+      device_name = "test-disk"
+      mode = "READ_WRITE"
+    }
   }
 
   labels = local.labels

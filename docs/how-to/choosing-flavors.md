@@ -29,7 +29,7 @@ name (cname)** combined with a target architecture. Under
 [ADR 0035](/reference/adr/0035-cname-flavor-artifact-naming):
 
 - **cname** — the feature encoding only, canonically sorted (e.g.
-  `aws-gardener_prod`). See [Canonical Names](/reference/flavors#canonical-names).
+  `aws-gardener_prod`). See [Canonical Names](/reference/flavors#feature-list).
 - **flavor** — `{cname}-{arch}` (e.g. `aws-gardener_prod-amd64`).
 
 The cname is assembled from three feature types defined in

@@ -43,6 +43,8 @@ resource "openstack_images_image_v2" "image" {
 }
 
 resource "openstack_images_image_v2" "test_disk" {
+  count = var.skip_tests ? 0 : 1
+
   name = "${local.image_name}-test-disk"
   local_file_path = var.test_disk_path
   container_format = "bare"
@@ -59,12 +61,16 @@ resource "openstack_images_image_v2" "test_disk" {
 }
 
 resource "openstack_blockstorage_volume_v3" "test_disk" {
+  count = var.skip_tests ? 0 : 1
+
   name = "${local.image_name}-test-volume"
   size = 1
-  image_id = openstack_images_image_v2.test_disk.id
+  image_id = openstack_images_image_v2.test_disk.0.id
 }
 
 resource "openstack_compute_volume_attach_v2" "test_disk" {
+  count = var.skip_tests ? 0 : 1
+
   instance_id = openstack_compute_instance_v2.instance.id
-  volume_id = openstack_blockstorage_volume_v3.test_disk.id
+  volume_id = openstack_blockstorage_volume_v3.test_disk.0.id
 }

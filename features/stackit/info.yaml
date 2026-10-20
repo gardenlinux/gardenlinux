@@ -1,5 +1,6 @@
 description: "STACKIT platform (cloud-init, KVM)"
 type: platform
+artifact: [".raw"]
 features:
   include:
     - cloud
