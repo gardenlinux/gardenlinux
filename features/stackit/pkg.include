@@ -1,6 +1,4 @@
 python3-cffi-backend
-# GL-TESTCOV-stackit-service-cloud-init-local-enable
-cloud-init
 dmidecode
 # GL-TESTCOV-stackit-service-chrony-enable
 chrony

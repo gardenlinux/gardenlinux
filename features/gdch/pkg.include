@@ -4,5 +4,3 @@ python3-cffi-backend
 nvme-cli
 # GL-TESTCOV-gdch-service-chrony-enable
 chrony
-# GL-TESTCOV-gdch-service-cloud-init-local-enable
-cloud-init
