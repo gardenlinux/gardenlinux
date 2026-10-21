@@ -45,7 +45,7 @@ jobs:
 
             echo "$labels" | jq -c '.[]' | while read -r label; do
               name=$(echo "$label" | jq -r '.name')
-              color=$(echo "$label" | jq -r '.color | if type == "string" and length > 0 then . else "ededed" end')
+              color=$(echo "$label" | jq -r 'if (.color | test("^[0-9a-fA-F]{6}$")) then .color else "ededed" end')
               description=$(echo "$label" | jq -r '.description // ""')
 
               if echo "$existing" | grep -qxF "$name"; then
