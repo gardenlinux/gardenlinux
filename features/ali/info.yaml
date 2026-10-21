@@ -1,5 +1,6 @@
 description: "Alibaba Cloud"
 type: platform
 features:
-  include: 
+  include:
     - cloud
+    - cloud-init

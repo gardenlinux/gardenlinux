@@ -1,5 +1,6 @@
 description: Google Distributed Cloud Hosted (gdch environment)"
 type: platform
 features:
-  include: 
+  include:
     - cloud
+    - cloud-init
