@@ -4,3 +4,4 @@ artifact: [".raw"]
 features:
   include:
     - cloud
+    - cloud-init
