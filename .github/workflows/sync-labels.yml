@@ -36,8 +36,8 @@ jobs:
           # Fetch all labels from the source repo
           labels=$(gh api --paginate "repos/$ORG/$SOURCE_REPO/labels?per_page=100")
 
-          # Fetch all other repos in the org
-          repos=$(gh api --paginate "orgs/$ORG/repos?per_page=100" --jq '.[].name' | grep -v "^$SOURCE_REPO$")
+          # Fetch all other non-archived repos in the org
+          repos=$(gh api --paginate "orgs/$ORG/repos?per_page=100" --jq '.[] | select(.archived == false) | .name' | grep -v "^$SOURCE_REPO$")
 
           for repo in $repos; do
             echo "--- $repo ---"
