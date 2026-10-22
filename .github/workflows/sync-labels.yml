@@ -109,8 +109,9 @@ jobs:
               if [ "$existing_color" = "$color" ] && [ "$existing_desc" = "$description" ]; then
                 echo "  [skip]    $name"
               else
-                gh api --method PATCH "repos/$ORG/$REPO/labels/$encoded_name" \
-                  --raw-field new_name="$name" \
+                label_id=$(echo "$existing_label" | jq -r '.id')
+                gh api --method PATCH "repos/$ORG/$REPO/labels/$label_id" \
+                  --raw-field name="$name" \
                   --raw-field color="$color" \
                   --raw-field description="$description" \
                   --jq '"  [updated] \(.name)"'
