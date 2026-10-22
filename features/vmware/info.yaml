@@ -3,5 +3,5 @@ type: platform
 features:
   include:
     - cloud
-    - cloud-init
+    - cloudInit
     - _ignite

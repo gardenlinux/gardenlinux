@@ -3,3 +3,4 @@ type: platform
 features:
   include:
     - cloud
+    - cloudInit
