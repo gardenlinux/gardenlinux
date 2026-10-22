@@ -41,7 +41,7 @@ jobs:
 
           for repo in $repos; do
             echo "--- $repo ---"
-            existing=$(gh api --paginate "repos/$ORG/$repo/milestones?state=all&per_page=100" --jq '.[].title')
+            repo_milestones=$(gh api --paginate "repos/$ORG/$repo/milestones?state=all&per_page=100")
 
             echo "$milestones" | jq -c '.[]' | while read -r milestone; do
               title=$(echo "$milestone" | jq -r '.title')
@@ -49,21 +49,35 @@ jobs:
               due_on=$(echo "$milestone" | jq -r '.due_on // ""')
               state=$(echo "$milestone" | jq -r '.state')
 
-              if echo "$existing" | grep -qxF "$title"; then
-                echo "  [skip]    $title"
-                continue
-              fi
-
               due_on_field=()
               if [ -n "$due_on" ]; then
                 due_on_field=(--field due_on="$due_on")
               fi
 
-              gh api --method POST "repos/$ORG/$repo/milestones" \
-                --raw-field title="$title" \
-                --raw-field description="$description" \
-                --raw-field state="$state" \
-                "${due_on_field[@]}" \
-                --jq '"  [created] \(.title)"'
+              existing_milestone=$(echo "$repo_milestones" | jq -c --arg title "$title" '.[] | select(.title == $title)' || echo "")
+
+              if [ -z "$existing_milestone" ]; then
+                gh api --method POST "repos/$ORG/$repo/milestones" \
+                  --raw-field title="$title" \
+                  --raw-field description="$description" \
+                  --raw-field state="$state" \
+                  "${due_on_field[@]}" \
+                  --jq '"  [created] \(.title)"'
+              else
+                existing_desc=$(echo "$existing_milestone" | jq -r '.description // ""')
+                existing_due=$(echo "$existing_milestone" | jq -r '.due_on // ""')
+                existing_state=$(echo "$existing_milestone" | jq -r '.state')
+                if [ "$existing_desc" = "$description" ] && [ "$existing_due" = "$due_on" ] && [ "$existing_state" = "$state" ]; then
+                  echo "  [skip]    $title"
+                else
+                  number=$(echo "$existing_milestone" | jq -r '.number')
+                  gh api --method PATCH "repos/$ORG/$repo/milestones/$number" \
+                    --raw-field title="$title" \
+                    --raw-field description="$description" \
+                    --raw-field state="$state" \
+                    "${due_on_field[@]}" \
+                    --jq '"  [updated] \(.title)"'
+                fi
+              fi
             done
           done
