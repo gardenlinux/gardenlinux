@@ -11,54 +11,115 @@ on:
         default: ""
 
 jobs:
-  sync-milestones:
+  prepare:
     runs-on: ubuntu-latest
     permissions:
       issues: read
+    outputs:
+      repos: ${{ steps.list-repos.outputs.repos }}
+      milestones: ${{ steps.list-milestones.outputs.milestones }}
 
     steps:
       - name: Generate GitHub App token
         uses: actions/create-github-app-token@v1
         id: app-token
         with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          app-id: ${{ vars.LABEL_SYNC_APP_ID }}
+          private-key: ${{ secrets.LABEL_SYNC_APP_PRIV_KEY }}
           owner: ${{ github.repository_owner }}
 
-      - name: Sync milestones to all other repos in org
+      - name: List repos
+        id: list-repos
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           ORG: ${{ github.repository_owner }}
-          SOURCE_REPO: ${{ inputs.source_repo || github.event.repository.name }}
+          SOURCE_REPO: gardenlinux
+        run: |
+          repos=$(gh api --paginate "orgs/$ORG/repos?per_page=100" \
+            --jq '[.[] | select(.archived == false) | .name] | map(select(. != "'"$SOURCE_REPO"'"))')
+          echo "repos<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$repos" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: List milestones
+        id: list-milestones
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          ORG: ${{ github.repository_owner }}
+          SOURCE_REPO: gardenlinux
+        run: |
+          milestones=$(gh api --paginate "repos/$ORG/$SOURCE_REPO/milestones?state=all&per_page=100" \
+            --jq '[.[] | {title: .title, description: (.description // ""), due_on: (.due_on // ""), state: .state}]')
+          echo "Found $(echo "$milestones" | jq length) milestones:"
+          echo "$milestones" | jq -r '.[].title' | sed 's/^/  /'
+          echo "milestones<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$milestones" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+  sync:
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+    strategy:
+      fail-fast: false
+      matrix:
+        repo: ${{ fromJson(needs.prepare.outputs.repos) }}
+
+    steps:
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.LABEL_SYNC_APP_ID }}
+          private-key: ${{ secrets.LABEL_SYNC_APP_PRIV_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Sync milestones to ${{ matrix.repo }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          ORG: ${{ github.repository_owner }}
+          REPO: ${{ matrix.repo }}
+          MILESTONES: ${{ needs.prepare.outputs.milestones }}
         run: |
           set -euo pipefail
 
-          # Fetch all milestones from the source repo
-          milestones=$(gh api --paginate "repos/$ORG/$SOURCE_REPO/milestones?state=all&per_page=100")
+          repo_milestones=$(gh api --paginate "repos/$ORG/$REPO/milestones?state=all&per_page=100")
 
-          # Fetch all other repos in the org
-          repos=$(gh api --paginate "orgs/$ORG/repos?per_page=100" --jq '.[].name' | grep -v "^$SOURCE_REPO$")
+          echo "$MILESTONES" | jq -c '.[]' | while read -r milestone; do
+            title=$(echo "$milestone" | jq -r '.title')
+            description=$(echo "$milestone" | jq -r '.description')
+            due_on=$(echo "$milestone" | jq -r '.due_on')
+            state=$(echo "$milestone" | jq -r '.state')
 
-          for repo in $repos; do
-            echo "--- $repo ---"
-            existing=$(gh api --paginate "repos/$ORG/$repo/milestones?state=all&per_page=100" --jq '.[].title')
+            due_on_field=()
+            if [ -n "$due_on" ]; then
+              due_on_field=(--field due_on="$due_on")
+            fi
 
-            echo "$milestones" | jq -c '.[]' | while read -r milestone; do
-              title=$(echo "$milestone" | jq -r '.title')
-              description=$(echo "$milestone" | jq -r '.description // ""')
-              due_on=$(echo "$milestone" | jq -r '.due_on // ""')
-              state=$(echo "$milestone" | jq -r '.state')
+            existing_milestone=$(echo "$repo_milestones" | jq -c --arg title "$title" '.[] | select(.title == $title)' || echo "")
 
-              if echo "$existing" | grep -qxF "$title"; then
-                echo "  [skip]    $title"
-                continue
-              fi
-
-              gh api --method POST "repos/$ORG/$repo/milestones" \
-                --field title="$title" \
-                --field description="$description" \
-                --field state="$state" \
-                --field due_on="$due_on" \
+            if [ -z "$existing_milestone" ]; then
+              gh api --method POST "repos/$ORG/$REPO/milestones" \
+                --raw-field title="$title" \
+                --raw-field description="$description" \
+                --raw-field state="$state" \
+                "${due_on_field[@]}" \
                 --jq '"  [created] \(.title)"'
-            done
+            else
+              existing_desc=$(echo "$existing_milestone" | jq -r '.description // ""')
+              existing_due=$(echo "$existing_milestone" | jq -r '.due_on // ""')
+              existing_state=$(echo "$existing_milestone" | jq -r '.state')
+              if [ "$existing_desc" = "$description" ] && [ "$existing_due" = "$due_on" ] && [ "$existing_state" = "$state" ]; then
+                echo "  [skip]    $title"
+              else
+                number=$(echo "$existing_milestone" | jq -r '.number')
+                gh api --method PATCH "repos/$ORG/$REPO/milestones/$number" \
+                  --raw-field title="$title" \
+                  --raw-field description="$description" \
+                  --raw-field state="$state" \
+                  "${due_on_field[@]}" \
+                  --jq '"  [updated] \(.title)"'
+              fi
+            fi
           done
