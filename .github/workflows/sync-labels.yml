@@ -17,6 +17,7 @@ jobs:
       issues: read
 
     steps:
+
       - name: Generate GitHub App token
         uses: actions/create-github-app-token@v1
         id: app-token
@@ -31,7 +32,10 @@ jobs:
           ORG: ${{ github.repository_owner }}
           SOURCE_REPO: ${{ inputs.source_repo || github.event.repository.name }}
         run: |
+          PATH=$PATH:/usr/local/bin/
           set -euo pipefail
+          echo "Org: ${ORG}"
+          echo "Source Repo: ${SOURCE_REPO}"
 
           # Fetch all labels from the source repo
           labels=$(gh api --paginate "repos/$ORG/$SOURCE_REPO/labels?per_page=100")
@@ -45,20 +49,20 @@ jobs:
 
             echo "$labels" | jq -c '.[]' | while read -r label; do
               name=$(echo "$label" | jq -r '.name')
-              color=$(echo "$label" | jq -r 'if (.color | tostring | test("^[0-9a-fA-F]{6}$")) then .color else "ededed" end')
+              color=$(echo "$label" | jq -r '.color // "ededed"')
               description=$(echo "$label" | jq -r '.description // ""')
 
               if echo "$existing" | grep -qxF "$name"; then
                 gh api --method PATCH "repos/$ORG/$repo/labels/$name" \
-                  --field new_name="$name" \
-                  --field color="$color" \
-                  --field description="$description" \
+                  --raw-field new_name="$name" \
+                  --raw-field color="$color" \
+                  --raw-field description="$description" \
                   --jq '"  [updated] \(.name)"'
               else
                 gh api --method POST "repos/$ORG/$repo/labels" \
-                  --field name="$name" \
-                  --field color="$color" \
-                  --field description="$description" \
+                  --raw-field name="$name" \
+                  --raw-field color="$color" \
+                  --raw-field description="$description" \
                   --jq '"  [created] \(.name)"'
               fi
             done
