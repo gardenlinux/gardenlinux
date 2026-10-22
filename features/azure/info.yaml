@@ -4,4 +4,4 @@ artifact: [".raw", ".vhd"]
 features:
   include:
     - cloud
-    - cloud-init
+    - cloudInit
