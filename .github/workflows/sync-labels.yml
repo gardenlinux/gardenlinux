@@ -89,13 +89,14 @@ jobs:
         run: |
           set -euo pipefail
 
+          repo_labels=$(gh api --paginate "repos/$ORG/$REPO/labels?per_page=100")
+
           echo "$LABELS" | jq -c '.[]' | while read -r label; do
             name=$(echo "$label" | jq -r '.name')
             color=$(echo "$label" | jq -r '.color')
             description=$(echo "$label" | jq -r '.description')
-            encoded_name=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$name")
 
-            existing_label=$(gh api "repos/$ORG/$REPO/labels/$encoded_name" 2>/dev/null || echo "")
+            existing_label=$(echo "$repo_labels" | jq -c --arg name "$name" '.[] | select(.name == $name)')
 
             if [ -z "$existing_label" ]; then
               gh api --method POST "repos/$ORG/$REPO/labels" \
