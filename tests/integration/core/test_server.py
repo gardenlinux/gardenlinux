@@ -448,7 +448,8 @@ def test_server_mount_tmp_active(systemd: Systemd):
 
 @pytest.mark.testcov(
     [
-        "GL-TESTCOV-server-config-network-default",
+        "GL-TESTCOV-cloud-config-network-default",
+        "GL-TESTCOV-metal-config-network-default",
     ]
 )
 @pytest.mark.feature("cloud and metal")

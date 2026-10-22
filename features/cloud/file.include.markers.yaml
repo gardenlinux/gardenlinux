@@ -34,6 +34,6 @@ markers:
   "etc/sysctl.d/22-ipv6-settings.conf":
   - "GL-TESTCOV-cloud-config-sysctl-ipv6"
   "etc/systemd/network/99-default.network":
-  - "GL-TESTCOV-server-config-network-default"
+  - "GL-TESTCOV-cloud-config-network-default"
   "etc/systemd/system/rngd.service.d/architecture.conf":
   - "GL-TESTCOV-cloud-config-systemd-rngd-architecture"

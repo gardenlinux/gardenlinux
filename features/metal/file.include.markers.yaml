@@ -14,7 +14,7 @@ markers:
   "etc/kernel/postrm.d/zz-update-syslinux":
   - "GL-TESTCOV-metal-config-kernel-postrm-update-syslinux"
   "etc/systemd/network/99-default.network":
-  - "GL-TESTCOV-server-config-network-default"
+  - "GL-TESTCOV-metal-config-network-default"
   "etc/udev/rules.d/69-nostbyrot.rules":
   - "GL-TESTCOV-metal-config-udev-rules-nostbyrot"
   "etc/udev/rules.d/71-intellldp.rules":
