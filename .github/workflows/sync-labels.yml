@@ -53,7 +53,9 @@ jobs:
         run: |
           repos=$(gh api --paginate "orgs/$ORG/repos?per_page=100" \
             --jq '[.[] | select(.archived == false) | .name] | map(select(. != "'"$SOURCE_REPO"'"))')
-          echo "repos=$repos" >> "$GITHUB_OUTPUT"
+          echo "repos<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$repos" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
   sync:
     needs: prepare
