@@ -21,8 +21,8 @@ jobs:
         uses: actions/create-github-app-token@v1
         id: app-token
         with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          app-id: ${{ vars.LABEL_SYNC_APP_ID }}
+          private-key: ${{ secrets.LABEL_SYNC_APP_PRIV_KEY }}
           owner: ${{ github.repository_owner }}
 
       - name: Sync milestones to all other repos in org
@@ -37,7 +37,7 @@ jobs:
           milestones=$(gh api --paginate "repos/$ORG/$SOURCE_REPO/milestones?state=all&per_page=100")
 
           # Fetch all other repos in the org
-          repos=$(gh api --paginate "orgs/$ORG/repos?per_page=100" --jq '.[].name' | grep -v "^$SOURCE_REPO$")
+          repos=$(gh api --paginate "orgs/$ORG/repos?per_page=100" --jq '.[] | select(.archived == false) | .name' | grep -v "^$SOURCE_REPO$")
 
           for repo in $repos; do
             echo "--- $repo ---"
@@ -54,11 +54,16 @@ jobs:
                 continue
               fi
 
+              due_on_field=()
+              if [ -n "$due_on" ]; then
+                due_on_field=(--field due_on="$due_on")
+              fi
+
               gh api --method POST "repos/$ORG/$repo/milestones" \
-                --field title="$title" \
-                --field description="$description" \
-                --field state="$state" \
-                --field due_on="$due_on" \
+                --raw-field title="$title" \
+                --raw-field description="$description" \
+                --raw-field state="$state" \
+                "${due_on_field[@]}" \
                 --jq '"  [created] \(.title)"'
             done
           done
