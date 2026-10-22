@@ -42,7 +42,11 @@ jobs:
 
           labels=$(gh api --paginate "repos/$ORG/$SOURCE_REPO/labels?per_page=100" \
             --jq '[.[] | {name: .name, color: (.color // "ededed"), description: (.description // "")}]')
-          echo "labels=$labels" >> "$GITHUB_OUTPUT"
+          echo "Found $(echo "$labels" | jq length) labels:"
+          echo "$labels" | jq -r '.[].name' | sed 's/^/  /'
+          echo "labels<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$labels" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: List repos
         id: list-repos
@@ -89,8 +93,9 @@ jobs:
             name=$(echo "$label" | jq -r '.name')
             color=$(echo "$label" | jq -r '.color')
             description=$(echo "$label" | jq -r '.description')
+            encoded_name=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$name")
 
-            existing_label=$(gh api "repos/$ORG/$REPO/labels/$name" 2>/dev/null || echo "")
+            existing_label=$(gh api "repos/$ORG/$REPO/labels/$encoded_name" 2>/dev/null || echo "")
 
             if [ -z "$existing_label" ]; then
               gh api --method POST "repos/$ORG/$REPO/labels" \
@@ -104,7 +109,7 @@ jobs:
               if [ "$existing_color" = "$color" ] && [ "$existing_desc" = "$description" ]; then
                 echo "  [skip]    $name"
               else
-                gh api --method PATCH "repos/$ORG/$REPO/labels/$name" \
+                gh api --method PATCH "repos/$ORG/$REPO/labels/$encoded_name" \
                   --raw-field new_name="$name" \
                   --raw-field color="$color" \
                   --raw-field description="$description" \
