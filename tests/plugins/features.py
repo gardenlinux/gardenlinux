@@ -2,24 +2,11 @@ from typing import List
 
 import boolean
 import pytest
+from plugins.os_release import get_os_release
 
 booleanAlgebra = boolean.BooleanAlgebra()
 
-
-def setup_gardenlinux_features() -> set[str]:
-    """
-    Collects Garden Linux features and architecture information.
-    """
-    features = set[str]()
-    with open("/etc/os-release") as os_release:
-        for line in os_release:
-            if line.startswith("GARDENLINUX_FEATURES="):
-                _, value = line.split("=", 1)
-                features = set(feature.strip() for feature in value.split(","))
-    return features
-
-
-features: set[str] = setup_gardenlinux_features()
+features: set[str] = set(get_os_release().features)
 
 
 def check_feature_condition(condition: str):

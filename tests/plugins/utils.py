@@ -2,6 +2,8 @@ import logging
 import os
 from typing import List, Optional, TypeVar
 
+from plugins.os_release import get_os_release
+
 # Various utility functions to make tests more readable
 # This should not contain test-assertions, but only abstract details that make tests harder to read
 
@@ -57,17 +59,4 @@ def get_cname_from_os_release() -> Optional[str]:
     Returns:
         CNAME string if found, None otherwise.
     """
-    try:
-        logger.debug("Reading /etc/os-release to find GARDENLINUX_CNAME")
-        with open("/etc/os-release", "r") as f:
-            for line in f:
-                if line.startswith("GARDENLINUX_CNAME="):
-                    cname = line.split("=", 1)[1].strip().strip('"')
-                    logger.debug(f"Found GARDENLINUX_CNAME={cname} in /etc/os-release")
-                    return cname
-        logger.debug("GARDENLINUX_CNAME not found in /etc/os-release")
-    except FileNotFoundError:
-        logger.warning("/etc/os-release file not found")
-    except PermissionError:
-        logger.warning("Permission denied reading /etc/os-release")
-    return None
+    return get_os_release().cname
