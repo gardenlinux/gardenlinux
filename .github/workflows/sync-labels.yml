@@ -11,10 +11,14 @@ on:
         default: ""
 
 jobs:
-  sync-labels:
+  prepare:
     runs-on: ubuntu-latest
     permissions:
       issues: read
+    outputs:
+      repos: ${{ steps.list-repos.outputs.repos }}
+      labels: ${{ steps.list-labels.outputs.labels }}
+      source_repo: ${{ steps.list-labels.outputs.source_repo }}
 
     steps:
       - name: Generate GitHub App token
@@ -25,41 +29,93 @@ jobs:
           private-key: ${{ secrets.LABEL_SYNC_APP_PRIV_KEY }}
           owner: ${{ github.repository_owner }}
 
-      - name: Sync labels to all other repos in org
+      - name: List repos and labels
+        id: list-labels
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           ORG: ${{ github.repository_owner }}
           SOURCE_REPO: ${{ inputs.source_repo || github.event.repository.name }}
         run: |
+          echo "Org: $ORG"
+          echo "Source Repo: $SOURCE_REPO"
+          echo "source_repo=$SOURCE_REPO" >> "$GITHUB_OUTPUT"
+
+          labels=$(gh api --paginate "repos/$ORG/$SOURCE_REPO/labels?per_page=100" \
+            --jq '[.[] | {name: .name, color: (.color // "ededed"), description: (.description // "")}]')
+          echo "Found $(echo "$labels" | jq length) labels:"
+          echo "$labels" | jq -r '.[].name' | sed 's/^/  /'
+          echo "labels<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$labels" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: List repos
+        id: list-repos
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          ORG: ${{ github.repository_owner }}
+          SOURCE_REPO: ${{ inputs.source_repo || github.event.repository.name }}
+        run: |
+          repos=$(gh api --paginate "orgs/$ORG/repos?per_page=100" \
+            --jq '[.[] | select(.archived == false) | .name] | map(select(. != "'"$SOURCE_REPO"'"))')
+          echo "repos<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$repos" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+  sync:
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+    strategy:
+      fail-fast: false
+      matrix:
+        repo: ${{ fromJson(needs.prepare.outputs.repos) }}
+
+    steps:
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.LABEL_SYNC_APP_ID }}
+          private-key: ${{ secrets.LABEL_SYNC_APP_PRIV_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Sync labels to ${{ matrix.repo }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          ORG: ${{ github.repository_owner }}
+          REPO: ${{ matrix.repo }}
+          LABELS: ${{ needs.prepare.outputs.labels }}
+        run: |
           set -euo pipefail
 
-          # Fetch all labels from the source repo
-          labels=$(gh api --paginate "repos/$ORG/$SOURCE_REPO/labels?per_page=100")
+          repo_labels=$(gh api --paginate "repos/$ORG/$REPO/labels?per_page=100")
 
-          # Fetch all other non-archived repos in the org
-          repos=$(gh api --paginate "orgs/$ORG/repos?per_page=100" --jq '.[] | select(.archived == false) | .name' | grep -v "^$SOURCE_REPO$")
+          echo "$LABELS" | jq -c '.[]' | while read -r label; do
+            name=$(echo "$label" | jq -r '.name')
+            color=$(echo "$label" | jq -r '.color')
+            description=$(echo "$label" | jq -r '.description')
 
-          for repo in $repos; do
-            echo "--- $repo ---"
-            existing=$(gh api --paginate "repos/$ORG/$repo/labels?per_page=100" --jq '.[].name')
+            existing_label=$(echo "$repo_labels" | jq -c --arg name "$name" '.[] | select(.name == $name)')
 
-            echo "$labels" | jq -c '.[]' | while read -r label; do
-              name=$(echo "$label" | jq -r '.name')
-              color=$(echo "$label" | jq -r 'if (.color | tostring | test("^[0-9a-fA-F]{6}$")) then .color else "ededed" end')
-              description=$(echo "$label" | jq -r '.description // ""')
-
-              if echo "$existing" | grep -qxF "$name"; then
-                gh api --method PATCH "repos/$ORG/$repo/labels/$name" \
-                  --field new_name="$name" \
-                  --field color="$color" \
-                  --field description="$description" \
-                  --jq '"  [updated] \(.name)"'
+            if [ -z "$existing_label" ]; then
+              gh api --method POST "repos/$ORG/$REPO/labels" \
+                --raw-field name="$name" \
+                --raw-field color="$color" \
+                --raw-field description="$description" \
+                --jq '"  [created] \(.name)"'
+            else
+              existing_color=$(echo "$existing_label" | jq -r '.color // ""')
+              existing_desc=$(echo "$existing_label" | jq -r '.description // ""')
+              if [ "$existing_color" = "$color" ] && [ "$existing_desc" = "$description" ]; then
+                echo "  [skip]    $name"
               else
-                gh api --method POST "repos/$ORG/$repo/labels" \
-                  --field name="$name" \
-                  --field color="$color" \
-                  --field description="$description" \
-                  --jq '"  [created] \(.name)"'
+                label_id=$(echo "$existing_label" | jq -r '.id')
+                gh api --method PATCH "repos/$ORG/$REPO/labels/$label_id" \
+                  --raw-field name="$name" \
+                  --raw-field color="$color" \
+                  --raw-field description="$description" \
+                  --jq '"  [updated] \(.name)"'
               fi
-            done
+            fi
           done

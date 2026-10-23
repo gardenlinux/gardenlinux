@@ -4,4 +4,4 @@ artifact: [".raw", ".qcow2"]
 features:
   include:
     - cloud
-    - cloud-init
+    - cloudInit
