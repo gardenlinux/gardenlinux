@@ -448,10 +448,11 @@ def test_server_mount_tmp_active(systemd: Systemd):
 
 @pytest.mark.testcov(
     [
-        "GL-TESTCOV-server-config-network-default",
+        "GL-TESTCOV-cloud-config-network-default",
+        "GL-TESTCOV-metal-config-network-default",
     ]
 )
-@pytest.mark.feature("server")
+@pytest.mark.feature("cloud and metal")
 def test_server_network_default_config_exists(file: File):
     """Test that server has network default configuration"""
     assert file.exists("/etc/systemd/network/99-default.network")

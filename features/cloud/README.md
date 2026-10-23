@@ -59,6 +59,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/sysctl.d/20-cloud.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cloud/file.include/etc/sysctl.d/20-cloud.conf) ([`file.include`](/reference/features/#file-include)) | Cloud-optimized sysctl settings. |
 | [`file.include/etc/sysctl.d/21-ipv4-settings.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cloud/file.include/etc/sysctl.d/21-ipv4-settings.conf) ([`file.include`](/reference/features/#file-include)) | IPv4 network sysctl tuning for cloud environments. |
 | [`file.include/etc/sysctl.d/22-ipv6-settings.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cloud/file.include/etc/sysctl.d/22-ipv6-settings.conf) ([`file.include`](/reference/features/#file-include)) | IPv6 network sysctl tuning for cloud environments. |
+-| [`file.include/etc/systemd/network/99-default.network`](https://github.com/gardenlinux/gardenlinux/blob/main/features/server/file.include/etc/systemd/network/99-default.network) ([`file.include`](/reference/features/#file-include)) | Default systemd-networkd DHCP configuration for all Ethernet interfaces. |
 | [`file.include/etc/systemd/system/rngd.service.d/architecture.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cloud/file.include/etc/systemd/system/rngd.service.d/architecture.conf) ([`file.include`](/reference/features/#file-include)) | Architecture-specific override for the `rngd` entropy service. |
 
 ### Related features
