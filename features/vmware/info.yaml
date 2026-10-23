@@ -1,6 +1,7 @@
 description: "VMware platform (cloud-init, open-vm-tools)"
 type: platform
 features:
-  include: 
+  include:
     - cloud
+    - cloudInit
     - _ignite

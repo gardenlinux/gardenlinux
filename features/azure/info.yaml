@@ -1,5 +1,6 @@
 description: "azure platform (waagent)"
 type: platform
 features:
-  include: 
+  include:
     - cloud
+    - cloudInit
