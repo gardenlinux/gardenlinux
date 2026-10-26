@@ -1,5 +1,7 @@
 description: "OpenStack platform (cloud-init, open-vm-tools)"
 type: platform
 features:
-  include: 
+  include:
     - cloud
+    - cloudInit
+    - server # needed to enforce proper sorting
