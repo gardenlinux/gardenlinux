@@ -6,3 +6,4 @@ gnutls-bin
 libgcrypt20
 libkcapi1-hmac
 binutils
+gl-fips-checker
