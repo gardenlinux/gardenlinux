@@ -52,7 +52,6 @@ mount --bind "$erofs" "$rootfs/tmp/initrd.include/root.img"
 initrd="$(mktemp)"
 
 touch "$rootfs/initrd"
-mount --bind "$initrd" "$rootfs/initrd"
 
 kernel="$(find "$rootfs/boot/" -name 'vmlinuz-*' | sort -V | tail -n 1)"
 
@@ -63,7 +62,7 @@ chroot "$rootfs" dracut \
 	--kver "${kernel#*-}" \
 	--modules "bash dash systemd systemd-initrd systemd-repart systemd-cryptsetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown crypt" \
 	--reproducible \
-	--install 'find findmnt grep lsblk tail head realpath basename sfdisk mkfs.ext4 resizefat32 dd cryptsetup' \
+	--install 'find findmnt grep lsblk tail head realpath basename od sfdisk mkfs.ext4 resizefat32 dd cryptsetup chattr cmp /usr/lib/systemd/systemd-pcrextend' \
 	--include '/tmp/initrd.include' / \
 	--add-drivers erofs \
 	/initrd
@@ -75,7 +74,7 @@ umount -l "$rootfs/proc"
 umount -R "$rootfs/dev"
 umount "$rootfs/tmp"
 
-umount "$rootfs/initrd"
+mv "$rootfs/initrd" "$initrd"
 
 case "$BUILDER_ARCH" in
 	amd64)
