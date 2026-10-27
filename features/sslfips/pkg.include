@@ -1,3 +1,5 @@
 ca-certificates
 openssl
 openssl-provider-fips
+libkcapi1-hmac
+gl-fips-checker
