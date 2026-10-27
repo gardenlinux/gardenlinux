@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+echo "Package: openssl-provider-fips
+Pin: release o=GardenLinux
+Pin: version 3.5.5-1gl57~bp1877
+Pin-Priority: 1000" > /etc/apt/preferences.d/fips
+
+chown root:root /etc/apt/preferences.d/fips
+chmod 644 /etc/apt/preferences.d/fips
