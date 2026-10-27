@@ -1,3 +1,4 @@
+# proper version is pinned via exec.early in the _fips feature
 openssl-provider-fips
 libssl-dev
 libgnutls28-dev
