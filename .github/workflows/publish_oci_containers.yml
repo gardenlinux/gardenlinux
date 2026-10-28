@@ -79,8 +79,8 @@ jobs:
       run:
         shell: bash
     env:
-      CNAME_AMD64: ""
-      CNAME_ARM64: ""
+      ARTIFACT_BASE_NAME_AMD64: ""
+      ARTIFACT_BASE_NAME_ARM64: ""
     permissions:
       packages: write
     strategy:
@@ -103,25 +103,25 @@ jobs:
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
-      - name: Set CNAMEs
+      - name: Set ARTIFACT_BASE_NAME per arch
         run: |
           if [[ -n "$(gl-flavors-parse --include-only "${{ matrix.flavor }}-amd64" --publish)" ]]; then
-            echo "CNAME_AMD64=$(gl-features-parse --cname "${{ matrix.flavor }}" --arch amd64 --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
-            echo "CNAME_ARM64=$(gl-features-parse --cname "${{ matrix.flavor }}" --arch arm64 --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
+            echo "ARTIFACT_BASE_NAME_AMD64=$(gl-features-parse --cname "${{ matrix.flavor }}" --arch amd64 --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
+            echo "ARTIFACT_BASE_NAME_ARM64=$(gl-features-parse --cname "${{ matrix.flavor }}" --arch arm64 --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
           fi
-      - if: ${{ env.CNAME_AMD64 != '' }}
+      - if: ${{ env.ARTIFACT_BASE_NAME_AMD64 != '' }}
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
         with:
           name: build-${{ matrix.flavor }}-amd64
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - if: ${{ env.CNAME_ARM64 != '' }}
+      - if: ${{ env.ARTIFACT_BASE_NAME_ARM64 != '' }}
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
         with:
           name: build-${{ matrix.flavor }}-arm64
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - if: ${{ env.CNAME_AMD64 != '' }}
+      - if: ${{ env.ARTIFACT_BASE_NAME_AMD64 != '' }}
         name: Publish container images
         run: |
           if [ "${{ inputs.target }}" = "nightly" ]; then
@@ -133,8 +133,8 @@ jobs:
           version="$(cat VERSION)"
 
           podman login -u token -p ${{ github.token }} ghcr.io
-          tar xzv < "${CNAME_AMD64}.tar.gz"
-          image="$(podman load < ${CNAME_AMD64}.oci | awk '{ print $NF }')"
+          tar xzv < "${ARTIFACT_BASE_NAME_AMD64}.tar.gz"
+          image="$(podman load < ${ARTIFACT_BASE_NAME_AMD64}.oci | awk '{ print $NF }')"
 
           # Tagging for amd64 nightly
           if [ $is_nightly = true ]; then
@@ -146,8 +146,8 @@ jobs:
           podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
           podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
 
-          tar xzv < "${CNAME_ARM64}.tar.gz"
-          image="$(podman load < ${CNAME_ARM64}.oci | awk '{ print $NF }')"
+          tar xzv < "${ARTIFACT_BASE_NAME_ARM64}.tar.gz"
+          image="$(podman load < ${ARTIFACT_BASE_NAME_ARM64}.oci | awk '{ print $NF }')"
 
           # Tagging for arm64 nightly
           if [ $is_nightly = true ]; then
@@ -258,7 +258,7 @@ jobs:
       run:
         shell: bash
     env:
-      CNAME: ""
+      ARTIFACT_BASE_NAME: ""
       GL_ALLOW_MULTIPLE_PLATFORMS: "1"
     permissions:
       id-token: write
@@ -289,26 +289,26 @@ jobs:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - name: Set CNAME
+      - name: Set ARTIFACT_BASE_NAME
         run: |
-          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
+          echo "ARTIFACT_BASE_NAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
       - name: Push using the gl-oci util
         env:
           GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
         run: |
-          mkdir "$CNAME"
+          mkdir "$ARTIFACT_BASE_NAME"
 
-          tar -C "$CNAME" -xzf "$CNAME.tar.gz"
+          tar -C "$ARTIFACT_BASE_NAME" -xzf "$ARTIFACT_BASE_NAME.tar.gz"
 
           gl-oci push-manifest \
-            --dir "${CNAME}" \
+            --dir "${ARTIFACT_BASE_NAME}" \
             --container ${{ needs.determine_environment.outputs.repository }} \
             --arch ${{ matrix.arch }} \
             --version ${{ inputs.version }} \
-            --cname "${CNAME}" \
+            --cname "${ARTIFACT_BASE_NAME}" \
             --cosign_file digest.txt \
-            --manifest_file "oci_manifest_entry_${CNAME}.json"
+            --manifest_file "oci_manifest_entry_${ARTIFACT_BASE_NAME}.json"
       - name: Sign the manifest
         run: |
           cat digest.txt
@@ -319,7 +319,7 @@ jobs:
           cosign verify --insecure-ignore-tlog=true --key "awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }}" "${{ needs.determine_environment.outputs.repository }}@$(cat digest.txt)"
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
-          path: oci_manifest_entry_${{ env.CNAME }}.json
+          path: oci_manifest_entry_${{ env.ARTIFACT_BASE_NAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
   update_manifest_index:
     needs: [determine_environment, push_flavors]
@@ -329,7 +329,7 @@ jobs:
       run:
         shell: bash
     env:
-      CNAME: ""
+      ARTIFACT_BASE_NAME: ""
       GL_ALLOW_MULTIPLE_PLATFORMS: "1"
     permissions:
       id-token: write
@@ -346,12 +346,12 @@ jobs:
           submodules: true
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@385aaad34c414d49583c0fe3e03243d110640770 # pin@0.10.25
-      - name: Set CNAME
+      - name: Set ARTIFACT_BASE_NAME
         run: |
-          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
+          echo "ARTIFACT_BASE_NAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
-          path: oci_manifest_entry_${{ env.CNAME }}.json
+          path: oci_manifest_entry_${{ env.ARTIFACT_BASE_NAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
       - name: Update index using glcli tool
         env:
@@ -359,7 +359,7 @@ jobs:
           GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
         run: |
           mkdir manifests
-          mv oci_manifest_entry_${CNAME}.json manifests/
+          mv oci_manifest_entry_${ARTIFACT_BASE_NAME}.json manifests/
 
           gl-oci push-index-from-directory \
             --index ${{ needs.determine_environment.outputs.repository }} \

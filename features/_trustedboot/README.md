@@ -90,7 +90,7 @@ and rootfs path as arguments:
 3. Copies the Garden Linux Secure Boot auth files (PK, KEK, db) from
    `/etc/gardenlinux/` in the rootfs to `EFI/loader/keys/auto/` in the ESP.
 4. Signs the UKI with `sbsign` and places the signed binary at
-   `EFI/Linux/$BUILDER_CNAME.efi` in the ESP.
+   `EFI/Linux/$BUILDER_VERSIONED_FLAVOR.efi` in the ESP.
 
 For certificate generation and build instructions, see
 [Building Images: Secureboot, Trustedboot and TPM2](/how-to/building-images#build-secureboot-trustedboot-and-tpm2-images).

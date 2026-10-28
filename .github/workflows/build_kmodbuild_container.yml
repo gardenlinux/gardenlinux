@@ -16,7 +16,7 @@ jobs:
       run:
         shell: bash
     env:
-      CNAME: ""
+      ARTIFACT_BASE_NAME: ""
     strategy:
       matrix:
         arch: [amd64, arm64]
@@ -37,9 +37,9 @@ jobs:
         name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@385aaad34c414d49583c0fe3e03243d110640770 # pin@0.10.25
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
-        name: Set CNAME
+        name: Set ARTIFACT_BASE_NAME
         run: |
-          echo "CNAME=$(gl-features-parse --cname container-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
+          echo "ARTIFACT_BASE_NAME=$(gl-features-parse --cname container-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Load container build artifact (${{ matrix.arch }})
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
@@ -60,8 +60,8 @@ jobs:
           fi
 
           mkdir ".build"
-          tar -C ".build/" -xzf "$CNAME.tar.gz"
-          rm "$CNAME.tar.gz"
+          tar -C ".build/" -xzf "$ARTIFACT_BASE_NAME.tar.gz"
+          rm "$ARTIFACT_BASE_NAME.tar.gz"
 
           base="ghcr.io/${{ github.repository }}:$version"
           image="$(podman load -i .build/container-${{ matrix.arch }}-$(cat VERSION)-${commit_short}.oci | awk '{ print $NF }')"

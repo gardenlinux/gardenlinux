@@ -40,7 +40,7 @@ jobs:
       id-token: write
       actions: write
     env:
-      CNAME: ""
+      ARTIFACT_BASE_NAME: ""
       USE_KMS: ${{ inputs.signing_env == '' && 'false' || 'true' }}
     environment: ${{ inputs.signing_env }}
     steps:
@@ -74,15 +74,15 @@ jobs:
         run: make ${{ inputs.flavor }}-${{ inputs.arch }}-build
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@385aaad34c414d49583c0fe3e03243d110640770 # pin@0.10.25
-      - name: Set CNAME
+      - name: Set ARTIFACT_BASE_NAME
         run: |
-          echo "CNAME=$(gl-features-parse --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname)" | tee -a "$GITHUB_ENV"
+          echo "ARTIFACT_BASE_NAME=$(gl-features-parse --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname)" | tee -a "$GITHUB_ENV"
       - name: Pack build artifacts for upload
-        run: tar -cSzvf "$CNAME.tar.gz" -C .build -T ".build/$CNAME.artifacts"
+        run: tar -cSzvf "$ARTIFACT_BASE_NAME.tar.gz" -C .build -T ".build/$ARTIFACT_BASE_NAME.artifacts"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         with:
           name: ${{ inputs.prefix }}build-${{ inputs.flavor }}-${{ inputs.arch }}
-          path: ${{ env.CNAME }}.tar.gz
+          path: ${{ env.ARTIFACT_BASE_NAME }}.tar.gz
           if-no-files-found: error
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:

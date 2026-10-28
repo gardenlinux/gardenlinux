@@ -237,10 +237,10 @@ cd "$(realpath -- "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/../")"
 basename="$(basename "$artifact")"
 
 extension="$(grep -E -o '(\.[a-z][a-zA-Z0-9_\-]*)*$' <<<"$basename")"
-cname="${basename%"$extension"}"
+artifact_base_name="${basename%"$extension"}"
 type="${extension#.}"
 
-[ -n "$cname" ]
+[ -n "$artifact_base_name" ]
 if [ -z "$cloud" ] && ! ((cloud_image)); then
 	[ -n "$type" ]
 fi
