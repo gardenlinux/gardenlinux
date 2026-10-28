@@ -3,6 +3,7 @@ title: "Boot Modes"
 description: "Understanding Legacy and USI boot modes in Garden Linux"
 related_topics:
   - /explanation/secure-boot
+  - /explanation/in-place-updates
   - /explanation/flavors
   - /reference/adr/0005-secure-boot-keys-glci
   - /how-to/secure-boot
@@ -35,7 +36,7 @@ These are USI images with all optional security features enabled. See
 | UEFI boot                  | Yes      | Yes    |
 | BIOS boot                  | No       | Yes    |
 | Secure Boot / Trusted Boot | Optional | No     |
-| In-place updates           | Yes      | No     |
+| In-place updates           | [Yes](/explanation/in-place-updates) | No     |
 | TPM 2.0 disk encryption    | Optional | No     |
 
 ## Legacy boot mode
