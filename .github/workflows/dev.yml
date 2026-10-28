@@ -8,7 +8,7 @@ on:
       - main
     paths-ignore:
       - ".gitignore"
-      - ".github/docs*.yml"
+      - ".github/workflows/docs*.yml"
       - 'docs/**'
       - 'features/*/README.md'
       - 'features/*/info.yaml'
@@ -33,7 +33,7 @@ jobs:
           filters: |
             code:
               - '!.gitignore'
-              - '!.github/docs*.yml'
+              - '!.github/workflows/docs*.yml'
               - '!docs/**'
               - '!features/*/README.md'
               - '!features/*/info.yaml'
