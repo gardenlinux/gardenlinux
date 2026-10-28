@@ -126,27 +126,36 @@ The publication pipeline follows a staged maturity model:
 
 Each stage acts as a gate. A flavor might have `build: true` but `test: false` during initial development. Once tests pass reliably, it can progress to `test: true` and eventually `publish: true`.
 
-### The CNAME system
+### The naming hierarchy
 
-As flavors progress through the pipeline, they receive a canonical name (CNAME) that uniquely identifies them. The CNAME format `{target}-{features}-{arch}-{version}-{commit}` serves several critical functions:
+As flavors progress through the pipeline, they are identified by a layered naming scheme defined in [ADR 0035](/reference/adr/0035-cname-flavor-artifact-naming). Each level adds one more qualifier:
 
-- **Unique identification**: No two artifacts have the same name
-- **Traceability**: The CNAME contains all information needed to reproduce the build
-- **Automation**: CI/CD pipelines can programmatically reference specific image variants
-- **Distribution**: S3 paths and container tags are derived from the CNAME
+| Term | Format | Example |
+| ---- | ------ | ------- |
+| **cname** | `{feature-encoding}` | `aws-gardener_prod` |
+| **flavor** | `{cname}-{arch}` | `aws-gardener_prod-amd64` |
+| **versioned flavor** | `{cname}-{arch}-{version}` | `aws-gardener_prod-amd64-1877.3` |
+| **artifact base name** | `{cname}-{arch}-{version}-{commit}` | `aws-gardener_prod-amd64-1877.3-a1b2c3d4` |
 
-:::info Feature name concatenation in the CNAME
-Regular features are joined to the target and to each other with `-`. Features whose names begin with `_` are appended directly, without a preceding `-`.
+This scheme serves several critical functions:
+
+- **Unique identification**: The artifact base name is the unique prefix of every file a build run produces under `.build/`; no two build runs share one.
+- **Traceability**: The artifact base name contains all information needed to reproduce the build — feature set, architecture, version, and commit.
+- **Automation**: CI/CD pipelines can programmatically reference specific image variants at whichever level they need (cname, flavor, versioned flavor, or artifact base name).
+- **Distribution**: S3 paths and container tags are derived from the artifact base name.
+
+:::info Feature name concatenation in the cname
+The cname encodes the minimal feature set. Regular features are joined to the platform and to each other with `-`. Features whose names begin with `_` (flags) are appended directly, without a preceding `-`.
 
 For example, `aws-gardener_prod_fips` is composed of:
 
-- `aws` — the target
+- `aws` — the platform
 - `gardener` — joined with `-` → `aws-gardener`
 - `_prod` — appended directly (no `-`) → `aws-gardener_prod`
 - `_fips` — appended directly (no `-`) → `aws-gardener_prod_fips`
   :::
 
-The CNAME system ensures that what was tested is exactly what gets deployed.
+The naming hierarchy ensures that what was tested is exactly what gets deployed.
 
 ## Integration points
 

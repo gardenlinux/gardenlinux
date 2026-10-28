@@ -109,7 +109,7 @@ Once you have a platform and feature set, look up the exact flavor name and
 confirm it is published.
 
 :::info How features are joined into a flavor name
-Garden Linux uses the [CNAME system](/explanation/flavors#the-cname-system) to
+Garden Linux uses the [naming hierarchy](/explanation/flavors#the-naming-hierarchy) to
 construct canonical flavor names.
 :::
 

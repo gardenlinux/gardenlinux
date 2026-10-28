@@ -33,7 +33,7 @@ Each target defines a platform or environment for Garden Linux images.
 ### Fields
 
 **name** (string, required)
-: The identifier for this target. Used in [CNAME generation](/explanation/flavors.md#the-cname-system), workflow steps, and artifact naming.
+: The identifier for this target. Used in [cname generation](/explanation/flavors.md#the-naming-hierarchy), workflow steps, and artifact naming.
 
 **category** (enum, required)
 : Organizational category for the target. One of:`

@@ -138,20 +138,20 @@ jobs:
         github-token: ${{ github.token }}
     - name: Compare builds
       run: |
-        cname_a=$(ls A | sed -E "s/.tar.gz$//")
-        cname_b=$(ls B | sed -E "s/.tar.gz$//")
+        artifact_base_name_a=$(ls A | sed -E "s/.tar.gz$//")
+        artifact_base_name_b=$(ls B | sed -E "s/.tar.gz$//")
 
-        tar -C A -xzf A/$cname_a.tar.gz
-        rm "A/$cname_a.tar.gz"
+        tar -C A -xzf A/$artifact_base_name_a.tar.gz
+        rm "A/$artifact_base_name_a.tar.gz"
         mkdir "A/unpacked"
-        tar -C A/unpacked -xf A/$cname_a.tar
+        tar -C A/unpacked -xf A/$artifact_base_name_a.tar
 
-        tar -C B -xzf B/$cname_b.tar.gz
-        rm "B/$cname_b.tar.gz"
+        tar -C B -xzf B/$artifact_base_name_b.tar.gz
+        rm "B/$artifact_base_name_b.tar.gz"
         mkdir "B/unpacked"
-        tar -C B/unpacked -xf B/$cname_b.tar
+        tar -C B/unpacked -xf B/$artifact_base_name_b.tar
 
-        ./.github/workflows/generate_diff.sh ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} ${{ matrix.flavor }}-${{ matrix.arch }} $cname_a $cname_b
+        ./.github/workflows/generate_diff.sh ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} ${{ matrix.flavor }}-${{ matrix.arch }} $artifact_base_name_a $artifact_base_name_b
     - name: Upload diff data
       if: always()
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1

@@ -34,7 +34,7 @@ jobs:
     # @TODO: We could use a better name for the required environment
     environment: oidc_platform_tests
     env:
-      CNAME: ""
+      ARTIFACT_BASE_NAME: ""
     strategy:
       matrix: ${{ fromJSON(inputs.flavors_matrix) }}
     steps:
@@ -47,9 +47,9 @@ jobs:
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
-      - name: Set CNAME
+      - name: Set ARTIFACT_BASE_NAME
         run: |
-          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
+          echo "ARTIFACT_BASE_NAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
       - name: "Authenticate to AWS"
         uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # pin@v4
         with:
@@ -58,14 +58,14 @@ jobs:
           aws-region: ${{ secrets.aws_region }}
       - name: Prepare image from S3
         run: |
-          mkdir "$CNAME"
-          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$CNAME" download-artifacts-from-bucket --cname "$CNAME"
+          mkdir "$ARTIFACT_BASE_NAME"
+          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$ARTIFACT_BASE_NAME" download-artifacts-from-bucket --cname "$ARTIFACT_BASE_NAME"
 
-          tar -cSzvf "$CNAME.tar.gz" -C "$CNAME/" .
+          tar -cSzvf "$ARTIFACT_BASE_NAME.tar.gz" -C "$ARTIFACT_BASE_NAME/" .
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
-          path: ${{ env.CNAME }}.tar.gz
+          path: ${{ env.ARTIFACT_BASE_NAME }}.tar.gz
           if-no-files-found: error
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
