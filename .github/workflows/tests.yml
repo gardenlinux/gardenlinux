@@ -184,7 +184,7 @@ jobs:
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.chroot_test_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
-      flavor: ${{ matrix.flavor }}
+      cname: ${{ matrix.cname }}
     permissions:
       actions: write
   test_flavors_qemu:
@@ -197,7 +197,7 @@ jobs:
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.qemu_test_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
-      flavor: ${{ matrix.flavor }}
+      cname: ${{ matrix.cname }}
     permissions:
       actions: write
   test_flavors_cloud:
@@ -214,7 +214,7 @@ jobs:
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.cloud_test_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
-      flavor: ${{ matrix.flavor }}
+      cname: ${{ matrix.cname }}
     secrets: inherit
     permissions:
       id-token: write
@@ -229,7 +229,7 @@ jobs:
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.oci_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
-      flavor: ${{ matrix.flavor }}
+      cname: ${{ matrix.cname }}
     permissions:
       actions: write
   ## test-ng end
