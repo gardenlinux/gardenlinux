@@ -1,5 +1,4 @@
-# Basic Python requirements for Garden Linux
-# that can be installed by Python pip.
+# Basic Python requirements for Garden Linux that can be installed by Python pip.
 # Note: You should always prefer your local package manager.
 #
 # `tests/Pipfile` holds dependencies backed into the platform-test images
