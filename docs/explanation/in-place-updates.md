@@ -222,7 +222,10 @@ the overlay. The reset restores `/etc` to the image default, preserves
 reset is what makes updates across major versions safe; without it, only upgrades
 across minor versions could be supported, because the new image starts from its own
 `/etc` rather than inheriting potentially incompatible configuration from the old
-one.
+one. The reset runs on any version change, including minor updates: it is not
+strictly required for a minor update, but applying it consistently means even a
+minor release can change configuration defaults — for example to update
+containerd — without risking compatibility issues with the old `/etc`.
 
 Because the reset is performed by the image being booted into, only the target
 version needs to support it. Updating from an older version to a target at or above
