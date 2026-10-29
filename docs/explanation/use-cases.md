@@ -55,6 +55,11 @@ controller. Garden Linux ships with the
 [`gardener`](/reference/features/gardener) feature pre-configured: containerd is
 installed (systemd unit disabled, enabled by Gardener).
 
+On Gardener worker pools that use an in-place node update strategy, the node's
+operating system is updated without replacing the machine. See
+[In-Place Updates](/explanation/in-place-updates) for how this works on Garden
+Linux.
+
 This use case applies to AWS, Azure, GCP, OpenStack, and bare-metal platforms.
 Choose one of these when operating Kubernetes clusters managed by Gardener in
 public or private clouds.
