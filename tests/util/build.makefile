@@ -22,9 +22,15 @@ clean:
 	echo '🛠️  building test framework distribution ($*)'
 	./$< $(word 2,$^) $@ $*
 
-.build/dist.ext2.raw: util/build_dist_image.sh .build/dist-x86_64.tar.gz | .build
+.build/dist.ext2.raw: util/build_dist_image.sh .build/dist-multi.tar.gz | .build
 	echo '🛠️  bundling test framework as disk image'
 	./$^ $@
+
+# dist-multi contains both x86_64 and aarch64 runtimes — used for the ext2
+# disk image which is mounted inside QEMU VMs that may be either arch.
+.build/dist-multi.tar.gz: util/build_dist.sh .build/runtime.tar.gz conftest.py $(wildcard handlers/*.py) $(shell find integration -name 'test_*.py' 2>/dev/null) $(wildcard plugins/*.py) | .build
+	echo '🛠️  building test framework distribution (multi-arch)'
+	./$< $(word 2,$^) $@
 
 .build/runtime.tar.gz: util/build_runtime.sh util/requirements.txt util/python.env.sh | .build
 	echo '🛠️  building python runtime (x86_64 + aarch64)'
