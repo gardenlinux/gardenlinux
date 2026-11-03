@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000072-GPOS-00040
 
-Verify the operating system requires the change of at least eight of the total
-number of characters when passwords are changed.
+Verify the operating system requires the change of at least eight of the total number of characters when passwords are changed.
 """
 
 import pytest

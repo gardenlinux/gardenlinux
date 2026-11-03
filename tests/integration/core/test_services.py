@@ -885,3 +885,33 @@ def test_vhost_libvirtd_tls_socket_service_disabled(systemd: Systemd):
 def test_vhost_libvirtd_tls_socket_service_inactive(systemd: Systemd):
     """Test that libvirtd-tls.socket is inactive"""
     assert systemd.is_inactive("libvirtd-tls.socket")
+
+
+# =============================================================================
+# stackit Feature Services
+# =============================================================================
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-service-no-systemd-timesyncd"])
+@pytest.mark.feature("stackit")
+@pytest.mark.booted(reason="Requires systemd")
+def test_stackit_no_timesyncd_service(systemd: Systemd):
+    """Test that systemd-timesyncd is not installed on STACKIT"""
+    assert not any(
+        u.unit == "systemd-timesyncd.service" for u in systemd.list_installed_units()
+    )
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-service-chrony-enable"])
+@pytest.mark.feature("stackit")
+@pytest.mark.booted(reason="Requires systemd")
+def test_stackit_chrony_enabled(systemd: Systemd):
+    """Test that chrony.service is enabled on STACKIT"""
+    assert systemd.is_enabled("chrony.service")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-modprobe-no-udf-disable"])
+@pytest.mark.feature("stackit")
+def test_stackit_no_modprobe_udf_disable(file: File):
+    """Test that STACKIT does not have UDF modprobe disable config"""
+    assert not file.exists("/etc/modprobe.d/disabled_udf.conf")

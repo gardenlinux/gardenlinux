@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000359-GPOS-00146
 
-Verify the operating system records time stamps for audit records that can be
-mapped to Coordinated Universal Time (UTC) or Greenwich Mean Time (GMT).
+Verify the operating system records time stamps for audit records that can be mapped to Coordinated Universal Time (UTC) or Greenwich Mean Time (GMT).
 """
 
 import pytest

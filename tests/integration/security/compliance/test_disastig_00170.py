@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000720-GPOS-00170
 
-Verify the operating system is configured to require immediate selection of a
-new password upon account recovery for password-based authentication.
+Verify the operating system is configured to require immediate selection of a new password upon account recovery for password-based authentication.
 """
 
 import pytest

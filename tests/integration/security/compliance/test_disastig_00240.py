@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000780-GPOS-00240
 
-Verify the operating system is configured to provide protected storage for
-cryptographic keys with organization-defined safeguards and/or hardware
-protected key store.
+Verify the operating system is configured to provide protected storage for cryptographic keys with organization-defined safeguards and/or hardware protected key store.
 """
 
 import pytest

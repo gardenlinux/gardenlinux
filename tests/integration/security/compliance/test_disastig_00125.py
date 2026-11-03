@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000324-GPOS-00125
 
-Verify that the operating system prevents non-privileged users from executing
-privileged functions to include disabling, circumventing, or altering
-implemented security safeguards/countermeasures.
+Verify that the operating system prevents non-privileged users from executing privileged functions to include disabling, circumventing, or altering implemented security safeguards/countermeasures.
 """
 
 import pytest

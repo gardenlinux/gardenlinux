@@ -1,2 +1,1 @@
-requirements_keys+=(secureboot)
-secureboot=true
+requirements["secureboot"]=true

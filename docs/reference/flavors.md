@@ -55,7 +55,6 @@ All available targets are listed below:
 | [`ali`](/reference/features/ali)             | public-cloud | Alibaba Cloud                   |
 | [`aws`](/reference/features/aws)             | public-cloud | Amazon Web Services             |
 | [`azure`](/reference/features/azure)         | public-cloud | Microsoft Azure                 |
-| [`bare`](/reference/features/bare)           | container    | Bare container base             |
 | [`container`](/reference/features/container) | container    | Full container base             |
 | [`gcp`](/reference/features/gcp)             | public-cloud | Google Cloud Platform           |
 | [`gdch`](/reference/features/gdch)           | public-cloud | Google Distributed Cloud Hosted |

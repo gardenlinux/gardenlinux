@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000355-GPOS-00143
 
-Verify the operating system, for networked systems, compares internal
-information system clocks at least every 24 hours with an authoritative time
-source.
+Verify the operating system, for networked systems, compares internal information system clocks at least every 24 hours with an authoritative time source.
 """
 
 import pytest

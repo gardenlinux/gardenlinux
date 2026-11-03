@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000038-GPOS-00016
 
-Verify the operating system produces audit records containing information to
-establish when (date and time) the events occurred.
+Verify the operating system produces audit records containing information to establish when (date and time) the events occurred.
 """
 
 import pytest

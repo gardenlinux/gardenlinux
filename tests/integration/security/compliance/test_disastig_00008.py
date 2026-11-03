@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000027-GPOS-00008
 
-Verify the operating system limits the number of concurrent sessions to 10
-for all accounts and/or account types. A hard maxlogins limit in
-/etc/security/limits.conf enforces this restriction.
+Verify the operating system limits the number of concurrent sessions to 10 for all accounts and/or account types. A hard maxlogins limit in /etc/security/limits.conf enforces this restriction.
 """
 
 import pytest

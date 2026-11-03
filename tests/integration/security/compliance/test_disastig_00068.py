@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000134-GPOS-00068
 
-Verify the operating system isolates security functions from nonsecurity
-functions.
+Verify the operating system isolates security functions from nonsecurity functions.
 """
 
 import pytest

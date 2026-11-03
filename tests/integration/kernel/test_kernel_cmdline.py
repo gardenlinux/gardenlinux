@@ -552,3 +552,25 @@ def test_console_configuration_in_cmdline_vmware_bautrates(kernel_cmdline: List[
     assert (
         "console=ttyS0,115200" in kernel_cmdline
     ), "Serial console (ttyS0,115200) not found in kernel cmdline"
+
+
+# =============================================================================
+# stackit Feature - Kernel Cmdline
+# =============================================================================
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-kernel-cmdline-console"])
+@pytest.mark.feature("stackit")
+def test_stackit_kernel_cmdline_console_config_exists(file: File):
+    """Test that STACKIT kernel console cmdline config exists"""
+    assert file.is_regular_file("/etc/kernel/cmdline.d/10-console.cfg")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-kernel-cmdline-console"])
+@pytest.mark.feature("stackit")
+@pytest.mark.booted(reason="kernel cmdline needs a booted system")
+def test_stackit_kernel_cmdline_console_config_content(kernel_cmdline: List[str]):
+    """Test that STACKIT kernel cmdline enables serial console"""
+    assert (
+        "console=ttyS0" in kernel_cmdline
+    ), "Serial console (ttyS0) not found in kernel cmdline"

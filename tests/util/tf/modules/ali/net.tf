@@ -7,11 +7,10 @@ data "alicloud_security_groups" "default" {
 }
 
 resource "alicloud_vpc" "net" {
-  ipv6_isp    = "BGP"
   description = local.net_name
   vpc_name    = local.net_name
   cidr_block  = var.provider_vars.net_cidr
-  enable_ipv6 = true
+  enable_ipv6 = false
 
   tags = merge(
     local.labels,

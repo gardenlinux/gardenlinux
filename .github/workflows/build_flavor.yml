@@ -48,7 +48,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@efdffb9a6b279cd7aada23b02baf4ec2534dc6d2 # pin@0.10.21
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@385aaad34c414d49583c0fe3e03243d110640770 # pin@0.10.25
       - name: Set build reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -73,7 +73,7 @@ jobs:
       - name: Build
         run: make ${{ inputs.flavor }}-${{ inputs.arch }}-build
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@efdffb9a6b279cd7aada23b02baf4ec2534dc6d2 # pin@0.10.21
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@385aaad34c414d49583c0fe3e03243d110640770 # pin@0.10.25
       - name: Set CNAME
         run: |
           echo "CNAME=$(gl-features-parse --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname)" | tee -a "$GITHUB_ENV"
@@ -84,7 +84,7 @@ jobs:
           name: ${{ inputs.prefix }}build-${{ inputs.flavor }}-${{ inputs.arch }}
           path: ${{ env.CNAME }}.tar.gz
           if-no-files-found: error
-      - uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # pin@v5.0.4
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           path: |
             COMMIT

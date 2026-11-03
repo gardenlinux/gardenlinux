@@ -114,15 +114,21 @@ def test_cloud_init_debian_cloud_manage_etc_hosts(parse_file: ParseFile):
         "GL-TESTCOV-aws-config-cloud-no-ntp",
         "GL-TESTCOV-aws-config-cloud-no-resizefs",
         "GL-TESTCOV-aws-config-cloud-no-growpart",
+        "GL-TESTCOV-azure-config-cloud-no-ntp",
+        "GL-TESTCOV-azure-config-cloud-no-resizefs",
+        "GL-TESTCOV-azure-config-cloud-no-growpart",
         "GL-TESTCOV-openstack-config-cloud-no-ntp",
         "GL-TESTCOV-openstack-config-cloud-no-resizefs",
         "GL-TESTCOV-openstack-config-cloud-no-growpart",
         "GL-TESTCOV-vmware-config-cloud-no-ntp",
         "GL-TESTCOV-vmware-config-cloud-no-resizefs",
         "GL-TESTCOV-vmware-config-cloud-no-growpart",
+        "GL-TESTCOV-stackit-config-cloud-no-ntp",
+        "GL-TESTCOV-stackit-config-cloud-no-resizefs",
+        "GL-TESTCOV-stackit-config-cloud-no-growpart",
     ]
 )
-@pytest.mark.feature("ali or aws or openstack or vmware")
+@pytest.mark.feature("ali or aws or azure or openstack or vmware or stackit")
 @pytest.mark.parametrize("module", ["ntp", "resizefs", "growpart"])
 def test_cloud_cfg_excludes_modules(parse_file: ParseFile, module: str):
     file = "/etc/cloud/cloud.cfg"
@@ -175,34 +181,6 @@ def test_ali_disable_network_config(parse_file: ParseFile):
     assert config["network"]["config"] == "disabled"
 
 
-@pytest.mark.testcov(["GL-TESTCOV-ali-service-cloud-init-local-enable"])
-@pytest.mark.feature("ali")
-@pytest.mark.booted(reason="Requires systemd")
-def test_ali_cloud_init_local_service_enabled(systemd: Systemd):
-    """Test that cloud-init-local.service is enabled"""
-    assert systemd.is_enabled("cloud-init-local.service")
-
-
-@pytest.mark.testcov(["GL-TESTCOV-ali-service-cloud-init-local-enable"])
-@pytest.mark.feature("ali")
-@pytest.mark.booted(reason="Requires systemd")
-@pytest.mark.hypervisor("qemu", reason="cloud-init can't be loaded in QEMU")
-def test_ali_cloud_init_local_service_inactive(systemd: Systemd):
-    """Test that cloud-init-local.service is inactive"""
-    assert systemd.is_inactive("cloud-init-local.service")
-
-
-@pytest.mark.testcov(["GL-TESTCOV-ali-service-cloud-init-local-enable"])
-@pytest.mark.feature("ali")
-@pytest.mark.booted(reason="Requires systemd")
-@pytest.mark.hypervisor(
-    "not qemu", reason="cloud-init is loaded in real cloud environment"
-)
-def test_ali_cloud_init_local_service_active(systemd: Systemd):
-    """Test that cloud-init-local.service is active"""
-    assert systemd.is_active("cloud-init-local.service")
-
-
 # =============================================================================
 # aws Feature Cloud-init
 # =============================================================================
@@ -221,35 +199,6 @@ def test_aws_disable_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
     config = parse_file.parse(file, format="yaml")
     assert config["network"]["config"] == "disabled"
-
-
-@pytest.mark.testcov(["GL-TESTCOV-aws-service-cloud-init-local-enable"])
-@pytest.mark.feature("aws")
-@pytest.mark.hypervisor("amazon", reason="Requires Amazon AWS infrastructure")
-@pytest.mark.booted(reason="Requires systemd")
-def test_aws_cloud_init_local_service_enabled(systemd: Systemd):
-    """Test that cloud-init-local.service is enabled"""
-    assert systemd.is_enabled("cloud-init-local.service")
-
-
-@pytest.mark.testcov(["GL-TESTCOV-aws-service-cloud-init-local-enable"])
-@pytest.mark.feature("aws")
-@pytest.mark.booted(reason="Requires systemd")
-@pytest.mark.hypervisor("qemu", reason="cloud-init can't be loaded in QEMU")
-def test_aws_cloud_init_local_service_inactive(systemd: Systemd):
-    """Test that cloud-init-local.service is inactive"""
-    assert systemd.is_inactive("cloud-init-local.service")
-
-
-@pytest.mark.testcov(["GL-TESTCOV-aws-service-cloud-init-local-enable"])
-@pytest.mark.feature("aws")
-@pytest.mark.booted(reason="Requires systemd")
-@pytest.mark.hypervisor(
-    "not qemu", reason="cloud-init is loaded in real cloud environment"
-)
-def test_aws_cloud_init_local_service_active(systemd: Systemd):
-    """Test that cloud-init-local.service is active"""
-    assert systemd.is_active("cloud-init-local.service")
 
 
 # =============================================================================
@@ -288,34 +237,6 @@ def test_azure_debian_cloud_user(parse_file: ParseFile):
     assert config["system_info"]["default_user"]["name"] == "azureuser"
 
 
-@pytest.mark.testcov(["GL-TESTCOV-azure-service-cloud-init-local-enable"])
-@pytest.mark.feature("azure")
-@pytest.mark.booted(reason="Requires systemd")
-def test_azure_cloud_init_local_service_enabled(systemd: Systemd):
-    """Test that cloud-init-local.service is enabled"""
-    assert systemd.is_enabled("cloud-init-local.service")
-
-
-@pytest.mark.testcov(["GL-TESTCOV-azure-service-cloud-init-local-enable"])
-@pytest.mark.feature("azure")
-@pytest.mark.booted(reason="Requires systemd")
-@pytest.mark.hypervisor("qemu", reason="cloud-init can't be loaded in QEMU")
-def test_azure_cloud_init_local_service_inactive(systemd: Systemd):
-    """Test that cloud-init-local.service is inactive"""
-    assert systemd.is_inactive("cloud-init-local.service")
-
-
-@pytest.mark.testcov(["GL-TESTCOV-azure-service-cloud-init-local-enable"])
-@pytest.mark.feature("azure")
-@pytest.mark.booted(reason="Requires systemd")
-@pytest.mark.hypervisor(
-    "not qemu", reason="cloud-init is loaded in real cloud environment"
-)
-def test_azure_cloud_init_local_service_active(systemd: Systemd):
-    """Test that cloud-init-local.service is active"""
-    assert systemd.is_active("cloud-init-local.service")
-
-
 # =============================================================================
 # gcp Feature Cloud-init
 # =============================================================================
@@ -348,43 +269,6 @@ def test_gdch_ntp_settings(parse_file: ParseFile):
     assert config["ntp"]["enabled"] is True
     assert config["ntp"]["ntp_client"] == "chrony"
     assert "ntp1.org.internal" in config["ntp"]["servers"]
-
-
-@pytest.mark.testcov(["GL-TESTCOV-gdch-service-cloud-init-local-enable"])
-@pytest.mark.feature("gdch")
-@pytest.mark.booted(reason="Requires systemd")
-def test_gdch_cloud_init_local_service_enabled(systemd: Systemd):
-    """Test that cloud-init-local.service is enabled"""
-    assert systemd.is_enabled("cloud-init-local.service")
-
-
-@pytest.mark.testcov(["GL-TESTCOV-gdch-service-cloud-init-local-enable"])
-@pytest.mark.feature("gdch")
-@pytest.mark.booted(reason="Requires systemd")
-def test_gdch_cloud_init_local_service_inactive(systemd: Systemd):
-    """Test that cloud-init-local.service is inactive"""
-    assert systemd.is_inactive("cloud-init-local.service")
-
-
-# =============================================================================
-# lima Feature Cloud-init
-# =============================================================================
-
-
-@pytest.mark.testcov(["GL-TESTCOV-lima-service-cloud-init-local-enable"])
-@pytest.mark.feature("lima")
-@pytest.mark.booted(reason="Requires systemd")
-def test_lima_cloud_init_local_service_enabled(systemd: Systemd):
-    """Test that cloud-init-local.service is enabled"""
-    assert systemd.is_enabled("cloud-init-local.service")
-
-
-@pytest.mark.testcov(["GL-TESTCOV-lima-service-cloud-init-local-enable"])
-@pytest.mark.feature("lima")
-@pytest.mark.booted(reason="Requires systemd")
-def test_lima_cloud_init_local_service_inactive(systemd: Systemd):
-    """Test that cloud-init-local.service is inactive"""
-    assert systemd.is_inactive("cloud-init-local.service")
 
 
 # =============================================================================
@@ -427,22 +311,6 @@ def test_openstack_cloud_disable_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
     config = parse_file.parse(file, format="yaml")
     assert config["network"]["config"] == "disabled"
-
-
-@pytest.mark.testcov(["GL-TESTCOV-openstack-service-cloud-init-local-enable"])
-@pytest.mark.feature("openstack")
-@pytest.mark.booted(reason="Requires systemd")
-def test_openstack_cloud_init_local_service_enabled(systemd: Systemd):
-    """Test that cloud-init-local.service is enabled"""
-    assert systemd.is_enabled("cloud-init-local.service")
-
-
-@pytest.mark.testcov(["GL-TESTCOV-openstack-service-cloud-init-local-enable"])
-@pytest.mark.feature("openstack")
-@pytest.mark.booted(reason="Requires systemd")
-def test_openstack_cloud_init_local_service_active(systemd: Systemd):
-    """Test that cloud-init-local.service is active"""
-    assert systemd.is_active("cloud-init-local.service")
 
 
 # =============================================================================
@@ -509,17 +377,126 @@ def test_vmware_datasource_files_exist(file_path: str):
     assert os.path.exists(file_path), f"File {file_path} could not be found."
 
 
-@pytest.mark.testcov(["GL-TESTCOV-vmware-service-cloud-init-local-enable"])
-@pytest.mark.feature("vmware")
+# =============================================================================
+# stackit Feature - Cloud Init Configuration
+# =============================================================================
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-datasource-identify"])
+@pytest.mark.feature("stackit")
+def test_stackit_ds_identify_exists(file: File):
+    """Test that STACKIT cloud-init datasource identification config exists"""
+    assert file.is_regular_file("/etc/cloud/ds-identify.cfg")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-datasource-identify"])
+@pytest.mark.feature("stackit")
+def test_stackit_ds_identify_datasource(parse_file: ParseFile):
+    """Test that STACKIT cloud-init ds-identify.cfg sets datasource to OpenStack"""
+    lines = parse_file.lines("/etc/cloud/ds-identify.cfg")
+    assert "datasource: OpenStack" in lines
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-datasource-identify"])
+@pytest.mark.feature("stackit")
+def test_stackit_ds_identify_policy(parse_file: ParseFile):
+    """Test that STACKIT cloud-init ds-identify.cfg sets policy to enabled"""
+    lines = parse_file.lines("/etc/cloud/ds-identify.cfg")
+    assert "policy: enabled" in lines
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-datasource"])
+@pytest.mark.feature("stackit")
+def test_stackit_datasource_config_exists(file: File):
+    """Test that STACKIT cloud-init datasource list config exists"""
+    assert file.is_regular_file("/etc/cloud/cloud.cfg.d/50-datasource.cfg")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-datasource"])
+@pytest.mark.feature("stackit")
+def test_stackit_datasource_config_content(parse_file: ParseFile):
+    """Test that STACKIT cloud-init datasource list contains ConfigDrive"""
+    lines = parse_file.lines("/etc/cloud/cloud.cfg.d/50-datasource.cfg")
+    assert "ConfigDrive" in lines
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-network-config-disable"])
+@pytest.mark.feature("stackit")
+def test_stackit_cloud_network_config_disabled(file: File):
+    """Test that STACKIT cloud-init network config is disabled"""
+    assert file.is_regular_file("/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-network-config-disable"])
+@pytest.mark.feature("stackit")
+def test_stackit_cloud_network_config_disabled_content(parse_file: ParseFile):
+    """Test that STACKIT cloud-init network config disable content is correct"""
+    lines = parse_file.lines("/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg")
+    assert "network: {config: disabled}" in lines
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-apt-sources"])
+@pytest.mark.feature("stackit")
+def test_stackit_cloud_apt_preserve_sources(parse_file: ParseFile):
+    """Test that STACKIT cloud-init preserves apt sources list"""
+    config = parse_file.parse(
+        "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg", format="yaml"
+    )
+    assert config["apt_preserve_sources_list"] is True
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-manage-hosts"])
+@pytest.mark.feature("stackit")
+def test_stackit_cloud_manage_etc_hosts(parse_file: ParseFile):
+    """Test that STACKIT cloud-init manages /etc/hosts"""
+    config = parse_file.parse(
+        "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg", format="yaml"
+    )
+    assert config["manage_etc_hosts"] is True
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-stackit-config-cloud-user-name",
+        "GL-TESTCOV-stackit-config-cloud-user-shell",
+        "GL-TESTCOV-stackit-config-cloud-user-lock-passwd",
+        "GL-TESTCOV-stackit-config-cloud-user-sudo",
+    ]
+)
+@pytest.mark.feature("stackit")
+def test_stackit_cloud_default_user_config_exists(file: File):
+    """Test that STACKIT cloud-init default user config exists"""
+    assert file.is_regular_file("/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg")
+
+
+# =============================================================================
+# cloudInit Feature
+# =============================================================================
+
+
+@pytest.mark.testcov(["GL-TESTCOV-cloudInit-service-cloud-init-local-enable"])
+@pytest.mark.feature("cloudInit")
 @pytest.mark.booted(reason="Requires systemd")
-def test_vmware_cloud_init_local_service_enabled(systemd: Systemd):
+def test_cloud_init_local_service_enabled(systemd: Systemd):
     """Test that cloud-init-local.service is enabled"""
     assert systemd.is_enabled("cloud-init-local.service")
 
 
-@pytest.mark.testcov(["GL-TESTCOV-vmware-service-cloud-init-local-enable"])
-@pytest.mark.feature("vmware")
+@pytest.mark.testcov(["GL-TESTCOV-cloudInit-service-cloud-init-local-enable"])
+@pytest.mark.feature("cloudInit and not openstack and not stackit")
 @pytest.mark.booted(reason="Requires systemd")
-def test_vmware_cloud_init_local_service_inactive(systemd: Systemd):
-    """Test that cloud-init-local.service is inactive"""
+@pytest.mark.hypervisor("qemu", reason="cloud-init has no datasource in QEMU")
+def test_cloud_init_local_service_inactive(systemd: Systemd):
+    """Test that cloud-init-local.service is inactive (openstack/stackit excluded: ds-identify hardcodes datasource so it runs even on qemu)"""
     assert systemd.is_inactive("cloud-init-local.service")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-cloudInit-service-cloud-init-local-enable"])
+@pytest.mark.feature("cloudInit")
+@pytest.mark.booted(reason="Requires systemd")
+@pytest.mark.hypervisor(
+    "not qemu", reason="cloud-init runs against real cloud infrastructure"
+)
+def test_cloud_init_local_service_active(systemd: Systemd):
+    """Test that cloud-init-local.service is active"""
+    assert systemd.is_active("cloud-init-local.service")

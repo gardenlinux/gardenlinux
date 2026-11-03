@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000109-GPOS-00056
 
-Verify the operating system locks the root account. A locked root account
-prevents direct login as root, forcing administrators to use privilege
-escalation mechanisms instead.
+Verify the operating system locks the root account. A locked root account prevents direct login as root, forcing administrators to use privilege escalation mechanisms instead.
 """
 
 import pytest

@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000392-GPOS-00172
 
-Verify the operating system generates audit records for all activities
-performed during nonlocal maintenance and diagnostic sessions by
-configuring sudo to log to a dedicated file.
+Verify the operating system generates audit records for all activities performed during nonlocal maintenance and diagnostic sessions by configuring sudo to log to a dedicated file.
 """
 
 import pytest

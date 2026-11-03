@@ -102,6 +102,7 @@ EOF
 cloud=
 
 cloud_image=0
+cloud_plan=0
 skip_tests=0
 watch=0
 chroot_args=()
@@ -171,6 +172,7 @@ while [ $# -gt 0 ]; do
 		;;
 	--cloud-plan)
 		cloud_args+=("$1")
+		cloud_plan=1
 		shift
 		;;
 	# qemu specific
@@ -263,7 +265,7 @@ if [ -n "$cloud" ]; then
 		fi
 		./util/run_cloud.sh --cloud "$cloud" "${cloud_args[@]}" .build "$artifact"
 	fi
-	if ((watch)); then
+	if ((watch)) && ! ((cloud_plan)); then
 		"./util/run_dev_cloud.sh" --watch ${test_args[@]:+"--test-args" "${test_args[*]}"} .build "$artifact"
 	fi
 else

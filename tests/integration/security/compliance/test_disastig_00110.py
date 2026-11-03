@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000590-GPOS-00110
 
-Verify the operating system is configured to disable accounts when the accounts
-are no longer associated to a user.
+Verify the operating system is configured to disable accounts when the accounts are no longer associated to a user.
 """
 
 import pytest

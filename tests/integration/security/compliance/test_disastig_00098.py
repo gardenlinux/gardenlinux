@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000257-GPOS-00098
 
-Verify the operating system protects audit tools from unauthorized
-modification.
+Verify the operating system protects audit tools from unauthorized modification.
 """
 
 from pathlib import Path

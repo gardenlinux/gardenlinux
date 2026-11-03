@@ -194,7 +194,7 @@ jobs:
           if [ ! -f backend.tf ]; then
             cp backend.tf.github backend.tf
           fi
-          tofu init -input=false -reconfigure -var-file empty.tfvars
+          tofu init -upgrade -input=false -reconfigure -var-file empty.tfvars
 
           if ! tofu workspace select "${WORKSPACE}"; then
             echo "Failed to select workspace ${WORKSPACE}, skipping..."

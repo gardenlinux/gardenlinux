@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000028-GPOS-00009
 
-Verify the operating system retains a user's session lock until that user
-reestablishes access using established identification and authentication
-procedures.
+Verify the operating system retains a user's session lock until that user reestablishes access using established identification and authentication procedures.
 """
 
 import pytest

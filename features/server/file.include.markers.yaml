@@ -21,8 +21,6 @@ markers:
   - "GL-TESTCOV-server-config-sysctl-restrict-dmesg"
   "etc/sysctl.d/90-allow-ping-for-non-root-user.conf":
   - "GL-TESTCOV-server-config-sysctl-allow-ping-for-non-root-user"
-  "etc/systemd/network/99-default.network":
-  - "GL-TESTCOV-server-config-network-default"
   "etc/systemd/networkd.conf.d/00-gardenlinux-server.conf":
   - "GL-TESTCOV-server-config-network-server"
   "etc/systemd/resolved.conf.d/00-disable-llmnr.conf":

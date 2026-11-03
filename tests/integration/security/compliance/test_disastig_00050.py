@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000096-GPOS-00050
 
-Verify the operating system is configured to prohibit or restrict the use of
-functions, ports, protocols, and/or services, as defined in the PPSM CAL and
-vulnerability assessments.
+Verify the operating system is configured to prohibit or restrict the use of functions, ports, protocols, and/or services, as defined in the PPSM CAL and vulnerability assessments.
 """
 
 import pytest

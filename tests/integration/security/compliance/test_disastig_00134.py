@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000343-GPOS-00134
 
-Verify the operating system takes appropriate action when the audit storage
-volume is full. Setting disk_full_action=halt in auditd.conf ensures the
-system halts rather than silently dropping audit records.
+Verify the operating system takes appropriate action when the audit storage volume is full. Setting disk_full_action=halt in auditd.conf ensures the system halts rather than silently dropping audit records.
 """
 
 import pytest

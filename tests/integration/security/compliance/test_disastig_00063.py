@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000122-GPOS-00063
 
-Verify the operating system provides an audit reduction capability that
-supports on-demand reporting requirements.
+Verify the operating system provides an audit reduction capability that supports on-demand reporting requirements.
 """
 
 import shutil

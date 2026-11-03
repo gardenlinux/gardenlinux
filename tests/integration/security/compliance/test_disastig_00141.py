@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000353-GPOS-00141
 
-Verify the operating system does not alter original content or time ordering of
-audit records when it provides an audit reduction capability.
+Verify the operating system does not alter original content or time ordering of audit records when it provides an audit reduction capability.
 """
 
 import pytest

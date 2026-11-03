@@ -11,7 +11,7 @@ resource "terraform_data" "test_disk_hash" {
 }
 
 resource "google_storage_bucket" "images" {
-  count = var.existing_root_disk != "" ? 0 : 1
+  count = var.existing_root_disk != "" && var.skip_tests ? 0 : 1
 
   name          = local.bucket_name
   location      = var.provider_vars.region_storage
@@ -81,6 +81,8 @@ resource "google_compute_image" "image" {
 }
 
 resource "google_storage_bucket_object" "image_test" {
+  count = var.skip_tests ? 0 : 1
+
   name   = replace(local.test_disk_object_key, ".raw", ".raw.tar.gz")
   source = replace(var.test_disk_path, ".raw", ".raw.tar.gz")
   bucket = google_storage_bucket.images.0.name
@@ -89,10 +91,12 @@ resource "google_storage_bucket_object" "image_test" {
 }
 
 resource "google_compute_image" "image_test" {
+  count = var.skip_tests ? 0 : 1
+
   name = "${local.image_name}-test"
 
   raw_disk {
-    source = "https://storage.cloud.google.com/${google_storage_bucket.images.0.name}/${google_storage_bucket_object.image_test.name}"
+    source = "https://storage.cloud.google.com/${google_storage_bucket.images.0.name}/${google_storage_bucket_object.image_test.0.name}"
   }
 
   labels = local.labels
@@ -105,9 +109,11 @@ resource "google_compute_image" "image_test" {
 }
 
 resource "google_compute_disk" "test_disk" {
+  count = var.skip_tests ? 0 : 1
+
   name = "${local.image_name}-test"
   size = 1
   type = "pd-ssd"
   zone = "${var.provider_vars.region}-${var.provider_vars.zone}"
-  image = google_compute_image.image_test.self_link
+  image = google_compute_image.image_test.0.self_link
 }

@@ -1,5 +1,7 @@
 description: "Container platform"
 type: platform
+artifact: [".tar.gz"]
 features:
-  include: 
+  include:
     - base
+    - _archgrouped

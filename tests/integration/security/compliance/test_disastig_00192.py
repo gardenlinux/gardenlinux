@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000433-GPOS-00192
 
-Verify the operating system implements non-executable data to protect its
-memory from unauthorized code execution.
+Verify the operating system implements non-executable data to protect its memory from unauthorized code execution.
 """
 
 import pytest

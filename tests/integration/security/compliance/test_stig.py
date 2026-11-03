@@ -27,14 +27,24 @@ def test_stig_modprobe_disable_modules_not_loaded(kernel_module: KernelModule):
         ), f"Module {module} is loaded but should be deny listed"
 
 
-@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-rsyslog-default"])
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-stig-config-rsyslog-default"
+        "GL-TESTCOV-disaSTIGmedium-config-rsyslog-default"
+    ]
+)
 @pytest.mark.feature("disaSTIGmedium")
 def test_stig_rsyslog_default_exists(file: File):
     """Test that STIG rsyslog default config exists"""
     assert file.is_regular_file("/etc/rsyslog.d/50-default.conf")
 
 
-@pytest.mark.testcov(["GL-TESTCOV-disaSTIGmedium-config-rsyslog-default"])
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-stig-config-rsyslog-default"
+        "GL-TESTCOV-disaSTIGmedium-config-rsyslog-default"
+    ]
+)
 @pytest.mark.feature("disaSTIGmedium")
 def test_stig_rsyslog_default_content(parse_file: ParseFile):
     """Test that STIG rsyslog default config content exists"""

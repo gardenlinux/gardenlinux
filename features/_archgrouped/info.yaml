@@ -1,0 +1,2 @@
+description: "publish this build's architectures as one grouped multi-arch artifact"
+type: flag

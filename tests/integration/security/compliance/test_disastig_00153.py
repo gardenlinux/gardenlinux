@@ -1,10 +1,7 @@
 """
 Ref: SRG-OS-000366-GPOS-00153
 
-Verify the operating system prevents the installation of patches, service
-packs, device drivers, or operating system components without verification they
-have been digitally signed using a certificate that is recognized and approved
-by the organization.
+Verify the operating system prevents the installation of patches, service packs, device drivers, or operating system components without verification they have been digitally signed using a certificate that is recognized and approved by the organization.
 """
 
 import re

@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000472-GPOS-00218
 
-Verify the operating system generates audit records when concurrent logons to
-the same account occur from different sources.
+Verify the operating system generates audit records when concurrent logons to the same account occur from different sources.
 """
 
 import tempfile

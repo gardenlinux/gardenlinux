@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000132-GPOS-00067
 
-Verify the operating system separates user functionality (including user
-interface services) from operating system management functionality.
+Verify the operating system separates user functionality (including user interface services) from operating system management functionality.
 """
 
 import pwd

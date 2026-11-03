@@ -1,8 +1,7 @@
 """
-SRG-OS-000041-GPOS-00019
+Ref: SRG-OS-000041-GPOS-00019
 
-Verify the operating system produces audit records containing information to
-establish the outcome of the events.
+Verify the operating system produces audit records containing information to establish the outcome of the events.
 """
 
 import pytest

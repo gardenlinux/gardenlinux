@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000480-GPOS-00228
 
-Verify the operating system defines default permissions for all authenticated
-users in such a way that the user can only read and modify their own files.
+Verify the operating system defines default permissions for all authenticated users in such a way that the user can only read and modify their own files.
 """
 
 import glob

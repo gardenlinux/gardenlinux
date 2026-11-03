@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000472-GPOS-00217
 
-Verify the operating system generates audit records showing starting and ending
-time for user access to the system.
+Verify the operating system generates audit records showing starting and ending time for user access to the system.
 """
 
 import pytest

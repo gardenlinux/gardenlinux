@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000042-GPOS-00020
 
-Verify the operating system generates audit records containing the full-text
-recording of privileged commands.
+Verify the operating system generates audit records containing the full-text recording of privileged commands.
 """
 
 import pytest

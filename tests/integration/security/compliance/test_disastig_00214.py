@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000470-GPOS-00214
 
-Verify the operating system generates audit records when
-successful/unsuccessful logon attempts occur.
+Verify the operating system generates audit records when successful/unsuccessful logon attempts occur.
 """
 
 import pytest

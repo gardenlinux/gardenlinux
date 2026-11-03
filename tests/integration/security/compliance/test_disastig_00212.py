@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000468-GPOS-00212
 
-Verify the operating system generates audit records when
-successful/unsuccessful attempts to delete security objects occur.
+Verify the operating system generates audit records when successful/unsuccessful attempts to delete security objects occur.
 """
 
 import platform

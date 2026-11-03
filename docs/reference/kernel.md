@@ -70,8 +70,7 @@ and enable Hyper-V, virtio, Xen, ENA (AWS), GVE (GCE), and MANA (Azure).
 | Branch       | Kernel | Description           |
 | ------------ | ------ | --------------------- |
 | `main`       | 6.18   | Latest LTS maintained |
-| `maint-6.12` | 6.12   | Previous LTS          |
-| `maint-6.6`  | 6.6    | Older LTS             |
+| `maint-6.12` | 6.12   | Previous LTS / SLTS   |
 
 ## Kernel build system
 

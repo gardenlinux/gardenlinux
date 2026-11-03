@@ -29,7 +29,7 @@ name (cname)** combined with a target architecture. Under
 [ADR 0035](/reference/adr/0035-cname-flavor-artifact-naming):
 
 - **cname** — the feature encoding only, canonically sorted (e.g.
-  `aws-gardener_prod`). See [Canonical Names](/reference/flavors#canonical-names).
+  `aws-gardener_prod`). See [Canonical Names](/reference/flavors#feature-list).
 - **flavor** — `{cname}-{arch}` (e.g. `aws-gardener_prod-amd64`).
 
 The cname is assembled from three feature types defined in
@@ -96,7 +96,7 @@ You can extend the use case and platform specific features with additional featu
 | Feature                                            | Description                                                                                                                                                           |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`_prod`](/reference/features/_prod)               | Production hardening: disables debug tooling and applies security defaults                                                                                            |
-| [`_fips`](/reference/features/_fips)               | FIPS 140-2 compliant cryptography                                                                                                                                     |
+| [`_fips`](/reference/features/_fips)               | FIPS 140-3 compliant cryptography                                                                                                                                     |
 | [`_ephemeral`](/reference/features/_ephemeral)     | Provides an ephemeral encrypted `/var`
 | [`_usi`](/reference/features/_usi)                 | Boot using a UKI with embedded EROFS root disk                                                                                                                        |
 | [`_trustedboot`](/reference/features/_trustedboot) | [Trusted Boot](/explanation/secure-boot): validates the entire boot chain including the rootfs (includes [`_ephemeral`](/reference/features/_ephemeral) and [`_usi`](/reference/features/_usi), requires [`_tpm2`](/reference/features/_tpm2) for persistent `/var`) |

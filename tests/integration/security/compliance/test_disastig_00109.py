@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000279-GPOS-00109
 
-Verify the operating system initiates a session lock after a period of
-inactivity. Setting TMOUT=900 in a profile.d script ensures interactive
-shell sessions time out after 15 minutes of inactivity.
+Verify the operating system initiates a session lock after a period of inactivity. Setting TMOUT=900 in a profile.d script ensures interactive shell sessions time out after 15 minutes of inactivity.
 """
 
 import pytest

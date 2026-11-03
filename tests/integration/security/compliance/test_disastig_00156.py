@@ -1,11 +1,7 @@
 """
 Ref: SRG-OS-000373-GPOS-00156
 
-Verify the operating system requires users to reauthenticate for privilege
-escalation. The sudoers wheel file must exist and be empty so that wheel-group
-membership does not grant passwordless sudo. No sudoers file may grant
-passwordless privilege escalation via NOPASSWD or bypass authentication
-via !authenticate.
+Verify the operating system requires users to reauthenticate for privilege escalation. The sudoers wheel file must exist and be empty so that wheel-group membership does not grant passwordless sudo. No sudoers file may grant passwordless privilege escalation via NOPASSWD or bypass authentication via !authenticate.
 """
 
 import re

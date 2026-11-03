@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000465-GPOS-00209
 
-Verify the operating system generates audit records when
-successful/unsuccessful attempts to modify categories of information (e.g.,
-classification levels) occur.
+Verify the operating system generates audit records when successful/unsuccessful attempts to modify categories of information (e.g., classification levels) occur.
 """
 
 import os
@@ -17,7 +15,7 @@ PRIV_ESC_RULE_FILE = "/etc/audit/rules.d/70-privilege-escalation.rules"
 
 
 @pytest.mark.security_id(203763)
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.feature("sap and not container and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to inspect audit config")
 def test_setreuid_rule_file_exists(file: File):
@@ -28,7 +26,7 @@ def test_setreuid_rule_file_exists(file: File):
 
 
 @pytest.mark.security_id(203763)
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.feature("sap and not container and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to inspect audit config")
 def test_setreuid_rule_contains_syscall(parse_file: ParseFile):
@@ -41,7 +39,7 @@ def test_setreuid_rule_contains_syscall(parse_file: ParseFile):
 
 
 @pytest.mark.security_id(203763)
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.feature("sap and not container and not lima")
 @pytest.mark.booted(reason="audit rule validation requires running audit subsystem")
 @pytest.mark.root(reason="required to query audit rules")
 def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
@@ -58,7 +56,7 @@ def test_setreuid_rule_loaded(shell: ShellRunner, parse: type[Parse]):
 
 
 @pytest.mark.security_id(203763)
-@pytest.mark.feature("not container and not lima")
+@pytest.mark.feature("sap and not container and not lima")
 @pytest.mark.booted(reason="audit event validation requires audit subsystem")
 @pytest.mark.root(reason="required to trigger syscall and read audit logs")
 def test_setreuid_event_logged(shell: ShellRunner):

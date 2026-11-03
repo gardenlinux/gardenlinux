@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000042-GPOS-00021
 
-Verify the operating system produces audit records containing the individual
-identities of group account users.
+Verify the operating system produces audit records containing the individual identities of group account users.
 """
 
 import pytest

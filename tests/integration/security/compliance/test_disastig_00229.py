@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000480-GPOS-00229
 
-Verify the operating system does not allow an unattended or automatic logon to
-the system.
+Verify the operating system does not allow an unattended or automatic logon to the system.
 """
 
 import pytest

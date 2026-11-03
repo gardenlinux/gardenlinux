@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000775-GPOS-00230
 
-Verify the operating system is configured to include only approved trust
-anchors in trust stores or certificate stores managed by the organization.
+Verify the operating system is configured to include only approved trust anchors in trust stores or certificate stores managed by the organization.
 """
 
 import pytest

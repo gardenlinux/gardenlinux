@@ -1,8 +1,7 @@
 """
 Ref: SRG-OS-000467-GPOS-00211
 
-Verify the operating system generates audit records when
-successful/unsuccessful attempts to delete security levels occur.
+Verify the operating system generates audit records when successful/unsuccessful attempts to delete security levels occur.
 """
 
 import pytest

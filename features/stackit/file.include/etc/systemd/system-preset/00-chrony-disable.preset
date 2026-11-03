@@ -1,0 +1,2 @@
+disable chrony-wait.service
+disable chronyd-restricted.service

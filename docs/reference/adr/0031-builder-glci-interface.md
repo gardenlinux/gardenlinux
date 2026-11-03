@@ -12,7 +12,7 @@ Date: 2026-02-05
 
 ## Status
 
-Accepted
+Superseded by [ADR 37](./0037-builder-glci-interface.md)
 
 ## Context
 

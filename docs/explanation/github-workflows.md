@@ -1,6 +1,6 @@
 ---
 title: GitHub Actions Workflows
-description: Explanation of the GitHub Actions workflows used to build, test, and publish nightly and versioned Garden Linux releases
+description: Explanation of the GitHub Actions workflows used to build, test, publish nightly and versioned Garden Linux releases, and validate pull requests
 order: 150
 related_topics:
   - /explanation/os-releases.md
@@ -351,14 +351,12 @@ flowchart TD
 
 **Trigger:** `workflow_call` (called by [`nightly.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/nightly.yml) and [`manual_release.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/manual_release.yml)) or `workflow_dispatch` (can be run standalone).
 
-**Purpose:** Uploads all built flavor artifacts to Amazon S3 buckets and registers the release in the Garden Linux Release Database (GLRD). Two separate S3 regions are supported: the global bucket and a China-region bucket.
+**Purpose:** Uploads all built flavor artifacts to an Amazon S3 bucket and registers the release in the Garden Linux Release Database (GLRD).
 
 **Flavors are split into two groups before upload:**
 
 - **Trustedboot flavors** (name contains `trustedboot`): uploaded with `with_certs: true` so that Secure Boot certificates are included alongside the image.
 - **Non-trustedboot flavors**: uploaded without certificates.
-
-Both groups are uploaded to both the global and China S3 buckets in parallel.
 
 **GLRD registration:**
 
@@ -384,21 +382,19 @@ flowchart TD
     TBS --> NTBS
 
     TBM --> US3T["upload_trustedboot_flavors_to_s3\nupload_to_s3.yml\nglobal S3, with_certs=true"]
-    TBM --> US3TC["upload_trustedboot_flavors_to_s3_china\nupload_to_s3.yml\nChina S3, with_certs=true"]
     NTBS --> US3N["upload_non_trustedboot_flavors_to_s3\nupload_to_s3.yml\nglobal S3"]
-    NTBS --> US3NC["upload_non_trustedboot_flavors_to_s3_china\nupload_to_s3.yml\nChina S3"]
 
     US3T & US3N --> GLRD
 
     GLRD["glrd\nCreate GLRD release entry\nnightly entry on main branch\nminor entry on other branches"]
 
-    US3T & US3TC & US3N & US3NC & GLRD -->|any failure| RETRY
+    US3T & US3N & GLRD -->|any failure| RETRY
 
     RETRY["publish_retry\nre-dispatch publish_s3 workflow\nmax 5 retries"]
 
     class CALL input
     class WD,WDA,TBS,NTBS,TBM decision
-    class US3T,US3TC,US3N,US3NC,GLRD output
+    class US3T,US3N,GLRD output
     class RETRY process
 ```
 
@@ -435,7 +431,7 @@ The following reusable workflows are called by the entry-point workflows and do 
 | Workflow | Purpose |
 |---|---|
 | [`publish.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish.yml) | Orchestrates publishing to ghcr.io. Calls [`download_workflow_data.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/download_workflow_data.yml), then [`publish_oci_containers.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish_oci_containers.yml) and [`publish_kmodbuild_container.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish_kmodbuild_container.yml) in parallel. Can be triggered standalone via `workflow_dispatch` against an existing build run. |
-| [`publish_s3.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish_s3.yml) | Orchestrates publishing to Amazon S3. Calls [`download_workflow_data.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/download_workflow_data.yml) and [`build_flavors_matrix.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/build_flavors_matrix.yml), then [`upload_to_s3.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/upload_to_s3.yml) (four times: trustedboot/non-trustedboot flavors, each to global and China S3 buckets), and registers a GLRD release entry. Can be triggered standalone via `workflow_dispatch`. |
+| [`publish_s3.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish_s3.yml) | Orchestrates publishing to Amazon S3. Calls [`download_workflow_data.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/download_workflow_data.yml) and [`build_flavors_matrix.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/build_flavors_matrix.yml), then [`upload_to_s3.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/upload_to_s3.yml) (twice: trustedboot and non-trustedboot flavors), and registers a GLRD release entry. Can be triggered standalone via `workflow_dispatch`. |
 | [`publish_oci_containers.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish_oci_containers.yml) | Publishes container base images (`container`, `container-pythonDev`), bare flavor images (libc, python, nodejs, sapmachine), and all regular flavor OCI images to ghcr.io. Signs each manifest with cosign using an AWS KMS key. Updates the OCI manifest index. |
 | [`publish_kmodbuild_container.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish_kmodbuild_container.yml) | Loads and pushes the kmodbuild dev container to `ghcr.io/{org}/gardenlinux/kmodbuild:{version}`. |
 | [`upload_to_s3.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/upload_to_s3.yml) | Uploads a set of flavor artifacts (selected by the flavors matrix) to an S3 bucket. Optionally includes Secure Boot certificates (`with_certs`). |
@@ -443,6 +439,151 @@ The following reusable workflows are called by the entry-point workflows and do 
 | [`download_flavors_images.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/download_flavors_images.yml) | Downloads pre-built flavor images from S3 for the given version and commit. Used by [`manual_tests.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/manual_tests.yml) in download mode. |
 
 [`publish.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish.yml) and [`publish_s3.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish_s3.yml) are **independent and run in parallel**. Both are called by [`nightly.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/nightly.yml) and [`manual_release.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/manual_release.yml) after the build-test-upload_workflow_data sequence completes. [`publish.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish.yml) targets the GitHub Container Registry (ghcr.io) while [`publish_s3.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/publish_s3.yml) targets Amazon S3 and the GLRD. Neither depends on the other's success, and either can be re-triggered independently via `workflow_dispatch` using the `run_id` of a completed build.
+
+
+## PR CI workflows
+
+Three workflows run on every pull request (and on pushes to `main`) to validate code quality, test-framework integrity, and documentation. Each workflow contains a dedicated **gate job** that always produces a check result, which is required for GitHub branch protection rules. The gate logic is consistent across all three:
+
+- If the relevant paths did not change, the gate passes immediately (expensive jobs were skipped).
+- If the paths changed, the gate passes only when all work jobs succeeded.
+- The gate runs with `if: always()` so it is never skipped, even when upstream jobs are skipped.
+
+The `pull_request` trigger carries **no `paths:` filter** on any of these workflows. This ensures the gate check name is always present on every PR, satisfying the branch protection requirement.
+
+### [dev.yml](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/dev.yml)
+
+**Trigger:** `push` to `main` (path-filtered, ignoring docs-only changes) and `pull_request` on all branches (no path filter).
+
+**Concurrency:** Only one run per workflow+ref is active at a time; in-progress runs are cancelled when a new commit arrives.
+
+**Purpose:** Builds and tests the full set of Garden Linux flavors on every pull request that touches non-documentation files. It is the PR-time equivalent of [`nightly.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/nightly.yml), using the same reusable [`build.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/build.yml) and [`tests.yml`](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/tests.yml) sub-workflows.
+
+**Gate job: `build_and_test_gate`**
+
+The gate evaluates whether both build and test passed. If the `detect-changes` job reports that no non-doc code changed (`code != 'true'`), the gate passes without waiting for build or test results.
+
+```mermaid
+flowchart TD
+    PR([pull_request / push to main]) --> DC
+
+    DC["detect-changes\n(dorny/paths-filter)\noutput: code"]
+
+    DC -->|code == true| SV["set_version\nreads VERSION file"]
+    DC -->|code != true| GATE
+
+    SV --> BUILD["build\ncalls build.yml\nversion from VERSION file, target=dev"]
+    BUILD -->|success or failure| TEST["test\ncalls tests.yml\ntest_types=chroot,qemu,oci,bare"]
+    BUILD & TEST --> GATE
+
+    GATE["build_and_test_gate\nif: always()\nskip → pass\nbuild or test failed → fail"]
+
+    class PR input
+    class DC,SV decision
+    class BUILD,TEST process
+    class GATE output
+```
+
+**Common failure causes:**
+
+| Symptom | Likely cause |
+|---|---|
+| `build` job fails | Build-breaking change in a non-doc file; check the `build_flavor` step logs |
+| `test` job fails | A flavor test regression; inspect the test report in the workflow summary |
+| `build_and_test_gate` fails with `code == true` but upstream jobs skipped | A `detect-changes` configuration mismatch; compare the path filters in `dev.yml` with the changed files |
+
+### [dev_tests.yml](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/dev_tests.yml)
+
+**Trigger:** `push` to `main` and `pull_request` on all branches (no path filter).
+
+**Concurrency:** One run per workflow+ref; in-progress runs are cancelled.
+
+**Purpose:** Validates the Python test framework under `tests/` for code style, type correctness, feature/test coverage, and plugin/utility correctness. It runs only when files under `tests/` change, but the gate job always produces a check result.
+
+**Gate job: `dev-tests-gate`**
+
+The gate collects the results of six parallel jobs. If no files under `tests/` changed, the gate passes without running any of them.
+
+```mermaid
+flowchart TD
+    PR([pull_request / push to main]) --> DC
+
+    DC["detect-changes\n(dorny/paths-filter)\noutput: tests"]
+
+    DC -->|tests == true| CHECKS
+
+    subgraph CHECKS[Parallel quality jobs]
+        BL["black\nformatting check\n(make -f tests/dev.makefile lint-black)"]
+        IS["isort\nimport sorting check\n(make -f tests/dev.makefile lint-isort)"]
+        PY["pyright\ntype checking\n(make -f tests/dev.makefile lint-pyright)"]
+        CV["coverage\nfeature/test coverage report\n(make -f tests/dev.makefile coverage)"]
+        TP["test-plugins\nplugin unit tests\n(make -f tests/dev.makefile test-plugins)"]
+        TU["test-utils\nutil unit tests\n(make -f tests/dev.makefile test-utils)"]
+    end
+
+    DC -->|tests != true| GATE
+    BL & IS & PY & CV & TP & TU --> GATE
+
+    GATE["dev-tests-gate\nif: always()\nskip → pass\nany job not success → fail"]
+
+    class PR input
+    class DC decision
+    class BL,IS,PY,CV,TP,TU process
+    class GATE output
+```
+
+**Common failure causes:**
+
+| Symptom | Likely cause |
+|---|---|
+| `black` fails | Code in `tests/` is not formatted — run `make -f tests/dev.makefile lint-black` locally and apply the diff |
+| `isort` fails | Import order does not match isort rules — run `make -f tests/dev.makefile lint-isort` locally |
+| `pyright` fails | Type errors in `tests/` — check the pyright output for the specific file and line |
+| `coverage` fails | A new feature has no corresponding test, or a new test maps to no feature — see the coverage report artifact |
+| `test-plugins` or `test-utils` fails | A unit test regression in the test framework itself — check the pytest output |
+
+### [check_adr_numbering.yml](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/check_adr_numbering.yml)
+
+**Trigger:** `push` to `main` and `pull_request` on all branches (no path filter).
+
+**Purpose:** Enforces that Architecture Decision Records (ADRs) in `docs/architecture/decisions/` are numbered in sequential, gapless order starting from `0001`. Files must have names matching the pattern `NNNN-<slug>.md` (four leading digits), and the sequence must be contiguous. The check runs only when files under `docs/reference/adr/**` change.
+
+**Gate job: `check-adr-numbering-gate`**
+
+If the path filter reports no ADR changes, the gate passes immediately.
+
+```mermaid
+flowchart TD
+    PR([pull_request / push to main]) --> DC
+
+    DC["detect-changes\n(dorny/paths-filter)\noutput: adr\npath: docs/reference/adr/**"]
+
+    DC -->|adr == true| CA["check-adr\ninline Python script\nvalidates NNNN- prefix and\nsequential numbering in\ndocs/architecture/decisions/"]
+    DC -->|adr != true| GATE
+
+    CA --> GATE
+
+    GATE["check-adr-numbering-gate\nif: always()\nskip → pass\ncheck-adr failed → fail"]
+
+    class PR input
+    class DC decision
+    class CA process
+    class GATE output
+```
+
+**ADR numbering rules enforced by the check:**
+
+1. Every file in `docs/architecture/decisions/` (except `README.md`) must start with exactly four digits followed by a hyphen.
+1. The four-digit prefix must match the file's position in lexicographic sort order, starting from `0001`.
+1. Gaps are not allowed — adding `0003-new.md` when `0002` does not yet exist fails the check.
+
+**Common failure causes:**
+
+| Symptom | Likely cause |
+|---|---|
+| `check-adr` fails with "filename does not start with 4 digits" | New ADR file does not follow the `NNNN-<slug>.md` naming convention |
+| `check-adr` fails with "numbering mismatch" | An ADR was inserted or deleted without renumbering the remaining files, or a new ADR was assigned an out-of-sequence number |
+| Gate fails even though the ADR file looks correct | The file was placed in `docs/reference/adr/` (the path filter) but the validation script scans `docs/architecture/decisions/`; ensure the file is in the correct directory |
 
 
 ## Retry mechanism

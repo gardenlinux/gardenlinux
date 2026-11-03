@@ -1,5 +1,7 @@
 """
 Ref: SRG-OS-000433-GPOS-00193
+
+Verify the operating system implements address space layout randomization to protect its memory from unauthorized code execution.
 """
 
 import pytest

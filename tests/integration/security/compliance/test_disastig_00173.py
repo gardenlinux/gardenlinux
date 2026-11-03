@@ -1,9 +1,7 @@
 """
 Ref: SRG-OS-000393-GPOS-00173
 
-Verify the operating system implements cryptographic mechanisms to protect the
-integrity of nonlocal maintenance and diagnostic communications, when used for
-nonlocal maintenance sessions.
+Verify the operating system implements cryptographic mechanisms to protect the integrity of nonlocal maintenance and diagnostic communications, when used for nonlocal maintenance sessions.
 """
 
 import pytest
