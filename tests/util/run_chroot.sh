@@ -2,6 +2,7 @@
 
 set -eufo pipefail
 
+arch="$(uname -m)"
 containerize=0
 watch=0
 test_args=()
@@ -64,7 +65,14 @@ run_sync() {
 	echo "⚙️  setting up test framework"
 
 	mkdir "$tmpdir/chroot/run/gardenlinux-tests"
-	gzip -d <"$test_dist_dir/dist-$(uname -m).tar.gz" | tar --extract --directory "$tmpdir/chroot/run/gardenlinux-tests"
+	# When running inside the container, the dist is mounted as dist.tar.gz.
+	# When running natively (root on Linux), use the arch-specific dist file.
+	if [[ "$rootfs_tar" == "/mnt/rootfs.tar" ]]; then
+		dist_file="dist.tar.gz"
+	else
+		dist_file="dist-${arch}.tar.gz"
+	fi
+	gzip -d <"$test_dist_dir/${dist_file}" | tar --extract --directory "$tmpdir/chroot/run/gardenlinux-tests"
 }
 
 run_test() {
@@ -175,7 +183,7 @@ if ((containerize)); then
 
 	podman run -q --rm --name "$container_name" --stop-signal=SIGINT \
 		-v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" \
-		-v "$(realpath -- "$test_dist_dir/dist-$(uname -m).tar.gz"):/mnt/test_dist/dist.tar.gz:ro" \
+		-v "$(realpath -- "$test_dist_dir/dist-${arch}.tar.gz"):/mnt/test_dist/dist.tar.gz:ro" \
 		-v "$(realpath -- "$rootfs_tar"):/mnt/rootfs.tar:ro" \
 		-v "$(realpath -- "$test_dist_dir/../log"):$log_dir:rw" \
 		-v "$(realpath -- "$test_dist_dir/../.."):/mnt/watch:ro" \
