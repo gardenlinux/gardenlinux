@@ -34,7 +34,6 @@ fi
 requirements="$1"
 python_env="$2"
 output="$3"
-target_arch="${4:-}"  # optional: x86_64 or aarch64; if empty, build both
 
 # shellcheck source=tests/util/python.env.sh
 source "$python_env"
@@ -48,10 +47,6 @@ cache_dir=".cache"
 mkdir -p "$cache_dir"
 
 for arch in x86_64 aarch64; do
-	# skip if a specific target arch was requested and this isn't it
-	if [ -n "$target_arch" ] && [ "$arch" != "$target_arch" ]; then
-		continue
-	fi
 	mkdir "$tmpdir/runtime/$arch"
 	archive_url="${PYTHON_SOURCE}/${RELEASE_DATE}/cpython-${PYTHON_VERSION}%2B${RELEASE_DATE}-${arch}-unknown-linux-gnu-install_only.tar.gz"
 	archive_name="cpython-${PYTHON_VERSION}+${RELEASE_DATE}-${arch}-unknown-linux-gnu-install_only.tar.gz"

@@ -18,9 +18,19 @@ tmpdir="$(mktemp -d)"
 
 runtime="$1"
 output="$2"
+target_arch="${3:-}"  # optional: x86_64 or aarch64; if set, strip the other arch from the runtime
 
 mkdir -p "$tmpdir/dist/runtime"
 gzip -d <"$runtime" | tar -x -C "$tmpdir/dist/runtime"
+
+# Remove the non-target arch runtime to keep the dist arch-specific
+if [ -n "$target_arch" ]; then
+	for arch in x86_64 aarch64; do
+		if [ "$arch" != "$target_arch" ]; then
+			rm -rf "$tmpdir/dist/runtime/$arch"
+		fi
+	done
+fi
 
 set +f
 
