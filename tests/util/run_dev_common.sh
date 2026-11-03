@@ -2,6 +2,7 @@
 
 set -eufo pipefail
 
+arch="$(uname -m)"
 watch=0
 test_args=""
 
@@ -40,7 +41,7 @@ run_sync() {
     if [ "$dist_exists" != "0" ]; then
         # shellcheck disable=SC2029
         ssh "${ssh_opts[@]}" "$ssh_user@$vm_ip" "sudo rm -rf /run/gardenlinux-tests-dev && sudo mkdir -p /run/gardenlinux-tests-dev && sudo chown -R $ssh_user:$ssh_user /run/gardenlinux-tests-dev"
-        gzip -d <.build/dist-$(uname -m).tar.gz | ssh "${ssh_opts[@]}" "$ssh_user@$vm_ip" "tar -C /run/gardenlinux-tests-dev -xf -"
+        gzip -d <.build/dist-${arch}.tar.gz | ssh "${ssh_opts[@]}" "$ssh_user@$vm_ip" "tar -C /run/gardenlinux-tests-dev -xf -"
     fi
     # temporarily disable -f for globbing
     set +f
