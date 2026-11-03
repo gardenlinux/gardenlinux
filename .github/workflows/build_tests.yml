@@ -68,7 +68,17 @@ jobs:
           repo="ghcr.io/${{ github.repository_owner }}/test"
           version="$(cat VERSION)"
 
-          podman build --arch ${arch} --build-context dist_ctx=tests/.build -t ${repo}:${arch}-${version} tests/util/container
+          # Map GitHub Actions arch names to the python-build-standalone arch names
+          case "$arch" in
+            amd64)  dist_arch="x86_64" ;;
+            arm64)  dist_arch="aarch64" ;;
+            *)      echo "Unsupported arch: $arch" >&2; exit 1 ;;
+          esac
+
+          podman build --arch ${arch} \
+            --build-context dist_ctx=tests/.build \
+            --build-arg DIST_FILE=dist-${dist_arch}.tar.gz \
+            -t ${repo}:${arch}-${version} tests/util/container
           podman save --format oci-archive ${repo}:${arch}-${version} > tests_container_${arch}.oci
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         with:

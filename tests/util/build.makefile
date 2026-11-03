@@ -8,7 +8,7 @@ MAKEFLAGS += --no-builtin-rules
 .PHONY: dist dist-disk clean
 
 all: dist-disk edk2
-dist: .build/dist.tar.gz edk2
+dist: .build/dist-x86_64.tar.gz .build/dist-aarch64.tar.gz edk2
 dist-disk: dist .build/dist.ext2.raw
 edk2: .build/edk2-qemu-x86_64-code .build/edk2-qemu-x86_64-vars .build/edk2-qemu-aarch64-code .build/edk2-qemu-aarch64-vars
 
@@ -18,17 +18,21 @@ clean:
 .build:
 	mkdir .build
 
-.build/dist.tar.gz: util/build_dist.sh .build/runtime.tar.gz conftest.py $(wildcard handlers/*.py) $(shell find integration -name 'test_*.py' 2>/dev/null) $(wildcard plugins/*.py) | .build
-	echo '🛠️  building test framework distribution'
+.build/dist-%.tar.gz: util/build_dist.sh .build/runtime-%.tar.gz conftest.py $(wildcard handlers/*.py) $(shell find integration -name 'test_*.py' 2>/dev/null) $(wildcard plugins/*.py) | .build
+	echo '🛠️  building test framework distribution ($*)'
 	./$< $(word 2,$^) $@
 
-.build/dist.ext2.raw: util/build_dist_image.sh .build/dist.tar.gz | .build
+.build/dist.ext2.raw: util/build_dist_image.sh .build/dist-x86_64.tar.gz | .build
 	echo '🛠️  bundling test framework as disk image'
 	./$^ $@
 
-.build/runtime.tar.gz: util/build_runtime.sh util/requirements.txt util/python.env.sh | .build
-	echo '🛠️  building python runtime'
-	./$^ $@
+.build/runtime-x86_64.tar.gz: util/build_runtime.sh util/requirements.txt util/python.env.sh | .build
+	echo '🛠️  building python runtime (x86_64)'
+	./$^ $@ x86_64
+
+.build/runtime-aarch64.tar.gz: util/build_runtime.sh util/requirements.txt util/python.env.sh | .build
+	echo '🛠️  building python runtime (aarch64)'
+	./$^ $@ aarch64
 
 .build/edk2-%: | .build
 	echo '⬇️  fetching EDK2 ($*)'

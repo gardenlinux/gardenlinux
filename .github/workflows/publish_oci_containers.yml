@@ -406,15 +406,15 @@ jobs:
 
           podman login -u token -p ${GITHUB_TOKEN} ghcr.io
 
-          # Push amd64 and arm64 images
-          podman push ghcr.io/${{ github.repository_owner }}/test:amd64-${version}
-          podman push ghcr.io/${{ github.repository_owner }}/test:arm64-${version}
+          # Push amd64 and arm64 images using zstd compression for smaller layer size
+          podman push --compression-format zstd ghcr.io/${{ github.repository_owner }}/test:amd64-${version}
+          podman push --compression-format zstd ghcr.io/${{ github.repository_owner }}/test:arm64-${version}
 
           if [ "$is_nightly" = true ]; then
             podman tag ghcr.io/${{ github.repository_owner }}/test:amd64-${version} ghcr.io/${{ github.repository_owner }}/test:amd64-nightly
             podman tag ghcr.io/${{ github.repository_owner }}/test:arm64-${version} ghcr.io/${{ github.repository_owner }}/test:arm64-nightly
-            podman push ghcr.io/${{ github.repository_owner }}/test:amd64-nightly
-            podman push ghcr.io/${{ github.repository_owner }}/test:arm64-nightly
+            podman push --compression-format zstd ghcr.io/${{ github.repository_owner }}/test:amd64-nightly
+            podman push --compression-format zstd ghcr.io/${{ github.repository_owner }}/test:arm64-nightly
           fi
 
           # Create and push manifests
