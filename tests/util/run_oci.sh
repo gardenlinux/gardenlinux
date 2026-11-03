@@ -86,7 +86,7 @@ echo "🚀  running test container $image_name"
 run_args=(
     "--pull" "never"
     "--rm"
-    "-v" "$root_dir/tests/.build/dist.tar.gz:/run/gardenlinux-tests/dist.tar.gz:ro"
+    "-v" "$root_dir/tests/.build/dist-$(uname -m).tar.gz:/run/gardenlinux-tests/dist.tar.gz:ro"
     "-v" "$log_dir:/run/gardenlinux-tests/log:rw"
 )
 
