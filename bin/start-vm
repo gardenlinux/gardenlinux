@@ -14,6 +14,7 @@ main () {
     get_arch
     set_defaults
     get_opts "$@"
+    qemu_opt_identity
     set_binaries
     qemu_opt_ignition
     qemu_opt_fw_cfg
@@ -101,10 +102,7 @@ set_defaults () {
     # Set default vars
     cpu="2"
     memory="2Gi"
-    mac="$(printf '02:%02x:%02x:%02x:%02x:%02x' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))"
-    mac="$(printf "%012s" | tr -d ":" <<< ${mac,,})"
-    macfull="$(sed 's/../&:/g;s/:$//' <<< $mac)"
-    uuid="12345678-0000-0000-0000-${mac}"
+    mac="$(printf '02%02x%02x%02x%02x%02x' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))"
     monitor=1
     bridge=
     daemonize=
@@ -144,8 +142,6 @@ set_defaults () {
 
     # Do not use defaults on QEMU
     QEMU_OPTS+=("-nodefaults")
-    # UUID is expected by systemd and Garden Linux
-    QEMU_OPTS+=("-uuid $uuid" )
 }
 
 
@@ -218,6 +214,24 @@ done
 # Get positional args in a dedicated var for
 # processing positional arguments in "qemu_opt_disk"
 images=$@
+}
+
+
+# Normalize the MAC address and derive the values that depend on it.
+qemu_opt_identity () {
+    mac="$(tr -d ':-' <<< "${mac,,}")"
+    [[ "$mac" =~ ^[0-9a-f]{12}$ ]] || eusage "--mac must be a MAC address of 12 hex digits"
+    macfull="$(sed 's/../&:/g;s/:$//' <<< "$mac")"
+    # The address has to be usable as a NIC source address. Linux rejects multicast and all-zero
+    if (( 0x${mac:0:2} & 1 )); then
+        eusage "--mac must be unicast, got $macfull (bit 0 of the first octet must be clear)"
+    fi
+    if [ "$mac" = "000000000000" ]; then
+        eusage "--mac must not be the all-zero address"
+    fi
+    # UUID is expected by systemd and Garden Linux
+    uuid="12345678-0000-0000-0000-${mac}"
+    QEMU_OPTS+=("-uuid $uuid")
 }
 
 
