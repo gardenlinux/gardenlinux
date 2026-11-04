@@ -239,22 +239,53 @@ cd "$(realpath -- "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/../")"
 basename="$(basename "$artifact")"
 
 extension="$(grep -E -o '(\.[a-z][a-zA-Z0-9_\-]*)*$' <<<"$basename")"
-artifact_base_name="${basename%"$extension"}"
+cname="${basename%"$extension"}"
 type="${extension#.}"
 
-[ -n "$artifact_base_name" ]
+[ -n "$cname" ]
 if [ -z "$cloud" ] && ! ((cloud_image)); then
 	[ -n "$type" ]
+fi
+
+# Detect arch from artifact name (e.g. "azure-gardener_prod-amd64-today-local")
+# or from the requirements file when running with --cloud-image.
+arch=
+if [[ "$cname" == *-amd64-* ]]; then
+	arch="amd64"
+elif [[ "$cname" == *-arm64-* ]]; then
+	arch="arm64"
+elif ((cloud_image)) && [ -n "${requirements_file:-}" ]; then
+	arch="$(grep '^arch=' "$requirements_file" | cut -d= -f2)"
 fi
 
 if [ -f ".build/.gh_artifact" ]; then
 	echo "Using cached test distribution from github artifact"
 elif ((skip_tests)); then
-	echo "Skipping test disk build; building dist and firmware only..."
-	./util/build.makefile dist edk2
-else
-	echo "Building test distribution..."
+	: # tests are skipped, no dist needed
+elif [ -z "$arch" ]; then
+	echo "Building test distribution (all arches)..."
 	./util/build.makefile dist-disk
+else
+	case "$type" in
+	tar | oci)
+		echo "Building test distribution ($arch)..."
+		./util/build.makefile "dist-${arch}"
+		;;
+	raw | pxe.tar.gz | iso)
+		if [ -n "$cloud" ]; then
+			echo "Building test distribution ($arch)..."
+			./util/build.makefile "dist-disk-${arch}"
+		else
+			echo "Building test distribution ($arch)..."
+			./util/build.makefile "dist-disk-${arch}" edk2
+		fi
+		;;
+	"")
+		# --cloud-image: no file type, arch from requirements file
+		echo "Building test distribution ($arch)..."
+		./util/build.makefile "dist-disk-${arch}"
+		;;
+	esac
 fi
 
 if [ -n "$cloud" ]; then
