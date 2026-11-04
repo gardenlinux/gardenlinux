@@ -14,6 +14,7 @@ esac
 containerize=0
 watch=0
 skip_tests=0
+skip_cleanup=0
 test_args=()
 
 if [ "$(uname -s)" != Linux ]; then
@@ -38,6 +39,10 @@ while [ $# -gt 0 ]; do
 		;;
 	--skip-tests)
 		skip_tests=1
+		shift
+		;;
+	--skip-cleanup)
+		skip_cleanup=1
 		shift
 		;;
 	--test-args)
@@ -196,6 +201,9 @@ if ((containerize)); then
 	if ((skip_tests)); then
 		container_cmd+=(--skip-tests)
 	fi
+	if ((skip_cleanup)); then
+		container_cmd+=(--skip-cleanup)
+	fi
 	if [ ${#test_args[@]} -gt 0 ]; then
 		container_cmd+=(--test-args "${test_args[*]}")
 	fi
@@ -211,12 +219,21 @@ if ((containerize)); then
 	if ! ((skip_tests)); then
 		podman_run_args+=(-v "$(realpath -- "$test_dist_dir/dist-${arch}.tar.gz"):/mnt/test_dist/dist.tar.gz:ro")
 	fi
+	if ((skip_cleanup)); then
+		podman_run_args+=(-it)
+	fi
 
-	podman run "${podman_run_args[@]}" "$image_id" fake_xattr "${container_cmd[@]}" &
-
-	podman_pid=$!
-	wait "$podman_pid" 2>/dev/null
-	exit_code=$?
+	if ((skip_cleanup)); then
+		# Run in foreground so the TTY is properly attached for the
+		# interactive inspection shell inside the container.
+		podman run "${podman_run_args[@]}" "$image_id" fake_xattr "${container_cmd[@]}"
+		exit_code=$?
+	else
+		podman run "${podman_run_args[@]}" "$image_id" fake_xattr "${container_cmd[@]}" &
+		podman_pid=$!
+		wait "$podman_pid" 2>/dev/null
+		exit_code=$?
+	fi
 
 	# Exit with the same code as the podman process to prevent falling through to non-containerized code path
 	exit $exit_code
@@ -237,5 +254,9 @@ else
 	run_sync
 	if ! ((skip_tests)); then
 		run_test
+	fi
+	if ((skip_cleanup)); then
+		echo "🔍  entering chroot shell for inspection; exit shell to clean up"
+		/sbin/chroot "$tmpdir/chroot" /bin/bash || true
 	fi
 fi

@@ -123,6 +123,7 @@ while [ $# -gt 0 ]; do
 		shift
 		;;
 	--skip-cleanup)
+		chroot_args+=("$1")
 		cloud_args+=("$1")
 		qemu_args+=("$1")
 		oci_args+=("$1")
