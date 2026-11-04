@@ -138,8 +138,8 @@ jobs:
 
           # Push amd64 image directly from OCI archive, preserving original layer digest
           tar xzv < "${ARTIFACT_BASE_NAME_AMD64}.tar.gz"
-          amd64_ref="$(tar -xOf "${ARTIFACT_BASE_NAME_AMD64}.oci" index.json | jq -r '.manifests[0].annotations["org.opencontainers.image.ref.name"]')"
-          oras cp --from-oci-layout "${ARTIFACT_BASE_NAME_AMD64}.oci:${amd64_ref}" \
+          amd64_ref="$(tar -xOf "${ARTIFACT_BASE_NAME_AMD64}.oci" index.json | jq -r '.manifests[0].digest')"
+          oras cp --from-oci-layout "${ARTIFACT_BASE_NAME_AMD64}.oci@${amd64_ref}" \
             ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
           if [ $is_nightly = true ]; then
             oras cp \
@@ -149,8 +149,8 @@ jobs:
 
           # Push arm64 image directly from OCI archive, preserving original layer digest
           tar xzv < "${ARTIFACT_BASE_NAME_ARM64}.tar.gz"
-          arm64_ref="$(tar -xOf "${ARTIFACT_BASE_NAME_ARM64}.oci" index.json | jq -r '.manifests[0].annotations["org.opencontainers.image.ref.name"]')"
-          oras cp --from-oci-layout "${ARTIFACT_BASE_NAME_ARM64}.oci:${arm64_ref}" \
+          arm64_ref="$(tar -xOf "${ARTIFACT_BASE_NAME_ARM64}.oci" index.json | jq -r '.manifests[0].digest')"
+          oras cp --from-oci-layout "${ARTIFACT_BASE_NAME_ARM64}.oci@${arm64_ref}" \
             ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version}
           if [ $is_nightly = true ]; then
             oras cp \
@@ -213,8 +213,8 @@ jobs:
           oras login -u token -p ${{ github.token }} ghcr.io
 
           # Push amd64 image directly from OCI archive, preserving original layer digest
-          amd64_ref="$(tar -xOf "${{ matrix.config }}-amd64.oci" index.json | jq -r '.manifests[0].annotations["org.opencontainers.image.ref.name"]')"
-          oras cp --from-oci-layout "${{ matrix.config }}-amd64.oci:${amd64_ref}" \
+          amd64_ref="$(tar -xOf "${{ matrix.config }}-amd64.oci" index.json | jq -r '.manifests[0].digest')"
+          oras cp --from-oci-layout "${{ matrix.config }}-amd64.oci@${amd64_ref}" \
             ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
           if [ $is_nightly = true ]; then
             oras cp \
@@ -223,8 +223,8 @@ jobs:
           fi
 
           # Push arm64 image directly from OCI archive, preserving original layer digest
-          arm64_ref="$(tar -xOf "${{ matrix.config }}-arm64.oci" index.json | jq -r '.manifests[0].annotations["org.opencontainers.image.ref.name"]')"
-          oras cp --from-oci-layout "${{ matrix.config }}-arm64.oci:${arm64_ref}" \
+          arm64_ref="$(tar -xOf "${{ matrix.config }}-arm64.oci" index.json | jq -r '.manifests[0].digest')"
+          oras cp --from-oci-layout "${{ matrix.config }}-arm64.oci@${arm64_ref}" \
             ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
           if [ $is_nightly = true ]; then
             oras cp \
@@ -399,8 +399,8 @@ jobs:
 
           # Push amd64 and arm64 images directly from OCI archive, preserving original layer digest
           for arch in amd64 arm64; do
-            ref="$(tar -xOf "tests_container_${arch}.oci" index.json | jq -r '.manifests[0].annotations["org.opencontainers.image.ref.name"]')"
-            oras cp --from-oci-layout "tests_container_${arch}.oci:${ref}" \
+            ref="$(tar -xOf "tests_container_${arch}.oci" index.json | jq -r '.manifests[0].digest')"
+            oras cp --from-oci-layout "tests_container_${arch}.oci@${ref}" \
               ghcr.io/${{ github.repository_owner }}/test:${arch}-${version}
             if [ "$is_nightly" = true ]; then
               oras cp \
