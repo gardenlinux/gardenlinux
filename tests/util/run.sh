@@ -247,24 +247,29 @@ if [ -z "$cloud" ] && ! ((cloud_image)); then
 	[ -n "$type" ]
 fi
 
-# Detect arch from artifact name (e.g. "azure-gardener_prod-amd64-today-local")
-# or from the requirements file when running with --cloud-image.
-arch=
-if [[ "$cname" == *-amd64-* ]]; then
-	arch="amd64"
-elif [[ "$cname" == *-arm64-* ]]; then
-	arch="arm64"
-elif ((cloud_image)) && [ -n "${requirements_file:-}" ]; then
-	arch="$(grep '^arch=' "$requirements_file" | cut -d= -f2)"
+# Read the target arch from the image requirements file.
+# With --cloud-image the file is provided via --image-requirements-file (already
+# resolved to an absolute path); otherwise it is a <cname>.requirements sidecar
+# next to the artifact.
+if ! ((cloud_image)); then
+	requirements_file="$(dirname -- "$artifact")/${cname}.requirements"
+fi
+
+if [ ! -f "$requirements_file" ]; then
+	echo "Error: image requirements file not found: $requirements_file" >&2
+	exit 1
+fi
+
+arch="$(grep '^arch=' "$requirements_file" | cut -d= -f2)"
+if [ -z "$arch" ]; then
+	echo "Error: no 'arch' entry in image requirements file: $requirements_file" >&2
+	exit 1
 fi
 
 if [ -f ".build/.gh_artifact" ]; then
 	echo "Using cached test distribution from github artifact"
 elif ((skip_tests)); then
 	: # tests are skipped, no dist needed
-elif [ -z "$arch" ]; then
-	echo "Building test distribution (all arches)..."
-	./util/build.makefile dist-disk
 else
 	case "$type" in
 	tar | oci)

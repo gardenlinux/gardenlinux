@@ -15,26 +15,23 @@ for f in "$input_amd64" "$input_arm64"; do
 	fi
 done
 
-# Use a run-unique tag so we don't collide with pre-existing local images
-# or with other concurrent builds in the same podman storage.
+# Use a run-unique manifest tag so we don't collide with pre-existing local
+# manifests or with other concurrent builds in the same podman storage.
 tag="localhost/gardenlinux-tests-multiarch-$$:latest"
 
 cleanup() {
 	podman manifest rm "$tag" 2>/dev/null || true
-	podman rmi -f "$amd64_id" "$arm64_id" 2>/dev/null || true
 }
 trap cleanup EXIT
 
-amd64_id="$(podman load -q -i "$input_amd64" | awk '{ print $NF }')"
-arm64_id="$(podman load -q -i "$input_arm64" | awk '{ print $NF }')"
-
-if [ -z "$amd64_id" ] || [ -z "$arm64_id" ]; then
-	echo "failed to load one or both OCI archives" >&2
-	exit 1
-fi
-
-podman manifest create "$tag" "$amd64_id" "$arm64_id" >/dev/null
+# Build the manifest list directly from the per-arch OCI archives using the
+# oci-archive: transport. Going through "podman load" and referring to the
+# loaded images by their "localhost/..." tags makes podman try to resolve them
+# against a (non-existent) registry in some environments, e.g. CI.
+podman manifest create "$tag" >/dev/null
+podman manifest add "$tag" "oci-archive:$input_amd64" >/dev/null
+podman manifest add "$tag" "oci-archive:$input_arm64" >/dev/null
 
 # --all includes the per-arch image blobs in the output archive so it is
 # self-contained (loadable without a registry).
-podman manifest push --all "$tag" "oci-archive:$output"
+podman manifest push --compression-format zstd --compression-level 10 --all "$tag" "oci-archive:$output"
