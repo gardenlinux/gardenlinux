@@ -121,6 +121,8 @@ jobs:
           name: build-${{ matrix.flavor }}-arm64
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
+      - name: Install oras
+        uses: oras-project/setup-oras@v2
       - if: ${{ env.ARTIFACT_BASE_NAME_AMD64 != '' }}
         name: Publish container images
         run: |
@@ -132,46 +134,43 @@ jobs:
 
           version="$(cat VERSION)"
 
-          podman login -u token -p ${{ github.token }} ghcr.io
+          oras login -u token -p ${{ github.token }} ghcr.io
+
+          # Push amd64 image directly from OCI archive, preserving original layer digest
           tar xzv < "${ARTIFACT_BASE_NAME_AMD64}.tar.gz"
-          image="$(podman load < ${ARTIFACT_BASE_NAME_AMD64}.oci | awk '{ print $NF }')"
-
-          # Tagging for amd64 nightly
+          amd64_ref="$(tar -xOf "${ARTIFACT_BASE_NAME_AMD64}.oci" index.json | jq -r '.manifests[0].digest')"
+          oras cp --from-oci-layout "${ARTIFACT_BASE_NAME_AMD64}.oci@${amd64_ref}" \
+            ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
           if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-nightly
+            oras cp \
+              ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version} \
+              ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-nightly
           fi
 
-          # Tagging for amd64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
-          podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
-
+          # Push arm64 image directly from OCI archive, preserving original layer digest
           tar xzv < "${ARTIFACT_BASE_NAME_ARM64}.tar.gz"
-          image="$(podman load < ${ARTIFACT_BASE_NAME_ARM64}.oci | awk '{ print $NF }')"
-
-          # Tagging for arm64 nightly
+          arm64_ref="$(tar -xOf "${ARTIFACT_BASE_NAME_ARM64}.oci" index.json | jq -r '.manifests[0].digest')"
+          oras cp --from-oci-layout "${ARTIFACT_BASE_NAME_ARM64}.oci@${arm64_ref}" \
+            ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version}
           if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-nightly
+            oras cp \
+              ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version} \
+              ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-nightly
           fi
 
-          # Tagging for arm64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version}
-          podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version}
-
-          # Creating and pushing manifest for nightly
+          # Creating and pushing manifest index for nightly
           if [ $is_nightly = true ]; then
-            podman manifest create ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-nightly
-            podman manifest push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly
+            oras manifest index create \
+              ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly \
+              ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-nightly \
+              ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-nightly
           fi
 
-          # Creating and pushing manifest for version tag
-          podman manifest create ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version}
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version} ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version} ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version}
-          podman manifest push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version}
+          # Creating and pushing manifest index for version tag
+          oras manifest index create \
+            ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version} \
+            ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version} \
+            ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version}
   bare_flavors:
     needs: determine_environment
     name: Publish bare flavors
@@ -200,6 +199,8 @@ jobs:
           merge-multiple: true
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
+      - name: Install oras
+        uses: oras-project/setup-oras@v2
       - name: Publish bare flavor image ${{ matrix.config }}
         run: |
           if [ "${{ inputs.target }}" = "nightly" ]; then
@@ -209,46 +210,40 @@ jobs:
           fi
           version=$(bin/garden-version "${{ inputs.version }}")
 
-          podman login -u token -p ${{ github.token }} ghcr.io
+          oras login -u token -p ${{ github.token }} ghcr.io
 
-          # Handling amd64 image
-          image="$(podman load < ${{ matrix.config }}-amd64.oci | awk '{ print $NF }')"
-
-          # Tagging and pushing amd64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
-          podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
-
-          # Tagging and pushing amd64 with nightly
+          # Push amd64 image directly from OCI archive, preserving original layer digest
+          amd64_ref="$(tar -xOf "${{ matrix.config }}-amd64.oci" index.json | jq -r '.manifests[0].digest')"
+          oras cp --from-oci-layout "${{ matrix.config }}-amd64.oci@${amd64_ref}" \
+            ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
           if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
+            oras cp \
+              ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version \
+              ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
           fi
 
-          # Handling arm64 image
-          image="$(podman load < ${{ matrix.config }}-arm64.oci | awk '{ print $NF }')"
-
-          # Tagging and pushing arm64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
-          podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
-
-          # Tagging and pushing arm64 with nightly
+          # Push arm64 image directly from OCI archive, preserving original layer digest
+          arm64_ref="$(tar -xOf "${{ matrix.config }}-arm64.oci" index.json | jq -r '.manifests[0].digest')"
+          oras cp --from-oci-layout "${{ matrix.config }}-arm64.oci@${arm64_ref}" \
+            ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
           if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
+            oras cp \
+              ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version \
+              ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
           fi
 
-          # Creating and pushing manifest for version tag
-          podman manifest create ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
-          podman manifest push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version
+          # Creating and pushing manifest index for version tag
+          oras manifest index create \
+            ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version \
+            ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version \
+            ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
 
-          # Creating and pushing manifest for nightly tag
+          # Creating and pushing manifest index for nightly tag
           if [ $is_nightly = true ]; then
-            podman manifest create ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            podman manifest push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly
+            oras manifest index create \
+              ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly \
+              ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly \
+              ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
           fi
   push_flavors:
     needs: determine_environment
@@ -386,12 +381,8 @@ jobs:
           merge-multiple: true
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - name: Load OCI archives
-        run: |
-          for oci in *.oci; do
-            podman load -i "${oci}"
-            rm -f "${oci}"
-          done
+      - name: Install oras
+        uses: oras-project/setup-oras@v2
       - name: Publish tests images and manifest
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -404,31 +395,33 @@ jobs:
 
           version="$(cat VERSION)"
 
-          podman login -u token -p ${GITHUB_TOKEN} ghcr.io
+          oras login -u token -p ${GITHUB_TOKEN} ghcr.io
 
-          # Push amd64 and arm64 images
-          podman push ghcr.io/${{ github.repository_owner }}/test:amd64-${version}
-          podman push ghcr.io/${{ github.repository_owner }}/test:arm64-${version}
+          # Push amd64 and arm64 images directly from OCI archive, preserving original layer digest
+          for arch in amd64 arm64; do
+            ref="$(tar -xOf "tests_container_${arch}.oci" index.json | jq -r '.manifests[0].digest')"
+            oras cp --from-oci-layout "tests_container_${arch}.oci@${ref}" \
+              ghcr.io/${{ github.repository_owner }}/test:${arch}-${version}
+            if [ "$is_nightly" = true ]; then
+              oras cp \
+                ghcr.io/${{ github.repository_owner }}/test:${arch}-${version} \
+                ghcr.io/${{ github.repository_owner }}/test:${arch}-nightly
+            fi
+          done
 
+          # Create and push manifest index for version tag
+          oras manifest index create \
+            ghcr.io/${{ github.repository_owner }}/test:${version} \
+            ghcr.io/${{ github.repository_owner }}/test:amd64-${version} \
+            ghcr.io/${{ github.repository_owner }}/test:arm64-${version}
+
+          # Create and push manifest index for nightly tag
           if [ "$is_nightly" = true ]; then
-            podman tag ghcr.io/${{ github.repository_owner }}/test:amd64-${version} ghcr.io/${{ github.repository_owner }}/test:amd64-nightly
-            podman tag ghcr.io/${{ github.repository_owner }}/test:arm64-${version} ghcr.io/${{ github.repository_owner }}/test:arm64-nightly
-            podman push ghcr.io/${{ github.repository_owner }}/test:amd64-nightly
-            podman push ghcr.io/${{ github.repository_owner }}/test:arm64-nightly
+            oras manifest index create \
+              ghcr.io/${{ github.repository_owner }}/test:nightly \
+              ghcr.io/${{ github.repository_owner }}/test:amd64-nightly \
+              ghcr.io/${{ github.repository_owner }}/test:arm64-nightly
           fi
-
-          # Create and push manifests
-          if [ "$is_nightly" = true ]; then
-            podman manifest create ghcr.io/${{ github.repository_owner }}/test:nightly
-            podman manifest add ghcr.io/${{ github.repository_owner }}/test:nightly ghcr.io/${{ github.repository_owner }}/test:amd64-nightly
-            podman manifest add ghcr.io/${{ github.repository_owner }}/test:nightly ghcr.io/${{ github.repository_owner }}/test:arm64-nightly
-            podman manifest push ghcr.io/${{ github.repository_owner }}/test:nightly
-          fi
-
-          podman manifest create ghcr.io/${{ github.repository_owner }}/test:${version}
-          podman manifest add ghcr.io/${{ github.repository_owner }}/test:${version} ghcr.io/${{ github.repository_owner }}/test:amd64-${version}
-          podman manifest add ghcr.io/${{ github.repository_owner }}/test:${version} ghcr.io/${{ github.repository_owner }}/test:arm64-${version}
-          podman manifest push ghcr.io/${{ github.repository_owner }}/test:${version}
 
           # Publish a floating stable tag per release branch (e.g. rel-2150-latest).
           # Consumers such as the diki compliance scanner can pin to this tag to
@@ -439,10 +432,10 @@ jobs:
             branch_series="${version%%.*}"
             stable_tag="rel-${branch_series}-latest"
 
-            podman manifest create ghcr.io/${{ github.repository_owner }}/test:${stable_tag}
-            podman manifest add ghcr.io/${{ github.repository_owner }}/test:${stable_tag} ghcr.io/${{ github.repository_owner }}/test:amd64-${version}
-            podman manifest add ghcr.io/${{ github.repository_owner }}/test:${stable_tag} ghcr.io/${{ github.repository_owner }}/test:arm64-${version}
-            podman manifest push ghcr.io/${{ github.repository_owner }}/test:${stable_tag}
+            oras manifest index create \
+              ghcr.io/${{ github.repository_owner }}/test:${stable_tag} \
+              ghcr.io/${{ github.repository_owner }}/test:amd64-${version} \
+              ghcr.io/${{ github.repository_owner }}/test:arm64-${version}
 
             echo "Floating stable tag updated: ghcr.io/${{ github.repository_owner }}/test:${stable_tag} → ${version}"
           fi
