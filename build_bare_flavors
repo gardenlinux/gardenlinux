@@ -32,13 +32,13 @@ fi
 
 config="bare_flavors/${1:-libc}"
 
-base_cname="$(cat "$config/base")-$arch"
-target_cname="$(cat "$config/target")-$arch"
+base_flavor="$(cat "$config/base")-$arch"
+target_flavor="$(cat "$config/target")-$arch"
 
-./build "$base_cname" "$target_cname"
+./build "$base_flavor" "$target_flavor"
 
-base_oci=".build/$(grep '\.oci$' ".build/$base_cname")"
-target_oci=".build/$(grep '\.oci$' ".build/$target_cname")"
+base_oci=".build/$(grep '\.oci$' ".build/$base_flavor")"
+target_oci=".build/$(grep '\.oci$' ".build/$target_flavor")"
 
 args=(--print-tree "--$(cat "$config/mode")")
 
