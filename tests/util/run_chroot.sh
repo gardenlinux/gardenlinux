@@ -13,6 +13,7 @@ aarch64) arch="arm64" ;;
 esac
 containerize=0
 watch=0
+skip_tests=0
 test_args=()
 
 if [ "$(uname -s)" != Linux ]; then
@@ -33,6 +34,10 @@ while [ $# -gt 0 ]; do
 		;;
 	--watch)
 		watch=1
+		shift
+		;;
+	--skip-tests)
+		skip_tests=1
 		shift
 		;;
 	--test-args)
@@ -69,6 +74,10 @@ run_sync() {
 	mount --rbind --make-rprivate /proc "$tmpdir/chroot/proc"
 	mount --rbind --make-rprivate /sys "$tmpdir/chroot/sys"
 	mount --rbind --make-rprivate /dev "$tmpdir/chroot/dev"
+
+	if ((skip_tests)); then
+		return
+	fi
 
 	echo "⚙️  setting up test framework"
 
@@ -184,18 +193,26 @@ if ((containerize)); then
 	if ((watch)); then
 		container_cmd+=(--watch)
 	fi
+	if ((skip_tests)); then
+		container_cmd+=(--skip-tests)
+	fi
 	if [ ${#test_args[@]} -gt 0 ]; then
 		container_cmd+=(--test-args "${test_args[*]}")
 	fi
 	container_cmd+=(/mnt/test_dist /mnt/rootfs.tar)
 
-	podman run -q --rm --name "$container_name" --stop-signal=SIGINT \
-		-v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" \
-		-v "$(realpath -- "$test_dist_dir/dist-${arch}.tar.gz"):/mnt/test_dist/dist.tar.gz:ro" \
-		-v "$(realpath -- "$rootfs_tar"):/mnt/rootfs.tar:ro" \
-		-v "$(realpath -- "$test_dist_dir/../log"):$log_dir:rw" \
-		-v "$(realpath -- "$test_dist_dir/../.."):/mnt/watch:ro" \
-		"$image_id" fake_xattr "${container_cmd[@]}" &
+	podman_run_args=(
+		-q --rm --name "$container_name" --stop-signal=SIGINT
+		-v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro"
+		-v "$(realpath -- "$rootfs_tar"):/mnt/rootfs.tar:ro"
+		-v "$(realpath -- "$test_dist_dir/../log"):$log_dir:rw"
+		-v "$(realpath -- "$test_dist_dir/../.."):/mnt/watch:ro"
+	)
+	if ! ((skip_tests)); then
+		podman_run_args+=(-v "$(realpath -- "$test_dist_dir/dist-${arch}.tar.gz"):/mnt/test_dist/dist.tar.gz:ro")
+	fi
+
+	podman run "${podman_run_args[@]}" "$image_id" fake_xattr "${container_cmd[@]}" &
 
 	podman_pid=$!
 	wait "$podman_pid" 2>/dev/null
@@ -212,9 +229,13 @@ command -v inotifywait >/dev/null || (echo "Error: inotifywait not found. Please
 
 if ((watch)); then
 	run_sync
-	run_test || true
+	if ! ((skip_tests)); then
+		run_test || true
+	fi
 	run_watch
 else
 	run_sync
-	run_test
+	if ! ((skip_tests)); then
+		run_test
+	fi
 fi
