@@ -128,18 +128,19 @@ The test framework is automatically built and packaged when running tests. The b
 
 The build system creates several artifacts:
 
-- `.build/runtime.tar.gz` - Python runtime environment with dependencies
-- `.build/dist.tar.gz` - Test framework and test files
-- `.build/dist.ext2.raw` - Raw ext2 filesystem image for mounting in virtual machines (VMs)
-- `.build/dist.ext2.raw.tar.gz` - Compressed tar file including `disk.raw` (Raw ext2 filesystem image to import to Google Cloud Platform (GCP))
-- `.build/dist.vhd` - Virtual Hard Disk (VHD) filesystem image for import in Azure
+- `.build/runtime-amd64.tar.gz`, `.build/runtime-arm64.tar.gz` - Per-arch Python runtime environments with dependencies
+- `.build/dist-amd64.tar.gz`, `.build/dist-arm64.tar.gz` - Test framework and test files (per-arch)
+- `.build/dist-amd64.ext2.raw`, `.build/dist-arm64.ext2.raw` - Raw ext2 filesystem images for mounting in virtual machines (VMs)
+- `.build/dist-{amd64,arm64}.ext2.raw.tar.gz` - Compressed tar file including `disk.raw` (Raw ext2 filesystem image to import to Google Cloud Platform (GCP))
+- `.build/dist-{amd64,arm64}.vhd` - Virtual Hard Disk (VHD) filesystem image for import in Azure
+- `.build/dist.oci` - Multiarch OCI test container image
 - `.build/edk2-*` - EFI Development Kit II (EDK2) firmware files for QEMU boot
 
 ### Build process
 
 The build system follows these steps:
 
-1. **Runtime Environment** - Downloads standalone Python binaries for x86_64 and aarch64 architectures and installs required packages from `requirements.txt`
+1. **Runtime Environment** - Downloads standalone Python binaries for the target arch (amd64 or arm64) and installs required packages from `requirements.txt`
 2. **Test Framework** - Bundles all test files, plugins, and the test runner script
 3. **Distribution** - Creates both a compressed tar archive and an ext2 filesystem image
 4. **Firmware** - Downloads EDK2 firmware files for QEMU virtualization
@@ -154,7 +155,9 @@ The build process runs automatically when you execute `./test`:
 
 # Or build manually
 cd tests
-make -f util/build.makefile
+make -f util/build.makefile all
+# or inspect available targets
+make -f util/build.makefile help
 ```
 
 ### Distribution structure
