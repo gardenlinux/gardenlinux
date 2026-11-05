@@ -107,6 +107,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 
 ### Further reading
 
+- [In-Place Updates](/explanation/in-place-updates)
 - [systemd-ukify documentation](https://www.freedesktop.org/software/systemd/man/latest/ukify.html)
 - [EROFS documentation](https://erofs.docs.kernel.org/)
 
