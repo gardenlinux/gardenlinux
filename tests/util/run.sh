@@ -123,6 +123,7 @@ while [ $# -gt 0 ]; do
 		shift
 		;;
 	--skip-cleanup)
+		chroot_args+=("$1")
 		cloud_args+=("$1")
 		qemu_args+=("$1")
 		oci_args+=("$1")
@@ -130,6 +131,7 @@ while [ $# -gt 0 ]; do
 		;;
 	--skip-tests)
 		skip_tests=1
+		chroot_args+=("$1")
 		cloud_args+=("$1")
 		qemu_args+=("$1")
 		oci_args+=("$1")
@@ -237,22 +239,58 @@ cd "$(realpath -- "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/../")"
 basename="$(basename "$artifact")"
 
 extension="$(grep -E -o '(\.[a-z][a-zA-Z0-9_\-]*)*$' <<<"$basename")"
-artifact_base_name="${basename%"$extension"}"
+cname="${basename%"$extension"}"
 type="${extension#.}"
 
-[ -n "$artifact_base_name" ]
+[ -n "$cname" ]
 if [ -z "$cloud" ] && ! ((cloud_image)); then
 	[ -n "$type" ]
+fi
+
+# Read the target arch from the image requirements file.
+# With --cloud-image the file is provided via --image-requirements-file (already
+# resolved to an absolute path); otherwise it is a <cname>.requirements sidecar
+# next to the artifact.
+if ! ((cloud_image)); then
+	requirements_file="$(dirname -- "$artifact")/${cname}.requirements"
+fi
+
+if [ ! -f "$requirements_file" ]; then
+	echo "Error: image requirements file not found: $requirements_file" >&2
+	exit 1
+fi
+
+arch="$(grep '^arch=' "$requirements_file" | cut -d= -f2)"
+if [ -z "$arch" ]; then
+	echo "Error: no 'arch' entry in image requirements file: $requirements_file" >&2
+	exit 1
 fi
 
 if [ -f ".build/.gh_artifact" ]; then
 	echo "Using cached test distribution from github artifact"
 elif ((skip_tests)); then
-	echo "Skipping test disk build; building dist and firmware only..."
-	./util/build.makefile dist edk2
+	: # tests are skipped, no dist needed
 else
-	echo "Building test distribution..."
-	./util/build.makefile dist-disk
+	case "$type" in
+	tar | oci)
+		echo "Building test distribution ($arch)..."
+		./util/build.makefile "dist-${arch}"
+		;;
+	raw | pxe.tar.gz | iso)
+		if [ -n "$cloud" ]; then
+			echo "Building test distribution ($arch)..."
+			./util/build.makefile "dist-disk-${arch}"
+		else
+			echo "Building test distribution ($arch)..."
+			./util/build.makefile "dist-disk-${arch}" edk2
+		fi
+		;;
+	"")
+		# --cloud-image: no file type, arch from requirements file
+		echo "Building test distribution ($arch)..."
+		./util/build.makefile "dist-disk-${arch}"
+		;;
+	esac
 fi
 
 if [ -n "$cloud" ]; then

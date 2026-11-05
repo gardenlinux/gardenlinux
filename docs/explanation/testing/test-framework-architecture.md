@@ -126,22 +126,33 @@ The test framework is automatically built and packaged when running tests. The b
 
 ### Build components
 
-The build system creates several artifacts:
+The build system creates the following artifacts (all under `.build/`), built for the target architecture (`amd64` or `arm64`):
 
-- `.build/runtime.tar.gz` - Python runtime environment with dependencies
-- `.build/dist.tar.gz` - Test framework and test files
-- `.build/dist.ext2.raw` - Raw ext2 filesystem image for mounting in virtual machines (VMs)
-- `.build/dist.ext2.raw.tar.gz` - Compressed tar file including `disk.raw` (Raw ext2 filesystem image to import to Google Cloud Platform (GCP))
-- `.build/dist.vhd` - Virtual Hard Disk (VHD) filesystem image for import in Azure
-- `.build/edk2-*` - EFI Development Kit II (EDK2) firmware files for QEMU boot
+| Artifact | Purpose | Consumed by |
+|---|---|---|
+| `runtime-<arch>.tar.gz` | Per-arch Python runtime with dependencies | Build input only |
+| `dist-<arch>.tar.gz` | Test framework and test files | Chroot, OCI, dev sync |
+| `dist-<arch>.ext2.raw` | Raw ext2 filesystem image | QEMU, AWS, OpenStack, Ali |
+| `dist-<arch>.ext2.vhd` | Virtual Hard Disk (VHD) image | Azure |
+| `dist-<arch>.ext2.qcow2` | QCOW2 disk image | Ali (alternative) |
+| `dist-<arch>.ext2.raw.tar.gz` | Tar file containing `disk.raw` | Google Cloud Platform (GCP) |
+| `dist-<arch>.oci` | Single-arch OCI image | Manifest input |
+| `dist.oci` | Multiarch OCI image index | Published `ghcr.io/gardenlinux/test` |
+| `edk2-qemu-*` | EFI Development Kit II (EDK2) firmware | QEMU boot |
+
+### Artifact naming and derivation
+
+- Distribution filenames use Garden Linux architecture naming (`amd64`, `arm64`). Kernel architecture names (`x86_64`, `aarch64`) only appear where they are required externally, such as Python runtime download URLs and EDK2 firmware filenames.
+- Each per-arch distribution contains only the Python runtime for its own architecture.
+- The multiarch OCI image `dist.oci` combines the two single-arch `dist-<arch>.oci` images into one image index.
 
 ### Build process
 
 The build system follows these steps:
 
-1. **Runtime Environment** - Downloads standalone Python binaries for x86_64 and aarch64 architectures and installs required packages from `requirements.txt`
+1. **Runtime Environment** - Downloads standalone Python binaries for the target arch (amd64 or arm64) and installs required packages from `requirements.txt`
 2. **Test Framework** - Bundles all test files, plugins, and the test runner script
-3. **Distribution** - Creates both a compressed tar archive and an ext2 filesystem image
+3. **Distribution** - Creates a compressed tar archive, an ext2 disk image with its `.vhd`/`.qcow2`/`.tar.gz` derivatives, and (optionally) an OCI image
 4. **Firmware** - Downloads EDK2 firmware files for QEMU virtualization
 
 ### Automatic building
@@ -154,8 +165,12 @@ The build process runs automatically when you execute `./test`:
 
 # Or build manually
 cd tests
-make -f util/build.makefile
+make -f util/build.makefile all
+# or inspect available targets
+make -f util/build.makefile help
 ```
+
+`./test` reads the target architecture from the artifact's `.requirements` file and builds only the artifacts required by the selected test type (see the [Test CLI Reference](/reference/testing/test-cli.md#build-behavior)).
 
 ### Distribution structure
 
@@ -163,22 +178,17 @@ The built distribution contains:
 
 ```
 dist/
-├── runtime/           # Python runtime and dependencies
-│   ├── x86_64/        # x86_64 Python binaries
-│   ├── aarch64/       # aarch64 Python binaries
-│   └── site-packages/ # Python packages
-├── tests/             # Test framework and test files
-│   ├── plugins/       # Test plugins
-│   ├── handlers/      # Test plugins
-│   ├── test_*.py      # Individual test modules
-│   └── conftest.py    # Pytest configuration
-├── integration/       # Directory for all tests and their categories
-│   ├── boot/          # Boot category
-│   │   └── test_*.py  # Individual tests
-│   ├── core/          # Core category
-│   │   └── test_*.py  # Individual tests
-│   └── ...
-└── run_tests          # Test execution script
+├── runtime/
+│   └── <arch>/         # Python runtime for this arch only (amd64 or arm64)
+├── tests/
+│   ├── conftest.py     # Pytest configuration
+│   ├── handlers/       # Test handlers
+│   ├── integration/    # Tests, grouped by category
+│   │   ├── boot/       # Boot category
+│   │   ├── core/       # Core category
+│   │   └── ...
+│   └── plugins/        # Test plugins
+└── run_tests           # Test execution script
 ```
 
 This self-contained distribution can be:
