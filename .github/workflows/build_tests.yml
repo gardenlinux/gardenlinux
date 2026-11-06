@@ -30,7 +30,7 @@ jobs:
       - name: Build test distribution
         run: |
           cd tests
-          make -f util/build.makefile
+          make -f util/build.makefile all
           touch .build/.gh_artifact
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
@@ -38,40 +38,30 @@ jobs:
           key: test-distribution-${{ github.run_id }}
 
   test_container:
-    name: Build test containers
+    name: Build multiarch test container
     needs: test
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
-    strategy:
-      matrix:
-        arch: [amd64, arm64]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: true
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # pin v4.4.0
       - name: Download test distribution
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           path: tests/.build
           key: test-distribution-${{ github.run_id }}
-      - name: Set distribution version reference
-        run: |
-          echo "${{ inputs.commit_id }}" | tee COMMIT
-          echo "${{ inputs.version }}" | tee VERSION
-      - name: Build tests container (${{ matrix.arch }})
+      - name: Build multiarch tests container
         run: |
           set -euo pipefail
-          arch="${{ matrix.arch }}"
-          echo "Building tests for arch=$arch"
-          repo="ghcr.io/${{ github.repository_owner }}/test"
-          version="$(cat VERSION)"
-
-          podman build --arch ${arch} --build-context dist_ctx=tests/.build -t ${repo}:${arch}-${version} tests/util/container
-          podman save --format oci-archive ${repo}:${arch}-${version} > tests_container_${arch}.oci
+          cd tests
+          make -f util/build.makefile oci
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         with:
-          name: tests-container-${{ matrix.arch }}
-          path: tests_container_${{ matrix.arch }}.oci
+          name: tests-container
+          path: tests/.build/dist.oci
           if-no-files-found: error
