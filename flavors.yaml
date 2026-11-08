@@ -918,3 +918,23 @@ targets:
         test: true
         test-platform: false
         publish: true
+  - name: proxmox
+    category: hypervisor
+    flavors:
+      - features:
+          - k3s
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - k3s
+          - _prod
+          - _signed
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
