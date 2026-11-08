@@ -1,0 +1,4 @@
+disable apt-daily.timer
+disable apt-daily-upgrade.timer
+disable apt-daily.service
+disable apt-daily-upgrade.service
