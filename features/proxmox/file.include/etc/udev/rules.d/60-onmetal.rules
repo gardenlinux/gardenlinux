@@ -1,0 +1,13 @@
+# e.g. on guest vdc with serial oda-abcdefabcdefabcd
+# /dev/vdc 
+# symlink /dev/onmetal/oda -> /dev/vdc
+# symlink /dev/disk/by-id/wwn-abcdefabcdefabcd -> /dev/vdc
+#
+# /dev/vdc3
+# symlink /dev/onmetal/oda3 -> /dev/vdc3
+# symlink /dev/disk/by-id/wwn-abcdefabcdefabcd-part3 -> /dev/vdc3
+
+KERNEL=="*d*[!0-9]", ATTRS{serial}=="[a-z]d[a-z]-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]", PROGRAM="/bin/sh -ec 'SERIAL=$attr{serial}; echo $${SERIAL%%-*} $${SERIAL#*-}'", SYMLINK+="onmetal/$result{1}", SYMLINK+="disk/by-id/wwn-$result{2}"
+
+# partition
+KERNEL=="*d*[0-9]", ATTRS{serial}=="[a-z]d[a-z]-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]", PROGRAM="/bin/sh -ec 'SERIAL=$attr{serial}; echo $${SERIAL%%-*} $${SERIAL#*-}'", SYMLINK+="onmetal/$result{1}%n", SYMLINK+="disk/by-id/wwn-$result{2}-part%n"

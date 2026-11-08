@@ -1,0 +1,10 @@
+description: 'proxmox platform'
+type: platform
+artifact: [".raw"]
+features:
+  include:
+    - server
+    - cloud
+    - cloudInit
+    - _usi
+    #- _signed
