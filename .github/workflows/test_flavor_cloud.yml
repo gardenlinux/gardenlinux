@@ -186,17 +186,27 @@ jobs:
       - id: "auth_stackit"
         if: ${{ startsWith(inputs.flavor, 'stackit-') }}
         name: "Authenticate to STACKIT"
-        uses: stackitcloud/stackit-actions/authenticate@main
-        with:
-          service-account-email: gardenlinux-ci-tests-953pw3i8@sa.stackit.cloud
+        run: |
+          OIDC_TOKEN=$(curl -sSfL -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.accounts.stackit.cloud" \
+            | jq -r '.value')
+          STACKIT_TOKEN=$(curl -sSfL -X POST "https://service.account.sts.accounts.stackit.cloud/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
+            --data-urlencode "subject_token_type=urn:ietf:params:oauth:token-type:jwt" \
+            --data-urlencode "requested_token_type=urn:ietf:params:oauth:token-type:access_token" \
+            --data-urlencode "subject_token=${OIDC_TOKEN}" \
+            | jq -r '.access_token')
+          echo "::add-mask::${STACKIT_TOKEN}"
+          echo "access_token=${STACKIT_TOKEN}" >> "$GITHUB_OUTPUT"
       - name: "Set STACKIT platform-test environment"
         if: ${{ startsWith(inputs.flavor, 'stackit-') }}
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            // tf provider auth (OIDC token set by authenticate action)
+            // tf provider auth via OIDC-exchanged token
             core.exportVariable("STACKIT_SERVICE_ACCOUNT_EMAIL", "gardenlinux-ci-tests-953pw3i8@sa.stackit.cloud");
-            core.exportVariable("STACKIT_TOKEN", "${{ steps.auth_stackit.outputs.access-token }}");
+            core.exportVariable("STACKIT_TOKEN", "${{ steps.auth_stackit.outputs.access_token }}");
             // tf provider vars
             core.setSecret("${{ secrets.STACKIT_PROJECT_ID }}");
             core.exportVariable("STACKIT_PROJECT_ID", "${{ secrets.STACKIT_PROJECT_ID }}");
