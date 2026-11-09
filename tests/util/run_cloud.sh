@@ -217,6 +217,18 @@ cloud_provider = "$cloud"
 # }
 EOF
 
+if [ "$cloud" = "stackit" ] && [ -n "${STACKIT_PROJECT_ID:-}" ]; then
+	cat >> "${tf_dir}/$image_name.tfvars" <<EOF
+
+provider_vars = {
+  stackit = {
+    project_id        = "${STACKIT_PROJECT_ID}"
+    region            = "${STACKIT_REGION:-EU01}"
+  }
+}
+EOF
+fi
+
 if ((only_cleanup)); then
 	exit 0 # triggers trap
 fi

@@ -21,5 +21,9 @@ terraform {
       source  = "terraform-provider-openstack/openstack"
       version = "3.4.0"
     }
+    stackit = {
+      source  = "stackitcloud/stackit"
+      version = "~> 0.123.0"
+    }
   }
 }

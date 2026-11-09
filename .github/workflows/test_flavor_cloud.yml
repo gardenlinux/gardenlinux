@@ -39,6 +39,12 @@ on:
         required: true
       alibaba_cloud_region:
         required: true
+      stackit_service_account_key:
+        required: true
+      stackit_project_id:
+        required: true
+      stackit_region:
+        required: true
       tf_encryption:
         required: true
 jobs:
@@ -178,6 +184,20 @@ jobs:
           script: |
             // tf provider vars
             core.exportVariable("ALIBABA_CLOUD_REGION", "${{ secrets.alibaba_cloud_region }}");
+        # TODO: handle skipping better
+      - name: "Set STACKIT platform-test environment"
+        if: ${{ startsWith(inputs.flavor, 'stackit-') }}
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            // tf provider auth
+            core.setSecret("${{ secrets.stackit_service_account_key }}");
+            core.exportVariable("STACKIT_SERVICE_ACCOUNT_KEY_PATH", "$RUNNER_TEMP/stackit_sa_key.json");
+            require("fs").writeFileSync(process.env.RUNNER_TEMP + "/stackit_sa_key.json", "${{ secrets.stackit_service_account_key }}");
+            // tf provider vars
+            core.setSecret("${{ secrets.stackit_project_id }}");
+            core.exportVariable("STACKIT_PROJECT_ID", "${{ secrets.stackit_project_id }}");
+            core.exportVariable("STACKIT_REGION", "${{ secrets.stackit_region }}");
         # TODO: handle skipping better
       - name: Execute tests
         run: |
