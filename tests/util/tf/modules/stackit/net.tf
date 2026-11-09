@@ -12,8 +12,6 @@ resource "stackit_network_interface" "nic" {
   network_id = stackit_network.net.network_id
   name       = "${local.test_name}-nic"
 
-  ipv4_prefix = var.provider_vars.subnet_cidr
-
   security_group_ids = [stackit_security_group.sg.security_group_id]
 }
 
@@ -24,8 +22,8 @@ resource "stackit_public_ip" "pip" {
 }
 
 resource "stackit_public_ip_associate" "pip_association" {
-  project_id          = var.provider_vars.project_id
-  public_ip_id        = stackit_public_ip.pip.public_ip_id
+  project_id           = var.provider_vars.project_id
+  public_ip_id         = stackit_public_ip.pip.public_ip_id
   network_interface_id = stackit_network_interface.nic.network_interface_id
 }
 
@@ -41,7 +39,7 @@ resource "stackit_security_group_rule" "sg_icmp" {
   security_group_id = stackit_security_group.sg.security_group_id
   direction         = "ingress"
   protocol          = { name = "icmp" }
-  remote            = { cidr_blocks = ["0.0.0.0/0"] }
+  ip_range          = "0.0.0.0/0"
 }
 
 resource "stackit_security_group_rule" "sg_ssh" {
@@ -53,5 +51,5 @@ resource "stackit_security_group_rule" "sg_ssh" {
     min = 22
     max = 22
   }
-  remote = { cidr_blocks = ["0.0.0.0/0"] }
+  ip_range = "0.0.0.0/0"
 }

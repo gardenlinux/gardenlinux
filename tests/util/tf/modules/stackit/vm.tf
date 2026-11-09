@@ -1,5 +1,4 @@
 resource "stackit_key_pair" "key" {
-  project_id = var.provider_vars.project_id
   name       = local.ssh_key_name
   public_key = file(var.ssh_public_key_path)
 }
