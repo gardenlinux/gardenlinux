@@ -39,11 +39,11 @@ on:
         required: true
       alibaba_cloud_region:
         required: true
-      stackit_service_account_key:
+      STACKIT_SERVICE_ACCOUNT_KEY:
         required: true
-      stackit_project_id:
+      STACKIT_PROJECT_ID:
         required: true
-      stackit_region:
+      STACKIT_REGION:
         required: true
       tf_encryption:
         required: true
@@ -191,13 +191,13 @@ jobs:
         with:
           script: |
             // tf provider auth
-            core.setSecret("${{ secrets.stackit_service_account_key }}");
+            core.setSecret("${{ secrets.STACKIT_SERVICE_ACCOUNT_KEY }}");
             core.exportVariable("STACKIT_SERVICE_ACCOUNT_KEY_PATH", "$RUNNER_TEMP/stackit_sa_key.json");
-            require("fs").writeFileSync(process.env.RUNNER_TEMP + "/stackit_sa_key.json", "${{ secrets.stackit_service_account_key }}");
+            require("fs").writeFileSync(process.env.RUNNER_TEMP + "/stackit_sa_key.json", "${{ secrets.STACKIT_SERVICE_ACCOUNT_KEY }}");
             // tf provider vars
-            core.setSecret("${{ secrets.stackit_project_id }}");
-            core.exportVariable("STACKIT_PROJECT_ID", "${{ secrets.stackit_project_id }}");
-            core.exportVariable("STACKIT_REGION", "${{ secrets.stackit_region }}");
+            core.setSecret("${{ secrets.STACKIT_PROJECT_ID }}");
+            core.exportVariable("STACKIT_PROJECT_ID", "${{ secrets.STACKIT_PROJECT_ID }}");
+            core.exportVariable("STACKIT_REGION", "${{ secrets.STACKIT_REGION }}");
         # TODO: handle skipping better
       - name: Execute tests
         run: |
