@@ -17,7 +17,7 @@ resource "stackit_server" "instance" {
 
   keypair_name = stackit_key_pair.key.name
 
-  network_interface_ids = [stackit_network_interface.nic.network_interface_id]
+  network_interfaces = [stackit_network_interface.nic.network_interface_id]
 
   user_data = base64encode(file(var.user_data_script_path))
 

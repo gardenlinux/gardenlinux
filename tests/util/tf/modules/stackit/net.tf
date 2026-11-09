@@ -16,15 +16,10 @@ resource "stackit_network_interface" "nic" {
 }
 
 resource "stackit_public_ip" "pip" {
-  project_id = var.provider_vars.project_id
+  project_id           = var.provider_vars.project_id
+  network_interface_id = stackit_network_interface.nic.network_interface_id
 
   labels = local.labels
-}
-
-resource "stackit_public_ip_associate" "pip_association" {
-  project_id           = var.provider_vars.project_id
-  public_ip_id         = stackit_public_ip.pip.public_ip_id
-  network_interface_id = stackit_network_interface.nic.network_interface_id
 }
 
 resource "stackit_security_group" "sg" {
