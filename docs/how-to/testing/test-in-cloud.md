@@ -152,7 +152,7 @@ export STACKIT_REGION="EU01"
 ```
 
 :::info
-The SA key JSON can be downloaded from `portal.stackit.cloud` → IAM → Service Accounts → your SA → Keys → Create key.
+The SA key JSON can be downloaded from `portal.stackit.cloud` → IAM → Service Accounts → your SA → Keys.
 The Project ID is shown in the portal project overview or in the URL.
 Install the STACKIT CLI via `brew install stackitcloud/tap/stackit` or from the [releases page](https://github.com/stackitcloud/stackit-cli/releases).
 :::
