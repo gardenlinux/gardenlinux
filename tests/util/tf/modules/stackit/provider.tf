@@ -8,5 +8,4 @@ terraform {
 }
 
 provider "stackit" {
-  region = var.provider_vars.region
 }
