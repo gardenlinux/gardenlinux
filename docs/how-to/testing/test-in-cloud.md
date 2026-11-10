@@ -138,7 +138,7 @@ STACKIT requires a [Service Account](https://docs.stackit.cloud/stackit/en/servi
 export STACKIT_SERVICE_ACCOUNT_EMAIL="your-sa@sa.stackit.cloud"
 export STACKIT_SERVICE_ACCOUNT_KEY_PATH="/path/to/stackit-sa-key.json"
 export STACKIT_PROJECT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-export STACKIT_REGION="EU01"
+export STACKIT_REGION="eu01"
 ```
 
 **Option B — STACKIT CLI:**
@@ -148,7 +148,7 @@ export STACKIT_REGION="EU01"
 stackit auth login
 
 export STACKIT_PROJECT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-export STACKIT_REGION="EU01"
+export STACKIT_REGION="eu01"
 ```
 
 :::info

@@ -39,9 +39,9 @@ on:
         required: true
       alibaba_cloud_region:
         required: true
-      STACKIT_PROJECT_ID:
+      stackit_project_id:
         required: true
-      STACKIT_REGION:
+      stackit_region:
         required: true
       tf_encryption:
         required: true
@@ -208,9 +208,9 @@ jobs:
             core.exportVariable("STACKIT_SERVICE_ACCOUNT_EMAIL", "gardenlinux-ci-tests-953pw3i8@sa.stackit.cloud");
             core.exportVariable("STACKIT_TOKEN", "${{ steps.auth_stackit.outputs.access_token }}");
             // tf provider vars
-            core.setSecret("${{ secrets.STACKIT_PROJECT_ID }}");
-            core.exportVariable("STACKIT_PROJECT_ID", "${{ secrets.STACKIT_PROJECT_ID }}");
-            core.exportVariable("STACKIT_REGION", "${{ secrets.STACKIT_REGION }}");
+            core.setSecret("${{ secrets.stackit_project_id }}");
+            core.exportVariable("STACKIT_PROJECT_ID", "${{ secrets.stackit_project_id }}");
+            core.exportVariable("STACKIT_REGION", "${{ secrets.stackit_region }}");
         # TODO: handle skipping better
       - name: Execute tests
         run: |
