@@ -97,7 +97,7 @@ jobs:
 
           echo "$REPOS" | jq -r '.[]' | while read -r REPO; do
             echo "=== Syncing labels to $REPO ==="
-            repo_labels=$(gh api --paginate "repos/$ORG/$REPO/labels?per_page=100" | jq -s 'add')
+            repo_labels=$(gh api --paginate "repos/$ORG/$REPO/labels?per_page=100" | jq -s 'add // []')
 
             echo "$LABELS" | jq -c '.[]' | while read -r label; do
               name=$(echo "$label" | jq -r '.name')
@@ -118,8 +118,8 @@ jobs:
                 if [ "$existing_color" = "$color" ] && [ "$existing_desc" = "$description" ]; then
                   echo "  [skip]    $name"
                 else
-                  label_id=$(echo "$existing_label" | jq -r '.id')
-                  gh api --method PATCH "repos/$ORG/$REPO/labels/$label_id" \
+                  encoded_name=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$name")
+                  gh api --method PATCH "repos/$ORG/$REPO/labels/$encoded_name" \
                     --raw-field name="$name" \
                     --raw-field color="$color" \
                     --raw-field description="$description" \
