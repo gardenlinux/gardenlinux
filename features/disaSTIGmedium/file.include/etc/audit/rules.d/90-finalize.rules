@@ -1,0 +1,4 @@
+## Make the audit configuration immutable after all rules are loaded.
+## Changing rules will require a system reboot to take effect.
+## This satisfies STIG V-238298 / SRG-OS-000057-GPOS-00027.
+-e 2

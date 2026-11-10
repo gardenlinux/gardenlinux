@@ -225,7 +225,8 @@ if [ "$arch" = "$native_arch" ]; then
 	if [ -w /dev/kvm ]; then
 		qemu_accel=kvm
 	elif [ "$(uname -s)" = Darwin ]; then
-		if [ "$(sysctl -n kern.hv_support)" = 1 ]; then
+		# HVF on macOS hangs with aarch64 EDK2 firmware; only use HVF for x86_64
+		if [ "$(sysctl -n kern.hv_support)" = 1 ] && [ "$arch" != aarch64 ]; then
 			qemu_accel=hvf
 		fi
 	fi

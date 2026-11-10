@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+if [ ! -f /var/lib/aide/aide.db ]; then
+    mkdir -p /var/lib/aide
+    aide --init --config /etc/aide/aide.conf
+    cp /var/lib/aide/aide.db{.new,}
+fi
