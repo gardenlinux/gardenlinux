@@ -248,8 +248,8 @@ def test_base_hosts_file_exists(file: File):
 
 @pytest.mark.testcov(["GL-TESTCOV-base-config-hosts"])
 @pytest.mark.feature(
-    "base and not (container or aws or azure)",
-    reason="Container, Azure, AWS write their own hosts file",
+    "base and not (container or aws or azure or stackit)",
+    reason="Container, Azure, AWS, STACKIT write their own hosts file via cloud-init",
 )
 def test_base_hosts_file_contains_localhost_and_garden(parse_file: ParseFile):
     """Test that /etc/hosts contains localhost and garden"""
