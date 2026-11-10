@@ -68,11 +68,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: read
-    strategy:
-      fail-fast: false
-      matrix:
-        repo: ${{ fromJson(needs.prepare.outputs.repos) }}
-
     steps:
       - name: Generate GitHub App token
         uses: actions/create-github-app-token@v1
@@ -82,42 +77,45 @@ jobs:
           private-key: ${{ secrets.LABEL_SYNC_APP_PRIV_KEY }}
           owner: ${{ github.repository_owner }}
 
-      - name: Sync labels to ${{ matrix.repo }}
+      - name: Sync labels to all repos
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           ORG: ${{ github.repository_owner }}
-          REPO: ${{ matrix.repo }}
+          REPOS: ${{ needs.prepare.outputs.repos }}
           LABELS: ${{ needs.prepare.outputs.labels }}
         run: |
           set -euo pipefail
 
-          repo_labels=$(gh api --paginate "repos/$ORG/$REPO/labels?per_page=100")
+          echo "$REPOS" | jq -r '.[]' | while read -r REPO; do
+            echo "=== Syncing labels to $REPO ==="
+            repo_labels=$(gh api --paginate "repos/$ORG/$REPO/labels?per_page=100" | jq -s 'add')
 
-          echo "$LABELS" | jq -c '.[]' | while read -r label; do
-            name=$(echo "$label" | jq -r '.name')
-            color=$(echo "$label" | jq -r '.color')
-            description=$(echo "$label" | jq -r '.description')
+            echo "$LABELS" | jq -c '.[]' | while read -r label; do
+              name=$(echo "$label" | jq -r '.name')
+              color=$(echo "$label" | jq -r '.color')
+              description=$(echo "$label" | jq -r '.description')
 
-            existing_label=$(echo "$repo_labels" | jq -c --arg name "$name" '.[] | select(.name == $name)')
+              existing_label=$(echo "$repo_labels" | jq -c --arg name "$name" '.[] | select(.name == $name)')
 
-            if [ -z "$existing_label" ]; then
-              gh api --method POST "repos/$ORG/$REPO/labels" \
-                --raw-field name="$name" \
-                --raw-field color="$color" \
-                --raw-field description="$description" \
-                --jq '"  [created] \(.name)"'
-            else
-              existing_color=$(echo "$existing_label" | jq -r '.color // ""')
-              existing_desc=$(echo "$existing_label" | jq -r '.description // ""')
-              if [ "$existing_color" = "$color" ] && [ "$existing_desc" = "$description" ]; then
-                echo "  [skip]    $name"
-              else
-                label_id=$(echo "$existing_label" | jq -r '.id')
-                gh api --method PATCH "repos/$ORG/$REPO/labels/$label_id" \
+              if [ -z "$existing_label" ]; then
+                gh api --method POST "repos/$ORG/$REPO/labels" \
                   --raw-field name="$name" \
                   --raw-field color="$color" \
                   --raw-field description="$description" \
-                  --jq '"  [updated] \(.name)"'
+                  --jq '"  [created] \(.name)"'
+              else
+                existing_color=$(echo "$existing_label" | jq -r '.color // ""')
+                existing_desc=$(echo "$existing_label" | jq -r '.description // ""')
+                if [ "$existing_color" = "$color" ] && [ "$existing_desc" = "$description" ]; then
+                  echo "  [skip]    $name"
+                else
+                  label_id=$(echo "$existing_label" | jq -r '.id')
+                  gh api --method PATCH "repos/$ORG/$REPO/labels/$label_id" \
+                    --raw-field name="$name" \
+                    --raw-field color="$color" \
+                    --raw-field description="$description" \
+                    --jq '"  [updated] \(.name)"'
+                fi
               fi
-            fi
+            done
           done
