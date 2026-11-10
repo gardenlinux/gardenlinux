@@ -12,7 +12,7 @@ mkdir -p blobs/sha256
 
 rootfs_sha256="$(sha256sum < "$input" | head -c 64)"
 
-zstd --rm < "$input" > layer
+zstd < "$input" > layer
 layer_sha256="$(sha256sum < layer | head -c 64)"
 layer_size="$(stat -c '%s' layer)"
 mv layer "blobs/sha256/$layer_sha256"
@@ -91,7 +91,7 @@ cat << EOF | jq -c . | tr -d '\n' > oci-layout
 }
 EOF
 
-tar --mtime="$(date -d @$BUILDER_TIMESTAMP)" -c blobs index.json oci-layout > "$output"
+tar --mtime="$(date -d @"$BUILDER_TIMESTAMP")" -c blobs index.json oci-layout > "$output"
 
 popd > /dev/null
 rm -rf "$dir"
