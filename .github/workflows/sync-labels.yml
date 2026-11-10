@@ -61,11 +61,7 @@ jobs:
             | jq -s 'add')
           # Split into chunks of 10 — each matrix job processes one chunk
           # sequentially, giving parallelism while staying under the 256-job limit.
-          chunks=$(echo "$repos" | python3 -c "
-import json, sys
-repos = json.load(sys.stdin)
-size = 10
-print(json.dumps([repos[i:i+size] for i in range(0, len(repos), size)]))")
+          chunks=$(echo "$repos" | python3 -c "import json,sys; r=json.load(sys.stdin); print(json.dumps([r[i:i+10] for i in range(0,len(r),10)]))")
           echo "Found $(echo "$repos" | jq length) repos in $(echo "$chunks" | jq length) chunks"
           echo "chunks<<EOF" >> "$GITHUB_OUTPUT"
           echo "$chunks" >> "$GITHUB_OUTPUT"
