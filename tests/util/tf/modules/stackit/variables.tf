@@ -61,12 +61,13 @@ variable "provider_vars" {
 
   type = object({
     project_id        = string
-    region            = optional(string, "EU01")
-    availability_zone = optional(string, "EU01-1")
+    region            = optional(string, "eu01")
+    availability_zone = optional(string, "eu01-1")
     machine_type      = optional(string)
-    ssh_user          = optional(string, "gardenlinux")
-    net_cidr          = optional(string, "10.0.0.0/16")
-    subnet_cidr       = optional(string, "10.0.1.0/24")
+    ssh_user          = optional(string, "admin")
+    net_cidr          = optional(string, "10.0.2.0/24")
+    vpc_id                    = optional(string)
+    ipv4_vpc_network_range_id = optional(string)
   })
 }
 

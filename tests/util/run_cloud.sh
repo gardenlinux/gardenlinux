@@ -223,7 +223,9 @@ if [ "$cloud" = "stackit" ] && [ -n "${STACKIT_PROJECT_ID:-}" ]; then
 provider_vars = {
   stackit = {
     project_id        = "${STACKIT_PROJECT_ID}"
-    region            = "${STACKIT_REGION:-EU01}"
+    region            = "${STACKIT_REGION:-eu01}"
+    vpc_id                    = "${STACKIT_VPC_ID:-}"
+    ipv4_vpc_network_range_id = "${STACKIT_VPC_NETWORK_RANGE_ID:-}"
   }
 }
 EOF

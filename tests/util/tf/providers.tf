@@ -27,3 +27,5 @@ terraform {
     }
   }
 }
+
+provider "stackit" {}

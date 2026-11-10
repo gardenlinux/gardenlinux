@@ -19,7 +19,7 @@ resource "stackit_server" "instance" {
 
   network_interfaces = [stackit_network_interface.nic.network_interface_id]
 
-  user_data = base64encode(file(var.user_data_script_path))
+  user_data = file(var.user_data_script_path)
 
   labels = local.labels
 
