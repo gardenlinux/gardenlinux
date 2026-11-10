@@ -1,0 +1,95 @@
+name: Annual Repository Audit
+
+on:
+  schedule:
+    - cron: '0 9 1 6 *'
+      timezone: "Europe/Berlin"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: Audit stale and archived repos
+    runs-on: ubuntu-24.04
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.PROJECT_ORGANIZER_APP_ID }}
+          private-key: ${{ secrets.PROJECT_ORGANIZER_APP_PRIV_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Create audit issue
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const now          = new Date();
+            const twoYearsAgo  = new Date(now); twoYearsAgo.setFullYear(now.getFullYear() - 2);
+            const sixMonthsAgo = new Date(now); sixMonthsAgo.setMonth(now.getMonth() - 6);
+            const fmt          = d => new Date(d).toISOString().split('T')[0];
+
+            const repos = await github.paginate(github.rest.repos.listForOrg, {
+              org: context.repo.owner,
+              type: 'all',
+              per_page: 100,
+            });
+
+            const inactive = repos
+              .filter(r => !r.archived && r.pushed_at && new Date(r.pushed_at) < twoYearsAgo)
+              .sort((a, b) => new Date(a.pushed_at) - new Date(b.pushed_at));
+
+            const archivedStale = repos
+              .filter(r => r.archived && new Date(r.updated_at) < sixMonthsAgo)
+              .sort((a, b) => new Date(a.updated_at) - new Date(b.updated_at));
+
+            const inactiveRow = r =>
+              `| [${r.name}](${r.html_url}) | ${fmt(r.pushed_at)} | ${r.stargazers_count} | ${r.forks_count} | archive |`;
+
+            const archivedRow = r =>
+              `| [${r.name}](${r.html_url}) | ${fmt(r.updated_at)} | ${r.stargazers_count} | ${r.forks_count} | delete |`;
+
+            const inactiveSection = rows => {
+              if (rows.length === 0) return `### :warning: Inactive repos — no push in >2 years (0)\n\n_None found._\n`;
+              return `### :warning: Inactive repos — no push in >2 years (${rows.length})\n\n`
+                + `> Recommended action is **archive**. Edit the Action column for each repo: \`delete\` · \`archive\` · \`keep\`\n\n`
+                + `| Repository | Last Push | Stars | Forks | Action (delete/archive/keep) |\n|---|---|---|---|---|\n`
+                + rows.map(inactiveRow).join('\n') + '\n';
+            };
+
+            const archivedSection = rows => {
+              if (rows.length === 0) return `### :file_cabinet: Stale archived repos — no change in >6 months (0)\n\n_None found._\n`;
+              return `### :file_cabinet: Stale archived repos — no change in >6 months (${rows.length})\n\n`
+                + `> Recommended action is **delete**. Edit the Action column for each repo: \`delete\` · \`unarchive\` · \`keep\`\n\n`
+                + `| Repository | Last Updated | Stars | Forks | Action (delete/unarchive/keep) |\n|---|---|---|---|---|\n`
+                + rows.map(archivedRow).join('\n') + '\n';
+            };
+
+            const body = [
+              `## Annual Repository Audit — ${now.getFullYear()}`,
+              ``,
+              `Auto-generated on ${fmt(now)}.`,
+              ``,
+              `### How to process this issue`,
+              `1. Review the lists below`,
+              `2. Change the **Action** column for any repo where the recommended action does not apply`,
+              `3. Apply the actions (archive / delete / unarchive repos as decided)`,
+              `4. Close this issue once done`,
+              ``,
+              inactiveSection(inactive),
+              archivedSection(archivedStale),
+              `---`,
+              `_\`Last Updated\` is used as a proxy for the archive date — GitHub does not expose an \`archived_at\` field._`,
+            ].join('\n');
+
+            const { data: issue } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              title: `Repository Audit ${now.getFullYear()} — ${inactive.length} inactive · ${archivedStale.length} stale-archived`,
+              body,
+            });
+
+            core.notice(`Created: ${issue.html_url}`);

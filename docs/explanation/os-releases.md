@@ -59,12 +59,14 @@ Garden Linux generates platform-specific image formats optimized for each deploy
 
 These specialized formats ensure optimal performance and integration with each platform's virtualization or provisioning systems.
 
-### The CNAME system
+### The artifact base name
 
 For the full naming hierarchy, worked example, and the `/etc/os-release` keys written by the builder, see [Canonical Names in Flavors Reference](/reference/flavors#feature-list) and [Feature resolution in `/etc/os-release`](/reference/features/#feature-resolution-in-etcos-release).
 
+Every file a build run produces under `.build/` is prefixed with the **artifact base name** (defined in [ADR 0035](/reference/adr/0035-cname-flavor-artifact-naming)):
+
 ```
-{target}-{features}-{arch}-{version}-{commit}
+{cname}-{arch}-{version}-{commit}
 ```
 
 For example:
@@ -73,14 +75,16 @@ For example:
 aws-gardener_prod-amd64-2150.0.0-31a9f915
 ```
 
-The CNAME is generated using `gl-features-parse --cname` and serves critical functions:
+The artifact base name is derived with `gl-features-parse --cname <flavor> --version <version> --commit <commit>` and serves critical functions:
 
-- **Uniqueness**: No two artifacts can have the same name
-- **Traceability**: The name contains target, features, architecture, version, and source commit
+- **Uniqueness**: No two build runs produce the same artifact base name
+- **Traceability**: The name contains the cname (feature encoding), architecture, version, and source commit
 - **Automation**: CI/CD systems can programmatically identify and retrieve specific variants
-- **Distribution**: S3 paths and container tags are derived from the CNAME
+- **Distribution**: S3 paths and container tags are derived from the artifact base name
 
-This system ensures that what was built, tested, and deployed can be precisely identified and reproduced.
+This ensures that what was built, tested, and deployed can be precisely identified and reproduced.
+
+Note: the `GARDENLINUX_CNAME` value written into `/etc/os-release` is the **cname** only (the feature encoding, e.g. `aws-gardener_prod`), not the full artifact base name — see [ADR 0035](/reference/adr/0035-cname-flavor-artifact-naming).
 
 ## Distribution channels
 
@@ -91,15 +95,15 @@ An Amazon S3 bucket serves as the primary distribution channel for OS images, pr
 - Direct access for automation and CI/CD pipelines
 - High availability and durability
 
-Artifact organization follows the CNAME hierarchy:
+Artifact organization follows the naming hierarchy:
 
 ```
 s3://gardenlinux-images/
-  └── {cname}/
+  └── {versioned-flavor}/
       └── {version}/
-          ├── {cname}.tar.gz
-          ├── {cname}.vhd
-          └── {cname}.raw.xz
+          ├── {versioned-flavor}.tar.gz
+          ├── {versioned-flavor}.vhd
+          └── {versioned-flavor}.raw.xz
 ```
 
 For example, the AWS Gardener image for version 2150.0.0 appears at:
@@ -198,7 +202,7 @@ Key workflows in the pipeline:
 - **`manual_release.yml`**: The orchestrator that manages the complete build-test-publish sequence
 - **`build.yml`**: Generates the flavor build matrix and executes per-flavor builds
 - **`tests.yml`**: Runs multi-platform validation across chroot, qemu, cloud, and oci environments
-- **`publish_s3.yml`**: Uploads OS images to S3 buckets organized by CNAME and version
+- **`publish_s3.yml`**: Uploads OS images to S3 buckets organized by versioned flavor and version
 - **`publish.yml`**: Pushes container images to GHCR with multi-arch manifest creation
 - **`manual_gh_release_page.yml`**: Creates the GitHub release with notes, metadata, and attached artifacts
 
@@ -218,7 +222,7 @@ publish: true] --> B[gl-flavors-parse
     B --> C[Build Matrix
 for publishable flavors]
     C --> D[Per-Flavor Builds]
-    D --> E[CNAME Artifacts]
+    D --> E[Named Artifacts]
     E --> F[S3 Buckets
 Automation channel]
     E --> G[GHCR
