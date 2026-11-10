@@ -57,6 +57,9 @@ jobs:
           key: test-distribution-${{ github.run_id }}
       - name: Build multiarch tests container
         run: |
+          # TEMPORARY FIX for https://github.com/actions/runner-images/issues/14473
+          podman() { command podman --runtime "$(command -v crun)" "$@"; }
+
           set -euo pipefail
           cd tests
           make -f util/build.makefile oci
