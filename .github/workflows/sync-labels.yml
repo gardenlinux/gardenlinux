@@ -118,8 +118,8 @@ jobs:
                 if [ "$existing_color" = "$color" ] && [ "$existing_desc" = "$description" ]; then
                   echo "  [skip]    $name"
                 else
-                  label_id=$(echo "$existing_label" | jq -r '.id')
-                  gh api --method PATCH "repos/$ORG/$REPO/labels/$label_id" \
+                  encoded_name=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$name")
+                  gh api --method PATCH "repos/$ORG/$REPO/labels/$encoded_name" \
                     --raw-field name="$name" \
                     --raw-field color="$color" \
                     --raw-field description="$description" \
