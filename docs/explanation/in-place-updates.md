@@ -97,9 +97,8 @@ version, not by mutating the running one.
 In-place updates are only available in
 [USI boot mode](/explanation/boot-modes#unified-system-image-usi), which requires
 UEFI. [Legacy](/explanation/boot-modes#legacy-boot-mode) (BIOS) images cannot be
-updated in place.[^legacy]
-
-[^legacy]: Not yet, at least. Legacy support is currently under investigation and may be supported in future releases.
+updated in place (not yet, at least; legacy support is currently under investigation
+and may be supported in future releases).
 
 :::warning Version requirement
 Updates across a minor or major version require a **target** version that resets

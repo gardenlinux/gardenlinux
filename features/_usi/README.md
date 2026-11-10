@@ -4,6 +4,7 @@ related_topics:
   - /how-to/custom-feature
   - /reference/features/
   - /explanation/features
+  - /explanation/in-place-updates
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: features/_usi/README.md
@@ -70,7 +71,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`image.esp.tar`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_usi/image.esp.tar) ([ref](/reference/features/#image-image-ext-convert-ext-convert-exta-extb)) | Creates the EROFS root disk image, embeds it in a UKI, and packages the result as an ESP tarball. |
 | [`info.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_usi/info.yaml) ([ref](/reference/features/#info-yaml-file-structure)) | Declares `type: flag` and included/excluded features. |
 | [`initrd.include.markers.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_usi/initrd.include.markers.yaml) ([ref](/reference/testing/test-coverage-markers)) | Maps initrd files to test-coverage marker IDs. |
-| [`pkg.include`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_usi/pkg.include) ([ref](/reference/features/#pkg-include)) | Installs `dracut`, `systemd-ukify`, `systemd-boot-efi`, `systemd-tpm`, `efitools`, `tpm2-tools`, `cryptsetup`, `gardenlinux-update`, and `resizefat32`. |
+| [`pkg.include`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_usi/pkg.include) ([ref](/reference/features/#pkg-include)) | Installs `dracut`, `systemd-ukify`, `systemd-boot-efi`, `systemd-tpm`, `efitools`, `tpm2-tools`, `cryptsetup`, [`gardenlinux-update`](/explanation/in-place-updates), and `resizefat32`. |
 | [`requirements.mod`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_usi/requirements.mod) | Declares that the UEFI requirement must be satisfied (`requirements["uefi"]=true`). |
 | [`file.include/etc/kernel/cmdline.d/99-no-gpt-auto.cfg`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_usi/file.include/etc/kernel/cmdline.d/99-no-gpt-auto.cfg) ([`file.include`](/reference/features/#file-include)) | Disables GPT auto-discovery in the kernel command line so that only the ESP is auto-mounted. |
 | [`file.include/etc/systemd/system/gardenlinux-etc-setup-hooks.service`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_usi/file.include/etc/systemd/system/gardenlinux-etc-setup-hooks.service) ([`file.include`](/reference/features/#file-include)) | Systemd service that runs first-boot `/etc` setup hooks after the overlay is ready. |
@@ -107,7 +108,6 @@ See the [feature file reference](/reference/features/) for the semantics of each
 
 ### Further reading
 
-- [In-Place Updates](/explanation/in-place-updates)
 - [systemd-ukify documentation](https://www.freedesktop.org/software/systemd/man/latest/ukify.html)
 - [EROFS documentation](https://erofs.docs.kernel.org/)
 
