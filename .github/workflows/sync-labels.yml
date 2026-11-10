@@ -97,7 +97,7 @@ jobs:
 
           echo "$REPOS" | jq -r '.[]' | while read -r REPO; do
             echo "=== Syncing labels to $REPO ==="
-            repo_labels=$(gh api --paginate "repos/$ORG/$REPO/labels?per_page=100" | jq -s 'add')
+            repo_labels=$(gh api --paginate "repos/$ORG/$REPO/labels?per_page=100" | jq -s 'add // []')
 
             echo "$LABELS" | jq -c '.[]' | while read -r label; do
               name=$(echo "$label" | jq -r '.name')

@@ -90,7 +90,7 @@ jobs:
 
           echo "$REPOS" | jq -r '.[]' | while read -r REPO; do
             echo "=== Syncing milestones to $REPO ==="
-            repo_milestones=$(gh api --paginate "repos/$ORG/$REPO/milestones?state=all&per_page=100" | jq -s 'add')
+            repo_milestones=$(gh api --paginate "repos/$ORG/$REPO/milestones?state=all&per_page=100" | jq -s 'add // []')
 
             echo "$MILESTONES" | jq -c '.[]' | while read -r milestone; do
               title=$(echo "$milestone" | jq -r '.title')
