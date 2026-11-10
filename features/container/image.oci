@@ -17,7 +17,7 @@ layer_sha256="$(sha256sum < layer | head -c 64)"
 layer_size="$(stat -c '%s' layer)"
 mv layer "blobs/sha256/$layer_sha256"
 
-cat > config << EOF
+cat << EOF | jq -c . | tr -d '\n' > config
 {
   "architecture": "$BUILDER_ARCH",
   "os": "linux",
@@ -46,7 +46,7 @@ config_sha256="$(sha256sum < config | head -c 64)"
 config_size="$(stat -c '%s' config)"
 mv config "blobs/sha256/$config_sha256"
 
-cat > manifest << EOF
+cat << EOF | jq -c . | tr -d '\n' > manifest
 {
   "schemaVersion": 2,
   "mediaType": "application/vnd.oci.image.manifest.v1+json",
@@ -69,7 +69,7 @@ manifest_sha256="$(sha256sum < manifest | head -c 64)"
 manifest_size="$(stat -c '%s' manifest)"
 mv manifest "blobs/sha256/$manifest_sha256"
 
-cat > index.json << EOF
+cat << EOF | jq -c . | tr -d '\n' > index.json
 {
   "schemaVersion": 2,
   "manifests": [
@@ -85,7 +85,7 @@ cat > index.json << EOF
 }
 EOF
 
-cat > oci-layout << EOF
+cat << EOF | jq -c . | tr -d '\n' > oci-layout
 {
   "imageLayoutVersion": "1.0.0"
 }
