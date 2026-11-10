@@ -16,7 +16,7 @@ jobs:
     permissions:
       issues: read
     outputs:
-      repos: ${{ steps.list-repos.outputs.repos }}
+      chunks: ${{ steps.list-repos.outputs.chunks }}
       labels: ${{ steps.list-labels.outputs.labels }}
       source_repo: ${{ steps.list-labels.outputs.source_repo }}
 
@@ -59,8 +59,16 @@ jobs:
           repos=$(gh api --paginate "orgs/$ORG/repos?per_page=100" \
             --jq '[.[] | select(.archived == false) | .name] | map(select(. != "'"$SOURCE_REPO"'"))' \
             | jq -s 'add')
-          echo "repos<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$repos" >> "$GITHUB_OUTPUT"
+          # Split into chunks of 10 — each matrix job processes one chunk
+          # sequentially, giving parallelism while staying under the 256-job limit.
+          chunks=$(echo "$repos" | python3 -c "
+import json, sys
+repos = json.load(sys.stdin)
+size = 10
+print(json.dumps([repos[i:i+size] for i in range(0, len(repos), size)]))")
+          echo "Found $(echo "$repos" | jq length) repos in $(echo "$chunks" | jq length) chunks"
+          echo "chunks<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$chunks" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
   sync:
@@ -68,6 +76,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: read
+    strategy:
+      fail-fast: false
+      matrix:
+        repos: ${{ fromJson(needs.prepare.outputs.chunks) }}
+
     steps:
       - name: Generate GitHub App token
         uses: actions/create-github-app-token@v1
@@ -77,11 +90,11 @@ jobs:
           private-key: ${{ secrets.LABEL_SYNC_APP_PRIV_KEY }}
           owner: ${{ github.repository_owner }}
 
-      - name: Sync labels to all repos
+      - name: Sync labels to chunk
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           ORG: ${{ github.repository_owner }}
-          REPOS: ${{ needs.prepare.outputs.repos }}
+          REPOS: ${{ toJson(matrix.repos) }}
           LABELS: ${{ needs.prepare.outputs.labels }}
         run: |
           set -euo pipefail
