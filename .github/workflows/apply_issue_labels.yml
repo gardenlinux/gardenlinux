@@ -1,0 +1,191 @@
+name: Apply needs-attention label for stale issues in Internal Board
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+      timezone: Europe/Berlin
+  workflow_dispatch:
+
+permissions: {}
+concurrency:
+  group: internal-board-needs-attention
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.LABEL_SYNC_APP_ID }}
+          private-key: ${{ secrets.LABEL_SYNC_APP_PRIV_KEY }}
+          owner: ${{ github.repository_owner }}
+          permission-organization-projects: read
+          permission-issues: write
+
+      - name: Reconcile issue labels
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          ORG: ${{ github.repository_owner }}
+          # From github.com/orgs/ORG/projects/NUMBER
+          PROJECT_NUMBER: ${{ vars.INTERNAL_BOARD_PROJECT_NUMBER }}
+        shell: python
+        run: |
+          import json
+          import math
+          import os
+          import time
+          from datetime import datetime, timedelta, timezone
+          from http.client import HTTPException
+          from urllib.error import HTTPError
+          from urllib.request import Request, urlopen
+
+          LABEL = "needs-attention"
+          STATUS_DAYS = {"New": 7, "Review": 7, "Backlog": 180}
+          now = datetime.now(timezone.utc)
+          number = os.environ["PROJECT_NUMBER"]
+          if not number.isdecimal() or int(number) < 1:
+              raise SystemExit("Set the Actions variable INTERNAL_BOARD_PROJECT_NUMBER to the board number.")
+
+          def overdue(status):
+              if not status or status["name"] not in STATUS_DAYS:
+                  return False
+              entered = datetime.fromisoformat(status["updatedAt"].replace("Z", "+00:00"))
+              return now - entered > timedelta(days=STATUS_DAYS[status["name"]])
+
+          query = """
+          query($org: String!, $number: Int!, $endCursor: String) {
+            organization(login: $org) {
+              projectV2(number: $number) {
+                items(first: 50, after: $endCursor) {
+                  pageInfo { hasNextPage endCursor }
+                  nodes {
+                    isArchived
+                    status: fieldValueByName(name: "Status") {
+                      ... on ProjectV2ItemFieldSingleSelectValue { name updatedAt }
+                    }
+                    content {
+                      __typename
+                      ... on Issue {
+                        number
+                        repository { nameWithOwner }
+                        labels(first: 100) {
+                          nodes { name }
+                          pageInfo { hasNextPage }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          """
+          def api(url, method="GET", body=None):
+              request = Request(url, method=method, headers={
+                  "Authorization": "Bearer " + os.environ["GH_TOKEN"],
+                  "Accept": "application/vnd.github+json",
+                  "Content-Type": "application/json",
+              }, data=json.dumps(body).encode() if body is not None else None)
+              for attempt in range(4):
+                  try:
+                      response = urlopen(request, timeout=45)
+                  except HTTPError as error:
+                      response = error  # Read GitHub's message and rate-limit headers below.
+                  with response:
+                      code, headers = response.status, response.headers
+                      raw = response.read()
+                  try:
+                      data = json.loads(raw) if raw else None
+                  except ValueError:
+                      if code < 400:
+                          raise
+                      data = {}
+                  details = data if isinstance(data, dict) else {}
+                  errors = details.get("errors", []) if url == os.environ["GITHUB_GRAPHQL_URL"] else []
+                  if code < 400 and not errors:
+                      return data
+                  if code == 401:
+                      raise SystemExit("GitHub rejected the App token. Stopping the run.")
+                  message = "; ".join(e["message"] for e in errors) or details.get("message", "Request failed")
+                  retry_after = headers.get("Retry-After")
+                  limited = (code == 429 or any(e.get("type") == "RATE_LIMITED" for e in errors)
+                             or ((code == 403 or errors) and
+                                 (retry_after or headers.get("X-RateLimit-Remaining") == "0"
+                                  or "rate limit" in message.lower())))
+                  if not limited:
+                      raise RuntimeError(f"GitHub API (HTTP {code}): {message}")
+                  if attempt == 3:
+                      raise SystemExit("GitHub is still rate-limiting requests after three retries. Rerun later.")
+                  wait = int(retry_after) if retry_after else 0
+                  if headers.get("X-RateLimit-Remaining") == "0" and headers.get("X-RateLimit-Reset"):
+                      wait = max(wait, math.ceil(float(headers["X-RateLimit-Reset"]) - time.time()))
+                  delay = max(1, wait) if (retry_after or wait > 0) else 60 * 2**attempt
+                  print(f"GitHub rate limit. Retrying in {delay} seconds.", flush=True)
+                  time.sleep(delay)
+
+          # Read every board page before changing labels. A failed board read stops the run.
+          items = []
+          variables = {"org": os.environ["ORG"], "number": int(number), "endCursor": None}
+          while True:
+              page = api(os.environ["GITHUB_GRAPHQL_URL"], "POST", {"query": query, "variables": variables})
+              org = page["data"]["organization"]
+              if not org or not org["projectV2"]:
+                  raise SystemExit("Cannot read the project. Check its number and the App installation permissions.")
+              batch = org["projectV2"]["items"]
+              items.extend(batch["nodes"])
+              if not batch["pageInfo"]["hasNextPage"]:
+                  break
+              variables["endCursor"] = batch["pageInfo"]["endCursor"]
+
+          def has_attention(issue, endpoint):
+              labels = issue["labels"]
+              if any(label["name"] == LABEL for label in labels["nodes"]):
+                  return True
+              if labels["pageInfo"]["hasNextPage"]:
+                  # The board query already checked the first 100 labels. Read the full
+                  # REST list independently, as its ordering can differ from GraphQL.
+                  page = 1
+                  while True:
+                      batch = api(f"{endpoint}?per_page=100&page={page}")
+                      if any(label["name"] == LABEL for label in batch):
+                          return True
+                      if len(batch) < 100:
+                          break
+                      page += 1
+              return False
+
+          added = removed = checked = failed = unreadable = 0
+          for item in items:
+              status = item["status"]
+              if item["isArchived"] or (status and status["name"] == "Done"):
+                  continue
+              issue = item["content"]
+              if issue is None:
+                  unreadable += 1
+                  continue
+              if issue["__typename"] != "Issue":
+                  continue
+              repo = issue["repository"]["nameWithOwner"]
+              endpoint = f"{os.environ['GITHUB_API_URL']}/repos/{repo}/issues/{issue['number']}/labels"
+              checked += 1
+              try:
+                  should_label = overdue(status)
+                  if should_label == has_attention(issue, endpoint):
+                      continue
+                  if should_label:
+                      api(endpoint, "POST", {"labels": [LABEL]})
+                      added += 1
+                  else:
+                      api(f"{endpoint}/{LABEL}", "DELETE")
+                      removed += 1
+              except (RuntimeError, OSError, HTTPException, ValueError) as error:
+                  failed += 1
+                  print(f"{repo}#{issue['number']}: {error}", flush=True)
+
+          print(f"{checked} issues checked, {added} labels added, {removed} labels removed, "
+                f"{failed} issue errors, {unreadable} unreadable board items skipped.", flush=True)
+          if failed:
+              raise SystemExit("Some issues could not be processed. See the issue errors above.")
