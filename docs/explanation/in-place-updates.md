@@ -43,6 +43,21 @@ to activate the new version. It is not a live update and does not keep the node 
 operation while it runs.
 :::
 
+## Requirements
+
+In-place updates are only available in
+[USI boot mode](/explanation/boot-modes#unified-system-image-usi), which requires
+UEFI. [Legacy](/explanation/boot-modes#legacy-boot-mode) (BIOS) images cannot be
+updated in place (not yet, at least; legacy support is currently under investigation
+and may be supported in future releases).
+
+:::warning Version requirement
+Updates across a minor or major version require a **target** version that resets
+`/etc` on upgrade (see [Updating across versions](#updating-across-versions)). This
+is the case from **2150.13.0** on the 2150 line, and from **1877.27** on the 1877
+line. Only the target version matters, not the version you update from.
+:::
+
 ## How atomicity is achieved
 
 An in-place update is all-or-nothing. The new version is delivered as a single
@@ -91,21 +106,6 @@ A consequence is that package-manager operations that modify the system, such as
 `apt install`, are not supported on a USI deployment. Software and configuration are
 baked into the image at build time; changes are delivered by updating to a new image
 version, not by mutating the running one.
-
-## Requirements
-
-In-place updates are only available in
-[USI boot mode](/explanation/boot-modes#unified-system-image-usi), which requires
-UEFI. [Legacy](/explanation/boot-modes#legacy-boot-mode) (BIOS) images cannot be
-updated in place (not yet, at least; legacy support is currently under investigation
-and may be supported in future releases).
-
-:::warning Version requirement
-Updates across a minor or major version require a **target** version that resets
-`/etc` on upgrade (see [Updating across versions](#updating-across-versions)). This
-is the case from **2150.13.0** on the 2150 line, and from **1877.27** on the 1877
-line. Only the target version matters, not the version you update from.
-:::
 
 ## When to use in-place updates
 
