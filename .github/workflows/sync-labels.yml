@@ -41,7 +41,8 @@ jobs:
           echo "source_repo=$SOURCE_REPO" >> "$GITHUB_OUTPUT"
 
           labels=$(gh api --paginate "repos/$ORG/$SOURCE_REPO/labels?per_page=100" \
-            --jq '[.[] | {name: .name, color: (.color // "ededed"), description: (.description // "")}]')
+            --jq '[.[] | {name: .name, color: (.color // "ededed"), description: (.description // "")}]' \
+            | jq -s 'add')
           echo "Found $(echo "$labels" | jq length) labels:"
           echo "$labels" | jq -r '.[].name' | sed 's/^/  /'
           echo "labels<<EOF" >> "$GITHUB_OUTPUT"
@@ -56,7 +57,8 @@ jobs:
           SOURCE_REPO: ${{ inputs.source_repo || github.event.repository.name }}
         run: |
           repos=$(gh api --paginate "orgs/$ORG/repos?per_page=100" \
-            --jq '[.[] | select(.archived == false) | .name] | map(select(. != "'"$SOURCE_REPO"'"))')
+            --jq '[.[] | select(.archived == false) | .name] | map(select(. != "'"$SOURCE_REPO"'"))' \
+            | jq -s 'add')
           echo "repos<<EOF" >> "$GITHUB_OUTPUT"
           echo "$repos" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
