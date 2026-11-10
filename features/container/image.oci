@@ -12,7 +12,7 @@ mkdir -p blobs/sha256
 
 rootfs_sha256="$(sha256sum < "$input" | head -c 64)"
 
-gzip < "$input" > layer
+zstd --rm < "$input" > layer
 layer_sha256="$(sha256sum < layer | head -c 64)"
 layer_size="$(stat -c '%s' layer)"
 mv layer "blobs/sha256/$layer_sha256"
@@ -57,7 +57,7 @@ cat > manifest << EOF
   },
   "layers": [
     {
-      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+zstd",
       "digest": "sha256:$layer_sha256",
       "size": $layer_size
     }
