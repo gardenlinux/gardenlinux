@@ -24,6 +24,7 @@ Installs `auditd`, `ca-certificates`, `acl`, and `python3-apt`. Configures:
 - Garden Linux MOTD and issue banners
 - The SAP Global Root CA certificate
 - tmpfiles configuration for legacy paths
+- symlinks `/var/shared` to `/shared`
 
 ### Files
 
