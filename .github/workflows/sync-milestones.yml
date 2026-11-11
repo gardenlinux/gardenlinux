@@ -16,7 +16,7 @@ jobs:
     permissions:
       issues: read
     outputs:
-      repos: ${{ steps.list-repos.outputs.repos }}
+      chunks: ${{ steps.list-repos.outputs.chunks }}
       milestones: ${{ steps.list-milestones.outputs.milestones }}
 
     steps:
@@ -36,9 +36,12 @@ jobs:
           SOURCE_REPO: gardenlinux
         run: |
           repos=$(gh api --paginate "orgs/$ORG/repos?per_page=100" \
-            --jq '[.[] | select(.archived == false) | .name] | map(select(. != "'"$SOURCE_REPO"'"))')
-          echo "repos<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$repos" >> "$GITHUB_OUTPUT"
+            --jq '[.[] | select(.archived == false) | .name] | map(select(. != "'"$SOURCE_REPO"'"))' \
+            | jq -s 'add')
+          chunks=$(echo "$repos" | python3 -c "import json,sys; r=json.load(sys.stdin); print(json.dumps([r[i:i+10] for i in range(0,len(r),10)]))")
+          echo "Found $(echo "$repos" | jq length) repos in $(echo "$chunks" | jq length) chunks"
+          echo "chunks<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$chunks" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: List milestones
@@ -49,7 +52,8 @@ jobs:
           SOURCE_REPO: gardenlinux
         run: |
           milestones=$(gh api --paginate "repos/$ORG/$SOURCE_REPO/milestones?state=all&per_page=100" \
-            --jq '[.[] | {title: .title, description: (.description // ""), due_on: (.due_on // ""), state: .state}]')
+            --jq '[.[] | {title: .title, description: (.description // ""), due_on: (.due_on // ""), state: .state}]' \
+            | jq -s 'add')
           echo "Found $(echo "$milestones" | jq length) milestones:"
           echo "$milestones" | jq -r '.[].title' | sed 's/^/  /'
           echo "milestones<<EOF" >> "$GITHUB_OUTPUT"
@@ -64,7 +68,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        repo: ${{ fromJson(needs.prepare.outputs.repos) }}
+        repos: ${{ fromJson(needs.prepare.outputs.chunks) }}
 
     steps:
       - name: Generate GitHub App token
@@ -75,51 +79,54 @@ jobs:
           private-key: ${{ secrets.LABEL_SYNC_APP_PRIV_KEY }}
           owner: ${{ github.repository_owner }}
 
-      - name: Sync milestones to ${{ matrix.repo }}
+      - name: Sync milestones to chunk
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           ORG: ${{ github.repository_owner }}
-          REPO: ${{ matrix.repo }}
+          REPOS: ${{ toJson(matrix.repos) }}
           MILESTONES: ${{ needs.prepare.outputs.milestones }}
         run: |
           set -euo pipefail
 
-          repo_milestones=$(gh api --paginate "repos/$ORG/$REPO/milestones?state=all&per_page=100")
+          echo "$REPOS" | jq -r '.[]' | while read -r REPO; do
+            echo "=== Syncing milestones to $REPO ==="
+            repo_milestones=$(gh api --paginate "repos/$ORG/$REPO/milestones?state=all&per_page=100" | jq -s 'add // []')
 
-          echo "$MILESTONES" | jq -c '.[]' | while read -r milestone; do
-            title=$(echo "$milestone" | jq -r '.title')
-            description=$(echo "$milestone" | jq -r '.description')
-            due_on=$(echo "$milestone" | jq -r '.due_on')
-            state=$(echo "$milestone" | jq -r '.state')
+            echo "$MILESTONES" | jq -c '.[]' | while read -r milestone; do
+              title=$(echo "$milestone" | jq -r '.title')
+              description=$(echo "$milestone" | jq -r '.description')
+              due_on=$(echo "$milestone" | jq -r '.due_on')
+              state=$(echo "$milestone" | jq -r '.state')
 
-            due_on_field=()
-            if [ -n "$due_on" ]; then
-              due_on_field=(--field due_on="$due_on")
-            fi
+              due_on_field=()
+              if [ -n "$due_on" ]; then
+                due_on_field=(--field due_on="$due_on")
+              fi
 
-            existing_milestone=$(echo "$repo_milestones" | jq -c --arg title "$title" '.[] | select(.title == $title)' || echo "")
+              existing_milestone=$(echo "$repo_milestones" | jq -c --arg title "$title" '.[] | select(.title == $title)' || echo "")
 
-            if [ -z "$existing_milestone" ]; then
-              gh api --method POST "repos/$ORG/$REPO/milestones" \
-                --raw-field title="$title" \
-                --raw-field description="$description" \
-                --raw-field state="$state" \
-                "${due_on_field[@]}" \
-                --jq '"  [created] \(.title)"'
-            else
-              existing_desc=$(echo "$existing_milestone" | jq -r '.description // ""')
-              existing_due=$(echo "$existing_milestone" | jq -r '.due_on // ""')
-              existing_state=$(echo "$existing_milestone" | jq -r '.state')
-              if [ "$existing_desc" = "$description" ] && [ "$existing_due" = "$due_on" ] && [ "$existing_state" = "$state" ]; then
-                echo "  [skip]    $title"
-              else
-                number=$(echo "$existing_milestone" | jq -r '.number')
-                gh api --method PATCH "repos/$ORG/$REPO/milestones/$number" \
+              if [ -z "$existing_milestone" ]; then
+                gh api --method POST "repos/$ORG/$REPO/milestones" \
                   --raw-field title="$title" \
                   --raw-field description="$description" \
                   --raw-field state="$state" \
                   "${due_on_field[@]}" \
-                  --jq '"  [updated] \(.title)"'
+                  --jq '"  [created] \(.title)"'
+              else
+                existing_desc=$(echo "$existing_milestone" | jq -r '.description // ""')
+                existing_due=$(echo "$existing_milestone" | jq -r '.due_on // ""')
+                existing_state=$(echo "$existing_milestone" | jq -r '.state')
+                if [ "$existing_desc" = "$description" ] && [ "$existing_due" = "$due_on" ] && [ "$existing_state" = "$state" ]; then
+                  echo "  [skip]    $title"
+                else
+                  number=$(echo "$existing_milestone" | jq -r '.number')
+                  gh api --method PATCH "repos/$ORG/$REPO/milestones/$number" \
+                    --raw-field title="$title" \
+                    --raw-field description="$description" \
+                    --raw-field state="$state" \
+                    "${due_on_field[@]}" \
+                    --jq '"  [updated] \(.title)"'
+                fi
               fi
-            fi
+            done
           done
