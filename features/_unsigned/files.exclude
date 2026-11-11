@@ -1,0 +1,2 @@
+# the enroll command should not be there if we don't sign
+/usr/sbin/enroll-gardenlinux-secureboot-keys
