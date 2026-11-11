@@ -1,0 +1,153 @@
+name: Apply needs-attention label for stale issues in Internal Board
+
+on:
+  schedule:
+    - cron: '0 9,17 * * *'
+      timezone: Europe/Berlin
+  workflow_dispatch:
+
+permissions: {}
+concurrency:
+  group: internal-board-needs-attention
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.LABEL_SYNC_APP_ID }}
+          private-key: ${{ secrets.LABEL_SYNC_APP_PRIV_KEY }}
+          owner: ${{ github.repository_owner }}
+          permission-organization-projects: read
+          permission-issues: write
+
+      - name: Reconcile issue labels
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          ORG: ${{ github.repository_owner }}
+          PROJECT_NUMBER: ${{ vars.INTERNAL_BOARD_PROJECT_NUMBER }}
+        shell: python
+        run: |
+          import json
+          import os
+          import subprocess
+          from datetime import datetime, timezone
+
+          # Escalation steps per status: after N days in that status, the issue
+          # should carry the given label. Steps are ordered gentlest first; an
+          # issue gets the label of the most severe step whose threshold it passes.
+          RULES = {
+              "New":     [(4, "will-need-attention"), (7, "needs-attention")],
+              "Review":  [(4, "will-need-attention"), (7, "needs-attention")],
+              "Backlog": [(180, "needs-attention")],
+          }
+          # Every label this workflow manages, so we can strip ones that no longer apply.
+          MANAGED = {label for steps in RULES.values() for _, label in steps}
+
+          def gh(*args, parse_json=False):
+              result = subprocess.run(["gh", *args], check=True, capture_output=True, text=True)
+              return json.loads(result.stdout) if parse_json else result.stdout
+
+          def days_in_status(item):
+              entered = datetime.fromisoformat(item["status"]["updatedAt"])
+              return (datetime.now(timezone.utc) - entered).days
+
+          def target_label(item):
+              """The one managed label this issue should have, or None."""
+              status = item["status"]
+              if not status:
+                  return None
+              days = days_in_status(item)
+              label = None
+              for threshold, name in RULES.get(status["name"], []):
+                  if days > threshold:
+                      label = name
+              return label
+
+          # 1. Read every issue on the board, with its status and current labels.
+          query = """
+            query($org: String!, $number: Int!, $endCursor: String) {
+              organization(login: $org) {
+                projectV2(number: $number) {
+                  items(first: 50, after: $endCursor) {
+                    pageInfo { hasNextPage endCursor }
+                    nodes {
+                      isArchived
+                      status: fieldValueByName(name: "Status") {
+                        ... on ProjectV2ItemFieldSingleSelectValue { name updatedAt }
+                      }
+                      content {
+                        __typename
+                        ... on Issue {
+                          number
+                          repository { nameWithOwner }
+                          labels(first: 100) { nodes { name } }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          """
+          board = gh(
+              "api", "graphql", "--paginate", "--slurp",
+              "-f", f"query={query}",
+              "-F", f"org={os.environ['ORG']}",
+              "-F", f"number={os.environ['PROJECT_NUMBER']}",
+              parse_json=True,
+          )
+          items = []
+          for page in board:
+              project = (page["data"]["organization"] or {}).get("projectV2")
+              if project is None:
+                  raise SystemExit(
+                      "Cannot read the project. Check INTERNAL_BOARD_PROJECT_NUMBER "
+                      "and the App installation permissions."
+                  )
+              items.extend(project["items"]["nodes"])
+
+          # 2. For each open issue, make its managed labels match the target.
+          added = removed = failed = 0
+          for item in items:
+              issue = item["content"]
+              if item["isArchived"] or not issue or issue["__typename"] != "Issue":
+                  continue
+
+              repo = issue["repository"]["nameWithOwner"]
+              ref = f"{repo}#{issue['number']}"
+
+              target = target_label(item)
+              current = {label["name"] for label in issue["labels"]["nodes"]} & MANAGED
+
+              to_add = [target] if target and target not in current else []
+              to_remove = [label for label in current if label != target]
+              if not to_add and not to_remove:
+                  continue
+
+              args = []
+              for label in to_add:
+                  args += ["--add-label", label]
+              for label in to_remove:
+                  args += ["--remove-label", label]
+
+              try:
+                  gh("issue", "edit", str(issue["number"]), "--repo", repo, *args)
+              except subprocess.CalledProcessError as error:
+                  print(f"  [error]   {ref}: {error.stderr.strip()}")
+                  failed += 1
+              else:
+                  for label in to_add:
+                      print(f"  [added]   {ref}: {label}")
+                      added += 1
+                  for label in to_remove:
+                      print(f"  [removed] {ref}: {label}")
+                      removed += 1
+
+          print(f"Done: {added} added, {removed} removed, {failed} errors.")
+          if failed:
+              raise SystemExit(1)
