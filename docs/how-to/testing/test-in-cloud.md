@@ -132,16 +132,36 @@ You can download the `clouds.yaml` from your OpenStack dashboard.
 
 STACKIT requires a [Service Account](https://docs.stackit.cloud/stackit/en/service-accounts-134415819.html) with either a key file or the STACKIT CLI:
 
-**Option A — Service account key file (no CLI needed):**
+**Option A — Credentials file (recommended, no CLI needed):**
+
+Create `~/.stackit/credentials.json` pointing to your service account key:
 
 ```bash
-export STACKIT_SERVICE_ACCOUNT_EMAIL="your-sa@sa.stackit.cloud"
+mkdir -p ~/.stackit
+
+# Download your SA key from portal.stackit.cloud → IAM → Service Accounts → your SA → Keys
+# Save it as ~/.stackit/sa-key.json, then create the credentials file:
+cat > ~/.stackit/credentials.json <<'EOF'
+{
+  "STACKIT_SERVICE_ACCOUNT_KEY_PATH": "/Users/YOUR_USER/.stackit/sa-key.json"
+}
+EOF
+
+export STACKIT_PROJECT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+export STACKIT_REGION="eu01"
+```
+
+The OpenTofu STACKIT provider automatically reads `~/.stackit/credentials.json`, so no additional environment variables are needed for authentication.
+
+**Option B — Explicit environment variables:**
+
+```bash
 export STACKIT_SERVICE_ACCOUNT_KEY_PATH="/path/to/stackit-sa-key.json"
 export STACKIT_PROJECT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 export STACKIT_REGION="eu01"
 ```
 
-**Option B — STACKIT CLI:**
+**Option C — STACKIT CLI:**
 
 ```bash
 # Login (only needed once)
