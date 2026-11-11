@@ -9,7 +9,7 @@ on:
   pull_request:
     # No paths: filter — must run on every PR to always produce the gate check
 jobs:
-  detect-changes:
+  detect-test-changes:
     name: Detect test path changes
     runs-on: ubuntu-24.04
     outputs:
@@ -25,10 +25,26 @@ jobs:
             tests:
               - 'tests/**'
 
+  detect-feature-changes:
+    name: Detect feature path changes
+    runs-on: ubuntu-24.04
+    outputs:
+      features: ${{ steps.filter.outputs.features }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check for test path changes
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          filters: |
+            features:
+              - 'features/**'
+
   black:
     name: Black (formatting)
-    needs: [detect-changes]
-    if: needs.detect-changes.outputs.tests == 'true'
+    needs: [detect-test-changes]
+    if: needs.detect-test-changes.outputs.tests == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
@@ -44,8 +60,8 @@ jobs:
 
   isort:
     name: isort (import sorting)
-    needs: [detect-changes]
-    if: needs.detect-changes.outputs.tests == 'true'
+    needs: [detect-test-changes]
+    if: needs.detect-test-changes.outputs.tests == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
@@ -61,8 +77,8 @@ jobs:
 
   pyright:
     name: Pyright (type checking)
-    needs: [detect-changes]
-    if: needs.detect-changes.outputs.tests == 'true'
+    needs: [detect-test-changes]
+    if: needs.detect-test-changes.outputs.tests == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
@@ -78,8 +94,8 @@ jobs:
 
   coverage:
     name: Coverage (feature/test coverage reporting)
-    needs: [detect-changes]
-    if: needs.detect-changes.outputs.tests == 'true'
+    needs: [detect-test-changes, detect-feature-changes]
+    if: needs.detect-test-changes.outputs.tests == 'true' || needs.detect-feature-changes.outputs.features == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
@@ -124,8 +140,8 @@ jobs:
 
   test-plugins:
     name: Test plugins
-    needs: [detect-changes]
-    if: needs.detect-changes.outputs.tests == 'true'
+    needs: [detect-test-changes]
+    if: needs.detect-test-changes.outputs.tests == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
@@ -141,8 +157,8 @@ jobs:
 
   test-utils:
     name: Test utils
-    needs: [detect-changes]
-    if: needs.detect-changes.outputs.tests == 'true'
+    needs: [detect-test-changes]
+    if: needs.detect-test-changes.outputs.tests == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
@@ -158,25 +174,27 @@ jobs:
 
   dev-tests-gate:
     name: Dev tests gate
-    needs: [detect-changes, black, isort, pyright, coverage, test-plugins, test-utils]
+    needs: [detect-test-changes, detect-feature-changes, black, isort, pyright, coverage, test-plugins, test-utils]
     if: always()
     runs-on: ubuntu-24.04
     steps:
       - name: Evaluate dev tests result
         run: |
-          TESTS_CHANGED="${{ needs.detect-changes.outputs.tests }}"
-          if [[ "$TESTS_CHANGED" != "true" ]]; then
-            echo "Test paths not changed; skipping dev tests — gate passes."
+          TESTS_CHANGED="${{ needs.detect-test-changes.outputs.tests }}"
+          FEATURES_CHANGED="${{ needs.detect-feature-changes.outputs.features }}"
+          if [[ "$TESTS_CHANGED" != "true" ]] && [[ "$FEATURES_CHANGED" != "true" ]]; then
+            echo "Test and Features paths not changed; skipping dev tests — gate passes."
             exit 0
           fi
           BLACK="${{ needs.black.result }}"
+          COVERAGE="${{ needs.coverage.result }}"
           ISORT="${{ needs.isort.result }}"
           PYRIGHT="${{ needs.pyright.result }}"
-          COVERAGE="${{ needs.coverage.result }}"
           TEST_PLUGINS="${{ needs.test-plugins.result }}"
           TEST_UTILS="${{ needs.test-utils.result }}"
+
           FAILED=0
-          for result in "$BLACK" "$ISORT" "$PYRIGHT" "$COVERAGE" "$TEST_PLUGINS" "$TEST_UTILS"; do
+          for result in "$BLACK" "$COVERAGE" "$ISORT" "$PYRIGHT" "$TEST_PLUGINS" "$TEST_UTILS"; do
             if [[ "$result" != "success" ]]; then
               FAILED=1
             fi
