@@ -8,3 +8,4 @@ features:
     - openstackMetal
     - cloudInit
     - server # needed to enforce proper sorting
+    - _nvidia
