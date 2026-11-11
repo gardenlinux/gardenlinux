@@ -84,7 +84,7 @@ jobs:
                         __typename
                         ... on Issue {
                           number
-                          repository { nameWithOwner }
+                          repository { nameWithOwner isArchived }
                           labels(first: 100) { nodes { name } }
                         }
                       }
@@ -116,6 +116,10 @@ jobs:
           for item in items:
               issue = item["content"]
               if item["isArchived"] or not issue or issue["__typename"] != "Issue":
+                  continue
+              # Archived repos are read-only and are skipped by label sync, so the
+              # managed labels don't exist there and can't be changed anyway.
+              if issue["repository"]["isArchived"]:
                   continue
 
               repo = issue["repository"]["nameWithOwner"]
