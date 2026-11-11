@@ -1,2 +1,5 @@
 description: "OpenStack baremetal platform (cloud-init, metal kernel)"
 type: element
+features:
+  include:
+    - _nvidia
