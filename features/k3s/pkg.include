@@ -1,0 +1,17 @@
+# GL-TESTCOV-gardener-service-apparmor-enable
+apparmor
+# k3s includes containerd
+#containerd
+ethtool
+ipvsadm
+socat
+curl
+# GL-TESTCOV-gardener-service-logrotate-enable
+logrotate
+xfsprogs
+btrfs-progs
+jq
+ipvsadm
+cifs-utils
+nfs-common
+netcat-openbsd
