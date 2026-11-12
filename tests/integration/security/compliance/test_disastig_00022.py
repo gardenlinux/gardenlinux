@@ -17,8 +17,7 @@ def test_auditd_action_mail_acct_configured(parse_file):
     """Verify auditd notifies personnel on audit processing failure via action_mail_acct."""
     lines = parse_file.lines("/etc/audit/auditd.conf")
     assert any(
-        line.startswith("action_mail_acct") and "=" in line
-        for line in lines
+        line.startswith("action_mail_acct") and "=" in line for line in lines
     ), "stigcompliance: action_mail_acct is not configured in auditd.conf"
 
 
