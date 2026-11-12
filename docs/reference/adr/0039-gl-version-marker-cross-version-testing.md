@@ -54,8 +54,16 @@ older, still-maintained Garden Linux releases:
 - This capability is additive. Release-pinned tests continue to run unchanged;
   version-aware execution complements them.
 
+A reference implementation for a new pytest marker could look like this:
+
+```python
+@pytest.mark.gl_version(">1592.0.0", mode="skip")
+def test_new_behavior(client):
+    ...
+```
+
 The concrete syntax, parsing, comparison semantics, and framework wiring are
-intentionally left out of this ADR and are tracked in the implementation issue.
+intentionally left out of this ADR and are tracked [in the implementation issue](https://github.com/gardenlinux/gardenlinux/issues/5347).
 
 ## Consequences
 
