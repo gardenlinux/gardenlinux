@@ -12,7 +12,7 @@ github_target_path: docs/reference/adr/0039-gl-version-marker-cross-version-test
 
 ## Status
 
-Draft
+Accepted
 
 ## Context
 
