@@ -16,8 +16,8 @@ import pytest
 def test_auditd_action_mail_acct_configured(parse_file):
     """Verify auditd notifies personnel on audit processing failure via action_mail_acct."""
     lines = parse_file.lines("/etc/audit/auditd.conf")
-    assert any(
-        line.startswith("action_mail_acct") and "=" in line for line in lines
+    assert (
+        "action_mail_acct = root" in lines
     ), "stigcompliance: action_mail_acct is not configured in auditd.conf"
 
 
@@ -28,8 +28,6 @@ def test_auditd_action_mail_acct_configured(parse_file):
 def test_auditd_space_left_action_alerts_personnel(parse_file):
     """Verify auditd alerts personnel when audit storage is at risk of being exhausted."""
     lines = parse_file.lines("/etc/audit/auditd.conf")
-    assert any(
-        line.startswith("space_left_action")
-        and any(v in line.upper() for v in ["SYSLOG", "EMAIL"])
-        for line in lines
+    assert (
+        "space_left_action = SYSLOG" in lines or "space_left_action = EMAIL" in lines
     ), "stigcompliance: space_left_action must be SYSLOG or EMAIL to alert personnel when audit storage is at risk"
