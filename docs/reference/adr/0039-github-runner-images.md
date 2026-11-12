@@ -12,7 +12,7 @@ Date: 2026-11-05
 
 ## Status
 
-Draft
+Accepted
 
 ## Context
 
