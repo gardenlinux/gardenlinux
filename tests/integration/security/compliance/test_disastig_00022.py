@@ -6,6 +6,8 @@ processing failure. It is critical for the appropriate personnel to be aware if 
 at risk of failing to process audit logs as required.
 """
 
+import re
+
 import pytest
 
 
@@ -29,5 +31,5 @@ def test_auditd_space_left_action_alerts_personnel(parse_file):
     """Verify auditd alerts personnel when audit storage is at risk of being exhausted."""
     lines = parse_file.lines("/etc/audit/auditd.conf")
     assert (
-        "space_left_action = syslog" in lines or "space_left_action = email" in lines
+        re.compile(r"space_left_action\s*=\s*(syslog|email)", re.IGNORECASE) in lines
     ), "stigcompliance: space_left_action must be SYSLOG or EMAIL to alert personnel when audit storage is at risk"
