@@ -45,12 +45,16 @@ Positive:
 
 Negative:
 
-- CI runs are less reproducible because the underlying runner image changes over time.
+- Runner environments are not strictly reproducible across time. However, this is inherent to GitHub-hosted
+  runners in general: even version-pinned runners (e.g. `ubuntu-24.04`) receive rolling daily/weekly software
+  updates from GitHub, meaning pinning does not yield real reproducibility.
 - Upstream changes can break workflows at any time and require a timely reaction.
 - ARM64 images have no `-latest` label, so the versioned image must still be updated manually. ARM64 images are used sparsely, so this is not big issue.
 
 Mitigations:
 
+- Garden Linux build infrastructure is designed to isolate builds from the host runner: build workloads
+  execute inside controlled containers, chroots, or VMs rather than relying on mutable runner host packages.
 - GitHub Actions remain pinned to full commit SHAs as decided in [ADR 0028](./0028-pin-actions-to-sha.md).
 - Tool and dependency versions are pinned where reproducibility matters.
 - Runner image changes only affect CI; they do not change the Garden Linux images produced by the build.
