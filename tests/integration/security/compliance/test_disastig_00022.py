@@ -1,26 +1,36 @@
 """
 Ref: SRG-OS-000043-GPOS-00022
 
-Verify the operating system alerts the ISSO and SA (at a minimum) in the event of an audit processing failure.
+Verify the operating system alerts the ISSO and SA (at a minimum) in the event of an audit
+processing failure. It is critical for the appropriate personnel to be aware if a system is
+at risk of failing to process audit logs as required.
 """
-
-import re
 
 import pytest
 
 
 @pytest.mark.security_id(203611)
 @pytest.mark.feature("not container and not lima")
-@pytest.mark.booted(reason="audit event validation requires audit subsystem")
-@pytest.mark.root(reason="required to read audit logs")
-def test_audit_event_contains_audit_processing_failures(shell):
-    """Verify ausearch -ts recent output mentions 'audit' together with fail/error/lost=/backlog."""
-    result = shell(
-        cmd="ausearch -ts recent",
-        capture_output=True,
-    )
+@pytest.mark.booted(reason="audit subsystem must be running")
+@pytest.mark.root(reason="required to read audit config")
+def test_auditd_action_mail_acct_configured(parse_file):
+    """Verify auditd notifies personnel on audit processing failure via action_mail_acct."""
+    lines = parse_file.lines("/etc/audit/auditd.conf")
+    assert any(
+        line.startswith("action_mail_acct") and "=" in line
+        for line in lines
+    ), "stigcompliance: action_mail_acct is not configured in auditd.conf"
 
-    match_found = bool(re.search(r"audit.*(fail|error|lost=|backlog)", result.stdout))
-    assert (
-        match_found
-    ), "stigcompliance: audit records do not indicate alerting or detection of audit processing failures"
+
+@pytest.mark.security_id(203611)
+@pytest.mark.feature("not container and not lima")
+@pytest.mark.booted(reason="audit subsystem must be running")
+@pytest.mark.root(reason="required to read audit config")
+def test_auditd_space_left_action_alerts_personnel(parse_file):
+    """Verify auditd alerts personnel when audit storage is at risk of being exhausted."""
+    lines = parse_file.lines("/etc/audit/auditd.conf")
+    assert any(
+        line.startswith("space_left_action")
+        and any(v in line.upper() for v in ["SYSLOG", "EMAIL"])
+        for line in lines
+    ), "stigcompliance: space_left_action must be SYSLOG or EMAIL to alert personnel when audit storage is at risk"
