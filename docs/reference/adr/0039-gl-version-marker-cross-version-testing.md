@@ -1,12 +1,12 @@
 ---
-title: "ADR 0039: Version-Aware Tests for Cross-Version Test Execution"
+title: "ADR 0040: Version-Aware Tests for Cross-Version Test Execution"
 github_org: gardenlinux
 github_repo: gardenlinux
-github_source_path: docs/reference/adr/0039-gl-version-marker-cross-version-testing.md
-github_target_path: docs/reference/adr/0039-gl-version-marker-cross-version-testing.md
+github_source_path: docs/reference/adr/0040-gl-version-marker-cross-version-testing.md
+github_target_path: docs/reference/adr/0040-gl-version-marker-cross-version-testing.md
 ---
 
-# ADR 0039: Version-Aware Tests for Cross-Version Test Execution
+# ADR 0040: Version-Aware Tests for Cross-Version Test Execution
 
 **Date:** 2026-09-23
 
