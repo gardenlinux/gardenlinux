@@ -5,6 +5,9 @@ on:
       run_id:
         type: string
         required: true
+      prefix:
+        type: string
+        default: ''
     outputs:
       run_id:
         value: ${{ inputs.run_id }}
@@ -20,6 +23,8 @@ on:
         value: ${{ jobs.workflow_data.outputs.original_workflow_name }}
       target:
         value: ${{ jobs.workflow_data.outputs.target }}
+      prefix:
+        value: ${{ jobs.workflow_data.outputs.prefix }}
 jobs:
   workflow_data:
     name: Download workflow JSON data from trigger (${{ inputs.run_id }})
@@ -34,7 +39,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
         with:
-          name: flavor-version-data
+          name: ${{ inputs.prefix }}flavor-version-data
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
@@ -50,7 +55,7 @@ jobs:
             const fs = await import("fs");
 
             fs.accessSync("workflow_data.json", (fs.constants.F_OK | fs.constants.R_OK));
-            workflowData = JSON.parse(fs.readFileSync("workflow_data.json"));
+            const workflowData = JSON.parse(fs.readFileSync("workflow_data.json"));
 
             if ("${{ inputs.run_id }}" != workflowData.id) {
               core.setFailed("Failed validating workflow_run.id");
@@ -58,7 +63,7 @@ jobs:
             }
 
             fs.accessSync("flavor_version_data.json", (fs.constants.F_OK | fs.constants.R_OK));
-            flavorVersionData = JSON.parse(fs.readFileSync("flavor_version_data.json"));
+            const flavorVersionData = JSON.parse(fs.readFileSync("flavor_version_data.json"));
 
             core.setOutput("commit_id", flavorVersionData.commit_id);
             core.setOutput("version", flavorVersionData.version);
@@ -66,5 +71,6 @@ jobs:
             core.setOutput("bare_flavors_matrix", workflowData.bare_flavors_matrix);
             core.setOutput("original_workflow_name", workflowData.original_workflow_name);
             core.setOutput("target", flavorVersionData.target);
+            core.setOutput("prefix", ("prefix" in flavorVersionData ? flavorVersionData.prefix : ""));
 
             return true;
