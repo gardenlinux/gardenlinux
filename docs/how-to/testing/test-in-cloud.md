@@ -33,6 +33,7 @@ Cloud testing deploys the image to cloud infrastructure using OpenTofu, providin
 - Google Cloud Platform (GCP)
 - Alibaba Cloud (ALI)
 - OpenStack
+- STACKIT
 
 ## Cloud provider authentication
 
@@ -127,11 +128,32 @@ export OS_CLOUD=gardenlinux-test
 You can download the `clouds.yaml` from your OpenStack dashboard.
 :::
 
+### STACKIT
+
+STACKIT requires a [Service Account](https://docs.stackit.cloud/stackit/en/service-accounts-134415819.html) with [key-based authentication](https://docs.stackit.cloud/stackit/en/authorization-for-service-accounts-134415831.html):
+
+```bash
+# Configure your existing STACKIT Project
+export STACKIT_PROJECT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# Download your SA key from portal.stackit.cloud → IAM → Service Accounts → your SA → Keys
+export STACKIT_SERVICE_ACCOUNT_KEY_PATH="/path/to/stackit-sa-key.json"
+
+# Check access
+stackit auth validate-token
+```
+
+:::info
+The Project ID is shown in the portal project overview or in the URL.
+Install the STACKIT CLI via `brew install stackitcloud/tap/stackit` or from the [releases page](https://github.com/stackitcloud/stackit-cli/releases).
+:::
+
+
 ## Cloud-specific command-line options
 
 ### `--cloud <provider>`
 
-Specify the cloud provider (aws, gcp, azure, ali, openstack).
+Specify the cloud provider (aws, gcp, azure, ali, openstack, stackit).
 
 ```bash
 ./test --cloud aws .build/image.raw

@@ -51,8 +51,8 @@ variable "cloud_provider" {
   description = "Which cloud provider to target"
   type        = string
   validation {
-    condition     = contains(["aws", "gcp", "azure", "ali", "openstack"], var.cloud_provider)
-    error_message = "Must be one of aws, gcp, azure, ali, or openstack."
+    condition     = contains(["aws", "gcp", "azure", "ali", "openstack", "stackit"], var.cloud_provider)
+    error_message = "Must be one of aws, gcp, azure, ali, openstack, or stackit."
   }
 }
 
