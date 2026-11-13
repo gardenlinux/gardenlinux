@@ -61,7 +61,7 @@ jobs:
       flavors_matrix: ${{ inputs.flavors_matrix }}
   flavors:
     needs: [flavors_matrix, requirements]
-    name: Build flavors
+    name: Build flavor
     strategy:
       matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix ) }}
       fail-fast: ${{ inputs.fail_fast }}

@@ -62,7 +62,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends podman make curl jq unzip qemu-utils retry
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
         with:
           submodules: true
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
@@ -83,7 +83,7 @@ jobs:
           name: certs
           path: cert/
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@e7e6d8adf3c8a7f096f080441e83b940c7f7139b # pin@1.0.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@38884794812cbfc34709ff915aa50e5e2a67bce4 # pin@1.0.1
       - name: Set ABN
         run: |
           echo "ABN=$(gl-features-parse --cname ${{ inputs.cname }} --arch ${{ inputs.arch }} artifact-base-name)" | tee -a "$GITHUB_ENV"
@@ -111,7 +111,7 @@ jobs:
           export_environment_variables: true
       - name: Set GCP platform-test environment
         if: ${{ startsWith(inputs.cname, 'gcp-') }}
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # pin@v9.0.0
         with:
           script: |
             // tf provider vars
@@ -120,7 +120,7 @@ jobs:
             core.exportVariable("GOOGLE_ZONE", "${{ secrets.gcp_zone }}");
       - id: "auth_aws"
         name: "Authenticate to AWS"
-        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # pin@v4
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # pin@v6.2.3
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}
@@ -128,7 +128,7 @@ jobs:
           output-credentials: true
       - name: Set AWS platform-test environment
         if: ${{ startsWith(inputs.cname, 'aws-') }}
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # pin@v9.0.0
         with:
           script: |
             // tf provider auth
@@ -143,14 +143,14 @@ jobs:
       - id: "auth_azure"
         if: ${{ startsWith(inputs.cname, 'azure-') }}
         name: "Authenticate to Azure"
-        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # pin@v1
+        uses: azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # pin@v3.0.2
         with:
           client-id: ${{ secrets.az_client_id }}
           tenant-id: ${{ secrets.az_tenant_id }}
           subscription-id: ${{ secrets.az_subscription_id }}
       - name: Set Azure platform-test environment
         if: ${{ startsWith(inputs.cname, 'azure-') }}
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # pin@v9.0.0
         with:
           script: |
             // tf provider auth
@@ -173,7 +173,7 @@ jobs:
           role-session-expiration: 21600
       - name: "Set Alicloud platform-test environment"
         if: ${{ startsWith(inputs.cname, 'ali-') }}
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # pin@v9.0.0
         with:
           script: |
             // tf provider vars

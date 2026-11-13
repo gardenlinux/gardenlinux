@@ -14,19 +14,19 @@ jobs:
       contents: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
 
-      - name: Build local container 
+      - name: Build local container
         run: podman pull ghcr.io/gardenlinux/cpe:latest
 
-      - name: Generate CPE 
+      - name: Generate CPE
         run: podman run -i ghcr.io/gardenlinux/cpe:latest -p "${{ inputs.version }}" | tail -n1 > gardenlinux-cpe.json
 
       - name: Upload asset to release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: "${{ inputs.version }}"
-          files: gardenlinux-cpe.json 
+          files: gardenlinux-cpe.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
