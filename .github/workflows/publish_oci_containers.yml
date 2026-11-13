@@ -47,7 +47,7 @@ jobs:
       environment: ${{ steps.set_values.outputs.environment }}
       repository: ${{ steps.set_values.outputs.repository }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
         with:
           ref: main
           sparse-checkout: |
@@ -55,7 +55,7 @@ jobs:
           sparse-checkout-cone-mode: false
       - name: Set environment and repository
         id: set_values
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # pin@v9.0.0
         with:
           script: |
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
@@ -79,99 +79,92 @@ jobs:
       run:
         shell: bash
     env:
-      ARTIFACT_BASE_NAME_AMD64: ""
-      ARTIFACT_BASE_NAME_ARM64: ""
+      ABN_AMD64: ""
+      ABN_ARM64: ""
     permissions:
       packages: write
     strategy:
       matrix:
         include:
-          - flavor: "container"
+          - cname: "container"
             subpath: ""
-          - flavor: "container-pythonDev"
+          - cname: "container-pythonDev"
             subpath: "/container-python-dev"
-          - flavor: "container-sslfips"
+          - cname: "container-sslfips"
             subpath: "/fips"
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
         with:
           ref: ${{ inputs.commit_id }}
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@385aaad34c414d49583c0fe3e03243d110640770 # pin@0.10.25
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@38884794812cbfc34709ff915aa50e5e2a67bce4 # pin@1.0.1
       - name: Set container version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
-      - name: Set ARTIFACT_BASE_NAME per arch
+      - name: Set ABNs
         run: |
-          if [[ -n "$(gl-flavors-parse --include-only "${{ matrix.flavor }}-amd64" --publish)" ]]; then
-            echo "ARTIFACT_BASE_NAME_AMD64=$(gl-features-parse --cname "${{ matrix.flavor }}" --arch amd64 --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
-            echo "ARTIFACT_BASE_NAME_ARM64=$(gl-features-parse --cname "${{ matrix.flavor }}" --arch arm64 --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
+          if [[ -n "$(gl-flavors-parse --include-only "${{ matrix.cname }}-amd64" --publish)" ]]; then
+            echo "ABN_AMD64=$(gl-features-parse --cname "${{ matrix.cname }}" --arch amd64 artifact-base-name)" | tee -a "$GITHUB_ENV"
+            echo "ABN_ARM64=$(gl-features-parse --cname "${{ matrix.cname }}" --arch arm64 artifact-base-name)" | tee -a "$GITHUB_ENV"
           fi
-      - if: ${{ env.ARTIFACT_BASE_NAME_AMD64 != '' }}
+      - if: ${{ env.ABN_AMD64 != '' }}
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
         with:
-          name: build-${{ matrix.flavor }}-amd64
+          name: build-${{ matrix.cname }}-amd64
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - if: ${{ env.ARTIFACT_BASE_NAME_ARM64 != '' }}
+      - if: ${{ env.ABN_ARM64 != '' }}
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
         with:
-          name: build-${{ matrix.flavor }}-arm64
+          name: build-${{ matrix.cname }}-arm64
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - if: ${{ env.ARTIFACT_BASE_NAME_AMD64 != '' }}
+      - if: ${{ env.ABN_AMD64 != '' }}
         name: Publish container images
         run: |
-          if [ "${{ inputs.target }}" = "nightly" ]; then
-            is_nightly=true
+          ABNS="${ABN_AMD64} ${ABN_ARM64}"
+
+          if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
+            IS_NIGHTLY=true
           else
-            is_nightly=false
+            IS_NIGHTLY=false
           fi
 
-          version="$(cat VERSION)"
-
-          podman login -u token -p ${{ github.token }} ghcr.io
-          tar xzv < "${ARTIFACT_BASE_NAME_AMD64}.tar.gz"
-          image="$(podman load < ${ARTIFACT_BASE_NAME_AMD64}.oci | awk '{ print $NF }')"
-
-          # Tagging for amd64 nightly
-          if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-nightly
-          fi
-
-          # Tagging for amd64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
-          podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
-
-          tar xzv < "${ARTIFACT_BASE_NAME_ARM64}.tar.gz"
-          image="$(podman load < ${ARTIFACT_BASE_NAME_ARM64}.oci | awk '{ print $NF }')"
-
-          # Tagging for arm64 nightly
-          if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-nightly
-          fi
-
-          # Tagging for arm64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version}
-          podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version}
-
-          # Creating and pushing manifest for nightly
-          if [ $is_nightly = true ]; then
-            podman manifest create ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-nightly
-            podman manifest push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly
-          fi
+          VERSION=$(cat VERSION)
 
           # Creating and pushing manifest for version tag
-          podman manifest create ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version}
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version} ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version} ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version}
-          podman manifest push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version}
+          gl-oci new-index --index "${{ needs.determine_environment.outputs.repository }}" --index-tag "${VERSION}"
+
+          # Creating and pushing manifest for nightly
+          if [ $IS_NIGHTLY = true ]; then
+            gl-oci new-index --index "${{ needs.determine_environment.outputs.repository }}" --index-tag nightly
+          fi
+
+          for abn in $ABNS; do
+            tar xzv < "${abn}.tar.gz"
+
+            ARCH="$(gl-features-parse --artifact-base-name "${abn}" arch)"
+            IMAGE_ID="$(gl-oci load-image --oci-archive "${abn}.oci" | awk '{ print $NF }')"
+
+            # Tagging with version
+            gl-oci tag-image --repository "${IMAGE_ID}" --additional-tag "${{ needs.determine_environment.outputs.repository }}:${ARCH}-${VERSION}"
+            gl-oci push-image --repository "${{ needs.determine_environment.outputs.repository }}" --tag "${ARCH}-${VERSION}"
+
+            # Tagging for nightly
+            if [ $IS_NIGHTLY = true ]; then
+              gl-oci tag-image --repository "${IMAGE_ID}" --additional-tag "${{ needs.determine_environment.outputs.repository }}:${ARCH}-nightly"
+              gl-oci push-image --repository "${{ needs.determine_environment.outputs.repository }}" --tag "${ARCH}-nightly"
+            fi
+
+            # Image index handling
+            gl-oci add-image-to-index --index "${{ needs.determine_environment.outputs.repository }}" --index-tag "${VERSION}" --repository "${{ needs.determine_environment.outputs.repository }}" --tag "${ARCH}-${VERSION}"
+
+            if [ $IS_NIGHTLY = true ]; then
+              gl-oci add-image-to-index --index "${{ needs.determine_environment.outputs.repository }}" --index-tag nightly --repository "${{ needs.determine_environment.outputs.repository }}" --tag "${ARCH}-nightly"
+            fi
+          done
   bare_flavors:
     needs: determine_environment
     name: Publish bare flavors
@@ -188,68 +181,63 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
         with:
           ref: ${{ inputs.commit_id }}
           sparse-checkout: |
             bin/**
           sparse-checkout-cone-mode: false
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d64300c48bf9a0a262642b564c7aeea0b89be21f # pin@0.10.5
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
         with:
           pattern: build-bare-${{ matrix.config }}-*
           merge-multiple: true
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - name: Publish bare flavor image ${{ matrix.config }}
+      - name: Publish bare flavor image ${{ matrix.config }} (${{ matrix.arch }})
+        env:
+          GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
         run: |
-          if [ "${{ inputs.target }}" = "nightly" ]; then
-            is_nightly=true
+          ARCHS="amd64 arm64"
+
+          if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
+            IS_NIGHTLY=true
           else
-            is_nightly=false
-          fi
-          version=$(bin/garden-version "${{ inputs.version }}")
-
-          podman login -u token -p ${{ github.token }} ghcr.io
-
-          # Handling amd64 image
-          image="$(podman load < ${{ matrix.config }}-amd64.oci | awk '{ print $NF }')"
-
-          # Tagging and pushing amd64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
-          podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
-
-          # Tagging and pushing amd64 with nightly
-          if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
+            IS_NIGHTLY=false
           fi
 
-          # Handling arm64 image
-          image="$(podman load < ${{ matrix.config }}-arm64.oci | awk '{ print $NF }')"
-
-          # Tagging and pushing arm64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
-          podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
-
-          # Tagging and pushing arm64 with nightly
-          if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
-          fi
+          VERSION=$(bin/garden-version "${{ inputs.version }}")
 
           # Creating and pushing manifest for version tag
-          podman manifest create ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
-          podman manifest push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version
+          gl-oci new-index --index "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}" --index-tag "${VERSION}"
 
-          # Creating and pushing manifest for nightly tag
-          if [ $is_nightly = true ]; then
-            podman manifest create ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            podman manifest push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly
+          # Creating and pushing manifest for nightly
+          if [ $IS_NIGHTLY = true ]; then
+            gl-oci new-index --index "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}" --index-tag nightly
           fi
+
+          for ARCH in $ARCHS; do
+            IMAGE_ID="$(gl-oci load-image --oci-archive "${{ matrix.config }}-${ARCH}.oci" | awk '{ print $NF }')"
+
+            # Tagging with version
+            gl-oci tag-image --repository "${IMAGE_ID}" --additional-tag "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:${ARCH}-${VERSION}"
+            gl-oci push-image --repository "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}" --tag "${ARCH}-${VERSION}"
+
+            # Tagging for nightly
+            if [ $IS_NIGHTLY = true ]; then
+              gl-oci tag-image --repository "${IMAGE_ID}" --additional-tag "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:${ARCH}-nightly"
+              gl-oci push-image --repository "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}" --tag "${ARCH}-nightly"
+            fi
+
+            # Image index handling
+            gl-oci add-image-to-index --index "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}" --index-tag "${VERSION}" --repository "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}" --tag "${ARCH}-${VERSION}"
+
+            if [ $IS_NIGHTLY = true ]; then
+              gl-oci add-image-to-index --index "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}" --index-tag nightly --repository "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}" --tag "${ARCH}-nightly"
+            fi
+          done
   push_flavors:
     needs: determine_environment
     name: Publish flavors
@@ -258,7 +246,7 @@ jobs:
       run:
         shell: bash
     env:
-      ARTIFACT_BASE_NAME: ""
+      ABN: ""
       GL_ALLOW_MULTIPLE_PLATFORMS: "1"
     permissions:
       id-token: write
@@ -269,46 +257,46 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 8
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
         with:
           ref: ${{ inputs.commit_id }}
           submodules: true
-      - uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # pin@v4
+      - uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # pin@v6.2.3
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@385aaad34c414d49583c0fe3e03243d110640770 # pin@0.10.25
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@38884794812cbfc34709ff915aa50e5e2a67bce4 # pin@1.0.1
       - name: Install cosign
-        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # pin@v4.1.2
         with:
           cosign-release: "v2.4.1"
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
         with:
-          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+          name: build-${{ matrix.cname }}-${{ matrix.arch }}
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - name: Set ARTIFACT_BASE_NAME
+      - name: Set ABN
         run: |
-          echo "ARTIFACT_BASE_NAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
+          echo "ABN=$(gl-features-parse --cname ${{ matrix.cname }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} artifact-base-name)" | tee -a "$GITHUB_ENV"
       - name: Push using the gl-oci util
         env:
           GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
         run: |
-          mkdir "$ARTIFACT_BASE_NAME"
+          mkdir "$ABN"
 
-          tar -C "$ARTIFACT_BASE_NAME" -xzf "$ARTIFACT_BASE_NAME.tar.gz"
+          tar -C "$ABN" -xzf "$ABN.tar.gz"
 
           gl-oci push-manifest \
-            --dir "${ARTIFACT_BASE_NAME}" \
-            --container ${{ needs.determine_environment.outputs.repository }} \
+            --dir "${ABN}" \
+            --repository ${{ needs.determine_environment.outputs.repository }} \
             --arch ${{ matrix.arch }} \
             --version ${{ inputs.version }} \
-            --cname "${ARTIFACT_BASE_NAME}" \
-            --cosign_file digest.txt \
-            --manifest_file "oci_manifest_entry_${ARTIFACT_BASE_NAME}.json"
+            --cname "${{ matrix.cname }}" \
+            --cosign-file digest.txt \
+            --manifest-file "oci_manifest_entry_${ABN}.json"
       - name: Sign the manifest
         run: |
           cat digest.txt
@@ -319,8 +307,8 @@ jobs:
           cosign verify --insecure-ignore-tlog=true --key "awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }}" "${{ needs.determine_environment.outputs.repository }}@$(cat digest.txt)"
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
-          path: oci_manifest_entry_${{ env.ARTIFACT_BASE_NAME }}.json
-          key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
+          path: oci_manifest_entry_${{ env.ABN }}.json
+          key: oci-manifest-${{ matrix.cname }}-${{ matrix.arch }}-${{ github.run_id }}
   update_manifest_index:
     needs: [determine_environment, push_flavors]
     name: Update OCI manifest index
@@ -329,7 +317,7 @@ jobs:
       run:
         shell: bash
     env:
-      ARTIFACT_BASE_NAME: ""
+      ABN: ""
       GL_ALLOW_MULTIPLE_PLATFORMS: "1"
     permissions:
       id-token: write
@@ -340,31 +328,31 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 1
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
         with:
           ref: ${{ inputs.commit_id }}
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@385aaad34c414d49583c0fe3e03243d110640770 # pin@0.10.25
-      - name: Set ARTIFACT_BASE_NAME
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@38884794812cbfc34709ff915aa50e5e2a67bce4 # pin@1.0.1
+      - name: Set ABN
         run: |
-          echo "ARTIFACT_BASE_NAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} cname)" | tee -a "$GITHUB_ENV"
+          echo "ABN=$(gl-features-parse --cname ${{ matrix.cname }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --commit ${{ inputs.commit_id }} artifact-base-name)" | tee -a "$GITHUB_ENV"
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
-          path: oci_manifest_entry_${{ env.ARTIFACT_BASE_NAME }}.json
-          key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
-      - name: Update index using glcli tool
+          path: oci_manifest_entry_${{ env.ABN }}.json
+          key: oci-manifest-${{ matrix.cname }}-${{ matrix.arch }}-${{ github.run_id }}
+      - name: Update index using gl-oci tool
         env:
           GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
         run: |
           mkdir manifests
-          mv oci_manifest_entry_${ARTIFACT_BASE_NAME}.json manifests/
+          mv oci_manifest_entry_${ABN}.json manifests/
 
           gl-oci push-index-from-directory \
             --index ${{ needs.determine_environment.outputs.repository }} \
             --index-tag ${{ inputs.version }} \
-            --manifest_folder manifests
+            --dir manifests
   publish_tests:
     name: Publish tests container
     runs-on: ubuntu-24.04
@@ -374,54 +362,58 @@ jobs:
     permissions:
       packages: write
     steps:
+      - id: tests_containers
+        name: Download built tests container(s)
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
+        with:
+          pattern: tests-container*
+          merge-multiple: true
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: true
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
       - name: Set container version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
-      - id: tests_containers
-        name: Download built tests archive
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
-        with:
-          name: tests-container
-          github-token: ${{ github.token }}
-          run-id: ${{ inputs.run_id }}
-      - name: Setup oras
-        uses: oras-project/setup-oras@5e2f2482b30b0cb3e14e67f89a80c88c659a7c63 # pin@v2.0.3
-      - name: Publish tests container
+      - name: Publish tests images and manifest
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
 
-          if [ "${{ inputs.target }}" = "nightly" ]; then
-            is_nightly=true
+          if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
+            IS_NIGHTLY=true
           else
-            is_nightly=false
+            IS_NIGHTLY=false
           fi
 
-          version="$(cat VERSION)"
-          repo="ghcr.io/${{ github.repository_owner }}/test"
+          IDENTIFIER=""
+          MAJOR_TAG=""
+          VERSION=$(bin/garden-version "${{ inputs.version }}")
 
-          echo "${GITHUB_TOKEN}" | oras login ghcr.io -u token --password-stdin
+          for oci in *.oci; do
+            if [[ "${oci}" == "dist.oci" ]]; then
+                IDENTIFIER=""
+            elif [[ "${oci}" =~ _([^_.]+)\.[^.]+$ ]]; then
+                IDENTIFIER="-${BASH_REMATCH[1]}"
+            else
+                echo "Unsupported OCI archive name: ${oci}"
+                exit 1
+            fi
 
-          # dist.oci is an OCI image layout archive holding a multiarch image
-          # index. Oras is used to copy the image by digest and preserve that digest.
-          ref="$(tar -xOf dist.oci index.json | jq -r '.manifests[0].digest')"
-          oras cp --from-oci-layout "dist.oci@${ref}" "${repo}:${version}"
-          if [ "$is_nightly" = true ]; then
-            oras cp --from-oci-layout "dist.oci@${ref}" "${repo}:nightly"
-          fi
+            gl-oci push-oci-image --oci-archive "dist.oci" --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "${VERSION}${IDENTIFIER}"
 
-          # Publish a floating stable tag per release branch (e.g. rel-2150-latest).
-          # Consumers such as the diki compliance scanner can pin to this tag to
-          # always get the latest patch of a given release series (e.g. 2150.9.0 →
-          # 2150.10.0) without following nightly/main which introduces unreviewed CVEs.
-          # The tag is only created/updated on non-nightly (release) builds.
-          if [ "$is_nightly" = false ]; then
-            branch_series="${version%%.*}"
-            stable_tag="rel-${branch_series}-latest"
+            # Creating and pushing manifest for nightly
+            if [ $IS_NIGHTLY = true ]; then
+              gl-oci push-oci-image --oci-archive "dist.oci" --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "$nightly${IDENTIFIER}"
+            else
+              MAJOR_VERSION="${version%%.*}"
+              MAJOR_TAG="rel-${MAJOR_VERSION}-latest"
 
-            oras cp --from-oci-layout "dist.oci@${ref}" "${repo}:${stable_tag}"
-
-            echo "Floating stable tag updated: ${repo}:${stable_tag} → ${version}"
-          fi
+              gl-oci push-oci-image --oci-archive "dist.oci" --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "${MAJOR_TAG}${IDENTIFIER}"
+            fi
+          done

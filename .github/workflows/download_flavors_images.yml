@@ -22,7 +22,7 @@ on:
         required: true
 jobs:
   images:
-    name: Provide image ${{ matrix.flavor }} (${{ matrix.arch }})
+    name: Provide image ${{ matrix.cname }} (${{ matrix.arch }})
     if: ${{ inputs.flavors_matrix != '{"include":[]}' }}
     runs-on: ubuntu-24.04
     defaults:
@@ -34,42 +34,42 @@ jobs:
     # @TODO: We could use a better name for the required environment
     environment: oidc_platform_tests
     env:
-      ARTIFACT_BASE_NAME: ""
+      ABN: ""
     strategy:
       matrix: ${{ fromJSON(inputs.flavors_matrix) }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@385aaad34c414d49583c0fe3e03243d110640770 # pin@0.10.25
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@38884794812cbfc34709ff915aa50e5e2a67bce4 # pin@1.0.1
       - name: Set image reference for S3
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
-      - name: Set ARTIFACT_BASE_NAME
+      - name: Set ABN
         run: |
-          echo "ARTIFACT_BASE_NAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
+          echo "ABN=$(gl-features-parse --cname ${{ matrix.cname }} --arch ${{ matrix.arch }} artifact-base-name)" | tee -a "$GITHUB_ENV"
       - name: "Authenticate to AWS"
-        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # pin@v4
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # pin@v6.2.3
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: Prepare image from S3
         run: |
-          mkdir "$ARTIFACT_BASE_NAME"
-          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$ARTIFACT_BASE_NAME" download-artifacts-from-bucket --cname "$ARTIFACT_BASE_NAME"
+          mkdir "$ABN"
+          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$ABN" download-artifacts-from-bucket --artifact-base-name "$ABN"
 
-          tar -cSzvf "$ARTIFACT_BASE_NAME.tar.gz" -C "$ARTIFACT_BASE_NAME/" .
+          tar -cSzvf "$ABN.tar.gz" -C "$ABN/" .
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         with:
-          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
-          path: ${{ env.ARTIFACT_BASE_NAME }}.tar.gz
+          name: build-${{ matrix.cname }}-${{ matrix.arch }}
+          path: ${{ env.ABN }}.tar.gz
           if-no-files-found: error
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           path: |
             COMMIT
             VERSION
-          key: build-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
+          key: build-${{ matrix.cname }}-${{ matrix.arch }}-${{ github.run_id }}

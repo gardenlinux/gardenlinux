@@ -17,23 +17,23 @@ on:
   pull_request:
     # No paths-ignore on pull_request — workflow must run on every PR so that
     # build_and_test_gate always produces a check result for branch protection.
-    # detect-changes skips the expensive build/test jobs on docs-only PRs.
+    # detect_changes skips the expensive build/test jobs on docs-only PRs.
 jobs:
-  detect-changes:
+  detect_changes:
     name: Detect code path changes
     runs-on: ubuntu-24.04
     outputs:
       code: ${{ steps.filter.outputs.code }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
       - name: Check for code path changes
         id: filter
-        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # pin@v4.0.3
         with:
           filters: |
             code:
               - '!.gitignore'
-              - '!.github/workflows/docs*.yml'
+              - '!.github/workflows/**'
               - '!docs/**'
               - '!features/*/README.md'
               - '!features/*/info.yaml'
@@ -42,14 +42,14 @@ jobs:
 
   set_version:
     name: Set VERSION
-    needs: [detect-changes]
-    if: needs.detect-changes.outputs.code == 'true'
+    needs: detect_changes
+    if: needs.detect_changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
       - name: Use VERSION file to support dev build on rel-branch
         id: version
         run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
@@ -80,19 +80,24 @@ jobs:
 
   build_and_test_gate:
     name: Build and test gate
-    needs: [detect-changes, build, test]
+    needs:
+    - build
+    - test
     if: always()
     runs-on: ubuntu-24.04
     steps:
       - name: Evaluate build and test result
         run: |
-          CODE_CHANGED="${{ needs.detect-changes.outputs.code }}"
-          BUILD_RESULT="${{ needs.build.result }}"
-          TEST_RESULT="${{ needs.test.result }}"
+          CODE_CHANGED="${{ needs.detect_changes.outputs.code }}"
+
           if [[ "$CODE_CHANGED" != "true" ]]; then
             echo "No code paths changed; skipping build and test — gate passes."
             exit 0
           fi
+
+          BUILD_RESULT="${{ needs.build.result }}"
+          TEST_RESULT="${{ needs.test.result }}"
+
           if [[ "$BUILD_RESULT" != "success" ]]; then
             echo "Build result: $BUILD_RESULT"
             exit 1
@@ -101,4 +106,6 @@ jobs:
             echo "Test result: $TEST_RESULT"
             exit 1
           fi
+
           echo "Build and test passed."
+          exit 0
