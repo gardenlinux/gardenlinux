@@ -1,0 +1,5 @@
+markers:
+  "etc/kernel/cmdline.d/10-console.cfg":
+  - "GL-TESTCOV-kvm-config-kernel-cmdline-console"
+  "etc/udev/rules.d/60-onmetal.rules":
+  - "GL-TESTCOV-kvm-config-udev-rules-onmetal"

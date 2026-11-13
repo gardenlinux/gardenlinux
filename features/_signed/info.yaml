@@ -1,0 +1,7 @@
+description: "use signed EFI binaries"
+type: flag
+features:
+  include:
+    - _usi
+  exclude:
+    - _unsigned

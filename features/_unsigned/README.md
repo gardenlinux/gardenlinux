@@ -20,7 +20,9 @@ Configures the build to use unsigned EFI binaries, bypassing the signing step fo
 
 `_unsigned` instructs the build system to produce EFI binaries (bootloader and Unified Kernel Image) without applying a cryptographic signature. This allows the image to boot on systems where Secure Boot is disabled or in a development key enrollment mode, without requiring access to the Garden Linux signing keys.
 
-The `usi.config` file provides Unified System Image (USI) build configuration specific to the unsigned variant.
+The `usi.post` file provides Unified System Image (USI) build configuration specific to the unsigned variant.
+
+It also removes the `enroll-gardenlinux-secureboot-keys` command to avoid that people run it and break their system.
 
 ### Files
 
@@ -29,8 +31,9 @@ See the [feature file reference](/reference/features/) for the semantics of each
 
 | File | Purpose |
 |---|---|
-| [`info.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_unsigned/info.yaml) ([ref](/reference/features/#info-yaml-file-structure)) | Declares `type: flag` and included/excluded features. |
-| [`usi.config`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_unsigned/usi.config) | USI build configuration for unsigned EFI binaries, specifying signing options for the Unified Kernel Image build. |
+| [`files.exclude`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_unsigned/files.exclude) | Excludes the secure-boot key enrollment command from the image. |
+| [`info.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_unsigned/info.yaml) ([ref](/reference/features/#info-yaml-file-structure)) | Declares `_unsigned` as a feature flag. |
+| [`usi.post`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_unsigned/usi.post) | Builds the EFI System Partition with systemd-boot and the Unified Kernel Image, and configures the boot loader without signing. |
 
 ### Related features
 

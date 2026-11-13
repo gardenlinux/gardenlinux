@@ -35,7 +35,7 @@ emergency escape paths. For the full trust model and security guarantees, see
   `/var` storage to a per-boot randomly-keyed encrypted partition (no state persists
   across reboots). Replace with [`_tpm2`](/reference/features/_tpm2) if persistent
   `/var` is needed.
-- **Signs the UKI** — `usi.config` runs at build time to sign the systemd-boot EFI
+- **Signs the UKI** — `usi.post` runs at build time to sign the systemd-boot EFI
   binary and the UKI with `sbsign`, using either a local key or an AWS KMS PKCS#11
   key. Secure Boot auth files (PK, KEK, db) are copied to the ESP and `loader.conf`
   is configured for automatic key enrollment.
@@ -77,9 +77,9 @@ All verification steps run inside the initrd, before any local filesystem is mou
      kernel or dracut from offering an emergency shell regardless of how the system
      was invoked.
 
-#### Image signing (`usi.config`, build-time)
+#### Image signing (`usi.post`, build-time)
 
-`usi.config` is called by the `_usi` image builder with the UKI path, ESP directory,
+`usi.post` is called by the `_usi` image builder with the UKI path, ESP directory,
 and rootfs path as arguments:
 
 1. Signs the systemd-boot EFI binary (`EFI/BOOT/BOOT{X64,AA64}.EFI`) with `sbsign`
@@ -133,7 +133,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`info.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_trustedboot/info.yaml) ([ref](/reference/features/#info-yaml-file-structure)) | Declares `type: flag`; includes [`_usi`](/reference/features/_usi) and [`_ephemeral`](/reference/features/_ephemeral); excludes [`_nocrypt`](/reference/features/_nocrypt) and [`_unsigned`](/reference/features/_unsigned). |
 | [`initrd.include.markers.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_trustedboot/initrd.include.markers.yaml) ([ref](/reference/testing/test-coverage-markers)) | Maps initrd files to test-coverage marker IDs. |
 | [`requirements.mod`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_trustedboot/requirements.mod) | Declares `requirements["secureboot"]=true`, enforcing that the build target supports Secure Boot. |
-| [`usi.config`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_trustedboot/usi.config) | Build-time signing script called by the `_usi` image builder: signs the systemd-boot EFI binary and the UKI with `sbsign` (local PEM key or AWS KMS PKCS#11); configures auto-enrollment; copies Garden Linux Secure Boot auth files to the ESP. |
+| [`usi.post`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_trustedboot/usi.post) | Build-time signing script called by the `_usi` image builder: signs the systemd-boot EFI binary and the UKI with `sbsign` (local PEM key or AWS KMS PKCS#11); configures auto-enrollment; copies Garden Linux Secure Boot auth files to the ESP. |
 | [`file.include/etc/kernel/cmdline.d/99-no-rd-shell.cfg`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_trustedboot/file.include/etc/kernel/cmdline.d/99-no-rd-shell.cfg) ([`file.include`](/reference/features/#file-include)) | Strips `rd.shell` and `rd.emergency` kernel parameters and appends `rd.shell=0 rd.emergency=poweroff systemd.gpt_auto=0`, closing all emergency escape hatches in the initrd. |
 | [`initrd.include/etc/systemd/system/check-secureboot.service`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_trustedboot/initrd.include/etc/systemd/system/check-secureboot.service) (`initrd.include`) | Initrd service ordered before `local-fs.target` (via `local-fs.target.requires/`) that runs `check-secureboot` and triggers `emergency.target` (immediate halt) if Secure Boot is not active. |
 | [`initrd.include/etc/systemd/system/emergency.service`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_trustedboot/initrd.include/etc/systemd/system/emergency.service) (`initrd.include`) | Overrides the standard emergency shell: replaces `ExecStart` with `halt -f`, preventing any interactive access if the system enters emergency mode. |
