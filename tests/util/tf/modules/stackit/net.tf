@@ -4,7 +4,7 @@ resource "stackit_network" "net" {
   vpc_id                    = var.provider_vars.vpc_id
   ipv4_vpc_network_range_id = var.provider_vars.ipv4_vpc_network_range_id
 
-  ipv4_prefix = var.provider_vars.net_cidr
+  ipv4_prefix_length = 29
 
   labels = local.labels
 }

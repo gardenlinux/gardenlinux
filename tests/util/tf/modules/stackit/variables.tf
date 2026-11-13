@@ -65,7 +65,6 @@ variable "provider_vars" {
     availability_zone = optional(string, "eu01-1")
     machine_type      = optional(string)
     ssh_user          = optional(string, "admin")
-    net_cidr          = optional(string, "10.0.2.0/24")
     vpc_id                    = optional(string)
     ipv4_vpc_network_range_id = optional(string)
   })

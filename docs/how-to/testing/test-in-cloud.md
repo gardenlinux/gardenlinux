@@ -130,49 +130,20 @@ You can download the `clouds.yaml` from your OpenStack dashboard.
 
 ### STACKIT
 
-STACKIT requires a [Service Account](https://docs.stackit.cloud/stackit/en/service-accounts-134415819.html) with either a key file or the STACKIT CLI:
-
-**Option A — Credentials file (recommended, no CLI needed):**
-
-Create `~/.stackit/credentials.json` pointing to your service account key:
+STACKIT requires a [Service Account](https://docs.stackit.cloud/stackit/en/service-accounts-134415819.html) with [key-based authentication](https://docs.stackit.cloud/stackit/en/authorization-for-service-accounts-134415831.html):
 
 ```bash
-mkdir -p ~/.stackit
+# Configure your existing STACKIT Project
+export STACKIT_PROJECT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 # Download your SA key from portal.stackit.cloud → IAM → Service Accounts → your SA → Keys
-# Save it as ~/.stackit/sa-key.json, then create the credentials file:
-cat > ~/.stackit/credentials.json <<'EOF'
-{
-  "STACKIT_SERVICE_ACCOUNT_KEY_PATH": "/Users/YOUR_USER/.stackit/sa-key.json"
-}
-EOF
-
-export STACKIT_PROJECT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-export STACKIT_REGION="eu01"
-```
-
-The OpenTofu STACKIT provider automatically reads `~/.stackit/credentials.json`, so no additional environment variables are needed for authentication.
-
-**Option B — Explicit environment variables:**
-
-```bash
 export STACKIT_SERVICE_ACCOUNT_KEY_PATH="/path/to/stackit-sa-key.json"
-export STACKIT_PROJECT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-export STACKIT_REGION="eu01"
-```
 
-**Option C — STACKIT CLI:**
-
-```bash
-# Login (only needed once)
-stackit auth login
-
-export STACKIT_PROJECT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-export STACKIT_REGION="eu01"
+# Check access
+stackit auth validate-token
 ```
 
 :::info
-The SA key JSON can be downloaded from `portal.stackit.cloud` → IAM → Service Accounts → your SA → Keys.
 The Project ID is shown in the portal project overview or in the URL.
 Install the STACKIT CLI via `brew install stackitcloud/tap/stackit` or from the [releases page](https://github.com/stackitcloud/stackit-cli/releases).
 :::
