@@ -123,6 +123,9 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - if: ${{ env.ABN_AMD64 != '' }}
         name: Publish container images
+        env:
+          GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
         run: |
           ABNS="${ABN_AMD64} ${ABN_ARM64}"
 
@@ -381,7 +384,8 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Publish tests images and manifest
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
 
