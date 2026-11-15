@@ -134,7 +134,7 @@ jobs:
             flavors.yaml
           sparse-checkout-cone-mode: false
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2787b8e4f9eca6502dfe3edd11f4a85c752678a9 # pin@1.0.2
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@6930c531a324e6b8c615a3a15fbdfd3a8c4eab03 # pin@1.0.3
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # pin@v6.2.3
         with:
