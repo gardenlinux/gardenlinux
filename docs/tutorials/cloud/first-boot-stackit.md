@@ -92,25 +92,39 @@ For a complete list of maintained releases and their support lifecycle, see the 
 
 You can [build your own Garden Linux images](/how-to/building-images) or even [create a custom feature](/how-to/custom-feature).
 
-### Step 3: Create a Network
+### Step 3: Get or Create a Network
 
-Create a network for your Garden Linux server:
+Get the ID of an existing network, or create a new one:
 
 :::tip
-If you already have a STACKIT network you'd like to reuse, you can skip this step and set `NETWORK_ID` to your existing network ID.
+New STACKIT projects come with a default network (`nw-0`). VPC-enabled projects require a routing table ID to create additional networks. We recommend reusing the existing network unless you need isolation.
 :::
+
+**Option A: Use an existing network (recommended)**
+
+```bash
+NETWORK_ID=$(stackit network list \
+  --project-id "${STACKIT_PROJECT_ID}" \
+  --output-format json | \
+  jq -r '.[0].id')
+echo "Network ID: ${NETWORK_ID}"
+```
+
+**Option B: Create a new network** (non-VPC projects only)
 
 ```bash
 NETWORK_NAME="gardenlinux-network"
 
 stackit network create \
   --project-id "${STACKIT_PROJECT_ID}" \
-  --name "${NETWORK_NAME}"
+  --name "${NETWORK_NAME}" \
+  --assume-yes
 
 NETWORK_ID=$(stackit network list \
   --project-id "${STACKIT_PROJECT_ID}" \
   --output-format json | \
   jq -r ".[] | select(.name==\"${NETWORK_NAME}\") | .id")
+echo "Network ID: ${NETWORK_ID}"
 ```
 
 ### Step 4: Create a Security Group
@@ -119,7 +133,7 @@ Create a security group that allows inbound SSH access from your current public 
 
 ```bash
 SG_NAME="gardenlinux-sg"
-MY_IP=$(curl -s ifconfig.me)
+MY_IP=$(curl -s -4 ifconfig.me)
 
 stackit security-group create \
   --project-id "${STACKIT_PROJECT_ID}" \
@@ -214,7 +228,7 @@ echo "Server is reachable at: ${PUBLIC_IP}"
 
 ### Step 8: Connect to Your Instance
 
-Wait a few moments for the server to complete its startup script, then connect via SSH:
+Wait for the server to complete its startup script (typically 3–5 minutes), then connect via SSH:
 
 ```bash
 ssh -i "${KEY_NAME}" admin@"${PUBLIC_IP}"
