@@ -25,31 +25,36 @@ Before starting, you'll need:
 
 - A [STACKIT account](https://portal.stackit.cloud/) with a project and appropriate permissions to create servers, networks, and security groups
 - [STACKIT CLI](https://github.com/stackitcloud/stackit-cli) installed (`brew install stackitcloud/tap/stackit` or from the [releases page](https://github.com/stackitcloud/stackit-cli/releases))
-- [OpenStack CLI](https://docs.openstack.org/python-openstackclient/latest/) installed (`python-openstackclient`) — STACKIT exposes a standard OpenStack API
 - STACKIT credentials configured — see [STACKIT CLI authentication](https://github.com/stackitcloud/stackit-cli/blob/main/AUTHENTICATION.md)
 - An SSH client on your local machine
 
 ## What you'll build
 
-You'll upload a Garden Linux image to STACKIT, deploy a server with a basic networking setup (network, subnet, security group, and floating IP), configure SSH access, and verify the installation. The tutorial uses the `stackit-gardener_prod` [flavor](/explanation/flavors), which is optimized for production workloads on STACKIT.
+You'll upload a Garden Linux image to STACKIT, deploy a server with a basic networking setup (network, security group, and public IP), configure SSH access, and verify the installation. The tutorial uses the `stackit-gardener_prod` [flavor](/explanation/flavors), which is optimized for production workloads on STACKIT.
 
 ## Steps
 
-### Step 1: Choose an Image
+### Step 1: Set Your Project ID
 
-Garden Linux provides pre-built images for STACKIT. Start by downloading the image and uploading it to your STACKIT project.
+All STACKIT CLI commands require a project ID. Set it once as an environment variable:
+
+```bash
+export STACKIT_PROJECT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # replace with your project ID
+```
+
+### Step 2: Upload a Garden Linux Image
+
+Garden Linux provides pre-built images for STACKIT. Download and upload the image to your STACKIT project.
 
 :::tip
 For a complete overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
 :::
 
-#### Official Images
-
 Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
 
 In the "Published Images" section on the release page, find the image for your desired [flavor](/explanation/flavors) and [architecture](/reference/glossary#architecture). The default production flavor is `stackit-gardener_prod-amd64`. You can directly download it there.
 
-To download it by script, find the `.tar.xz` archive in the "Assets" section and extract the `.raw` image, then upload it to STACKIT via the OpenStack Glance API:
+To download and upload by script, find the `.tar.xz` archive in the "Assets" section, extract the `.raw` image, and upload it via the STACKIT CLI:
 
 ```bash
 GL_VERSION="2150.0.0"
@@ -65,13 +70,13 @@ curl -L -o "${GL_TAR_XZ}" \
 
 tar -xf "${GL_TAR_XZ}" "${GL_RAW}"
 
-# Upload to STACKIT image service (OpenStack Glance)
-export OS_CLOUD=stackit   # adjust to your clouds.yaml entry
-IMAGE_ID=$(openstack image create gardenlinux-tutorial \
-    --disk-format raw \
-    --container-format bare \
-    --file "${GL_RAW}" \
-    -f value -c id)
+# Upload to STACKIT
+IMAGE_ID=$(stackit image create \
+  --project-id "${STACKIT_PROJECT_ID}" \
+  --name gardenlinux-tutorial \
+  --disk-format raw \
+  --local-file-path "${GL_RAW}" \
+  --output-format json | jq -r '.id')
 echo "Uploaded image: ${IMAGE_ID}"
 ```
 
@@ -87,48 +92,57 @@ For a complete list of maintained releases and their support lifecycle, see the 
 
 You can [build your own Garden Linux images](/how-to/building-images) or even [create a custom feature](/how-to/custom-feature).
 
-### Step 2: Prepare Your Network
+### Step 3: Create a Network
 
-Before launching a server, set up the necessary networking infrastructure.
+Create a network for your Garden Linux server:
 
 :::tip
-If you already have a STACKIT network and subnet you'd like to reuse, you can skip directly to creating the security group.
+If you already have a STACKIT network you'd like to reuse, you can skip this step and set `NETWORK_ID` to your existing network ID.
 :::
 
 ```bash
-STACKIT_PROJECT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # replace with your project ID
 NETWORK_NAME="gardenlinux-network"
 
-# Create a network
-stackit beta network create \
+stackit network create \
   --project-id "${STACKIT_PROJECT_ID}" \
   --name "${NETWORK_NAME}"
 
-NETWORK_ID=$(stackit beta network list \
+NETWORK_ID=$(stackit network list \
   --project-id "${STACKIT_PROJECT_ID}" \
   --output-format json | \
   jq -r ".[] | select(.name==\"${NETWORK_NAME}\") | .id")
 ```
 
-### Step 3: Create a Security Group
+### Step 4: Create a Security Group
 
-Create a security group that allows SSH access from your current public IP:
+Create a security group that allows inbound SSH access from your current public IP:
 
 ```bash
 SG_NAME="gardenlinux-sg"
 MY_IP=$(curl -s ifconfig.me)
 
-openstack security group create "${SG_NAME}"
+stackit security-group create \
+  --project-id "${STACKIT_PROJECT_ID}" \
+  --name "${SG_NAME}"
 
-openstack security group rule create "${SG_NAME}" \
-  --protocol tcp \
-  --dst-port 22 \
-  --remote-ip "${MY_IP}/32"
+SG_ID=$(stackit security-group list \
+  --project-id "${STACKIT_PROJECT_ID}" \
+  --output-format json | \
+  jq -r ".[] | select(.name==\"${SG_NAME}\") | .id")
+
+stackit security-group rule create \
+  --project-id "${STACKIT_PROJECT_ID}" \
+  --security-group-id "${SG_ID}" \
+  --direction ingress \
+  --protocol-name tcp \
+  --port-range-min 22 \
+  --port-range-max 22 \
+  --ip-range "${MY_IP}/32"
 ```
 
-### Step 4: Configure SSH Access
+### Step 5: Configure SSH Access
 
-Generate an SSH key pair and register it with STACKIT:
+Generate an SSH key pair, register it with STACKIT, and prepare a cloud-init script to enable SSH on first boot:
 
 :::warning Garden Linux SSH Default
 Garden Linux disables SSH by default for security. You must explicitly enable it using cloud-init user-data when launching the server.
@@ -138,69 +152,79 @@ Garden Linux disables SSH by default for security. You must explicitly enable it
 KEY_NAME="gardenlinux-tutorial-key"
 ssh-keygen -t ed25519 -f "${KEY_NAME}" -N ""
 
-stackit beta key-pair create \
+stackit key-pair create \
   --project-id "${STACKIT_PROJECT_ID}" \
   --name "${KEY_NAME}" \
-  --public-key "$(cat ${KEY_NAME}.pub)"
+  --public-key "@${KEY_NAME}.pub"
 
 USER_DATA=user_data.sh
-cat >"${USER_DATA}" <<EOF
+cat >"${USER_DATA}" <<'EOF'
 #!/usr/bin/env bash
-
-# Enable SSH service on first boot
 systemctl enable --now ssh
 EOF
 ```
 
-### Step 5: Launch the Server
+### Step 6: Launch the Server
 
 Launch your Garden Linux server on STACKIT:
 
 ```bash
 SERVER_NAME="gardenlinux-tutorial"
-MACHINE_TYPE="c1.2"   # adjust to an available type in your project
+MACHINE_TYPE="g2i.2"   # adjust to an available type — see https://docs.stackit.cloud/products/compute-engine/server/basics/machine-types/
 
-stackit beta server create \
+SERVER_ID=$(stackit server create \
   --project-id "${STACKIT_PROJECT_ID}" \
   --name "${SERVER_NAME}" \
   --machine-type "${MACHINE_TYPE}" \
-  --image-id "${IMAGE_ID}" \
+  --boot-volume-source-id "${IMAGE_ID}" \
+  --boot-volume-source-type image \
+  --boot-volume-size 20 \
   --network-id "${NETWORK_ID}" \
+  --security-groups "${SG_ID}" \
   --keypair-name "${KEY_NAME}" \
-  --user-data "@${USER_DATA}"
-
-SERVER_ID=$(stackit beta server list \
-  --project-id "${STACKIT_PROJECT_ID}" \
-  --output-format json | \
-  jq -r ".[] | select(.name==\"${SERVER_NAME}\") | .id")
+  --user-data "@${USER_DATA}" \
+  --output-format json | jq -r '.id')
+echo "Server ID: ${SERVER_ID}"
 ```
 
-### Step 6: Assign a Public IP
+### Step 7: Assign a Public IP
 
-Allocate a floating IP and associate it with your server:
+Allocate a public IP and associate it with your server's network interface:
 
 ```bash
-FLOATING_IP=$(openstack floating ip create public \
-  -f value -c floating_ip_address)
+# Get the network interface ID of the server
+NIC_ID=$(stackit server list \
+  --project-id "${STACKIT_PROJECT_ID}" \
+  --output-format json | \
+  jq -r ".[] | select(.id==\"${SERVER_ID}\") | .networking.nicIds[0]")
 
-openstack server add floating ip "${SERVER_NAME}" "${FLOATING_IP}"
+# Create and associate a public IP
+PUBLIC_IP_ID=$(stackit public-ip create \
+  --project-id "${STACKIT_PROJECT_ID}" \
+  --associated-resource-id "${NIC_ID}" \
+  --output-format json | jq -r '.id')
 
-echo "Server is reachable at: ${FLOATING_IP}"
+PUBLIC_IP=$(stackit public-ip list \
+  --project-id "${STACKIT_PROJECT_ID}" \
+  --output-format json | \
+  jq -r ".[] | select(.id==\"${PUBLIC_IP_ID}\") | .ip")
+
+echo "Server is reachable at: ${PUBLIC_IP}"
 ```
 
-### Step 7: Connect to Your Instance
+### Step 8: Connect to Your Instance
 
 Wait a few moments for the server to complete its startup script, then connect via SSH:
 
 ```bash
-ssh -i "${KEY_NAME}" admin@"${FLOATING_IP}"
+ssh -i "${KEY_NAME}" admin@"${PUBLIC_IP}"
 ```
 
 :::tip
 Garden Linux uses `admin` as the default SSH username on STACKIT, as configured by cloud-init.
 :::
 
-### Step 8: Verify the Installation
+### Step 9: Verify the Installation
 
 Once connected, verify your Garden Linux installation:
 
@@ -240,32 +264,33 @@ This tutorial is complete when:
 When finished, remove all created resources:
 
 ```bash
-# Remove floating IP from server
-openstack server remove floating ip "${SERVER_NAME}" "${FLOATING_IP}"
+# Disassociate and delete public IP
+stackit public-ip disassociate "${PUBLIC_IP_ID}" \
+  --project-id "${STACKIT_PROJECT_ID}"
+
+stackit public-ip delete "${PUBLIC_IP_ID}" \
+  --project-id "${STACKIT_PROJECT_ID}"
 
 # Delete the server
-stackit beta server delete \
-  --project-id "${STACKIT_PROJECT_ID}" \
-  --server-id "${SERVER_ID}"
-
-# Delete the floating IP
-openstack floating ip delete "${FLOATING_IP}"
+stackit server delete "${SERVER_ID}" \
+  --project-id "${STACKIT_PROJECT_ID}"
 
 # Delete the security group
-openstack security group delete "${SG_NAME}"
+stackit security-group delete "${SG_ID}" \
+  --project-id "${STACKIT_PROJECT_ID}"
 
-# Delete the keypair
-stackit beta key-pair delete \
+# Delete the key pair
+stackit key-pair delete \
   --project-id "${STACKIT_PROJECT_ID}" \
   --name "${KEY_NAME}"
 
 # Delete the image
-openstack image delete gardenlinux-tutorial
+stackit image delete "${IMAGE_ID}" \
+  --project-id "${STACKIT_PROJECT_ID}"
 
 # Delete the network
-stackit beta network delete \
-  --project-id "${STACKIT_PROJECT_ID}" \
-  --network-id "${NETWORK_ID}"
+stackit network delete "${NETWORK_ID}" \
+  --project-id "${STACKIT_PROJECT_ID}"
 
 # Remove local files
 rm "${USER_DATA}" "${KEY_NAME}" "${KEY_NAME}.pub" "${GL_RAW}" "${GL_TAR_XZ}"
