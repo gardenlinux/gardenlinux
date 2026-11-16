@@ -130,14 +130,14 @@ You can download the `clouds.yaml` from your OpenStack dashboard.
 
 ### STACKIT
 
-STACKIT requires a [Service Account](https://docs.stackit.cloud/stackit/en/service-accounts-134415819.html) with [key-based authentication](https://docs.stackit.cloud/stackit/en/authorization-for-service-accounts-134415831.html):
+STACKIT requires [user authentication via the STACKIT CLI](https://github.com/stackitcloud/stackit-cli/blob/main/AUTHENTICATION.md):
 
 ```bash
 # Configure your existing STACKIT Project
 export STACKIT_PROJECT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-# Download your SA key from portal.stackit.cloud → IAM → Service Accounts → your SA → Keys
-export STACKIT_SERVICE_ACCOUNT_KEY_PATH="/path/to/stackit-sa-key.json"
+# Login (opens browser)
+stackit auth login
 
 # Check access
 stackit auth validate-token
