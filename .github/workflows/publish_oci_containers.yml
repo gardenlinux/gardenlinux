@@ -128,6 +128,9 @@ jobs:
           GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
           GL_CLI_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Workaround Podman API login() issue
+          podman login -u "${GL_CLI_REGISTRY_USERNAME}" -p "${GL_CLI_REGISTRY_PASSWORD}" ghcr.io
+
           ABNS="${ABN_AMD64} ${ABN_ARM64}"
 
           if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
@@ -205,6 +208,9 @@ jobs:
           GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
           GL_CLI_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Workaround Podman API login() issue
+          podman login -u "${GL_CLI_REGISTRY_USERNAME}" -p "${GL_CLI_REGISTRY_PASSWORD}" ghcr.io
+
           ARCHS="amd64 arm64"
 
           if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
@@ -288,7 +294,6 @@ jobs:
       - name: Push using the gl-oci util
         env:
           GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
         run: |
           mkdir "$ABN"
 
@@ -297,9 +302,10 @@ jobs:
           gl-oci push-manifest \
             --dir "${ABN}" \
             --repository ${{ needs.determine_environment.outputs.repository }} \
+            --cname "${{ matrix.cname }}" \
             --arch ${{ matrix.arch }} \
             --version ${{ inputs.version }} \
-            --cname "${{ matrix.cname }}" \
+            --commit ${{ inputs.commit_id }} \
             --cosign-file digest.txt \
             --manifest-file "oci_manifest_entry_${ABN}.json"
       - name: Sign the manifest
@@ -349,7 +355,6 @@ jobs:
       - name: Update index using gl-oci tool
         env:
           GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
         run: |
           mkdir manifests
           mv oci_manifest_entry_${ABN}.json manifests/
@@ -379,7 +384,7 @@ jobs:
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@6930c531a324e6b8c615a3a15fbdfd3a8c4eab03 # pin@1.0.3
       - name: Set container version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
