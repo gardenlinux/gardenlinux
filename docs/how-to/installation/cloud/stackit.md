@@ -23,7 +23,11 @@ For a complete step-by-step first-boot walkthrough, see the [First Boot on STACK
 
 After installation, follow one or more of these post-installation steps to complete your STACKIT setup:
 
-- [Creating a User Account using `cloud-init`](/how-to/installation/post-install.md#method-3-cloud-init-user-data-cloud-platforms)
+- [Provision with cloud-init](/how-to/installation/cloud-init.md) — create users, install packages, and configure services on first boot
+
+:::note STACKIT Default User
+On STACKIT, cloud-init creates an `admin` user with passwordless `sudo` access via the `sudo` group (not `wheel`). This is configured in the STACKIT platform feature and does not require manual user creation.
+:::
 
 ## Related topics
 

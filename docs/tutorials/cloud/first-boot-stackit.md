@@ -221,7 +221,7 @@ ssh -i "${KEY_NAME}" admin@"${PUBLIC_IP}"
 ```
 
 :::tip
-Garden Linux uses `admin` as the default SSH username on STACKIT, as configured by cloud-init.
+Garden Linux uses `admin` as the default SSH username on STACKIT, as configured by cloud-init. The `admin` user has passwordless `sudo` access via the `sudo` group.
 :::
 
 ### Step 9: Verify the Installation
