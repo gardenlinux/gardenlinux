@@ -80,6 +80,12 @@ IMAGE_ID=$(stackit image create \
 echo "Uploaded image: ${IMAGE_ID}"
 ```
 
+Expected output:
+
+```
+Uploaded image: bbd1cc8f-29ca-47e6-ac01-628e1dddd0d6
+```
+
 :::tip
 Set `GL_ARCH` to `arm64` to use the ARM variant instead.
 :::
@@ -201,6 +207,12 @@ SERVER_ID=$(stackit server create \
 echo "Server ID: ${SERVER_ID}"
 ```
 
+Expected output:
+
+```
+Server ID: 43517fee-1234-5678-abcd-ef0123456789
+```
+
 ### Step 7: Assign a Public IP
 
 Allocate a public IP and associate it with your server's network interface:
@@ -224,6 +236,12 @@ PUBLIC_IP=$(stackit public-ip list \
   jq -r ".[] | select(.id==\"${PUBLIC_IP_ID}\") | .ip")
 
 echo "Server is reachable at: ${PUBLIC_IP}"
+```
+
+Expected output:
+
+```
+Server is reachable at: 185.214.186.2
 ```
 
 ### Step 8: Connect to Your Instance
@@ -264,6 +282,17 @@ NAME="Garden Linux"
 VERSION="2150.0.0"
 GARDENLINUX_PLATFORM_VARIANT=stackit
 ```
+
+Expected output from `chronyc tracking` should show the KVM PTP clock as reference:
+
+```
+Reference ID    : 50484330 (PHC0)
+Stratum         : 1
+...
+System time     : 0.000000123 seconds fast of NTP time
+```
+
+`PHC0` (PTP Hardware Clock) confirms Garden Linux is using the KVM PTP clock for time synchronization on STACKIT.
 
 ## Success Criteria
 
