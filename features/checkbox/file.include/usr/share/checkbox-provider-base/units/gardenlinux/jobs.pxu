@@ -38,7 +38,7 @@ category_id: ccloud
 user: root
 command:
  cat $(hw_encrypt_check.sh | grep ATTACHMENT | awk '{print $2}')
-_summary: Attach the HW Encryption  enabled check output
+_summary: Attach the HW Encryption enabled check output
 
 unit: job
 id: ccloud/virtualization_disabled_output
@@ -79,3 +79,45 @@ user: root
 command:
  cat $(tpm_check.sh | grep ATTACHMENT | awk '{print $2}')
 _summary: Attach the TPM enabled check output
+
+unit: job
+id: ccloud/ipmi_check
+plugin: shell
+flags: simple
+category_id: ccloud
+user: root
+command:
+    ipmi_check.sh
+_summary: Check BMC/IPMI interface detection and sensor reading availability
+estimated_duration: 30s
+
+unit: job
+id: ccloud/ipmi_check_attachment
+plugin: attachment
+estimated_duration: 1.0
+category_id: ccloud
+user: root
+command:
+ cat $(ipmi_check.sh | grep ATTACHMENT | awk '{print $2}')
+_summary: Attach the IPMI check output
+
+unit: job
+id: ccloud/bios_info_check
+plugin: shell
+flags: simple
+category_id: ccloud
+user: root
+command:
+    bios_info_check.sh
+_summary: Check firmware version, BIOS date and DMI/SMBIOS system information
+estimated_duration: 10s
+
+unit: job
+id: ccloud/bios_info_check_attachment
+plugin: attachment
+estimated_duration: 1.0
+category_id: ccloud
+user: root
+command:
+ cat $(bios_info_check.sh | grep ATTACHMENT | awk '{print $2}')
+_summary: Attach the BIOS/firmware info check output
