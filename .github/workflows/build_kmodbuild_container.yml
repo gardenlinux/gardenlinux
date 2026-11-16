@@ -36,7 +36,7 @@ jobs:
           key: ${{ inputs.prefix }}build-container-${{ matrix.arch }}-${{ github.run_id }}
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@6930c531a324e6b8c615a3a15fbdfd3a8c4eab03 # pin@1.0.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@8a26d04fe21b09d7f0fe048c1dea7764f6e46b17 # pin@1.0.4
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Set ABN
         run: |
