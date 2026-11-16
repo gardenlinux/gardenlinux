@@ -196,7 +196,7 @@ Allocate a public IP and associate it with your server's network interface:
 NIC_ID=$(stackit server list \
   --project-id "${STACKIT_PROJECT_ID}" \
   --output-format json | \
-  jq -r ".[] | select(.id==\"${SERVER_ID}\") | .networking.nicIds[0]")
+  jq -r ".[] | select(.id==\"${SERVER_ID}\") | .nics[0].nicId")
 
 # Create and associate a public IP
 PUBLIC_IP_ID=$(stackit public-ip create \
