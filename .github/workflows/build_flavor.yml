@@ -48,13 +48,13 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@38884794812cbfc34709ff915aa50e5e2a67bce4 # pin@1.0.1
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@6930c531a324e6b8c615a3a15fbdfd3a8c4eab03 # pin@1.0.3
       - name: Set build reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
       - name: Load certs artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # pin@v8.0.2
         with:
           name: ${{ inputs.prefix }}certs
           path: cert/
