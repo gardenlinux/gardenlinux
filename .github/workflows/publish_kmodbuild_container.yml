@@ -51,7 +51,5 @@ jobs:
           gl-oci load-image --oci-archive "kmodbuild_container_${{ matrix.arch }}.oci"
           rm *.oci
 
-          gl-oci push-image --repository "ghcr.io/${{ github.repository }}/kmodbuild" --tag "amd64-$VERSION"
-          gl-oci add-image-to-index --index "ghcr.io/${{ github.repository }}/kmodbuild" --index-tag "$VERSION" --repository "ghcr.io/${{ github.repository }}/kmodbuild" --tag "amd64-$VERSION"
-          gl-oci push-image --repository "ghcr.io/${{ github.repository }}/kmodbuild" --tag "arm64-$VERSION"
-          gl-oci add-image-to-index --index "ghcr.io/${{ github.repository }}/kmodbuild" --index-tag "$VERSION" --repository "ghcr.io/${{ github.repository }}/kmodbuild" --tag "arm64-$VERSION"
+          gl-oci push-image --repository "ghcr.io/${{ github.repository }}/kmodbuild" --tag "${{ matrix.arch }}-$VERSION"
+          gl-oci add-image-to-index --index "ghcr.io/${{ github.repository }}/kmodbuild" --index-tag "$VERSION" --repository "ghcr.io/${{ github.repository }}/kmodbuild" --tag "${{ matrix.arch }}-$VERSION"
