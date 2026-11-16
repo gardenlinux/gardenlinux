@@ -89,14 +89,21 @@ class AuditRule:
             rule
             for rule in self.rules
             if "-F" in rule
-            if "path=" in rule["-F"] or "dir=" in rule["-F"]
+            if any("path=" in f or "dir=" in f for f in rule["-F"])
         ]
         matching_file_syscall_rules = [
             rule
             for rule in file_syscall_rules
             for path in self._extract_paths(rule)
             if Path(fs_watch_path).is_relative_to(path)  # pyright: ignore
-            if set(access_types).issubset(rule["-p"][0])
+            if (
+                any(
+                    set(access_types).issubset(f.split("=")[1])
+                    for f in rule["-F"]
+                    if f.startswith("perm=")
+                )
+                or ("-p" in rule and set(access_types).issubset(rule["-p"][0]))
+            )
         ]
         if matching_file_syscall_rules:
             logger.debug(f"Matched file syscall rules: {matching_file_syscall_rules}")
