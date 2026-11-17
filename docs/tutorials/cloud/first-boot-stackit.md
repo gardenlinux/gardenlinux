@@ -24,8 +24,9 @@ Garden Linux is a minimal, security-hardened Linux distribution designed for clo
 Before starting, you'll need:
 
 - A [STACKIT account](https://portal.stackit.cloud/) with a project and appropriate permissions to create servers, networks, and security groups
-- [STACKIT CLI](https://github.com/stackitcloud/stackit-cli) installed (`brew install stackitcloud/tap/stackit` or from the [releases page](https://github.com/stackitcloud/stackit-cli/releases))
+- [STACKIT CLI](https://github.com/stackitcloud/stackit-cli) installed — see [installation instructions](https://github.com/stackitcloud/stackit-cli/blob/main/INSTALLATION.md)
 - STACKIT credentials configured — see [STACKIT CLI authentication](https://github.com/stackitcloud/stackit-cli/blob/main/AUTHENTICATION.md)
+- Basic familiarity with [STACKIT concepts](https://docs.stackit.cloud/stackit/en/basics-139464.html) (projects, networks, security groups)
 - An SSH client on your local machine
 
 ## What you'll build
@@ -51,6 +52,10 @@ For a complete overview of all image acquisition methods across platforms, see [
 :::
 
 Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
+
+:::info No pre-built STACKIT images yet
+Pre-built STACKIT images are not yet published in the GitHub Releases "Published Images" section. Until they are available, [build your own Garden Linux image](#build-your-own-images) using the instructions below.
+:::
 
 In the "Published Images" section on the release page, find the image for your desired [flavor](/explanation/flavors) and [architecture](/reference/glossary#architecture). The default production flavor is `stackit-gardener_prod-amd64`. You can directly download it there.
 
