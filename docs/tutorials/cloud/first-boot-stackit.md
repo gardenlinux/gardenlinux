@@ -57,7 +57,7 @@ For a complete overview of all image acquisition methods across platforms, see [
 :::
 
 :::info No pre-built STACKIT images yet
-Pre-built STACKIT images are not yet published in the GitHub Releases "Published Images" section. Until they are available, [build your own Garden Linux image](#build-your-own-images) using the instructions below.
+Pre-built STACKIT images are not yet published in the GitHub Releases "Published Images" section. Until they are available, use the **[Build Your Own Images](#build-your-own-images)** section below to build a local image first.
 :::
 
 In the "Published Images" section on the release page, find the image for your desired [flavor](/explanation/flavors) and [architecture](/reference/glossary#architecture). The default production flavor is `stackit-gardener_prod-amd64`. You can directly download it there.
