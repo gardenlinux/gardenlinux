@@ -59,7 +59,7 @@ def test_cloud_init_not_installed():
 def test_cloud_init_debian_cloud_defaults(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg"
     config = parse_file.parse(file, format="yaml")
-    assert config["apt_preserve_sources_list"] is True
+    assert config["apt"]["preserve_sources_list"] is True
     assert config["system_info"]["default_user"]["shell"] == "/bin/bash"
     assert config["system_info"]["default_user"]["lock_passwd"] is True
     assert config["system_info"]["default_user"]["sudo"] == ["ALL=(ALL) NOPASSWD:ALL"]
@@ -442,7 +442,7 @@ def test_stackit_cloud_apt_preserve_sources(parse_file: ParseFile):
     config = parse_file.parse(
         "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg", format="yaml"
     )
-    assert config["apt_preserve_sources_list"] is True
+    assert config["apt"]["preserve_sources_list"] is True
 
 
 @pytest.mark.testcov(["GL-TESTCOV-stackit-config-cloud-manage-hosts"])
