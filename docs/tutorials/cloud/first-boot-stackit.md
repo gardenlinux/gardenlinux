@@ -106,27 +106,41 @@ For a complete list of maintained releases and their support lifecycle, see the 
 
 You can [build your own Garden Linux images](/how-to/building-images) or even [create a custom feature](/how-to/custom-feature).
 
-### Step 3: Get a Network ID
+### Step 3: Create a Network
 
-STACKIT networking is VPC-based. You'll need an existing network in your project to attach the server to.
+Create a dedicated network for your Garden Linux server. This requires your VPC ID and its routing table ID.
 
-:::warning Environment-Specific Values
-The available networks depend on your STACKIT project setup. Check with your STACKIT administrator for the correct network ID to use.
+:::warning Experimental CLI commands
+The `stackit alpha vpc` commands used below are experimental and may change in future CLI versions.
 :::
 
-List available networks and pick one:
-
 ```bash
-stackit network list \
+# Get VPC ID
+VPC_ID=$(stackit alpha vpc list \
+  --project-id "${STACKIT_PROJECT_ID}" \
+  --output-format json | jq -r '.[0].id')
+echo "VPC ID: ${VPC_ID}"
+
+# Get routing table ID from the VPC
+ROUTING_TABLE_ID=$(stackit alpha vpc routing-table list \
+  --project-id "${STACKIT_PROJECT_ID}" \
+  --vpc-id "${VPC_ID}" \
+  --output-format json | jq -r '.items[0].id')
+echo "Routing table ID: ${ROUTING_TABLE_ID}"
+
+# Create a network
+NETWORK_NAME="gardenlinux-network"
+
+stackit network create \
+  --project-id "${STACKIT_PROJECT_ID}" \
+  --name "${NETWORK_NAME}" \
+  --routing-table-id "${ROUTING_TABLE_ID}" \
+  --assume-yes
+
+NETWORK_ID=$(stackit network list \
   --project-id "${STACKIT_PROJECT_ID}" \
   --output-format json | \
-  jq -r '.[] | "\(.id) \(.name)"'
-```
-
-Set the network ID you want to use:
-
-```bash
-NETWORK_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # replace with your network ID
+  jq -r ".[] | select(.name==\"${NETWORK_NAME}\") | .id")
 echo "Network ID: ${NETWORK_ID}"
 ```
 
