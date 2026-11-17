@@ -106,15 +106,9 @@ For a complete list of maintained releases and their support lifecycle, see the 
 
 You can [build your own Garden Linux images](/how-to/building-images) or even [create a custom feature](/how-to/custom-feature).
 
-### Step 3: Create a Network
+### Step 3: Get a Network ID
 
-Create a dedicated network for your Garden Linux server.
-
-:::warning VPC-enabled projects — CLI limitation
-As of CLI v0.77.2, `stackit network create` does not support VPC-enabled projects. If your project is VPC-enabled, you will get:
-`"request invalid: VPC is required with a VPC enabled project"`
-
-**Workaround:** Reuse an existing network in your project:
+Get the ID of an existing network in your STACKIT project:
 
 ```bash
 # List available networks and pick one
@@ -127,40 +121,11 @@ NETWORK_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # replace with your network I
 echo "Network ID: ${NETWORK_ID}"
 ```
 
-Check with your STACKIT administrator if unsure which network to use. VPC support in `stackit network create` is tracked upstream in the STACKIT CLI.
+:::info Network creation not yet supported for VPC-enabled projects
+As of CLI v0.77.2, `stackit network create` does not support VPC-enabled projects. New STACKIT projects are VPC-enabled by default, so reusing an existing network is currently the recommended approach.
+
+Check with your STACKIT administrator if unsure which network to use.
 :::
-
-For **non-VPC projects**, create a dedicated network:
-
-```bash
-# Get VPC ID (experimental CLI)
-VPC_ID=$(stackit alpha vpc list \
-  --project-id "${STACKIT_PROJECT_ID}" \
-  --output-format json | jq -r '.[0].id')
-echo "VPC ID: ${VPC_ID}"
-
-# Get routing table ID from the VPC
-ROUTING_TABLE_ID=$(stackit alpha vpc routing-table list \
-  --project-id "${STACKIT_PROJECT_ID}" \
-  --vpc-id "${VPC_ID}" \
-  --output-format json | jq -r '.items[0].id')
-echo "Routing table ID: ${ROUTING_TABLE_ID}"
-
-# Create a network
-NETWORK_NAME="gardenlinux-network"
-
-stackit network create \
-  --project-id "${STACKIT_PROJECT_ID}" \
-  --name "${NETWORK_NAME}" \
-  --routing-table-id "${ROUTING_TABLE_ID}" \
-  --assume-yes
-
-NETWORK_ID=$(stackit network list \
-  --project-id "${STACKIT_PROJECT_ID}" \
-  --output-format json | \
-  jq -r ".[] | select(.name==\"${NETWORK_NAME}\") | .id")
-echo "Network ID: ${NETWORK_ID}"
-```
 
 ### Step 4: Create a Security Group
 
@@ -357,10 +322,6 @@ stackit key-pair delete "${KEY_NAME}" \
 
 # Delete the image
 stackit image delete "${IMAGE_ID}" \
-  --project-id "${STACKIT_PROJECT_ID}"
-
-# Delete the network
-stackit network delete "${NETWORK_ID}" \
   --project-id "${STACKIT_PROJECT_ID}"
 
 # Remove local files
