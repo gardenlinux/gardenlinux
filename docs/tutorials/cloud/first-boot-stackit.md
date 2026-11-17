@@ -26,7 +26,7 @@ Before starting, you'll need:
 - A [STACKIT account](https://portal.stackit.cloud/) with a project and appropriate permissions to create servers, networks, and security groups
 - [STACKIT CLI](https://github.com/stackitcloud/stackit-cli) installed — see [installation instructions](https://github.com/stackitcloud/stackit-cli/blob/main/INSTALLATION.md)
 - STACKIT credentials configured — see [STACKIT CLI authentication](https://github.com/stackitcloud/stackit-cli/blob/main/AUTHENTICATION.md)
-- Basic familiarity with [STACKIT concepts](https://docs.stackit.cloud/stackit/en/basics-139464.html) (projects, networks, security groups)
+- Basic familiarity with [STACKIT concepts](https://docs.stackit.cloud/platform/getting-started/) (projects, networks, security groups)
 - An SSH client on your local machine
 
 ## What you'll build
