@@ -299,3 +299,12 @@ def test_sap_global_root_ca_content(parse_file: ParseFile):
     assert expected_lines in parse_file.lines(
         "/usr/local/share/ca-certificates/SAP_Global_Root_CA.crt"
     ), "SAP Global Root CA certificate content should be correct"
+
+
+@pytest.mark.testcov(["GL-TESTCOV-sap-config-shared-symlink"])
+@pytest.mark.feature("sap")
+def test_shared_symlink(file: File):
+    """Test that /shared is a symlink to /var/shared"""
+    assert file.is_symlink(
+        "/shared", target="/var/shared"
+    ), "/shared must be a symlink pointing to /var/shared"

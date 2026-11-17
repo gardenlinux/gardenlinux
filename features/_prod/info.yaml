@@ -1,4 +1,2 @@
+description: "Marks an image as a production artifact, removing package management tooling."
 type: flag
-features:
-  include:
-    - _nopkg

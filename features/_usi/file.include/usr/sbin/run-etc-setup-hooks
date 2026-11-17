@@ -2,11 +2,13 @@
 
 set -euo pipefail
 
-hooks_dir=/var/lib/gardenlinux/etc-setup-hooks
+usr_hooks_dir=/usr/lib/gardenlinux/etc-setup-hooks
+var_hooks_dir=/var/lib/gardenlinux/etc-setup-hooks
 
-[ -d "$hooks_dir" ] || exit 0
-
-for hook in "$hooks_dir"/*; do
-	[ -f "$hook" ] && [ -x "$hook" ] || continue
-	"$hook"
+for hooks_dir in "$usr_hooks_dir" "$var_hooks_dir"; do
+	[ -d "$hooks_dir" ] || continue
+	for hook in "$hooks_dir"/*; do
+		[ -f "$hook" ] && [ -x "$hook" ] || continue
+		"$hook"
+	done
 done

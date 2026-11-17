@@ -1,5 +1,7 @@
 description: "Alibaba Cloud"
 type: platform
+artifact: [".raw", ".qcow2"]
 features:
-  include: 
+  include:
     - cloud
+    - cloudInit

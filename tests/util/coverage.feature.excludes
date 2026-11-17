@@ -10,16 +10,12 @@ _curl
 _debug
 _dev
 _initrdDebug
-_nopkg
 _oci
-_readonly
-_secureboot
 baremetal
 bluefield
 capi
 cisPackages
 container
-firecracker
 nodejs
 python
 pythonDev

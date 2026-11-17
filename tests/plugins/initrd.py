@@ -91,7 +91,7 @@ class Initrd:
         self._dracut_module_set = None
 
     def _get_efi_path(self) -> Optional[str]:
-        """Get the path to the EFI file based on the versioned falvor from os-release.
+        """Get the path to the EFI file based on the versioned flavor from os-release.
 
         Returns:
             Path to EFI file, or None if the version flavor cannot be
@@ -99,7 +99,10 @@ class Initrd:
         """
         versioned_flavor = get_os_release().versioned_flavor
         if not versioned_flavor:
-            logger.debug("CNAME not found in /etc/os-release, cannot locate EFI file")
+            logger.debug(
+                "versioned flavor could not be assembled from /etc/os-release, "
+                "cannot locate EFI file"
+            )
             return None
 
         efi_path = f"/efi/EFI/Linux/{versioned_flavor}.efi"

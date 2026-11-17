@@ -2,6 +2,15 @@
 
 set -eufo pipefail
 
+# Map kernel arch (uname -m) to Garden Linux arch naming used by the dist layout.
+case "$(uname -m)" in
+x86_64) arch="amd64" ;;
+aarch64) arch="arm64" ;;
+*)
+    echo "Unsupported arch: $(uname -m)" >&2
+    exit 1
+    ;;
+esac
 skip_tests=0
 skip_cleanup=0
 test_args=()
@@ -86,7 +95,7 @@ echo "🚀  running test container $image_name"
 run_args=(
     "--pull" "never"
     "--rm"
-    "-v" "$root_dir/tests/.build/dist.tar.gz:/run/gardenlinux-tests/dist.tar.gz:ro"
+    "-v" "$root_dir/tests/.build/dist-${arch}.tar.gz:/run/gardenlinux-tests/dist.tar.gz:ro"
     "-v" "$log_dir:/run/gardenlinux-tests/log:rw"
 )
 

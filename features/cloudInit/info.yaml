@@ -1,0 +1,2 @@
+description: "cloud-init with /etc-reset recovery of the default user"
+type: element

@@ -28,9 +28,12 @@ resource "aws_instance" "vm" {
     encrypted             = false
   }
 
-  ebs_block_device {
-    device_name = "/dev/xvdb"
-    snapshot_id = aws_ebs_snapshot_import.test_disk.id
+  dynamic "ebs_block_device" {
+    for_each = var.skip_tests ? [] : [true]
+    content {
+      device_name = "/dev/xvdb"
+      snapshot_id = aws_ebs_snapshot_import.test_disk.0.id
+    }
   }
 
   tags = merge(

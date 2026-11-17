@@ -55,6 +55,11 @@ controller. Garden Linux ships with the
 [`gardener`](/reference/features/gardener) feature pre-configured: containerd is
 installed (systemd unit disabled, enabled by Gardener).
 
+On Gardener worker pools that use an in-place node update strategy, the node's
+operating system is updated without replacing the machine. See
+[In-Place Updates](/explanation/in-place-updates) for how this works on Garden
+Linux.
+
 This use case applies to AWS, Azure, GCP, OpenStack, and bare-metal platforms.
 Choose one of these when operating Kubernetes clusters managed by Gardener in
 public or private clouds.
@@ -167,7 +172,7 @@ an auditable, minimal foundation.
 | Type              | Flavor                                                                         | Description                          | Architecture |
 | ----------------- | ------------------------------------------------------------------------------ | ------------------------------------ | ------------ |
 | Full              | [`container`](/reference/flavor-matrix.md#container-amd64)                     | Complete Debian-based OCI base image | amd64, arm64 |
-| Full (Python dev) | [`container-pythonDev`](/reference/flavor-matrix.md#container-pythondev-amd64) | Full image with Python toolchain     | amd64, arm64 |
+| Full (Python dev) | [`container-pythonDev`](/reference/flavor-matrix.md#container-pythonDev-amd64) | Full image with Python toolchain     | amd64, arm64 |
 | Bare (C/C++)      | [`bare-libc`](/reference/flavor-matrix.md#bare-libc-amd64)                     | Minimal C/C++ runtime (distroless)   | amd64, arm64 |
 | Bare (Python)     | [`bare-python`](/reference/flavor-matrix.md#bare-python-amd64)                 | Minimal Python runtime (distroless)  | amd64, arm64 |
 | Bare (Node.js)    | [`bare-nodejs`](/reference/flavor-matrix.md#bare-nodejs-amd64)                 | Minimal Node.js runtime (distroless) | amd64, arm64 |

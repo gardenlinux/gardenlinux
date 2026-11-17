@@ -1,0 +1,212 @@
+#!/usr/bin/env python3
+"""Recreate the cloud-init default user after an /etc overlay reset.
+
+On an in-place (USI) update, setup-etc-overlay wipes the /etc overlay when
+/etc/os-release changes, removing the cloud-init-created default user from
+/etc/passwd, /etc/group and /etc/sudoers.d. The user's home directory under
+/home survives on a separate filesystem and still carries the original
+UID/GID as its ownership, so we re-derive the account identity from it rather
+than letting cloud-init pick fresh (possibly different) numbers.
+
+A systemd drop-in (shipped by the cloud-init feature) orders the hook runner
+After=cloud-config.service, so this hook runs after cloud-init's config stage and
+observes cloud-init's final user state rather than racing it:
+  - First boot:  cloud-config creates the user; the hook sees it and no-ops.
+  - Reset boot:  cloud-init's users_groups is PER_INSTANCE and its semaphore under
+                 /var/lib/cloud survives the /etc wipe, so cloud-config skips user
+                 creation; the hook then recreates the user from the surviving home.
+
+We read the default_user config from the *static* /etc/cloud/cloud.cfg(.d) rather
+than `cloud-init query`, merging cloud.cfg and cloud.cfg.d/*.cfg the same way
+cloud-init does (later files win). Static config avoids depending on cloud-init's
+runtime-rendered instance-data and keeps the hook usable regardless of ordering.
+
+All actions and decisions are logged to stderr, which systemd records in the
+journal of gardenlinux-etc-setup-hooks.service
+(journalctl -u gardenlinux-etc-setup-hooks.service).
+"""
+
+import glob
+import grp
+import os
+import pwd
+import subprocess
+import sys
+
+import yaml
+
+CLOUD_CFG = "/etc/cloud/cloud.cfg"
+CLOUD_CFG_D = "/etc/cloud/cloud.cfg.d/*.cfg"
+SUDOERS_FILE = "/etc/sudoers.d/90-cloud-init-users"
+
+
+def log(msg):
+    print(f"00-cloud-init-useradd: {msg}", file=sys.stderr)
+
+
+def deep_merge(dst, src):
+    for key, value in (src or {}).items():
+        if isinstance(value, dict) and isinstance(dst.get(key), dict):
+            deep_merge(dst[key], value)
+        else:
+            dst[key] = value
+    return dst
+
+
+def load_default_user():
+    cfg = {}
+    loaded = []
+    files = [CLOUD_CFG] + sorted(glob.glob(CLOUD_CFG_D))
+    for path in files:
+        if not os.path.exists(path):
+            continue
+        with open(path) as handle:
+            deep_merge(cfg, yaml.safe_load(handle) or {})
+        loaded.append(path)
+    log(f"merged cloud-init config from: {', '.join(loaded) if loaded else '(none found)'}")
+    return (cfg.get("system_info") or {}).get("default_user") or {}
+
+
+def main():
+    du = load_default_user()
+
+    name = du.get("name") or ""
+    if not name:
+        log("no system_info.default_user.name configured; nothing to do")
+        return 0
+
+    home = f"/home/{name}"
+    # Nothing to re-derive from: leave first-boot user creation to cloud-init.
+    if not os.path.isdir(home):
+        log(
+            f"home '{home}' does not exist (first boot, or user never created); "
+            "leaving user creation to cloud-init"
+        )
+        return 0
+
+    stat = os.stat(home)
+    uid, gid = stat.st_uid, stat.st_gid
+    log(f"restoring default user '{name}' from home '{home}' (uid={uid} gid={gid})")
+
+    shell = du.get("shell") or "/bin/bash"
+    gecos = du.get("gecos") or ""
+
+    groups = du.get("groups") or []
+    if isinstance(groups, str):
+        groups = [g.strip() for g in groups.split(",") if g.strip()]
+
+    sudo = du.get("sudo")
+    if isinstance(sudo, list):
+        sudo = sudo[0] if sudo else ""
+    sudo = sudo or ""
+
+    lock_passwd = du.get("lock_passwd", True)
+
+    # Recreate the primary group unless the name or GID is already taken.
+    if group_exists(name):
+        log(f"group '{name}' already exists; not recreating")
+    else:
+        if gid_taken(gid):
+            log(f"GID {gid} already in use, refusing to recreate group '{name}'")
+            return 1
+        log(f"creating group '{name}' with gid {gid}")
+        run(["groupadd", "-g", str(gid), name])
+
+    # Recreate the user account unless it already exists.
+    if user_exists(name):
+        log(f"user '{name}' already exists; not recreating (cloud-init handled it)")
+    else:
+        if uid_taken(uid):
+            log(f"UID {uid} already in use, refusing to recreate user '{name}'")
+            return 1
+
+        cmd = ["useradd", "-u", str(uid), "-g", str(gid), "-s", shell, "-d", home, "-M"]
+        if gecos:
+            cmd += ["-c", gecos]
+        if groups:
+            cmd += ["-G", ",".join(groups)]
+        cmd.append(name)
+        log(
+            f"creating user '{name}' (uid={uid} gid={gid} shell={shell} "
+            f"groups={','.join(groups) if groups else '-'})"
+        )
+        run(cmd)
+
+        # cloud-init locks the password by default (lock_passwd: True).
+        if lock_passwd:
+            log(f"locking password for '{name}'")
+            run(["passwd", "-l", name], capture=True)
+
+    # Restore passwordless sudo to match cloud-init's default_user.sudo rule.
+    # Only write it if the file is absent: if cloud-init (or a prior run) already
+    # created it, leave it untouched rather than clobbering it.
+    if not sudo:
+        log(f"no sudo rule configured for '{name}'")
+    elif os.path.exists(SUDOERS_FILE):
+        log(f"{SUDOERS_FILE} already exists; leaving it untouched")
+    else:
+        log(f"writing sudo rule for '{name}' to {SUDOERS_FILE}")
+        with open(SUDOERS_FILE, "w") as handle:
+            handle.write(f"{name} {sudo}\n")
+        os.chmod(SUDOERS_FILE, 0o440)
+        # Drop the file again if it does not validate, rather than break sudo.
+        if subprocess.run(
+            ["visudo", "-cf", SUDOERS_FILE],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ).returncode != 0:
+            log(f"sudo rule failed validation; removing {SUDOERS_FILE}")
+            os.unlink(SUDOERS_FILE)
+
+    log(f"done restoring '{name}'")
+    return 0
+
+
+def user_exists(name):
+    try:
+        pwd.getpwnam(name)
+        return True
+    except KeyError:
+        return False
+
+
+def uid_taken(uid):
+    try:
+        pwd.getpwuid(uid)
+        return True
+    except KeyError:
+        return False
+
+
+def group_exists(name):
+    try:
+        grp.getgrnam(name)
+        return True
+    except KeyError:
+        return False
+
+
+def gid_taken(gid):
+    try:
+        grp.getgrgid(gid)
+        return True
+    except KeyError:
+        return False
+
+
+def run(cmd, capture=False):
+    kwargs = {"check": True}
+    if capture:
+        kwargs["stdout"] = subprocess.DEVNULL
+    subprocess.run(cmd, **kwargs)
+
+
+if __name__ == "__main__":
+    log("starting (/etc was reset; restoring cloud-init default user)")
+    try:
+        rc = main()
+    except subprocess.CalledProcessError as exc:
+        log(f"command failed: {' '.join(exc.cmd)} (exit {exc.returncode})")
+        rc = 1
+    log(f"exiting with status {rc}")
+    sys.exit(rc)

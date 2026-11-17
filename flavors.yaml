@@ -847,6 +847,43 @@ targets:
         test: true
         test-platform: false
         publish: true
+  - name: stackit
+    category: public-cloud
+    flavors:
+      - features:
+          - gardener
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - _prod
+          - _usi
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - _prod
+          - _usi
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
   - name: vmware
     category: hypervisor
     flavors:

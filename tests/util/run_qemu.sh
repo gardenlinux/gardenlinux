@@ -105,6 +105,7 @@ fi
 
 [ -n "$autoinstall" ]
 [ -n "$arch" ]
+gl_arch="$arch"
 arch="$(map_arch "$arch")"
 [ -n "$uefi" ]
 [ -n "$secureboot" ]
@@ -478,7 +479,7 @@ fi
 
 if ! ((skip_tests)); then
 	qemu_opts+=(
-		-drive "if=virtio,format=raw,readonly=on,file=$test_dist_dir/dist.ext2.raw"
+		-drive "if=virtio,format=raw,readonly=on,file=$test_dist_dir/dist-${gl_arch}.ext2.raw"
 	)
 fi
 

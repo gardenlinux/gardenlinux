@@ -4,17 +4,17 @@ set -eufo pipefail
 
 input="$(realpath "$1")"
 output="$(realpath "$2")"
-cname="$(basename "$output" .ova)"
+artifact_base_name="$(basename "$output" .ova)"
 
 dir="$(mktemp -d)"
 pushd "$dir"
 
-qemu-img convert -o subformat=streamOptimized -o adapter_type=lsilogic -f raw -O vmdk "$input" "$cname.vmdk"
-/builder/features/vmware/make-ova --vmdk "$cname.vmdk" --guest-id debian10_64Guest --template /builder/features/vmware/vmware.ovf.template
+qemu-img convert -o subformat=streamOptimized -o adapter_type=lsilogic -f raw -O vmdk "$input" "$artifact_base_name.vmdk"
+/builder/features/vmware/make-ova --vmdk "$artifact_base_name.vmdk" --guest-id debian10_64Guest --template /builder/features/vmware/vmware.ovf.template
 
-tar -tf "$cname.ova"
+tar -tf "$artifact_base_name.ova"
 
-cp --sparse=always "$cname.ova" "$output"
+cp --sparse=always "$artifact_base_name.ova" "$output"
 
 popd
 rm -rf "$dir"

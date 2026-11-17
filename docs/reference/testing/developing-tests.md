@@ -664,7 +664,7 @@ You can also pass additional `--test-args`.
 This will:
 
 - Start a QEMU VM.
-- Sync `.build/dist.tar.gz` into the VM.
+- Sync `.build/dist-<arch>.tar.gz` into the VM.
 - Sync the current `tests/` tree.
 - Run `pytest` inside the VM with the provided `--test-args` once.
 - Wait for file changes in `tests/` and `features/`.
@@ -696,7 +696,7 @@ You can also pass additional `--test-args`.
 This will:
 
 - Deploy a Cloud VM.
-- Sync `.build/dist.tar.gz` into the VM.
+- Sync `.build/dist-<arch>.tar.gz` into the VM.
 - Sync the current `tests/` tree.
 - Run `pytest` inside the VM with the provided `--test-args`.
 - Wait for file changes in `tests/` and `features/`.

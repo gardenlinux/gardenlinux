@@ -1,5 +1,6 @@
 description: "only pxe build is done (with squashfs)"
 type: flag
+artifact: [".pxe.tar.gz"]
 features:
   include:
     - _ignite

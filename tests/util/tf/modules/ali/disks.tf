@@ -11,7 +11,7 @@ resource "terraform_data" "test_disk_hash" {
 }
 
 resource "alicloud_oss_bucket" "images" {
-  count = 1
+  count = var.existing_root_disk != "" && var.skip_tests ? 0 : 1
 
   bucket = local.bucket_name
 
@@ -26,6 +26,8 @@ resource "alicloud_oss_bucket" "images" {
 }
 
 resource "terraform_data" "pause_1_second" {
+  count = var.existing_root_disk != "" && var.skip_tests ? 0 : 1
+
   triggers_replace = [
     alicloud_oss_bucket.images[0].id
   ]
@@ -36,7 +38,7 @@ resource "terraform_data" "pause_1_second" {
 }
 
 resource "alicloud_oss_bucket_public_access_block" "no_public_access" {
-  count = 1
+  count = var.existing_root_disk != "" && var.skip_tests ? 0 : 1
 
   bucket = alicloud_oss_bucket.images[0].bucket
 
@@ -77,6 +79,8 @@ resource "alicloud_image_import" "import" {
 }
 
 resource "alicloud_oss_bucket_object" "image_test" {
+  count = var.skip_tests ? 0 : 1
+
   bucket = alicloud_oss_bucket.images[0].bucket
   key    = "${local.image_name}-test"
   ## somehow qcow2 does not work
@@ -85,11 +89,13 @@ resource "alicloud_oss_bucket_object" "image_test" {
 }
 
 resource "alicloud_image_import" "import_test" {
+  count = var.skip_tests ? 0 : 1
+
   image_name  = "${local.image_name}-test"
   description = "${local.image_name}-test"
   disk_device_mapping {
     oss_bucket      = alicloud_oss_bucket.images[0].bucket
-    oss_object      = alicloud_oss_bucket_object.image_test.key
+    oss_object      = alicloud_oss_bucket_object.image_test.0.key
     disk_image_size = 5
     # format = "qcow2" # seems broken as it diffs to QCOW2 (capital)
   }
@@ -102,6 +108,8 @@ resource "alicloud_image_import" "import_test" {
 }
 
 data "alicloud_ecs_snapshots" "image_test" {
+  count = var.skip_tests ? 0 : 1
+
   name_regex = "SnapshotForImage-${local.image_name}-test"
 
   depends_on = [

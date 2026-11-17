@@ -129,9 +129,9 @@ cleanup() {
 		echo "⚙️  cleaning up cloud resources"
 		(
 			cd "${tf_dir}"
-			tofu init -var-file "$image_name.tfvars"
+			tofu init -upgrade -var-file "$image_name.tfvars"
 			tofu workspace select "$workspace"
-			tofu init -var-file "$image_name.tfvars"
+			tofu init -upgrade -var-file "$image_name.tfvars"
 			tofu destroy -var-file "$image_name.tfvars" --auto-approve
 			tofu workspace select default
 			tofu workspace delete "$workspace"
@@ -188,7 +188,7 @@ fi
 
 cat >"${tf_dir}/$image_name.tfvars" <<EOF
 root_disk_path        = "$root_disk_path_var"
-test_disk_path        = "$(realpath -- "$test_dist_dir/dist.ext2.raw")"
+test_disk_path        = "$(realpath -- "$test_dist_dir/dist-${arch}.ext2.raw")"
 ssh_public_key_path   = "$ssh_private_key.pub"
 user_data_script_path = "$user_data_script"
 existing_root_disk    = "$existing_root_disk_var"
@@ -231,7 +231,7 @@ fi
 (
 	cd "${tf_dir}"
 	echo "⚙️  initializing terraform"
-	tofu init -var-file "$image_name.tfvars"
+	tofu init -upgrade -var-file "$image_name.tfvars"
 	echo "⚙️  selecting workspace: $workspace"
 	tofu workspace select -or-create "$workspace"
 	echo "⚙️  running terraform ${tf_cmd[*]}"

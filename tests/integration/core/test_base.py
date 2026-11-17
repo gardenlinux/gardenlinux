@@ -107,7 +107,7 @@ def test_kernel_not_tainted():
 
 
 @pytest.mark.feature(
-    "not gcp and not metal and not openstack",
+    "not gcp and not metal and not openstack and not stackit",
     reason="Not compatible, usually because of missing external backends",
 )
 @pytest.mark.root(reason="Required for journalctl in case of errors")

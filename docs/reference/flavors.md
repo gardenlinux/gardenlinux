@@ -33,7 +33,7 @@ Each target defines a platform or environment for Garden Linux images.
 ### Fields
 
 **name** (string, required)
-: The identifier for this target. Used in [CNAME generation](/explanation/flavors.md#the-cname-system), workflow steps, and artifact naming.
+: The identifier for this target. Used in [cname generation](/explanation/flavors.md#the-naming-hierarchy), workflow steps, and artifact naming.
 
 **category** (enum, required)
 : Organizational category for the target. One of:`
@@ -55,7 +55,6 @@ All available targets are listed below:
 | [`ali`](/reference/features/ali)             | public-cloud | Alibaba Cloud                   |
 | [`aws`](/reference/features/aws)             | public-cloud | Amazon Web Services             |
 | [`azure`](/reference/features/azure)         | public-cloud | Microsoft Azure                 |
-| [`bare`](/reference/features/bare)           | container    | Bare container base             |
 | [`container`](/reference/features/container) | container    | Full container base             |
 | [`gcp`](/reference/features/gcp)             | public-cloud | Google Cloud Platform           |
 | [`gdch`](/reference/features/gdch)           | public-cloud | Google Distributed Cloud Hosted |

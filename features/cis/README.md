@@ -1,5 +1,9 @@
 ---
 title: "Feature: cis"
+related_topics:
+  - /how-to/custom-feature
+  - /reference/features/
+  - /explanation/features
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: features/cis/README.md
@@ -7,32 +11,56 @@ github_target_path: docs/reference/features/cis.md
 ---
 
 ## Feature: cis
+
 ### Description
-<website-feature>
 
-The [Garden Linux](https://gardenlinux.io/) [CIS](https://www.cisecurity.org) unit test is [Debian-CIS](https://github.com/ovh/debian-cis) (created by [OVH](https://github.com/ovh)) based. This test framework is mostly based on recommendations of [CIS (Center for Internet Security)](https://www.cisecurity.org) benchmarks for [Debian GNU/Linux](https://www.debian.org). However, Garden Linux may fulfill them in a slightly different way. This becomes important for unit testing where ACL's like `AppArmor` are replaced by `SELinux` (which is also accepted by CIS benchmarks). `CIS`
- related unit tests can be performed on any cloud platform (see also [../../tests/README.md](../../tests/README.md)) except of `chroot`.
-</website-feature>
+The `cis` feature is a meta-feature that groups all [CIS benchmark](/reference/glossary#cis-center-for-internet-security) benchmark sub-features into a single composable unit.
 
-### Features
-## Overview
-This `cis` feature represents a meta feature that includes multiple sub features. Most sub features are prefixed by `cis`. Working with sub features provides an easy overview, adjustment and administration for each sub feature. While only including all sub features fits the CIS benchmarks, it is in an operators decision to adjust sub features to his needs. This allows changes to be as near as possible to `CIS`, even it may not fit the `CIS` benchmarks.
+### What it does
 
-Sub features are included by the `cis/info.yaml` configuration file. Sub features **can not** be used as a standalone feature and always depend on `cis`.
+This feature represents a meta-feature that includes multiple sub-features, each covering a specific area of the CIS benchmark for Debian Linux. It applies the following CIS controls:
 
-### Unit testing
-The [CIS](https://www.cisecurity.org) unit test is [Debian-CIS](https://github.com/ovh/debian-cis) (created by [OVH](https://github.com/ovh)) based. This test framework is mostly based on recommendations of [CIS (Center for Internet Security)](https://www.cisecurity.org) benchmarks for [Debian GNU/Linux](https://www.debian.org). This tests will be proceeded for artifacts that are built with `CIS` feature and will validate all options, whether a sub feature is not included.
+- `aide` — host-based intrusion detection
+- `cisAudit` — auditd logging of security events
+- `cisModprobe` — kernel module denylisting
+- `cisOS` — OS-level security settings (PAM, file permissions, login options)
+- `cisPackages` — required and unwanted package management
+- `cisPartition` — CIS-compliant partition layout
+- `cisSshd` — SSH hardening and firewall rules
+- `cisSysctl` — sysctl settings (disables IPv6, IPv4 forwarding and redirects)
+- `firewall` — nftables-based firewall
 
-However, Garden Linux may fulfill them in a slightly different way. While the recommended way for ACL for Debian based distributions is `AppArmor`, Garden Linux used `SELinux`. As a result, `AppArmor` tests need to be whitelisted, as well as new `SeLinux` tests created.
+An `exec.config` script applies CIS-specific configuration that spans multiple sub-areas.
 
-Tests can be whitelisted by placing a `.cfg` file with equal name of the test in [test/conf.d](test/conf.d). More information can be found in [test/conf.d/README.md](test/conf.d/README.md).
+### Files
 
-Additional tests can be be included by placing an executable script nn [test/check_scripts](test/check_scripts). More information can be found in [test/check_scripts/README.md](test/check_scripts/README.md).
+Files present in this feature and their purpose.
+See the [feature file reference](/reference/features/) for the semantics of each file type.
 
-### Meta
-|||
+| File | Purpose |
 |---|---|
-|type|element|
-|artifact|None|
-|included_features|[`aide`](/reference/features/aide), [`cisAudit`](/reference/features/cisAudit), [`cisModprobe`](/reference/features/cisModprobe), [`cisOS`](/reference/features/cisOS), [`cisPackages`](/reference/features/cisPackages), [`cisPartition`](/reference/features/cisPartition), [`cisSshd`](/reference/features/cisSshd), [`cisSysctl`](/reference/features/cisSysctl), [`clamav`](/reference/features/clamav), [`firewall`](/reference/features/firewall)|
-|excluded_features|[`fedramp`](/reference/features/fedramp)|
+| [`exec.config`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cis/exec.config) ([ref](/reference/features/#exec-config-exec-early-exec-late-exec-post)) | Applies CIS framework configuration that spans multiple sub-feature areas. |
+| [`info.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cis/info.yaml) ([ref](/reference/features/#info-yaml-file-structure)) | Declares `type: element` and included/excluded features. |
+
+### Related features
+
+**Includes:**
+
+- [`aide`](/reference/features/aide) — host-based intrusion detection required by CIS.
+- [`cisAudit`](/reference/features/cisAudit) — `auditd` logging of security events per CIS benchmark.
+- [`cisModprobe`](/reference/features/cisModprobe) — kernel module denylisting per CIS benchmark.
+- [`cisOS`](/reference/features/cisOS) — OS-level security settings per CIS benchmark.
+- [`cisPackages`](/reference/features/cisPackages) — required and unwanted package management per CIS benchmark.
+- [`cisPartition`](/reference/features/cisPartition) — CIS-compliant partition layout.
+- [`cisSshd`](/reference/features/cisSshd) — SSH hardening and firewall rules per CIS benchmark.
+- [`cisSysctl`](/reference/features/cisSysctl) — sysctl settings per CIS benchmark.
+- [`firewall`](/reference/features/firewall) — nftables firewall required for CIS network controls.
+
+**Excludes (incompatible with):**
+
+- [`fedramp`](/reference/features/fedramp) — `cis` and `fedramp` both implement overlapping compliance requirements and cannot be composed together.
+
+## Related topics
+
+<RelatedTopics />
+

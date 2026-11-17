@@ -258,6 +258,28 @@ The test runner automatically detects the image type based on the file extension
 ./test .build/container-amd64-today-local.oci
 ```
 
+## Build behavior
+
+`./test` builds the test distribution automatically before running tests. It reads the target architecture from the artifact's `.requirements` file (the `arch=` entry, located next to the artifact) and builds only what the selected test type needs:
+
+| Test type | Builds |
+|---|---|
+| `.tar` (chroot) or `.oci` | `dist-<arch>` |
+| `.raw`, `.pxe.tar.gz`, or `.iso` (QEMU) | `dist-disk-<arch>` and `edk2` |
+| `.raw` with `--cloud` | `dist-disk-<arch>` |
+| `--cloud-image` | `dist-disk-<arch>` (architecture read from the requirements file) |
+| `--skip-tests` | nothing |
+
+Artifacts are written to `tests/.build/`. If a cached `.gh_artifact` marker exists (CI), the build is skipped. If the requirements file or its `arch=` entry is missing, `./test` exits with an error.
+
+For manual builds, use the makefile:
+
+```bash
+cd tests
+make -f util/build.makefile help    # list targets
+make -f util/build.makefile all     # build everything
+```
+
 ## Examples
 
 ### Basic testing

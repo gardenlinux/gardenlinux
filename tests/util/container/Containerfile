@@ -5,7 +5,7 @@ COPY enter_host_ns.c ./
 RUN gcc -Wall -Wextra -Werror -std=c23 -O2 -static -o enter_host_ns enter_host_ns.c
 
 FROM ghcr.io/gardenlinux/gardenlinux:latest AS extract
-ARG DIST_FILE=dist.tar.gz
+ARG DIST_FILE=dist-amd64.tar.gz
 WORKDIR /work
 COPY --from=dist_ctx $DIST_FILE ./
 RUN mkdir tests && tar -xz -C tests < "$DIST_FILE"

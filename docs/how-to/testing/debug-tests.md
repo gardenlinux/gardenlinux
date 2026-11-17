@@ -145,7 +145,7 @@ With specific tests:
 **What happens:**
 
 1. Starts a QEMU VM
-2. Syncs `.build/dist.tar.gz` into the VM
+2. Syncs `.build/dist-<arch>.tar.gz` into the VM
 3. Syncs the current `tests/` tree
 4. Runs `pytest` inside the VM with the provided `--test-args`
 5. Waits for file changes in `tests/` and `features/`
@@ -183,7 +183,7 @@ With specific tests:
 **What happens:**
 
 1. Deploys a cloud VM
-2. Syncs `.build/dist.tar.gz` into the VM
+2. Syncs `.build/dist-<arch>.tar.gz` into the VM
 3. Syncs the current `tests/` tree
 4. Runs `pytest` inside the VM with the provided `--test-args`
 5. Waits for file changes in `tests/` and `features/`

@@ -1,5 +1,6 @@
 description: "OpenStack cloud specific configs"
 type: element
+artifact: [".raw", ".qcow2", ".vmdk"]
 features:
   include:
     - cloud

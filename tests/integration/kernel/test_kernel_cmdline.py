@@ -552,3 +552,58 @@ def test_console_configuration_in_cmdline_vmware_bautrates(kernel_cmdline: List[
     assert (
         "console=ttyS0,115200" in kernel_cmdline
     ), "Serial console (ttyS0,115200) not found in kernel cmdline"
+
+
+# =============================================================================
+# _nvidia Feature Kernel Command Line
+# =============================================================================
+
+
+@pytest.mark.testcov(["GL-TESTCOV-_nvidia-config-kernel-cmdline-nvidia"])
+@pytest.mark.feature("_nvidia")
+def test_nvidia_kernel_cmdline_cfg_exists(file: File):
+    """Test that _nvidia kernel cmdline configuration file exists"""
+    assert file.is_regular_file("/etc/kernel/cmdline.d/50-nvidia.cfg")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-_nvidia-config-kernel-cmdline-nvidia"])
+@pytest.mark.feature("_nvidia")
+@pytest.mark.booted(reason="kernel cmdline needs a booted system")
+def test_nvidia_kernel_cmdline_parameters(kernel_cmdline: List[str]):
+    """Verify NVIDIA GPU performance parameters are present in the running kernel command line."""
+    required_params = [
+        "iommu=pt",
+        "idle=poll",
+        "nvidia.NVreg_DynamicPowerManagement=0x00",
+        "usbcore.autosuspend=-1",
+        "nvme_core.default_ps_max_latency_us=0",
+        "pcie_port_pm=off",
+        "pcie_aspm.policy=performance",
+        "cpufreq.default_governor=performance",
+    ]
+    missing = [param for param in required_params if param not in kernel_cmdline]
+    assert (
+        not missing
+    ), f"The following NVIDIA kernel cmdline parameters were not found: {', '.join(missing)}"
+
+
+# =============================================================================
+# stackit Feature - Kernel Cmdline
+# =============================================================================
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-kernel-cmdline-console"])
+@pytest.mark.feature("stackit")
+def test_stackit_kernel_cmdline_console_config_exists(file: File):
+    """Test that STACKIT kernel console cmdline config exists"""
+    assert file.is_regular_file("/etc/kernel/cmdline.d/10-console.cfg")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-stackit-config-kernel-cmdline-console"])
+@pytest.mark.feature("stackit")
+@pytest.mark.booted(reason="kernel cmdline needs a booted system")
+def test_stackit_kernel_cmdline_console_config_content(kernel_cmdline: List[str]):
+    """Test that STACKIT kernel cmdline enables serial console"""
+    assert (
+        "console=ttyS0" in kernel_cmdline
+    ), "Serial console (ttyS0) not found in kernel cmdline"

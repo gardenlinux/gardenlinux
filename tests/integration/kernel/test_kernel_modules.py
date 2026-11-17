@@ -21,8 +21,8 @@ from plugins.kernel_module import KernelModule
     ]
 )
 @pytest.mark.feature("cisModprobe")
-def test_cismodprobe_blacklist_exists(file: File):
-    """Test that kernel modules are blacklisted"""
+def test_cismodprobe_denylist_exists(file: File):
+    """Test that kernel modules are denylisted"""
     paths = [
         "/etc/modprobe.d/cramfs.conf",
         "/etc/modprobe.d/dccp.conf",
@@ -106,7 +106,8 @@ def test_cloud_modprobe_disable_configs_exist(file: File):
     ]
 )
 @pytest.mark.feature(
-    "cloud and not azure", reason="azure has a different modprobe disable configuration"
+    "cloud and not azure and not stackit",
+    reason="azure has a different modprobe disable configuration; stackit intentionally omits disabled_udf.conf",
 )
 def test_cloud_modprobe_disable_udf_config_exists(file: File):
     """Test that cloud modprobe disable configurations exist, but not on Azure"""

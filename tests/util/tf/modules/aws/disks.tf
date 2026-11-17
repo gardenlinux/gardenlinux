@@ -11,6 +11,8 @@ resource "terraform_data" "test_disk_hash" {
 }
 
 resource "aws_s3_bucket" "upload" {
+  count = var.existing_root_disk != "" && var.skip_tests ? 0 : 1
+
   bucket = local.bucket_name
 
   tags = merge(
@@ -21,14 +23,18 @@ resource "aws_s3_bucket" "upload" {
 }
 
 resource "aws_s3_bucket_versioning" "versioning" {
-  bucket = aws_s3_bucket.upload.id
+  count = var.existing_root_disk != "" && var.skip_tests ? 0 : 1
+
+  bucket = aws_s3_bucket.upload.0.id
   versioning_configuration {
     status = "Disabled"
   }
 }
 
 resource "aws_s3_bucket_ownership_controls" "owner" {
-  bucket = aws_s3_bucket.upload.id
+  count = var.existing_root_disk != "" && var.skip_tests ? 0 : 1
+
+  bucket = aws_s3_bucket.upload.0.id
 
   rule {
     object_ownership = "BucketOwnerPreferred"
@@ -36,14 +42,18 @@ resource "aws_s3_bucket_ownership_controls" "owner" {
 }
 
 resource "aws_s3_bucket_acl" "private" {
+  count = var.existing_root_disk != "" && var.skip_tests ? 0 : 1
+
   depends_on = [aws_s3_bucket_ownership_controls.owner]
 
-  bucket = aws_s3_bucket.upload.id
+  bucket = aws_s3_bucket.upload.0.id
   acl    = "private"
 }
 
 resource "aws_s3_bucket_public_access_block" "block_public" {
-  bucket                  = aws_s3_bucket.upload.id
+  count = var.existing_root_disk != "" && var.skip_tests ? 0 : 1
+
+  bucket                  = aws_s3_bucket.upload.0.id
   block_public_acls       = true
   ignore_public_acls      = true
   block_public_policy     = true
@@ -51,7 +61,9 @@ resource "aws_s3_bucket_public_access_block" "block_public" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "default" {
-  bucket = aws_s3_bucket.upload.id
+  count = var.existing_root_disk != "" && var.skip_tests ? 0 : 1
+
+  bucket = aws_s3_bucket.upload.0.id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -62,6 +74,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "default" {
 }
 
 data "aws_iam_policy_document" "secure_transport" {
+  count = var.existing_root_disk != "" && var.skip_tests ? 0 : 1
   statement {
     principals {
       type        = "*"
@@ -70,8 +83,8 @@ data "aws_iam_policy_document" "secure_transport" {
     effect  = "Deny"
     actions = ["s3:*"]
     resources = [
-      aws_s3_bucket.upload.arn,
-      "${aws_s3_bucket.upload.arn}/*"
+      aws_s3_bucket.upload.0.arn,
+      "${aws_s3_bucket.upload.0.arn}/*"
     ]
 
     condition {
@@ -88,13 +101,15 @@ data "aws_iam_policy_document" "secure_transport" {
 }
 
 resource "aws_s3_bucket_policy" "secure_transport" {
-  bucket = aws_s3_bucket.upload.id
-  policy = data.aws_iam_policy_document.secure_transport.json
+  count = var.existing_root_disk != "" && var.skip_tests ? 0 : 1
+
+  bucket = aws_s3_bucket.upload.0.id
+  policy = data.aws_iam_policy_document.secure_transport.0.json
 }
 
 resource "aws_s3_object" "root_disk" {
   count  = var.existing_root_disk != "" ? 0 : 1
-  bucket = aws_s3_bucket.upload.id
+  bucket = aws_s3_bucket.upload.0.id
   key    = local.root_disk_object_key
   source = var.root_disk_path
 
@@ -104,7 +119,9 @@ resource "aws_s3_object" "root_disk" {
 }
 
 resource "aws_s3_object" "test_disk" {
-  bucket = aws_s3_bucket.upload.id
+  count = var.skip_tests ? 0 : 1
+
+  bucket = aws_s3_bucket.upload.0.id
   key    = local.test_disk_object_key
   source = var.test_disk_path
 
@@ -118,7 +135,7 @@ resource "aws_ebs_snapshot_import" "root_disk" {
   disk_container {
     format = "RAW"
     user_bucket {
-      s3_bucket = aws_s3_bucket.upload.bucket
+      s3_bucket = aws_s3_bucket.upload.0.bucket
       s3_key    = aws_s3_object.root_disk[0].key
     }
   }
@@ -129,11 +146,12 @@ resource "aws_ebs_snapshot_import" "root_disk" {
 }
 
 resource "aws_ebs_snapshot_import" "test_disk" {
+  count = var.skip_tests ? 0 : 1
   disk_container {
     format = "RAW"
     user_bucket {
-      s3_bucket = aws_s3_bucket.upload.bucket
-      s3_key    = aws_s3_object.test_disk.key
+      s3_bucket = aws_s3_bucket.upload.0.bucket
+      s3_key    = aws_s3_object.test_disk.0.key
     }
   }
 

@@ -97,7 +97,7 @@ def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
 
 
 @pytest.mark.feature(
-    "ssh and not (ali or aws or azure or openstack)",
+    "ssh and not (ali or aws or azure or openstack or stackit)",
     reason="We want no authorized_keys for unmanaged users",
 )
 def test_users_have_no_authorized_keys(expected_users, file: File):

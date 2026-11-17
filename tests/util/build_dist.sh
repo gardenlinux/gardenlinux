@@ -18,6 +18,15 @@ tmpdir="$(mktemp -d)"
 
 runtime="$1"
 output="$2"
+target_arch="$3"  # required: amd64 or arm64 (Garden Linux arch naming)
+
+case "$target_arch" in
+amd64|arm64) ;;
+*)
+	echo "Unsupported target_arch: '$target_arch' (expected 'amd64' or 'arm64')" >&2
+	exit 1
+	;;
+esac
 
 mkdir -p "$tmpdir/dist/runtime"
 gzip -d <"$runtime" | tar -x -C "$tmpdir/dist/runtime"
@@ -35,7 +44,16 @@ cat >"$tmpdir/dist/run_tests" <<'EOF'
 
 set -e
 
-arch="$(uname -m)"
+# Map kernel arch (uname -m) to Garden Linux arch naming used by the dist layout.
+kernel_arch="$(uname -m)"
+case "$kernel_arch" in
+x86_64) arch="amd64" ;;
+aarch64) arch="arm64" ;;
+*)
+	echo "Unsupported arch: $kernel_arch" >&2
+	exit 1
+	;;
+esac
 script_path="$(realpath -- "$0")"
 script_dir="$(dirname -- "$script_path")"
 
