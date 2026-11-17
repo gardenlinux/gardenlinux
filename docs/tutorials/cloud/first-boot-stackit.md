@@ -108,14 +108,32 @@ You can [build your own Garden Linux images](/how-to/building-images) or even [c
 
 ### Step 3: Create a Network
 
-Create a dedicated network for your Garden Linux server. This requires your VPC ID and its routing table ID.
+Create a dedicated network for your Garden Linux server.
 
-:::warning Experimental CLI commands
-The `stackit alpha vpc` commands used below are experimental and may change in future CLI versions.
-:::
+:::warning VPC-enabled projects — CLI limitation
+As of CLI v0.77.2, `stackit network create` does not support VPC-enabled projects. If your project is VPC-enabled, you will get:
+`"request invalid: VPC is required with a VPC enabled project"`
+
+**Workaround:** Reuse an existing network in your project:
 
 ```bash
-# Get VPC ID
+# List available networks and pick one
+stackit network list \
+  --project-id "${STACKIT_PROJECT_ID}" \
+  --output-format json | \
+  jq -r '.[] | "\(.id) \(.name)"'
+
+NETWORK_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # replace with your network ID
+echo "Network ID: ${NETWORK_ID}"
+```
+
+Check with your STACKIT administrator if unsure which network to use. VPC support in `stackit network create` is tracked upstream in the STACKIT CLI.
+:::
+
+For **non-VPC projects**, create a dedicated network:
+
+```bash
+# Get VPC ID (experimental CLI)
 VPC_ID=$(stackit alpha vpc list \
   --project-id "${STACKIT_PROJECT_ID}" \
   --output-format json | jq -r '.[0].id')
