@@ -1,8 +1,6 @@
 import logging
 import os
-from typing import List, Optional, TypeVar
-
-from plugins.os_release import get_os_release
+from typing import List, TypeVar
 
 # Various utility functions to make tests more readable
 # This should not contain test-assertions, but only abstract details that make tests harder to read
@@ -51,4 +49,3 @@ def check_for_duplicates(entries: List[T]) -> List[T]:
             visited_entries.append(entry)
 
     return duplicates
-
