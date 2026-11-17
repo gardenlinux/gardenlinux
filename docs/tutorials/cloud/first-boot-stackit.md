@@ -56,8 +56,6 @@ Garden Linux provides pre-built images for STACKIT. Download and upload the imag
 For a complete overview of all image acquisition methods across platforms, see [Getting Images](/how-to/getting-images).
 :::
 
-Choose a release from the [GitHub Releases page](https://github.com/gardenlinux/gardenlinux/releases). For this tutorial, we'll use [release 2150.0.0](https://github.com/gardenlinux/gardenlinux/releases/tag/2150.0.0).
-
 :::info No pre-built STACKIT images yet
 Pre-built STACKIT images are not yet published in the GitHub Releases "Published Images" section. Until they are available, [build your own Garden Linux image](#build-your-own-images) using the instructions below.
 :::
