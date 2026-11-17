@@ -420,9 +420,9 @@ jobs:
 
             # Creating and pushing manifest for nightly
             if [ $IS_NIGHTLY = true ]; then
-              gl-oci push-oci-archive --oci-archive "dist.oci" --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "$nightly${IDENTIFIER}"
+              gl-oci push-oci-archive --oci-archive "dist.oci" --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "nightly${IDENTIFIER}"
             else
-              MAJOR_VERSION="${version%%.*}"
+              MAJOR_VERSION="${VERSION%%.*}"
               MAJOR_TAG="rel-${MAJOR_VERSION}-latest"
 
               gl-oci push-oci-archive --oci-archive "dist.oci" --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "${MAJOR_TAG}${IDENTIFIER}"
