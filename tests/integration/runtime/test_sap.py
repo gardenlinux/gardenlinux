@@ -308,3 +308,123 @@ def test_shared_symlink(file: File):
     assert file.is_symlink(
         "/shared", target="/var/shared"
     ), "/shared must be a symlink pointing to /var/shared"
+
+
+# =============================================================================
+# Runtime audit rule tests — verify rules are loaded via auditctl -l
+# =============================================================================
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_privilege_escalation_setuid_loaded(audit_rule):
+    assert audit_rule(syscall="setuid", rule_fields=["auid!=-1"])
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_privilege_escalation_setreuid_loaded(audit_rule):
+    assert audit_rule(syscall="setreuid", rule_fields=["auid!=-1"])
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_privilege_escalation_setgid_loaded(audit_rule):
+    assert audit_rule(syscall="setgid", rule_fields=["auid!=-1"])
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_privilege_escalation_setregid_loaded(audit_rule):
+    assert audit_rule(syscall="setregid", rule_fields=["auid!=-1"])
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_privilege_escalation_execve_loaded(audit_rule):
+    assert audit_rule(syscall="execve", rule_fields=["euid=0", "auid!=-1"])
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_privileged_special_mount_loaded(audit_rule):
+    assert audit_rule(syscall="mount", rule_fields=["auid!=-1"])
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_privileged_special_mount_setattr_loaded(audit_rule):
+    assert audit_rule(syscall="mount_setattr", rule_fields=["auid!=-1"])
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_privileged_special_umount2_loaded(audit_rule):
+    assert audit_rule(syscall="umount2", rule_fields=["auid!=-1"])
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.arch("amd64", reason="mknod rule is amd64-only; arm64 rules.d omits it")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_privileged_special_mknod_loaded(audit_rule):
+    assert audit_rule(syscall="mknod", rule_fields=["auid!=-1"])
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_privileged_special_mknodat_loaded(audit_rule):
+    assert audit_rule(syscall="mknodat", rule_fields=["auid!=-1"])
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_privileged_special_chroot_loaded(audit_rule):
+    assert audit_rule(syscall="chroot", rule_fields=["auid!=-1"])
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_system_integrity_boot_watch_loaded(audit_rule):
+    assert audit_rule(fs_watch_path="/boot", access_types="wa")
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_system_integrity_etc_watch_loaded(audit_rule):
+    assert audit_rule(fs_watch_path="/etc", access_types="wa")
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_system_integrity_bin_watch_loaded(audit_rule):
+    assert audit_rule(fs_watch_path="/bin", access_types="wa")
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_system_integrity_sbin_watch_loaded(audit_rule):
+    assert audit_rule(fs_watch_path="/sbin", access_types="wa")
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_system_integrity_usr_watch_loaded(audit_rule):
+    assert audit_rule(fs_watch_path="/usr", access_types="wa")
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_system_integrity_opt_watch_loaded(audit_rule):
+    assert audit_rule(fs_watch_path="/opt", access_types="wa")
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_system_integrity_root_watch_loaded(audit_rule):
+    assert audit_rule(fs_watch_path="/root", access_types="wa")
+
+
+@pytest.mark.booted(reason="requires live auditd kernel subsystem")
+@pytest.mark.feature("sap", reason="SAP audit rules are only present in sap flavor")
+def test_sap_audit_runtime_system_integrity_lib_watch_loaded(audit_rule):
+    assert audit_rule(fs_watch_path="/lib", access_types="wa")
