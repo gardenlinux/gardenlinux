@@ -52,11 +52,3 @@ def check_for_duplicates(entries: List[T]) -> List[T]:
 
     return duplicates
 
-
-def get_cname_from_os_release() -> Optional[str]:
-    """Get GARDENLINUX_CNAME from /etc/os-release.
-
-    Returns:
-        CNAME string if found, None otherwise.
-    """
-    return get_os_release().cname
