@@ -41,6 +41,10 @@ class OsRelease:
     commit_id: Optional[str] = None  # GARDENLINUX_COMMIT_ID=
     commit_id_long: Optional[str] = None  # GARDENLINUX_COMMIT_ID_LONG=
 
+    # Constructed variables as aliases or combinations of existing keys
+    flavor: Optional[str] = None  # VARIANT_ID
+    versioned_flavor: Optional[str] = None  # VARIANT_ID + GARDENLINUX_VERSION
+
     # All parsed raw key/value pairs (values already quote-stripped)
     raw: dict = field(default_factory=dict)
 
@@ -113,6 +117,8 @@ def parse_os_release(path: str = _OS_RELEASE_PATH) -> OsRelease:
         features=features,
         commit_id=raw.get("GARDENLINUX_COMMIT_ID"),
         commit_id_long=raw.get("GARDENLINUX_COMMIT_ID_LONG"),
+        flavor=raw.get("VARIANT_ID"),
+        versioned_flavor=f"{raw.get("VARIANT_ID")}-{raw.get("GARDENLINUX_VERSION")}",
         raw=raw,
     )
 

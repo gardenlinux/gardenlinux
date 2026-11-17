@@ -9,7 +9,7 @@ import pefile
 import pytest
 
 from .kernel_versions import KernelVersions
-from .utils import get_cname_from_os_release
+from .os_release import get_os_release
 
 logger = logging.getLogger(__name__)
 
@@ -91,17 +91,18 @@ class Initrd:
         self._dracut_module_set = None
 
     def _get_efi_path(self) -> Optional[str]:
-        """Get the path to the EFI file based on CNAME from os-release.
+        """Get the path to the EFI file based on the versioned falvor from os-release.
 
         Returns:
-            Path to EFI file, or None if CNAME not found or file doesn't exist.
+            Path to EFI file, or None if the version flavor cannot be
+            assembled or file doesn't exist.
         """
-        cname = get_cname_from_os_release()
-        if not cname:
+        versioned_flavor = get_os_release().versioned_flavor
+        if not versioned_flavor:
             logger.debug("CNAME not found in /etc/os-release, cannot locate EFI file")
             return None
 
-        efi_path = f"/efi/EFI/Linux/{cname}.efi"
+        efi_path = f"/efi/EFI/Linux/{versioned_flavor}.efi"
         if not os.path.exists(efi_path):
             logger.debug(f"EFI file not found: {efi_path}")
             return None
