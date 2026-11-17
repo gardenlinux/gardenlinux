@@ -30,7 +30,7 @@ Before starting, you'll need:
   - [Getting Started](https://docs.stackit.cloud/platform/getting-started/) — projects, accounts, portal
   - [Products](https://docs.stackit.cloud/products/) — compute, networking, storage
   - [Linux Server](https://docs.stackit.cloud/products/compute-engine/linux-server/) — compute engine for Linux workloads
-  - [STACKIT CLI](https://docs.stackit.cloud/developer-tools/stackit-cli/) — command-line interface reference
+  - [STACKIT CLI](https://github.com/stackitcloud/stackit-cli/tree/main/docs) — command reference
   - [Marketplace](https://docs.stackit.cloud/marketplace/) — available services
 - An SSH client on your local machine
 
