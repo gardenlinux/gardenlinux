@@ -106,38 +106,27 @@ For a complete list of maintained releases and their support lifecycle, see the 
 
 You can [build your own Garden Linux images](/how-to/building-images) or even [create a custom feature](/how-to/custom-feature).
 
-### Step 3: Get or Create a Network
+### Step 3: Get a Network ID
 
-Get the ID of an existing network, or create a new one:
+STACKIT networking is VPC-based. You'll need an existing network in your project to attach the server to.
 
-:::tip
-New STACKIT projects come with a default network (`nw-0`). VPC-enabled projects require a routing table ID to create additional networks. We recommend reusing the existing network unless you need isolation.
+:::warning Environment-Specific Values
+The available networks depend on your STACKIT project setup. Check with your STACKIT administrator for the correct network ID to use.
 :::
 
-**Option A: Use an existing network (recommended)**
+List available networks and pick one:
 
 ```bash
-NETWORK_ID=$(stackit network list \
+stackit network list \
   --project-id "${STACKIT_PROJECT_ID}" \
   --output-format json | \
-  jq -r '.[0].id')
-echo "Network ID: ${NETWORK_ID}"
+  jq -r '.[] | "\(.id) \(.name)"'
 ```
 
-**Option B: Create a new network** (non-VPC projects only)
+Set the network ID you want to use:
 
 ```bash
-NETWORK_NAME="gardenlinux-network"
-
-stackit network create \
-  --project-id "${STACKIT_PROJECT_ID}" \
-  --name "${NETWORK_NAME}" \
-  --assume-yes
-
-NETWORK_ID=$(stackit network list \
-  --project-id "${STACKIT_PROJECT_ID}" \
-  --output-format json | \
-  jq -r ".[] | select(.name==\"${NETWORK_NAME}\") | .id")
+NETWORK_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # replace with your network ID
 echo "Network ID: ${NETWORK_ID}"
 ```
 
