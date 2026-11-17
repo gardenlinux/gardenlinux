@@ -352,9 +352,8 @@ stackit security-group delete "${SG_ID}" \
   --project-id "${STACKIT_PROJECT_ID}"
 
 # Delete the key pair
-stackit key-pair delete \
-  --project-id "${STACKIT_PROJECT_ID}" \
-  --name "${KEY_NAME}"
+stackit key-pair delete "${KEY_NAME}" \
+  --project-id "${STACKIT_PROJECT_ID}"
 
 # Delete the image
 stackit image delete "${IMAGE_ID}" \
