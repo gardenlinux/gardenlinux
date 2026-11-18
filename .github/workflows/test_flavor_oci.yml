@@ -42,7 +42,7 @@ jobs:
           path: tests/.build
           key: test-distribution-${{ github.run_id }}
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@8a26d04fe21b09d7f0fe048c1dea7764f6e46b17 # pin@1.0.4
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@904b4f48c468a908b3e92458e2ac3f54eeb01484 # pin@1.0.5
       - name: Set ABN
         run: |
           echo "ABN=$(gl-features-parse --cname ${{ inputs.cname }} --arch ${{ inputs.arch }} artifact-base-name)" | tee -a "$GITHUB_ENV"
