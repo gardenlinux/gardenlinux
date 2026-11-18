@@ -1,0 +1,3 @@
+markers:
+  "etc/kernel/cmdline.d/50-nvidia.cfg":
+  - "GL-TESTCOV-_nvidia-config-kernel-cmdline-nvidia"

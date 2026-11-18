@@ -555,6 +555,39 @@ def test_console_configuration_in_cmdline_vmware_bautrates(kernel_cmdline: List[
 
 
 # =============================================================================
+# _nvidia Feature Kernel Command Line
+# =============================================================================
+
+
+@pytest.mark.testcov(["GL-TESTCOV-_nvidia-config-kernel-cmdline-nvidia"])
+@pytest.mark.feature("_nvidia")
+def test_nvidia_kernel_cmdline_cfg_exists(file: File):
+    """Test that _nvidia kernel cmdline configuration file exists"""
+    assert file.is_regular_file("/etc/kernel/cmdline.d/50-nvidia.cfg")
+
+
+@pytest.mark.testcov(["GL-TESTCOV-_nvidia-config-kernel-cmdline-nvidia"])
+@pytest.mark.feature("_nvidia")
+@pytest.mark.booted(reason="kernel cmdline needs a booted system")
+def test_nvidia_kernel_cmdline_parameters(kernel_cmdline: List[str]):
+    """Verify NVIDIA GPU performance parameters are present in the running kernel command line."""
+    required_params = [
+        "iommu=pt",
+        "idle=poll",
+        "nvidia.NVreg_DynamicPowerManagement=0x00",
+        "usbcore.autosuspend=-1",
+        "nvme_core.default_ps_max_latency_us=0",
+        "pcie_port_pm=off",
+        "pcie_aspm.policy=performance",
+        "cpufreq.default_governor=performance",
+    ]
+    missing = [param for param in required_params if param not in kernel_cmdline]
+    assert (
+        not missing
+    ), f"The following NVIDIA kernel cmdline parameters were not found: {', '.join(missing)}"
+
+
+# =============================================================================
 # stackit Feature - Kernel Cmdline
 # =============================================================================
 

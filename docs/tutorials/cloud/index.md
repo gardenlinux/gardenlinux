@@ -15,7 +15,7 @@ Deploy Garden Linux to public and private cloud environments. These tutorials re
 ## Prerequisites
 
 - Active cloud provider account
-- Configured CLI tools (AWS CLI, Azure CLI, gcloud, or OpenStack CLI)
+- Configured CLI tools (AWS CLI, Azure CLI, gcloud, OpenStack CLI, or STACKIT CLI)
 - SSH client
 
 ## Cost Consideration
