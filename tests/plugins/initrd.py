@@ -9,7 +9,7 @@ import pefile
 import pytest
 
 from .kernel_versions import KernelVersions
-from .utils import get_versioned_flavor_from_os_release
+from .os_release import get_os_release
 
 logger = logging.getLogger(__name__)
 
@@ -94,10 +94,10 @@ class Initrd:
         """Get the path to the EFI file based on the versioned flavor from os-release.
 
         Returns:
-            Path to EFI file, or None if the versioned flavor cannot be
-            assembled or the file doesn't exist.
+            Path to EFI file, or None if the version flavor cannot be
+            assembled or file doesn't exist.
         """
-        versioned_flavor = get_versioned_flavor_from_os_release()
+        versioned_flavor = get_os_release().versioned_flavor
         if not versioned_flavor:
             logger.debug(
                 "versioned flavor could not be assembled from /etc/os-release, "
