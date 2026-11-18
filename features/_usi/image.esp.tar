@@ -46,13 +46,40 @@ cp --no-dereference /dev/{fd,stdin,stdout,stderr} "$rootfs/dev/"
 
 mount -t tmpfs -o size=1G tmpfs "$rootfs/tmp"
 
-mkdir "$rootfs/tmp/initrd.include"
+initrd_dir="$rootfs/tmp/initrd.include"
+mkdir "$initrd_dir"
 IFS=',' read -r -a features <<< "$BUILDER_FEATURES"
 for feature in "${features[@]}"; do
 	if [ -e "/builder/features/$feature/initrd.include" ]; then
-		cp -a "/builder/features/$feature/initrd.include/." "$rootfs/tmp/initrd.include"
+		cp -a "/builder/features/$feature/initrd.include/." "$initrd_dir"
 	fi
 done
+
+# we can't use chroot here because the initrd does not contain any shell or utilities
+for feature in "${features[@]}"; do
+	if [ -e "/builder/features/$feature/usi.config" ]; then
+		printf 'exec: %s %s %s\n' "/builder/features/$feature/usi.config" "$initrd_dir" "$rootfs"
+		"/builder/features/$feature/usi.config" "$initrd_dir" "$rootfs"
+	fi
+done
+
+# Remove files specified in initrd.exclude for each feature
+rm_files_list="$(mktemp)"
+
+for feature in "${features[@]}"; do
+	if [ -e "/builder/features/$feature/initrd.exclude" ]; then
+		sed 's/#.*$//;/^[[:space:]]*$/d' "/builder/features/$feature/initrd.exclude" | while read -r exclude; do
+			set +f
+			shopt -s globstar
+			shopt -s nullglob
+			for file in $exclude; do echo "${initrd_dir#"$rootfs"}${file}"; done
+		done
+	fi
+done > "$rm_files_list"
+
+xargs chroot "$rootfs" rm -rvf --one-file-system -- < "$rm_files_list"
+#sed 's/^/removed /' "$rm_files_list"
+rm "$rm_files_list"
 
 case "$BUILDER_ARCH" in
 	amd64)
@@ -76,7 +103,7 @@ chroot "$rootfs" dracut \
 	--modules "bash dash systemd systemd-initrd systemd-repart systemd-cryptsetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown crypt" \
 	--reproducible \
 	--install 'find findmnt grep lsblk tail head realpath basename od sfdisk mkfs.ext4 resizefat32 dd cryptsetup chattr cmp /usr/lib/systemd/systemd-pcrextend' \
-	--include '/tmp/initrd.include' / \
+	--include "${initrd_dir#"$rootfs"}" / \
 	--add-drivers erofs \
 	/initrd
 
@@ -106,10 +133,10 @@ umount "$rootfs/tmp"
 
 esp_dir="$(mktemp -d)"
 
-IFS=',' read -r -a features <<< "$BUILDER_FEATURES"
 for feature in "${features[@]}"; do
-	if [ -e "/builder/features/$feature/usi.config" ]; then
-		"/builder/features/$feature/usi.config" "$uki" "$esp_dir" "$rootfs"
+	if [ -e "/builder/features/$feature/usi.post" ]; then
+		printf 'exec: %s %s %s %s\n' "/builder/features/$feature/usi.post" "$uki" "$esp_dir" "$rootfs"
+		"/builder/features/$feature/usi.post" "$uki" "$esp_dir" "$rootfs"
 	fi
 done
 
