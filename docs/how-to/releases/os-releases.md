@@ -157,7 +157,7 @@ gh workflow -R gardenlinux/gardenlinux \
 ### Step 2: GLCI (internal)
 
 :::warning For Garden Linux maintainers
-The additional internal release step "GLCI" is mandatory. This requires authentication; see the [Internal Step Phase 1 Step 2: Run GLCI Workflow](https://pages.github.tools.sap/gardenlinux/docs-ng-internal/how-to/releases/os-releases-internal.html#internal-step-phase-1-step-2-run-glci-workflow) documentation for details.
+The additional internal release step "GLCI" is mandatory. This requires authentication; see the [Internal Step Phase 1 Step 2: Run GLCI Workflow](https://pages.github.tools.sap/gardenlinux/docs/how-to/releases/os-releases-internal.html#internal-step-phase-1-step-2-run-glci-workflow) documentation for details.
 :::
 
 ### Step 3: Create GitHub release
@@ -249,7 +249,7 @@ Or via GitHub UI:
 ### Step 5: Notify Security Stakeholders (internal)
 
 :::warning For Garden Linux maintainers
-The additional internal release step "Notify Security Stakeholders" is mandatory. This requires authentication; see the [Internal Step Phase 1 Step 5: Notify Security Stakeholders](https://pages.github.tools.sap/gardenlinux/docs-ng-internal/how-to/releases/os-releases-internal.html#internal-step-phase-1-step-5-notify-security-stakeholders) documentation for details.
+The additional internal release step "Notify Security Stakeholders" is mandatory. This requires authentication; see the [Internal Step Phase 1 Step 5: Notify Security Stakeholders](https://pages.github.tools.sap/gardenlinux/docs/how-to/releases/os-releases-internal.html#internal-step-phase-1-step-5-notify-security-stakeholders) documentation for details.
 :::
 
 ### Step 6: Update Garden Linux documentation
