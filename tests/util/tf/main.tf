@@ -5,6 +5,7 @@ locals {
     azure = "./modules/azure"
     ali   = "./modules/ali"
     openstack = "./modules/openstack"
+    stackit   = "./modules/stackit"
   }
 }
 
