@@ -744,9 +744,9 @@ qemu_opt_remote_control () {
     # IPMI
     if [ "centos" != $os ]; then
         if [ "$arch" = amd64 ]; then
-            # Add a BMC simulator
-            QEMU_OPTS+=("-device ipmi-bmc-sim,id=bmc0"
-                        "-device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2")
+            # Add a BMC simulator (for non confidential guests only)
+            [ "$cvm" ] || QEMU_OPTS+=("-device ipmi-bmc-sim,id=bmc0"
+                                      "-device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2")
 
             # Add QEMU guest agent support
             QEMU_OPTS+=("-chardev socket,path=$TMP_DIR/$mac.guest,server=on,wait=off,id=qga0"
