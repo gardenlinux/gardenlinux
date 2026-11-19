@@ -749,8 +749,12 @@ qemu_opt_remote_control () {
                                       "-device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2")
 
             # Add QEMU guest agent support
+            local serial_ctl="virtio-serial"
+            # Enforce virtio modern-only and route all DMA through platform IOMMU
+            # for confidential guests
+            [ "$cvm" ] && serial_ctl+=",disable-legacy=on,iommu_platform=true"
             QEMU_OPTS+=("-chardev socket,path=$TMP_DIR/$mac.guest,server=on,wait=off,id=qga0"
-                        "-device virtio-serial"
+                        "-device $serial_ctl"
                         "-device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0")
         fi
     fi
