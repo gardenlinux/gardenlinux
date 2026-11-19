@@ -77,7 +77,7 @@ jobs:
           echo "ABN=$(gl-features-parse --cname ${{ inputs.cname }} --arch ${{ inputs.arch }} artifact-base-name)" | tee -a "$GITHUB_ENV"
       - name: Pack build artifacts for upload
         run: tar -cSzvf "$ABN.tar.gz" -C .build -T ".build/$ABN.artifacts"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # pin@v7.0.2
         with:
           name: ${{ inputs.prefix }}build-${{ inputs.cname }}-${{ inputs.arch }}
           path: ${{ env.ABN }}.tar.gz
