@@ -36,7 +36,7 @@ jobs:
           key: ${{ inputs.prefix }}build-container-${{ matrix.arch }}-${{ github.run_id }}
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@904b4f48c468a908b3e92458e2ac3f54eeb01484 # pin@1.0.5
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@cb0202dc1267aac66b04578a35b4db35edf1ba5b # pin@1.0.6
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Set ABN
         run: |
@@ -83,7 +83,7 @@ jobs:
           gl-oci pull-image --repository "$snapshot" --platform linux/${{ matrix.arch }}
           gl-oci build-image --repository "ghcr.io/${{ github.repository }}/kmodbuild" --tag "${{ matrix.arch }}-${VERSION}" --oci-archive "kmodbuild_container_${{ matrix.arch }}.oci" --platform linux/${{ matrix.arch }} --dir "images/kmodbuild" --build-arg base="$base" --build-arg snapshot="$snapshot"
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # pin@v7.0.2
         with:
           name: ${{ inputs.prefix }}kmodbuild-container-${{ matrix.arch }}
           path: kmodbuild_container_${{ matrix.arch }}.oci

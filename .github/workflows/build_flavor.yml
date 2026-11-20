@@ -48,7 +48,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@904b4f48c468a908b3e92458e2ac3f54eeb01484 # pin@1.0.5
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@cb0202dc1267aac66b04578a35b4db35edf1ba5b # pin@1.0.6
       - name: Set build reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -77,7 +77,7 @@ jobs:
           echo "ABN=$(gl-features-parse --cname ${{ inputs.cname }} --arch ${{ inputs.arch }} artifact-base-name)" | tee -a "$GITHUB_ENV"
       - name: Pack build artifacts for upload
         run: tar -cSzvf "$ABN.tar.gz" -C .build -T ".build/$ABN.artifacts"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # pin@v7.0.2
         with:
           name: ${{ inputs.prefix }}build-${{ inputs.cname }}-${{ inputs.arch }}
           path: ${{ env.ABN }}.tar.gz
