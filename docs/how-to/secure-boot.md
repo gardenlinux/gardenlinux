@@ -67,7 +67,7 @@ platforms that support UEFI setup mode.
 
 **How it works:**
 
-1. During the build, `usi.config` places the signing keys in
+1. During the build, `usi.post` places the signing keys in
    `ESP/loader/keys/auto/{PK,KEK,db}.auth` and writes `secure-boot-enroll
 force` into `ESP/loader/loader.conf`.
 2. On first boot, systemd-boot detects that UEFI is in setup mode (no keys
