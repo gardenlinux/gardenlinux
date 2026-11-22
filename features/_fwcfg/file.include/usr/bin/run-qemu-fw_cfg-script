@@ -4,7 +4,7 @@ set -eufo pipefail
 fwcfg_path="/sys/firmware/qemu_fw_cfg/by_name/opt/gardenlinux/config_script/raw"
 tmp_script="/run/gardenlinux/qemu-fw_cfg-script"
 
-if ! grep -qi qemu /sys/class/dmi/id/sys_vendor; then
+if [ -e /sys/class/dmi/id/sys_vendor ] && ! grep -qi qemu /sys/class/dmi/id/sys_vendor; then
 	echo "Not running under QEMU, skipping." >&2
 	exit 0
 fi

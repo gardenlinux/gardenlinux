@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# GL-TESTCOV-disaSTIGmedium-config-login-defs-umask
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000480-GPOS-00228/
+# Runs in exec.late so it overrides base/exec.config which resets UMASK to 027
+sed -i '/^UMASK/D' /etc/login.defs
+printf 'UMASK\t\t077\n' >> /etc/login.defs
+
+# GL-TESTCOV-disaSTIGmedium-config-pam-common-auth-faildelay
+# https://stigaview.com/products/srg-gpos/v3r2/SRG-OS-000480-GPOS-00226/
+# Runs in exec.late to ensure it applies after all pam-auth-update calls
+# Fixture checks /etc/pam.d/login directly (does not follow @include)
+if grep -q 'pam_faildelay' /etc/pam.d/login 2>/dev/null; then
+    sed -i 's/^.*pam_faildelay.*/auth required pam_faildelay.so delay=4000000/' /etc/pam.d/login
+else
+    sed -i '1i auth required pam_faildelay.so delay=4000000' /etc/pam.d/login
+fi
+echo "=== /etc/pam.d/login after patch ==="
+cat /etc/pam.d/login
