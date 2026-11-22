@@ -1,0 +1,5 @@
+# this file actually gets deleted if the uninstall script is run
+selinux: true
+#container-runtime-endpoint: /run/containerd/containerd.sock
+# server only
+#etcd-expose-metrics: true

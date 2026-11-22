@@ -1,0 +1,6 @@
+description: 'k3s requirements (e.g. containerd)'
+type: element
+features:
+  include:
+    - iscsi
+    - _selinux
