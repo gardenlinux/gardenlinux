@@ -1,7 +1,9 @@
 name: dev
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-dev
   cancel-in-progress: true
+
 on:
   push:
     branches:
@@ -14,10 +16,7 @@ on:
       - 'features/*/info.yaml'
       - 'CONTRIBUTING.md'
       - 'SECURITY.md'
-  pull_request:
-    # No paths-ignore on pull_request — workflow must run on every PR so that
-    # build_and_test_gate always produces a check result for branch protection.
-    # detect_changes skips the expensive build/test jobs on docs-only PRs.
+
 jobs:
   detect_changes:
     name: Detect code path changes
@@ -39,7 +38,6 @@ jobs:
               - '!features/*/info.yaml'
               - '!CONTRIBUTING.md'
               - '!SECURITY.md'
-
   set_version:
     name: Set VERSION
     needs: detect_changes
@@ -77,7 +75,6 @@ jobs:
       id-token: write # TODO: 3215 elevated permissions for included workflow
       actions: write # TODO: 3215 elevated permissions for included workflow
       checks: write # Required for test_report job to write workflow summary
-
   build_and_test_gate:
     name: Build and test gate
     needs:

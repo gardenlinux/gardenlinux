@@ -13,6 +13,10 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   docs:
     uses: gardenlinux/docs/.github/workflows/aggregated-repo-docs.yml@main
@@ -20,9 +24,6 @@ jobs:
     # `pull-requests: read`. This repository restricts the default GITHUB_TOKEN
     # to read-only (pull-requests: none), so the grant must be explicit here or
     # the reusable workflow fails to start.
-    permissions:
-      contents: read
-      pull-requests: read
     with:
       repo: gardenlinux
     secrets: inherit
