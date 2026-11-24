@@ -1,3 +1,18 @@
+export function convertPreCNameFlavorsMatrix(matrixData) {
+    const matrix = JSON.parse(matrixData);
+    let convertedMatrix = [];
+
+    for (const flavor of matrix.include) {
+        if ("cname" in flavor) {
+            return matrixData;
+        }
+
+        convertedMatrix.push({ "cname": flavor["flavor"], "arch": flavor["arch"] });
+    }
+
+    return JSON.stringify({ "include": convertedMatrix });
+}
+
 export async function dispatchRetryWorkflow(core, githubActions, context, refName, retries = 1) {
     if (context.runAttempt >= retries) {
         core.setFailed("Workflow run failed permanently");
