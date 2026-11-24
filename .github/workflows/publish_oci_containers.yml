@@ -416,15 +416,15 @@ jobs:
                 exit 1
             fi
 
-            gl-oci push-oci-archive --oci-archive "dist.oci" --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "${VERSION}${IDENTIFIER}"
+            gl-oci push-oci-archive --oci-archive "${oci}" --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "${VERSION}${IDENTIFIER}"
 
             # Creating and pushing manifest for nightly
             if [ $IS_NIGHTLY = true ]; then
-              gl-oci push-oci-archive --oci-archive "dist.oci" --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "nightly${IDENTIFIER}"
+              gl-oci push-oci-archive --oci-archive "${oci}" --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "nightly${IDENTIFIER}"
             else
               MAJOR_VERSION="${VERSION%%.*}"
               MAJOR_TAG="rel-${MAJOR_VERSION}-latest"
 
-              gl-oci push-oci-archive --oci-archive "dist.oci" --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "${MAJOR_TAG}${IDENTIFIER}"
+              gl-oci push-oci-archive --oci-archive "${oci}" --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "${MAJOR_TAG}${IDENTIFIER}"
             fi
           done
