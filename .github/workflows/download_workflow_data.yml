@@ -53,6 +53,7 @@ jobs:
         with:
           script: |
             const fs = await import("fs");
+            const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
 
             fs.accessSync("workflow_data.json", (fs.constants.F_OK | fs.constants.R_OK));
             const workflowData = JSON.parse(fs.readFileSync("workflow_data.json"));
@@ -67,8 +68,8 @@ jobs:
 
             core.setOutput("commit_id", flavorVersionData.commit_id);
             core.setOutput("version", flavorVersionData.version);
-            core.setOutput("flavors_matrix", workflowData.flavors_matrix);
-            core.setOutput("bare_flavors_matrix", workflowData.bare_flavors_matrix);
+            core.setOutput("flavors_matrix", gitHubLib.convertPreCNameFlavorsMatrix(workflowData.flavors_matrix));
+            core.setOutput("bare_flavors_matrix", gitHubLib.convertPreCNameFlavorsMatrix(workflowData.bare_flavors_matrix));
             core.setOutput("original_workflow_name", workflowData.original_workflow_name);
             core.setOutput("target", flavorVersionData.target);
             core.setOutput("prefix", ("prefix" in flavorVersionData ? flavorVersionData.prefix : ""));
