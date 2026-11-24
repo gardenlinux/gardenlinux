@@ -403,6 +403,7 @@ jobs:
           fi
 
           IDENTIFIER=""
+          IMAGE_REF=""
           MAJOR_TAG=""
           VERSION=$(bin/garden-version "${{ inputs.version }}")
 
@@ -410,21 +411,22 @@ jobs:
             if [[ "${oci}" == "dist.oci" ]]; then
                 IDENTIFIER=""
             elif [[ "${oci}" =~ _([^_.]+)\.[^.]+$ ]]; then
-                IDENTIFIER="-${BASH_REMATCH[1]}"
+                IDENTIFIER="${BASH_REMATCH[1]}-"
+                IMAGE_REF=" --oci-image-ref-name ghcr.io/${{ github.repository_owner }}/test:${IDENTIFIER}${VERSION}"
             else
                 echo "Unsupported OCI archive name: ${oci}"
                 exit 1
             fi
 
-            gl-oci push-oci-archive --oci-archive "${oci}" --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "${VERSION}${IDENTIFIER}"
+            gl-oci push-oci-archive --oci-archive "${oci}"${IMAGE_REF} --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "${IDENTIFIER}${VERSION}"
 
             # Creating and pushing manifest for nightly
             if [ $IS_NIGHTLY = true ]; then
-              gl-oci push-oci-archive --oci-archive "${oci}" --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "nightly${IDENTIFIER}"
+              gl-oci push-oci-archive --oci-archive "${oci}"${IMAGE_REF} --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "${IDENTIFIER}nightly"
             else
               MAJOR_VERSION="${VERSION%%.*}"
               MAJOR_TAG="rel-${MAJOR_VERSION}-latest"
 
-              gl-oci push-oci-archive --oci-archive "${oci}" --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "${MAJOR_TAG}${IDENTIFIER}"
+              gl-oci push-oci-archive --oci-archive "${oci}"${IMAGE_REF} --repository "ghcr.io/${{ github.repository_owner }}/test" --tag "${IDENTIFIER}${MAJOR_TAG}"
             fi
           done
