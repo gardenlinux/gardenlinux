@@ -51,7 +51,7 @@ jobs:
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: Create GLRD release
-        uses: gardenlinux/glrd@30fcac2ec9ad6cee873fcc503f0ca11022a4609e # v4.1.0
+        uses: gardenlinux/glrd@b6457ad53baf237f41d1c1366f2620c42dd39ed4 # v5.1.0
         with:
           cmd: |
             type="${{ inputs.is_dev_release && 'dev' || 'minor' }}"
@@ -69,7 +69,7 @@ jobs:
               glrd-manage --s3-update --create dev --version ${VERSION} --commit ${COMMIT}
             fi
       - name: Get created GLRD release
-        uses: gardenlinux/glrd@30fcac2ec9ad6cee873fcc503f0ca11022a4609e # v4.1.0
+        uses: gardenlinux/glrd@b6457ad53baf237f41d1c1366f2620c42dd39ed4 # v5.1.0
         with:
           cmd: |
             glrd --type major,minor,dev --version "$(echo ${VERSION} | cut -d'.' -f1)"
