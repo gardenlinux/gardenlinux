@@ -634,8 +634,8 @@ targets:
         test-platform: false
         publish: true
       - features:
-          - metal
           - gardener
+          - metal
           - _prod
         arch: amd64
         build: true
@@ -643,8 +643,8 @@ targets:
         test-platform: false
         publish: true
       - features:
-          - metal
           - gardener
+          - metal
           - _prod
         arch: arm64
         build: true
@@ -652,8 +652,8 @@ targets:
         test-platform: false
         publish: true
       - features:
-          - metal
           - gardener
+          - metal
           - _prod
           - _usi
         arch: amd64
@@ -662,8 +662,8 @@ targets:
         test-platform: false
         publish: true
       - features:
-          - metal
           - gardener
+          - metal
           - _prod
           - _usi
         arch: arm64
