@@ -22,7 +22,7 @@ on:
         required: true
 jobs:
   images:
-    name: Provide image ${{ matrix.cname }} (${{ matrix.arch }})
+    name: Provide image ${{ matrix.flavor }} (${{ matrix.arch }})
     if: ${{ inputs.flavors_matrix != '{"include":[]}' }}
     runs-on: ubuntu-24.04
     defaults:
@@ -42,14 +42,14 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@cb0202dc1267aac66b04578a35b4db35edf1ba5b # pin@1.0.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0108ebe0381f8c6225d1813b365e2fe639a80686 # pin@0.10.25
       - name: Set image reference for S3
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
       - name: Set ABN
         run: |
-          echo "ABN=$(gl-features-parse --cname ${{ matrix.cname }} --arch ${{ matrix.arch }} artifact-base-name)" | tee -a "$GITHUB_ENV"
+          echo "ABN=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
       - name: "Authenticate to AWS"
         uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # pin@v6.2.3
         with:
@@ -59,12 +59,12 @@ jobs:
       - name: Prepare image from S3
         run: |
           mkdir "$ABN"
-          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$ABN" download-artifacts-from-bucket --artifact-base-name "$ABN"
+          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$ABN" download-artifacts-from-bucket --cname "$ABN"
 
           tar -cSzvf "$ABN.tar.gz" -C "$ABN/" .
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # pin@v7.0.2
         with:
-          name: build-${{ matrix.cname }}-${{ matrix.arch }}
+          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           path: ${{ env.ABN }}.tar.gz
           if-no-files-found: error
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
@@ -72,4 +72,4 @@ jobs:
           path: |
             COMMIT
             VERSION
-          key: build-${{ matrix.cname }}-${{ matrix.arch }}-${{ github.run_id }}
+          key: build-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}

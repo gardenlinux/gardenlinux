@@ -5,7 +5,7 @@ on:
       arch:
         type: string
         default: "amd64"
-      cname:
+      flavor:
         type: string
         required: true
     secrets:
@@ -43,9 +43,9 @@ on:
         required: true
 jobs:
   test:
-    name: Test flavor ${{ inputs.cname }} (${{ inputs.arch }}) in cloud
+    name: Test flavor ${{ inputs.flavor }} (${{ inputs.arch }}) in cloud
     runs-on: "ubuntu-24.04"
-    if: ${{ inputs.cname != 'skip' }}
+    if: ${{ inputs.flavor != 'skip' }}
     # timeout-minutes: 30
     environment: oidc_platform_tests
     defaults:
@@ -70,7 +70,7 @@ jobs:
           path: |
             COMMIT
             VERSION
-          key: build-${{ inputs.cname }}-${{ inputs.arch }}-${{ github.run_id }}
+          key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: Download test distribution
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
@@ -83,17 +83,17 @@ jobs:
           name: certs
           path: cert/
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@cb0202dc1267aac66b04578a35b4db35edf1ba5b # pin@1.0.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0108ebe0381f8c6225d1813b365e2fe639a80686 # pin@0.10.25
       - name: Set ABN
         run: |
-          echo "ABN=$(gl-features-parse --cname ${{ inputs.cname }} --arch ${{ inputs.arch }} artifact-base-name)" | tee -a "$GITHUB_ENV"
+          echo "ABN=$(gl-features-parse --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname)" | tee -a "$GITHUB_ENV"
       - name: Set CLOUD
         run: |
           echo "CLOUD=${ABN%%-*}" | tee -a "$GITHUB_ENV"
       - name: Load flavor build artifact
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # pin@v8.0.2
         with:
-          name: build-${{ inputs.cname }}-${{ inputs.arch }}
+          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
       - name: unpack build artifacts
         run: |
           mkdir ".build"
@@ -101,7 +101,7 @@ jobs:
           rm "$ABN.tar.gz"
           tree .build
       - name: "Authenticate to Google Cloud"
-        if: ${{ startsWith(inputs.cname, 'gcp-') }}
+        if: ${{ startsWith(inputs.flavor, 'gcp-') }}
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           workload_identity_provider: ${{ secrets.gcp_identity_provider }}
@@ -110,7 +110,7 @@ jobs:
           cleanup_credentials: true
           export_environment_variables: true
       - name: Set GCP platform-test environment
-        if: ${{ startsWith(inputs.cname, 'gcp-') }}
+        if: ${{ startsWith(inputs.flavor, 'gcp-') }}
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # pin@v9.0.0
         with:
           script: |
@@ -127,8 +127,8 @@ jobs:
           aws-region: ${{ secrets.aws_region }}
           output-credentials: true
       - name: Set AWS platform-test environment
-        if: ${{ startsWith(inputs.cname, 'aws-') }}
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # pin@v9.0.0
+        if: ${{ startsWith(inputs.flavor, 'aws-') }}
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             // tf provider auth
@@ -141,7 +141,7 @@ jobs:
             // tf provider vars
             core.exportVariable("AWS_REGION", "${{ secrets.aws_region }}");
       - id: "auth_azure"
-        if: ${{ startsWith(inputs.cname, 'azure-') }}
+        if: ${{ startsWith(inputs.flavor, 'azure-') }}
         name: "Authenticate to Azure"
         uses: azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # pin@v3.0.2
         with:
@@ -149,7 +149,7 @@ jobs:
           tenant-id: ${{ secrets.az_tenant_id }}
           subscription-id: ${{ secrets.az_subscription_id }}
       - name: Set Azure platform-test environment
-        if: ${{ startsWith(inputs.cname, 'azure-') }}
+        if: ${{ startsWith(inputs.flavor, 'azure-') }}
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # pin@v9.0.0
         with:
           script: |
@@ -164,7 +164,7 @@ jobs:
             // tf provider vars
             core.exportVariable("ARM_TENANT_ID", "${{ secrets.az_tenant_id }}");
       - id: "auth_alicloud"
-        if: ${{ startsWith(inputs.cname, 'ali-') }}
+        if: ${{ startsWith(inputs.flavor, 'ali-') }}
         name: "Authenticate to Alicloud"
         uses: aliyun/configure-aliyun-credentials-action@1e5248c8d5d93a8781ac344a68e19a43341e79e6 # v1.1.0
         with:
@@ -172,7 +172,7 @@ jobs:
           oidc-provider-arn: ${{ secrets.alibaba_cloud_oidc_provider_arn }}
           role-session-expiration: 21600
       - name: "Set Alicloud platform-test environment"
-        if: ${{ startsWith(inputs.cname, 'ali-') }}
+        if: ${{ startsWith(inputs.flavor, 'ali-') }}
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # pin@v9.0.0
         with:
           script: |
@@ -223,7 +223,7 @@ jobs:
           path: |
             .build/${{ env.ABN }}.cloud.test.log
             .build/${{ env.ABN }}.cloud.test.xml
-      - name: Cleanup cloud test for ${{ inputs.cname }} (${{ inputs.arch }})
+      - name: Cleanup cloud test for ${{ inputs.flavor }} (${{ inputs.arch }})
         if: always()
         run: |
           # enable remote state S3 backend

@@ -5,15 +5,15 @@ on:
       arch:
         type: string
         default: "amd64"
-      cname:
+      flavor:
         type: string
         required: true
 jobs:
   test:
-    name: Test flavor ${{ inputs.cname }} (${{ inputs.arch }}) in QEMU
+    name: Test flavor ${{ inputs.flavor }} (${{ inputs.arch }}) in QEMU
     # runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     runs-on: "ubuntu-24.04"
-    if: ${{ inputs.cname != 'skip' }}
+    if: ${{ inputs.flavor != 'skip' }}
     timeout-minutes: 40
     defaults:
       run:
@@ -35,7 +35,7 @@ jobs:
           path: |
             COMMIT
             VERSION
-          key: build-${{ inputs.cname }}-${{ inputs.arch }}-${{ github.run_id }}
+          key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: Download test distribution
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
@@ -48,14 +48,14 @@ jobs:
           name: certs
           path: cert/
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@cb0202dc1267aac66b04578a35b4db35edf1ba5b # pin@1.0.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0108ebe0381f8c6225d1813b365e2fe639a80686 # pin@0.10.25
       - name: Set ABN
         run: |
-          echo "ABN=$(gl-features-parse --cname ${{ inputs.cname }} --arch ${{ inputs.arch }} artifact-base-name)" | tee -a "$GITHUB_ENV"
+          echo "ABN=$(gl-features-parse --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname)" | tee -a "$GITHUB_ENV"
       - name: Load flavor build artifact
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # pin@v8.0.2
         with:
-          name: build-${{ inputs.cname }}-${{ inputs.arch }}
+          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
       - name: unpack build artifacts
         run: |
           mkdir ".build"
