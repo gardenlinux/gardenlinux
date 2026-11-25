@@ -101,7 +101,7 @@ git push origin rel-MAJOR
 
 The build process varies depending on the Garden Linux version:
 
-**For releases 2016.0.0 and later (using [SemVer](/reference/glossary.html#semver)):**
+**For releases 1877.x, 2016.0.0 and later (using [SemVer](/reference/glossary.html#semver)):**
 
 Use the [manual release workflow](https://github.com/gardenlinux/gardenlinux/actions/workflows/manual_release.yml):
 
