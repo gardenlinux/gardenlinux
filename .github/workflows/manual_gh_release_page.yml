@@ -1,4 +1,4 @@
-name: release page
+name: Create release entries
 on:
   workflow_dispatch:
     inputs:
@@ -134,7 +134,7 @@ jobs:
             flavors.yaml
           sparse-checkout-cone-mode: false
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@cb0202dc1267aac66b04578a35b4db35edf1ba5b # pin@1.0.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@b625eeb2c97a261503403e1224fbced6ead25657 # pin@1.0.7
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # pin@v6.2.3
         with:
@@ -147,12 +147,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ "${{ inputs.is_latest }}" == "true" ]]; then
-            gl-gh-release create-with-gl-release-notes --tag "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}" --latest
+            id=$(gl-gh-release create-with-gl-release-notes --tag "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}" --latest)
           else
-            gl-gh-release create-with-gl-release-notes --tag "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}"
+            id=$(gl-gh-release create-with-gl-release-notes --tag "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}")
           fi
 
-          echo "id=$(cat .github_release_id)" | tee -a $GITHUB_OUTPUT
+          echo "id=$id" | tee -a $GITHUB_OUTPUT
   flavors_matrix:
     needs: workflow_data
     name: Generate flavors matrix (marked for publishing)
