@@ -5,7 +5,7 @@ on:
       arch:
         type: string
         default: "amd64"
-      cname:
+      bare_flavor:
         type: string
         required: true
       commit_id:
@@ -19,7 +19,7 @@ on:
         default: ''
 jobs:
   build:
-    name: Build CName ${{ inputs.cname }} (${{ inputs.arch }})
+    name: Build bare flavor ${{ inputs.bare_flavor }} (${{ inputs.arch }})
     runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     defaults:
       run:
@@ -36,13 +36,13 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Build
         run: |
-          cname="${{ inputs.cname }}"
-          bare_flavor="${cname//bare-/}"
+          flavor="${{ inputs.bare_flavor }}"
+          bare_flavor="${flavor//bare-/}"
 
           ./build_bare_flavors "${bare_flavor}"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # pin@v7.0.2
         with:
-          name: ${{ inputs.prefix }}build-${{ inputs.cname }}-${{ inputs.arch }}
+          name: ${{ inputs.prefix }}build-${{ inputs.bare_flavor }}-${{ inputs.arch }}
           path: .build/bare_flavors/*.oci
           include-hidden-files: true
           if-no-files-found: error
@@ -51,4 +51,4 @@ jobs:
           path: |
             COMMIT
             VERSION
-          key: ${{ inputs.prefix }}build-${{ inputs.cname }}-${{ inputs.arch }}-${{ github.run_id }}
+          key: ${{ inputs.prefix }}build-${{ inputs.bare_flavor }}-${{ inputs.arch }}-${{ github.run_id }}

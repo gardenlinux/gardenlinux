@@ -1,18 +1,3 @@
-export function convertPreCNameFlavorsMatrix(matrixData) {
-    const matrix = JSON.parse(matrixData);
-    let convertedMatrix = [];
-
-    for (const flavor of matrix.include) {
-        if ("cname" in flavor) {
-            return matrixData;
-        }
-
-        convertedMatrix.push({ "cname": flavor["flavor"], "arch": flavor["arch"] });
-    }
-
-    return JSON.stringify({ "include": convertedMatrix });
-}
-
 export async function dispatchRetryWorkflow(core, githubActions, context, refName, retries = 1) {
     if (context.runAttempt >= retries) {
         core.setFailed("Workflow run failed permanently");
@@ -44,9 +29,9 @@ export function excludeFlavorsMatrix(matrixA, matrixB) {
     let resultMatrix = [];
 
     for (const arch in matrixA) {
-        for (const cname of matrixA[arch]) {
-            if (!matrixB.hasOwnProperty(arch) || !matrixB[arch].includes(cname)) {
-                resultMatrix.push({ "arch": arch, "cname": cname });
+        for (const flavor of matrixA[arch]) {
+            if (!matrixB.hasOwnProperty(arch) || !matrixB[arch].includes(flavor)) {
+                resultMatrix.push({ "arch": arch, "flavor": flavor });
             }
         }
     }
@@ -110,7 +95,7 @@ export function flattenFlavorsMatrixByArch(matrix) {
             matrixByArch[flavor["arch"]] = [];
         }
 
-        matrixByArch[flavor["arch"]].push(flavor["cname"]);
+        matrixByArch[flavor["arch"]].push(flavor["flavor"]);
     }
 
     return matrixByArch;
@@ -126,9 +111,9 @@ export function intersectFlavorsMatrix(matrixA, matrixB) {
             continue;
         }
 
-        for (const cname of matrixA[arch]) {
-            if (matrixB[arch].includes(cname)) {
-                intersectMatrix.push({ "arch": arch, "cname": cname });
+        for (const flavor of matrixA[arch]) {
+            if (matrixB[arch].includes(flavor)) {
+                intersectMatrix.push({ "arch": arch, "flavor": flavor });
             }
         }
     }

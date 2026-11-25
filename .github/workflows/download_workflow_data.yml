@@ -39,6 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
         with:
+          ref: main
           sparse-checkout: |
             .github/workflows/github.mjs
           sparse-checkout-cone-mode: false
@@ -73,8 +74,8 @@ jobs:
 
             core.setOutput("commit_id", flavorVersionData.commit_id);
             core.setOutput("version", flavorVersionData.version);
-            core.setOutput("flavors_matrix", gitHubLib.convertPreCNameFlavorsMatrix(workflowData.flavors_matrix));
-            core.setOutput("bare_flavors_matrix", gitHubLib.convertPreCNameFlavorsMatrix(workflowData.bare_flavors_matrix));
+            core.setOutput("flavors_matrix", workflowData.flavors_matrix);
+            core.setOutput("bare_flavors_matrix", workflowData.bare_flavors_matrix);
             core.setOutput("original_workflow_name", workflowData.original_workflow_name);
             core.setOutput("target", flavorVersionData.target);
             core.setOutput("prefix", ("prefix" in flavorVersionData ? flavorVersionData.prefix : ""));

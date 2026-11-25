@@ -1,3 +1,4 @@
+# @TODO: Replace with safe OCI manifast handling variant
 name: Publish container images
 on:
   workflow_call:
@@ -23,33 +24,33 @@ jobs:
         shell: bash
     env:
       VERSION: ${{ inputs.version }}
-    strategy:
-      matrix:
-        arch: [amd64, arm64]
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v7.0.1
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@cb0202dc1267aac66b04578a35b4db35edf1ba5b # pin@1.0.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0108ebe0381f8c6225d1813b365e2fe639a80686 # pin@0.10.25
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # pin@v8.0.2
         with:
-          name: kmodbuild-container-${{ matrix.arch }}
+          pattern: kmodbuild-container-*
+          merge-multiple: true
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - name: Publish kernel module build dev container (${{ matrix.arch }})
-        env:
-          GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
-          GL_CLI_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish kernel module build dev container
         run: |
-          # Workaround Podman API login() issue
-          podman login -u "${GL_CLI_REGISTRY_USERNAME}" -p "${GL_CLI_REGISTRY_PASSWORD}" ghcr.io
+          for oci_archive in *.oci; do
+            podman load -i ${oci_archive}
+            rm ${oci_archive}
+          done
 
-          gl-oci load-image --oci-archive "kmodbuild_container_${{ matrix.arch }}.oci"
-          rm *.oci
+          podman login -u token -p ${{ github.token }} ghcr.io
 
-          gl-oci push-image --repository "ghcr.io/${{ github.repository }}/kmodbuild" --tag "${{ matrix.arch }}-$VERSION"
-          gl-oci add-image-to-index --index "ghcr.io/${{ github.repository }}/kmodbuild" --index-tag "$VERSION" --repository "ghcr.io/${{ github.repository }}/kmodbuild" --tag "${{ matrix.arch }}-$VERSION"
+          podman push ghcr.io/${{ github.repository }}/kmodbuild:amd64-$VERSION
+          podman push ghcr.io/${{ github.repository }}/kmodbuild:arm64-$VERSION
+
+          podman manifest create ghcr.io/${{ github.repository }}/kmodbuild:$VERSION
+          podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:$VERSION ghcr.io/${{ github.repository }}/kmodbuild:amd64-$VERSION
+          podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:$VERSION ghcr.io/${{ github.repository }}/kmodbuild:arm64-$VERSION
+          podman manifest push ghcr.io/${{ github.repository }}/kmodbuild:$VERSION
