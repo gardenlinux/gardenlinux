@@ -30,8 +30,6 @@ We are probably on it, but feel free to open a Github issue.
 
 ## Relationship to Debian
 
-Garden Linux 💚 Debian.
-
 Debian is free and open source software. There are good [reasons](https://www.debian.org/intro/why_debian)
 to use Debian. In the following we explain our reasons in the kernel context.
 

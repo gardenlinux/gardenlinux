@@ -1,5 +1,6 @@
 ---
 title: "Install on GCP"
+description: "GCP platform-specific installation and configuration tasks"
 related_topics:
   - /tutorials/cloud/first-boot-gcp.md
   - /how-to/installation/post-install.md

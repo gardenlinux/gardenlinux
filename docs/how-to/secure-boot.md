@@ -107,14 +107,14 @@ journalctl | grep -i "secure boot"
 
 Expected `bootctl` output when Secure Boot is active:
 
-```
+```text
 Secure Boot: enabled (user)
 TPM2 Support: yes
 ```
 
 Expected kernel log lines:
 
-```
+```text
 kernel: Kernel is locked down from EFI Secure Boot; see man kernel_lockdown.7
 kernel: secureboot: Secure boot enabled
 ```

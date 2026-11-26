@@ -90,7 +90,7 @@ echo "Uploaded image: ${IMAGE_ID}"
 
 Expected output:
 
-```
+```text
 Uploaded image: bbd1cc8f-29ca-47e6-ac01-628e1dddd0d6
 ```
 
@@ -203,7 +203,7 @@ echo "Server ID: ${SERVER_ID}"
 
 Expected output:
 
-```
+```text
 Server ID: 43517fee-1234-5678-abcd-ef0123456789
 ```
 
@@ -234,7 +234,7 @@ echo "Server is reachable at: ${PUBLIC_IP}"
 
 Expected output:
 
-```
+```text
 Server is reachable at: 185.214.186.2
 ```
 
@@ -270,7 +270,7 @@ chronyc tracking
 
 Expected output from `/etc/os-release` should include:
 
-```
+```text
 ID=gardenlinux
 NAME="Garden Linux"
 VERSION="2150.0.0"
@@ -279,7 +279,7 @@ GARDENLINUX_PLATFORM_VARIANT=stackit
 
 Expected output from `chronyc tracking` should show the KVM PTP clock as reference:
 
-```
+```text
 Reference ID    : 50484330 (PHC0)
 Stratum         : 1
 ...

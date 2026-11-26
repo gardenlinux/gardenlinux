@@ -1,9 +1,10 @@
 ---
 title: "Security Response Process"
-github_target_path: "contributing/security.md"
+description: "Learn about the Garden Linux Security Response Process"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: SECURITY.md
+github_target_path: "contributing/security.md"
 ---
 
 # Garden Linux Security Response Process

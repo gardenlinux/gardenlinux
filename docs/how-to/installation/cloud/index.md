@@ -1,5 +1,6 @@
 ---
 title: "Cloud Installation"
+description: "Cloud platform-specific installation and configuration tasks"
 order: 1
 related_topics:
   - /tutorials/cloud/index.md

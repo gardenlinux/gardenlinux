@@ -1,5 +1,6 @@
 ---
 title: "Local Installation"
+description: "Learn about local installation and deployment methods"
 order: 3
 related_topics:
   - /tutorials/local/index.md

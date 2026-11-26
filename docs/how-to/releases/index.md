@@ -1,5 +1,6 @@
 ---
 title: "Releases"
+description: "Learn how to create Garden Linux releases"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: docs/how-to/releases/index.md

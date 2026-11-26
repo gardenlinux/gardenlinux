@@ -74,6 +74,4 @@ The identical disk layout for both firmware types allows migrating an installati
 
 ## Related topics
 
-- [Boot Modes](/explanation/boot-modes.md) — Technical background on BIOS and UEFI boot processes
-- [Install Using ISO](/how-to/installation/on-premises/iso.md) — ISO installation guide
-- [Install Using PXE Boot](/how-to/installation/on-premises/pxe-boot.md) — PXE network boot installation guide
+<RelatedTopics />

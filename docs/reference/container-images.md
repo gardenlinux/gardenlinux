@@ -66,3 +66,7 @@ The `unbase_oci` tool is instrumental in the development of these "bare" contain
   - Operates on OCI archives, comparing base and target images to identify and retain only necessary additions and their dependencies.
 - **Repository Link**: [unbase_oci](https://github.com/gardenlinux/unbase_oci)
 - **Impact**: This tool creates minimal, "distroless-like" images, ensuring that the resulting containers are lean and secure.
+
+## Related topics
+
+<RelatedTopics />

@@ -1,5 +1,6 @@
 ---
 title: "Container Installation"
+description: "Learn about container installation and deployment methods"
 order: 2
 related_topics:
   - /tutorials/container/index.md

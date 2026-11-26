@@ -1,5 +1,5 @@
 ---
-First Boot on Lima](./local/first-boot-lima.md)itle: "First Boot on KVM"
+title: "First Boot on KVM"
 description: "Step-by-step guide to deploying Garden Linux on QEMU/KVM"
 category: "tutorials"
 tags: ["tutorial", "kvm", "qemu", "virtualization", "beginner"]

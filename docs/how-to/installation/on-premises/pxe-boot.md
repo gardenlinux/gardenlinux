@@ -367,7 +367,7 @@ NVMe drives use the naming pattern `/dev/nvme0n1`, `/dev/nvme1n1`, etc. Virtio d
 The built-in installer (`/opt/install/install.sh` from the [`_install`](/reference/features/_install) feature) uses default configurations that can be customized:
 
 **Default partition layout** (`/opt/install/install.part`):
-```
+```text
 label: gpt
 type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, name="EFI", size=510MiB
 type=4f68bce3-e8cd-4db1-96e7-fbcaf984b709, name="ROOT"
@@ -378,7 +378,7 @@ The ROOT partition uses the x86-64 root partition GUID from the [Discoverable Pa
 :::
 
 **Default fstab** (`/opt/install/install.fstab`):
-```
+```text
 LABEL=ROOT      /               ext4            errors=remount-ro 0     1
 LABEL=EFI       /boot/efi       vfat            umask=0077      0       1
 ```

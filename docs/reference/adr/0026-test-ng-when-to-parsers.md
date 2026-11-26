@@ -41,9 +41,11 @@ Key questions that arose:
 - When should we create new domain-specific parser plugins (e.g., for PAM configs, SSH configs) versus using the default parser plugin?
 - How do we balance parser plugin benefits (consistency, automatic comment filtering, reusability) with test readability?
 
-> [!NOTE]
-> The parser plugins are planned to undergo refactoring to improve their API and usability.
-> This is tracked in https://github.com/gardenlinux/gardenlinux/issues/3866
+::: info
+The parser plugins are planned to undergo refactoring to improve their API and usability.
+This is tracked in https://github.com/gardenlinux/gardenlinux/issues/3866
+
+:::
 
 ## Decision
 

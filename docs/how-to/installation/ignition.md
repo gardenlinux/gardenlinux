@@ -288,7 +288,7 @@ How you deliver the Ignition configuration depends on the deployment method:
 
 In your iPXE boot script, specify the Ignition configuration URL:
 
-```
+```bash
 #!ipxe
 set base-url http://192.168.1.10:8080
 kernel ${base-url}/rootfs.vmlinuz initrd=rootfs.initrd \
