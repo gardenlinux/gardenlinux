@@ -33,7 +33,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@b625eeb2c97a261503403e1224fbced6ead25657 # pin@1.0.7
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@51a93bcab598b762753b073bd22ee00dcf622e3a # pin@1.0.8
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # pin@v8.0.2
         with:
           name: kmodbuild-container-${{ matrix.arch }}
