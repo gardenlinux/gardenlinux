@@ -1,0 +1,85 @@
+#!/bin/bash
+
+set -euo pipefail
+
+on_exit () {
+    local rc=$?
+    [[ "${rc}" -eq 0 ]] || printf "[start-confidential-vm] Error: exiting with status %s.\n" "${rc}"
+    exit "${rc}"
+}
+trap on_exit EXIT
+
+dir="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd -P)"
+
+ovmf="/usr/share/ovmf/OVMF.fd"
+build_dir="${dir}/.build"
+# --mac and --mem are measured into RTMR0 on TDX, so they have to match the
+# hack/attestation-generate-metadata invocation that produced the reference values.
+mac="02:00:00:ca:fe:01"
+mem="2Gi"
+driver=""
+image=""
+
+usage () {
+    printf "[start-cvm] Usage: start-confidential-vm [--snp|--tdx] [--image FILE] [--ovmf FILE]"
+    printf " [--mac ADDR] [--mem SIZE] [start-vm options...]\n"
+    exit "${1:-1}"
+}
+
+start_vm_args=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --snp) driver=snp; shift ;;
+        --tdx) driver=tdx; shift ;;
+        --image) image="$2"; shift 2 ;;
+        --ovmf) ovmf="$2"; shift 2 ;;
+        --mac) mac="$2"; shift 2 ;;
+        --mem) mem="$2"; shift 2 ;;
+        -h|--help) usage 0 ;;
+        *) start_vm_args+=("$1"); shift ;;
+    esac
+done
+
+# Detect the confidential computing technology of this host
+if [[ -z "${driver}" ]]; then
+    if [[ "$(cat /sys/module/kvm_amd/parameters/sev_snp 2>/dev/null)" == [Y1] ]]; then
+        driver=snp
+    elif [[ "$(cat /sys/module/kvm_intel/parameters/tdx 2>/dev/null)" == [Y1] ]]; then
+        driver=tdx
+    else
+        printf "[start-cvm] Neither SEV-SNP nor TDX is enabled on this host, use --snp/--tdx to force.\n"
+        exit 1
+    fi
+    printf "[start-cvm] Detected %s host\n" "${driver^^}"
+fi
+
+[[ -w /dev/kvm ]] || {
+    printf "[start-cvm] /dev/kvm is not writable, confidential guests require KVM.\n"
+    exit 1
+}
+
+# Default to the most recent image
+if [[ -z "${image}" ]]; then
+    flavor="kvm_dev-amd64"
+    mapfile -t images < <(ls -t "${build_dir}/${flavor}"-*.raw 2>/dev/null || true)
+    [[ "${#images[@]}" -gt 0 ]] || {
+        printf "[start-cvm] No image found, try to run \`./build %s'.\n" "${flavor}"
+        exit 1
+    }
+    image="${images[0]}"
+fi
+
+[[ -f "${image}" ]] || {
+    printf "[start-cvm] Image not found: \`%s'.\n" "${image}"
+    exit 1
+}
+
+printf "[start-cvm] Booting %s as %s guest (mac=%s mem=%s)\n" "${image}" "${driver^^}" "${mac}" "${mem}"
+
+exec "${dir}/bin/start-vm" \
+  "--${driver}" \
+  --cvm-fw "${ovmf}" \
+  --mac "${mac}" \
+  --mem "${mem}" \
+  "${start_vm_args[@]}" \
+  "${image}"
