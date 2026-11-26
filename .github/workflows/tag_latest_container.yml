@@ -21,7 +21,7 @@ jobs:
       packages: write
     steps:
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@b625eeb2c97a261503403e1224fbced6ead25657 # pin@1.0.7
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@51a93bcab598b762753b073bd22ee00dcf622e3a # pin@1.0.8
       - name: Tag manifest
         env:
           GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
