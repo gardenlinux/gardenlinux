@@ -1,5 +1,6 @@
 ---
 title: "Feature: lima"
+description: "A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux image for use with [Lima](/reference/glossary#lima), a Linux virtual machine manager for macOS and Linux."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -12,15 +13,15 @@ github_source_path: features/lima/README.md
 github_target_path: docs/reference/features/lima.md
 ---
 
-## Feature: lima
+# Feature: lima
 
-### Description
+## Description
 
 A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux
 image for use with [Lima](/reference/glossary#lima), a Linux virtual machine manager
 for macOS and Linux. Artifacts are delivered as `.qcow2` files.
 
-### What it does
+## What it does
 
 Produces a Lima-compatible Garden Linux image and a matching Lima YAML manifest.
 Key configurations:
@@ -51,7 +52,7 @@ For step-by-step instructions, see:
 
 :::
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -72,7 +73,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`samples/gardenlinux-rootless-podman.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/lima/samples/gardenlinux-rootless-podman.yaml) | Sample Lima manifest for a Garden Linux VM with rootless Podman. |
 | [`samples/_images/gardenlinux-2150.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/lima/samples/_images/gardenlinux-2150.yaml) | Sample Lima manifest for a specific Garden Linux 2150 release image. |
 
-### Related features
+## Related features
 
 **Includes:**
 
@@ -84,7 +85,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 - [`firewall`](/reference/features/firewall) — the default firewall rules conflict with Lima networking requirements.
 - [`_selinux`](/reference/features/_selinux) — SELinux is not supported in the Lima environment.
 
-### Further reading
+## Further reading
 
 - [cloud-init documentation](https://cloudinit.readthedocs.io/)
 - [Lima documentation](https://lima-vm.io/docs/)

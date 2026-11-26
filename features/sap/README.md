@@ -1,5 +1,6 @@
 ---
 title: "Feature: sap"
+description: "Configures Garden Linux for SAP workloads, including SAP-specific logging, certificates, and security audit rules."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,13 +11,13 @@ github_source_path: features/sap/README.md
 github_target_path: docs/reference/features/sap.md
 ---
 
-## Feature: sap
+# Feature: sap
 
-### Description
+## Description
 
 Configures Garden Linux for SAP workloads, including SAP-specific logging, certificates, and security audit rules.
 
-### What it does
+## What it does
 
 Installs `auditd`, `ca-certificates`, `acl`, and `python3-apt`. Configures:
 
@@ -26,7 +27,7 @@ Installs `auditd`, `ca-certificates`, `acl`, and `python3-apt`. Configures:
 - tmpfiles configuration for legacy paths
 - symlinks `/var/shared` to `/shared`
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -48,7 +49,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/tmpfiles.d/legacy.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/sap/file.include/etc/tmpfiles.d/legacy.conf) ([`file.include`](/reference/features/#file-include)) | Creates legacy directory paths needed by SAP applications. |
 | [`file.include/usr/local/share/ca-certificates/SAP_Global_Root_CA.crt`](https://github.com/gardenlinux/gardenlinux/blob/main/features/sap/file.include/usr/local/share/ca-certificates/SAP_Global_Root_CA.crt) ([`file.include`](/reference/features/#file-include)) | SAP Global Root Certificate Authority certificate. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 

@@ -1,5 +1,6 @@
 ---
 title: "Feature: fedramp"
+description: "A feature that configures Garden Linux for [Federal Risk and Authorization Management Program (FedRAMP)](/reference/glossary#federal-risk-and-authorization-management-program-fedramp) compliance."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/fedramp/README.md
 github_target_path: docs/reference/features/fedramp.md
 ---
 
-## Feature: fedramp
+# Feature: fedramp
 
-### Description
+## Description
 
 A feature that configures Garden Linux for [Federal Risk and Authorization Management Program (FedRAMP)](/reference/glossary#federal-risk-and-authorization-management-program-fedramp) compliance. It is a meta-feature that includes sub-features for intrusion detection, antivirus, and firewall hardening.
 
-### What it does
+## What it does
 
 Installs `apparmor` and `chrony` (replacing `systemd-timesyncd`). Configures FedRAMP-required settings including: FIPS and AppArmor kernel parameters, SSH hardening, resource limits, a pre-login banner, and an IPv4/IPv6 firewall. Includes `aide` and `clamav` for intrusion detection and antivirus scanning.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -45,7 +46,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/systemd/system/gardenlinux-fw-ipv4.service`](https://github.com/gardenlinux/gardenlinux/blob/main/features/fedramp/file.include/etc/systemd/system/gardenlinux-fw-ipv4.service) ([`file.include`](/reference/features/#file-include)) | systemd service that applies the Garden Linux IPv4 firewall rules at boot. |
 | [`file.include/etc/systemd/system/gardenlinux-fw-ipv6.service`](https://github.com/gardenlinux/gardenlinux/blob/main/features/fedramp/file.include/etc/systemd/system/gardenlinux-fw-ipv6.service) ([`file.include`](/reference/features/#file-include)) | systemd service that applies the Garden Linux IPv6 firewall rules at boot. |
 
-### Related features
+## Related features
 
 **Includes:**
 

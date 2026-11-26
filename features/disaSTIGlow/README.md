@@ -1,5 +1,6 @@
 ---
 title: "Feature: disaSTIGlow"
+description: "A feature that applies [Defense Information Systems Agency (DISA)](/reference/glossary#defense-information-systems-agency-disa) [Security Technical Implementation Guide (STIG)](/reference/glossary#security-technical-implementation-guide-stig) low-severity controls."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/disaSTIGlow/README.md
 github_target_path: docs/reference/features/disaSTIGlow.md
 ---
 
-## Feature: disaSTIGlow
+# Feature: disaSTIGlow
 
-### Description
+## Description
 
 A feature that applies [Defense Information Systems Agency (DISA)](/reference/glossary#defense-information-systems-agency-disa) [Security Technical Implementation Guide (STIG)](/reference/glossary#security-technical-implementation-guide-stig) low-severity controls.
 
-### What it does
+## What it does
 
 Configures `auditd` settings, account lockout (`faillock`), resource limits, password quality requirements, and sysctl settings per DISA STIG low-impact requirements.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -36,7 +37,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/security/pwquality.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/disaSTIGlow/file.include/etc/security/pwquality.conf) ([`file.include`](/reference/features/#file-include)) | Sets password quality requirements per DISA STIG. |
 | [`file.include/etc/sysctl.d/99-disaSTIG.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/disaSTIGlow/file.include/etc/sysctl.d/99-disaSTIG.conf) ([`file.include`](/reference/features/#file-include)) | Applies sysctl settings per DISA STIG requirements. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 

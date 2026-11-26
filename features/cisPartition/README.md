@@ -1,5 +1,6 @@
 ---
 title: "Feature: cisPartition"
+description: "A sub-feature of [`cis`](/reference/features/cis) that configures the partition layout per [CIS benchmark](/reference/glossary#cis-center-for-internet-security) requirements."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/cisPartition/README.md
 github_target_path: docs/reference/features/cisPartition.md
 ---
 
-## Feature: cisPartition
+# Feature: cisPartition
 
-### Description
+## Description
 
 A sub-feature of [`cis`](/reference/features/cis) that configures the partition layout per [CIS benchmark](/reference/glossary#cis-center-for-internet-security) requirements. Must be used with the [`cis`](/reference/features/cis) feature.
 
-### What it does
+## What it does
 
 Ships a CIS-compliant `fstab` with separate partitions for `/home`, `/var`, `/var/tmp`, `/var/log`, `/var/log/audit`, each mounted with `nosuid`, `noexec`, and `nodev`. Configures `/tmp` as a systemd mount unit with CIS-compliant mount options.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -33,7 +34,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`info.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cisPartition/info.yaml) ([ref](/reference/features/#info-yaml-file-structure)) | Declares `type: element` and included/excluded features. |
 | [`file.include/etc/systemd/system/tmp.mount`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cisPartition/file.include/etc/systemd/system/tmp.mount) ([`file.include`](/reference/features/#file-include)) | Configures `/tmp` as a systemd-managed tmpfs with CIS-compliant mount options (`nosuid`, `noexec`, `nodev`). |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 

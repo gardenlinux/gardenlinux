@@ -1,5 +1,6 @@
 ---
 title: "Feature: stig"
+description: "A feature that applies [Defense Information Systems Agency (DISA)](/reference/glossary#defense-information-systems-agency-disa) [Security Technical Implementation Guide (STIG)](/reference/glossary#security-technical-implementation-guide-stig) controls."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/stig/README.md
 github_target_path: docs/reference/features/stig.md
 ---
 
-## Feature: stig
+# Feature: stig
 
-### Description
+## Description
 
 A feature that applies [Defense Information Systems Agency (DISA)](/reference/glossary#defense-information-systems-agency-disa) [Security Technical Implementation Guide (STIG)](/reference/glossary#security-technical-implementation-guide-stig) controls.
 
-### What it does
+## What it does
 
 Installs `aide`, `aide-common`, and `auditd`. Configures comprehensive STIG controls: audit rules, kernel auditing at boot, PAM hardening, password quality requirements, SSH hardening, resource limits, account lockout, sysctl settings, and rsyslog configuration.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -46,7 +47,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/sysctl.d/99-stig.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/stig/file.include/etc/sysctl.d/99-stig.conf) ([`file.include`](/reference/features/#file-include)) | sysctl settings per STIG. |
 | [`file.include/usr/share/pam-configs/garden-stig`](https://github.com/gardenlinux/gardenlinux/blob/main/features/stig/file.include/usr/share/pam-configs/garden-stig) ([`file.include`](/reference/features/#file-include)) | PAM profile for STIG authentication requirements. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 

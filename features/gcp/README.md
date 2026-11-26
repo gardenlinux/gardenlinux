@@ -1,5 +1,6 @@
 ---
 title: "Feature: gcp"
+description: "A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux image for [Google Cloud Platform (GCP)](/reference/glossary#gcp)."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,15 +11,15 @@ github_source_path: features/gcp/README.md
 github_target_path: docs/reference/features/gcp.md
 ---
 
-## Feature: gcp
+# Feature: gcp
 
-### Description
+## Description
 
 A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux
 image for [Google Cloud Platform (GCP)](/reference/glossary#gcp). Artifacts are delivered as `.raw` files
 packaged in a `.gcpimage.tar.gz` tarball for GCP import.
 
-### What it does
+## What it does
 
 Installs Google Cloud guest packages (`google-guest-agent`,
 `google-compute-engine-oslogin`, `google-compute-engine`) and configures
@@ -36,7 +37,7 @@ platform-specific settings:
 - **Image conversion**: `convert.gcpimage.tar.gz` produces the GCP-compatible
   tarball format.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -54,13 +55,13 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/systemd/timesyncd.conf.d/00-gardenlinux-gcp.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/gcp/file.include/etc/systemd/timesyncd.conf.d/00-gardenlinux-gcp.conf) ([`file.include`](/reference/features/#file-include)) | Configures `systemd-timesyncd` to use the GCP metadata NTP server. |
 | [`file.include/usr/lib/udev/rules.d/64-gce-disk-removal.rules`](https://github.com/gardenlinux/gardenlinux/blob/main/features/gcp/file.include/usr/lib/udev/rules.d/64-gce-disk-removal.rules) ([`file.include`](/reference/features/#file-include)) | Removes stale GCE persistent disk symlinks when a disk is detached. |
 
-### Related features
+## Related features
 
 **Includes:**
 
 - [`cloud`](/reference/features/cloud) — provides common cloud-init integration and base cloud configuration shared across cloud platforms.
 
-### Further reading
+## Further reading
 
 - [cloud-init documentation](https://cloudinit.readthedocs.io/)
 - [Google Cloud guest packages](https://github.com/GoogleCloudPlatform/guest-configs)

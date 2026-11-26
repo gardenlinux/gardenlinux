@@ -1,5 +1,6 @@
 ---
 title: "Feature: server"
+description: "A feature that provides the Garden Linux server layer: security services (`auditd`, SELinux), systemd-based service management, networking, and essential server tooling."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,13 +11,13 @@ github_source_path: features/server/README.md
 github_target_path: docs/reference/features/server.md
 ---
 
-## Feature: server
+# Feature: server
 
-### Description
+## Description
 
 A feature that provides the Garden Linux server layer: security services (`auditd`, SELinux), systemd-based service management, networking, and essential server tooling. Most platform features inherit `server` transitively.
 
-### What it does
+## What it does
 
 Installs a comprehensive set of server packages including `sudo`, `sysstat`, `dnsutils`, `iproute2`, `ca-certificates`. Configures:
 
@@ -31,7 +32,7 @@ Installs a comprehensive set of server packages including `sudo`, `sysstat`, `dn
 - sudo configuration (`wheel` group, SSH agent forwarding)
 - Removes numerous init.d and legacy service scripts superseded by systemd
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -82,7 +83,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/usr/share/pam-configs/garden`](https://github.com/gardenlinux/gardenlinux/blob/main/features/server/file.include/usr/share/pam-configs/garden) ([`file.include`](/reference/features/#file-include)) | Garden Linux PAM configuration profile. |
 | [`file.include/usr/share/pam-configs/garden-extra`](https://github.com/gardenlinux/gardenlinux/blob/main/features/server/file.include/usr/share/pam-configs/garden-extra) ([`file.include`](/reference/features/#file-include)) | Additional Garden Linux PAM configuration profile. |
 
-### Related features
+## Related features
 
 **Includes:**
 

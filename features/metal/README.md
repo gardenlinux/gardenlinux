@@ -1,5 +1,6 @@
 ---
 title: "Feature: metal"
+description: "A feature that provides standard kernel, physical hardware support, and server configuration for bare metal systems."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,13 +11,13 @@ github_source_path: features/metal/README.md
 github_target_path: docs/reference/features/metal.md
 ---
 
-## Feature: metal
+# Feature: metal
 
-### Description
+## Description
 
 A feature that provides standard kernel, physical hardware support, and server configuration for bare metal systems. Produces `.raw` and `.qcow2` artifacts. The feature is usually pulled in via the [`baremetal`](/reference/features/baremetal) platform feature.
 
-### What it does
+## What it does
 
 Installs the standard (non-cloud) kernel and physical hardware tooling: `lvm2`, `efibootmgr`, `efitools`, `ipmitool`, `ethtool`, `dosfstools`. Configures:
 
@@ -26,7 +27,7 @@ Installs the standard (non-cloud) kernel and physical hardware tooling: `lvm2`, 
 - udev rules for network device naming and Intel LLDP
 - Removes networking init.d scripts replaced by systemd-networkd
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -52,7 +53,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/udev/rules.d/71-intellldp.rules`](https://github.com/gardenlinux/gardenlinux/blob/main/features/metal/file.include/etc/udev/rules.d/71-intellldp.rules) ([`file.include`](/reference/features/#file-include)) | udev rules for the Intel LLDP agent. |
 | [`file.include/usr/sbin/update-usbids`](https://github.com/gardenlinux/gardenlinux/blob/main/features/metal/file.include/usr/sbin/update-usbids) ([`file.include`](/reference/features/#file-include)) | Script to update the USB device IDs database. |
 
-### Related features
+## Related features
 
 **Includes:**
 

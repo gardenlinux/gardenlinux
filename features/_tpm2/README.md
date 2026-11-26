@@ -1,5 +1,6 @@
 ---
 title: "Feature: _tpm2"
+description: "A feature that encrypts the `/var` partition using a key sealed to the [TPM 2.0](/reference/glossary#tpm2)."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -13,9 +14,9 @@ github_source_path: features/_tpm2/README.md
 github_target_path: docs/reference/features/_tpm2.md
 ---
 
-## Feature: _tpm2
+# Feature: _tpm2
 
-### Description
+## Description
 
 A feature that encrypts the `/var` partition
 using a key sealed to the [TPM 2.0](/reference/glossary#tpm2).
@@ -25,7 +26,7 @@ so `/var` can only be unlocked when the system boots into a known-good state.
 For context on how `_tpm2` fits into the available `/var` storage modes, see
 [Boot Modes: Mutable Data Modes](/explanation/boot-modes#mutable-data-modes).
 
-### What it does
+## What it does
 
 `systemd-repart` creates and formats the `VAR` partition with `Encrypt=tpm2` on
 first boot — the LUKS2 encryption key is generated and enrolled into the TPM
@@ -58,7 +59,7 @@ Use `_tpm2` instead of [`_ephemeral`](/reference/features/_ephemeral) in any
 [`_trustedboot`](/reference/features/_trustedboot) flavor when persistent `/var`
 state is required.
 
-### How it works
+## How it works
 
 All steps run inside the initrd, before the root filesystem is available:
 
@@ -90,7 +91,7 @@ All steps run inside the initrd, before the root filesystem is available:
      value, preventing future key unsealing.
    - On failure, `tpm2-measure.service` triggers `emergency.target`.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -110,7 +111,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`initrd.include/usr/bin/check-tpm`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_tpm2/initrd.include/usr/bin/check-tpm) (`initrd.include`) | Script invoked by `check-tpm.service`: exits zero if `/dev/tpmrm0` exists; otherwise logs an error to the kernel log and calls `halt -f`. |
 | [`initrd.include/usr/bin/measure-pcr7`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_tpm2/initrd.include/usr/bin/measure-pcr7) (`initrd.include`) | Script invoked by `tpm2-measure.service`: calls `systemd-pcrextend --pcr 7 "switch-root"`; calls `halt -f` on failure. |
 
-### Related features
+## Related features
 
 **Excludes (incompatible with):**
 
@@ -127,7 +128,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
   meaningful. Without [`_trustedboot`](/reference/features/_trustedboot), PCR values may
   not accurately reflect the true boot state.
 
-### Further reading
+## Further reading
 
 - [Boot Modes: Mutable Data Modes](/explanation/boot-modes#mutable-data-modes) — comparison of [`_nocrypt`](/reference/features/_nocrypt), [`_ephemeral`](/reference/features/_ephemeral), and `_tpm2`
 - [Secure Boot and Trusted Boot](/explanation/secure-boot) — trust model, PCR binding, build and deploy instructions

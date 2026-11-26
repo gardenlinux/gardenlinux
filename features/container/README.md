@@ -1,5 +1,6 @@
 ---
 title: "Feature: container"
+description: "A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux container image compatible with [Docker](/reference/glossary#docker) and [Podman](/reference/glossary#podman)."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,15 +11,15 @@ github_source_path: features/container/README.md
 github_target_path: docs/reference/features/container.md
 ---
 
-## Feature: container
+# Feature: container
 
-### Description
+## Description
 
 A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux
 container image compatible with [Docker](/reference/glossary#docker) and [Podman](/reference/glossary#podman). The artifact is delivered as
 an [OCI image](/reference/glossary#oci-oci-image-format) tarball.
 
-### What it does
+## What it does
 
 Produces an OCI-compatible container image via `image.oci`. The image is a
 minimal base image built on top of the [`base`](/reference/features/base) and
@@ -36,7 +37,7 @@ docker load -i container-amd64-today-local.container.tar.gz
 
 ```
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -47,7 +48,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`info.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/container/info.yaml) ([ref](/reference/features/#info-yaml-file-structure)) | Declares `type: platform` and included/excluded features. |
 | [`pkg.exclude`](https://github.com/gardenlinux/gardenlinux/blob/main/features/container/pkg.exclude) ([ref](/reference/features/#pkg-exclude)) | Prevents installation of `garden-repo-manager` and `rng-tools` (not needed in containers). |
 
-### Related features
+## Related features
 
 **Includes:**
 

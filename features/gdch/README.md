@@ -1,5 +1,6 @@
 ---
 title: "Feature: gdch"
+description: "A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux image for [Google Distributed Cloud Hosted (GDCH)](/reference/glossary#gdch)."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,15 +11,15 @@ github_source_path: features/gdch/README.md
 github_target_path: docs/reference/features/gdch.md
 ---
 
-## Feature: gdch
+# Feature: gdch
 
-### Description
+## Description
 
 A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux
 image for [Google Distributed Cloud Hosted (GDCH)](/reference/glossary#gdch). Artifacts are delivered as
 `.raw` files packaged in a `.gcpimage.tar.gz` tarball.
 
-### What it does
+## What it does
 
 Configures Garden Linux for GDCH deployment, which uses a Google Cloud-like
 environment hosted on-premises or in a private data center:
@@ -34,7 +35,7 @@ environment hosted on-premises or in a private data center:
 - **Image conversion**: `convert.gcpimage.tar.gz` produces a tarball in the
   GCP image import format.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -51,13 +52,13 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/kernel/cmdline.d/00-cmdline.cfg`](https://github.com/gardenlinux/gardenlinux/blob/main/features/gdch/file.include/etc/kernel/cmdline.d/00-cmdline.cfg) ([`file.include`](/reference/features/#file-include)) | Sets GDCH-specific kernel boot parameters. |
 | [`file.include/etc/kernel/cmdline.d/10-console.cfg`](https://github.com/gardenlinux/gardenlinux/blob/main/features/gdch/file.include/etc/kernel/cmdline.d/10-console.cfg) ([`file.include`](/reference/features/#file-include)) | Sets the kernel console parameter for the GDCH serial console. |
 
-### Related features
+## Related features
 
 **Includes:**
 
 - [`cloud`](/reference/features/cloud) — provides common cloud-init integration and base cloud configuration shared across cloud platforms.
 
-### Further reading
+## Further reading
 
 - [cloud-init documentation](https://cloudinit.readthedocs.io/)
 - [chrony documentation](https://chrony-project.org/documentation.html)

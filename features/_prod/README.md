@@ -1,5 +1,6 @@
 ---
 title: "Feature: _prod"
+description: "Marks a Garden Linux image as a production artifact and sets settings for production environments."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,13 +11,13 @@ github_source_path: features/_prod/README.md
 github_target_path: docs/reference/features/_prod.md
 ---
 
-## Feature: _prod
+# Feature: _prod
 
-### Description
+## Description
 
 Marks a Garden Linux image as a production artifact and sets settings for production environments.
 
-### What it does
+## What it does
 
 `_prod` signals that the resulting image is intended for production use.
 
@@ -24,7 +25,7 @@ In addition, `_prod` disables core dump generation through three complementary m
 
 A `file.include.markers.yaml` maps the installed configuration files to test-coverage markers for automated verification.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.

@@ -1,5 +1,6 @@
 ---
 title: "Feature: nvme"
+description: "Adds NVMe Command Line Interface (CLI) tooling and configures NVMe host identifiers."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/nvme/README.md
 github_target_path: docs/reference/features/nvme.md
 ---
 
-## Feature: nvme
+# Feature: nvme
 
-### Description
+## Description
 
 Adds NVMe Command Line Interface (CLI) tooling and configures NVMe host identifiers.
 
-### What it does
+## What it does
 
 Installs `nvme-cli` and `cryptsetup`. Provides a systemd service (`nvme-hostid.service`) that generates `/etc/nvme/hostnqn` and `/etc/nvme/hostid` on first boot — equivalent to what the `nvme-cli` Debian package postinst script normally does, allowing images to be built without running the package scripts.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -32,7 +33,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`pkg.include`](https://github.com/gardenlinux/gardenlinux/blob/main/features/nvme/pkg.include) ([ref](/reference/features/#pkg-include)) | Installs: `cryptsetup`, `nvme-cli`. |
 | [`file.include/etc/systemd/system/nvme-hostid.service`](https://github.com/gardenlinux/gardenlinux/blob/main/features/nvme/file.include/etc/systemd/system/nvme-hostid.service) ([`file.include`](/reference/features/#file-include)) | Generates `/etc/nvme/hostnqn` and `/etc/nvme/hostid` unique identifiers at first boot. |
 
-### Related features
+## Related features
 
 **Includes:**
 

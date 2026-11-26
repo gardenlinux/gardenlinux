@@ -1,5 +1,6 @@
 ---
 title: "Feature: _trustedboot"
+description: "A feature that establishes a fully trusted boot chain: UEFI [Secure Boot](/reference/glossary#secure-boot) verifies the bootloader and Unified Kernel Image (UKI) and the root filesystem (embedded as EROFS in the UKI) is covered by the same signature."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -13,9 +14,9 @@ github_source_path: features/_trustedboot/README.md
 github_target_path: docs/reference/features/_trustedboot.md
 ---
 
-## Feature: _trustedboot
+# Feature: _trustedboot
 
-### Description
+## Description
 
 A feature that establishes a fully trusted
 boot chain: UEFI [Secure Boot](/reference/glossary#secure-boot) verifies the
@@ -25,7 +26,7 @@ At runtime, the system halts if Secure Boot is not active, closing all
 emergency escape paths. For the full trust model and security guarantees, see
 [Secure Boot and Trusted Boot](/explanation/secure-boot).
 
-### What it does
+## What it does
 
 `_trustedboot` composes several layers of boot-chain integrity:
 
@@ -52,9 +53,9 @@ emergency escape paths. For the full trust model and security guarantees, see
 For a detailed breakdown of security guarantees, the feature dependency table, and
 mutable data mode comparison, see [Secure Boot and Trusted Boot](/explanation/secure-boot).
 
-### How it works
+## How it works
 
-#### Boot-time verification (initrd)
+### Boot-time verification (initrd)
 
 All verification steps run inside the initrd, before any local filesystem is mounted:
 
@@ -77,7 +78,7 @@ All verification steps run inside the initrd, before any local filesystem is mou
      kernel or dracut from offering an emergency shell regardless of how the system
      was invoked.
 
-#### Image signing (`usi.config`, build-time)
+### Image signing (`usi.config`, build-time)
 
 `usi.config` is called by the `_usi` image builder with the UKI path, ESP directory,
 and rootfs path as arguments:
@@ -95,7 +96,7 @@ and rootfs path as arguments:
 For certificate generation and build instructions, see
 [Building Images: Secureboot, Trustedboot and TPM2](/how-to/building-images#build-secureboot-trustedboot-and-tpm2-images).
 
-#### Testing on macOS
+### Testing on macOS
 
 1. Generate the Secure Boot certificate chain:
    ```bash
@@ -122,7 +123,7 @@ For certificate generation and build instructions, see
      --tpm2 disk.qcow2,qcow=4G
    ```
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -140,7 +141,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`initrd.include/etc/systemd/system/local-fs.target.requires/check-secureboot.service`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_trustedboot/initrd.include/etc/systemd/system/local-fs.target.requires/check-secureboot.service) (`initrd.include`) | Symlink ordering `check-secureboot.service` as a requirement of `local-fs.target`, ensuring the Secure Boot check runs before any local filesystem is mounted. |
 | [`initrd.include/usr/bin/check-secureboot`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_trustedboot/initrd.include/usr/bin/check-secureboot) (`initrd.include`) | Script invoked by `check-secureboot.service`: reads the `SecureBoot` EFI variable from `/sys/firmware/efi/efivars/`; logs an error and exits non-zero if Secure Boot is not active (`1`). |
 
-### Related features
+## Related features
 
 **Includes:**
 
@@ -166,7 +167,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
   [`_tpm2`](/reference/features/_tpm2) instead of (not in addition to)
   [`_ephemeral`](/reference/features/_ephemeral).
 
-### Further reading
+## Further reading
 
 - [Secure Boot and Trusted Boot](/explanation/secure-boot) — trust model, security guarantees,
   feature dependency table, mutable data modes, build and deploy instructions

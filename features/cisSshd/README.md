@@ -1,5 +1,6 @@
 ---
 title: "Feature: cisSshd"
+description: "A sub-feature of [`cis`](/reference/features/cis) that configures sshd per [CIS benchmark](/reference/glossary#cis-center-for-internet-security) requirements."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/cisSshd/README.md
 github_target_path: docs/reference/features/cisSshd.md
 ---
 
-## Feature: cisSshd
+# Feature: cisSshd
 
-### Description
+## Description
 
 A sub-feature of [`cis`](/reference/features/cis) that configures sshd per [CIS benchmark](/reference/glossary#cis-center-for-internet-security) requirements. Must be used with the [`cis`](/reference/features/cis) feature.
 
-### What it does
+## What it does
 
 Restricts SSH ciphers and MACs to CIS-approved algorithms and configures an SSH login banner. Also includes Garden Linux firewall rules for IPv4 and IPv6.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -38,7 +39,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/systemd/system/gardenlinux-fw-ipv4.service`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cisSshd/file.include/etc/systemd/system/gardenlinux-fw-ipv4.service) ([`file.include`](/reference/features/#file-include)) | systemd service that applies the Garden Linux IPv4 firewall rules at boot. |
 | [`file.include/etc/systemd/system/gardenlinux-fw-ipv6.service`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cisSshd/file.include/etc/systemd/system/gardenlinux-fw-ipv6.service) ([`file.include`](/reference/features/#file-include)) | systemd service that applies the Garden Linux IPv6 firewall rules at boot. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 

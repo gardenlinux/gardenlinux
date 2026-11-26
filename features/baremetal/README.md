@@ -1,5 +1,6 @@
 ---
 title: "Feature: baremetal"
+description: "A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux image for bare metal systems."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,15 +11,15 @@ github_source_path: features/baremetal/README.md
 github_target_path: docs/reference/features/baremetal.md
 ---
 
-## Feature: baremetal
+# Feature: baremetal
 
-### Description
+## Description
 
 A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux
 image for bare metal systems. It is a thin wrapper around the
 [`metal`](/reference/features/metal) element feature.
 
-### What it does
+## What it does
 
 Pulls in the [`metal`](/reference/features/metal) element, which provides the
 standard kernel, physical hardware support, and server configuration needed to
@@ -26,7 +27,7 @@ run Garden Linux on physical servers. The `baremetal` platform feature selects
 this composition for bare metal deployment targets. Artifacts are delivered as
 `.raw` and `.qcow2` files.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -35,7 +36,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 |---|---|
 | [`info.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/baremetal/info.yaml) ([ref](/reference/features/#info-yaml-file-structure)) | Declares `type: platform` and included/excluded features. |
 
-### Related features
+## Related features
 
 **Includes:**
 

@@ -1,5 +1,6 @@
 ---
 title: "Feature: cloudInit"
+description: "A shared [element](/reference/glossary.html#element) feature that installs `cloud-init` and ships a hook that recreates the cloud-init default user after an `/etc` overlay reset (see [USI in-place updates](/reference/features/_usi))."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,14 +11,14 @@ github_source_path: features/cloudInit/README.md
 github_target_path: docs/reference/features/cloudInit.md
 ---
 
-## Feature: cloudInit
+# Feature: cloudInit
 
-### Description
+## Description
 
 A shared [element](/reference/glossary.html#element) feature that installs `cloud-init` and ships a
 hook that recreates the cloud-init default user after an `/etc` overlay reset (see [USI in-place updates](/reference/features/_usi)).
 
-### What it does
+## What it does
 
 - Installs `cloud-init`.
 - Ships `/usr/lib/gardenlinux/etc-setup-hooks/00-cloud-init-useradd`, a hook that runs after an
@@ -27,7 +28,7 @@ hook that recreates the cloud-init default user after an `/etc` overlay reset (s
   orders the etc-setup-hooks service after `cloud-config.service`, so the hook observes cloud-init's
   final state without racing it.
 
-### Files
+## Files
 
 | File | Purpose |
 |---|---|
@@ -36,7 +37,7 @@ hook that recreates the cloud-init default user after an `/etc` overlay reset (s
 | [`file.include/usr/lib/gardenlinux/etc-setup-hooks/00-cloud-init-useradd`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cloudInit/file.include/usr/lib/gardenlinux/etc-setup-hooks/00-cloud-init-useradd) ([`file.include`](/reference/features/#file-include)) | Hook that recreates the cloud-init default user after an `/etc` reset. |
 | [`file.include/etc/systemd/system/gardenlinux-etc-setup-hooks.service.d/10-after-cloud-config.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cloudInit/file.include/etc/systemd/system/gardenlinux-etc-setup-hooks.service.d/10-after-cloud-config.conf) ([`file.include`](/reference/features/#file-include)) | Systemd drop-in ordering the hook service after `cloud-config.service`. |
 
-### Related features
+## Related features
 
 **Included by:**
 

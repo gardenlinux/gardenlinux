@@ -1,5 +1,6 @@
 ---
 title: "Feature: pythonDev"
+description: "Adds Python development tools (`pip`, `venv`, and `vim`) to the `python` base."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/pythonDev/README.md
 github_target_path: docs/reference/features/pythonDev.md
 ---
 
-## Feature: pythonDev
+# Feature: pythonDev
 
-### Description
+## Description
 
 Adds Python development tools (`pip`, `venv`, and `vim`) to the `python` base. For production images, consider a multistage container build instead.
 
-### What it does
+## What it does
 
 Installs `python3-pip`, `python3-venv`, and `vim`. Provides `exportLibs.py` for listing installed Python libraries. For production use, a multistage build with `bare-python` is recommended over including `pythonDev` in the final image.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -33,7 +34,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`pkg.include`](https://github.com/gardenlinux/gardenlinux/blob/main/features/pythonDev/pkg.include) ([ref](/reference/features/#pkg-include)) | Installs: `python3-pip`, `python3.14-venv`, `vim`. |
 | [`file.include/usr/bin/exportLibs.py`](https://github.com/gardenlinux/gardenlinux/blob/main/features/pythonDev/file.include/usr/bin/exportLibs.py) ([`file.include`](/reference/features/#file-include)) | Utility script that exports a list of installed Python libraries to a file. |
 
-### Related features
+## Related features
 
 **Includes:**
 

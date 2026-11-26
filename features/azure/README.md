@@ -1,5 +1,6 @@
 ---
 title: "Feature: azure"
+description: "A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux image for [Microsoft Azure](/reference/glossary#azure)."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,14 +11,14 @@ github_source_path: features/azure/README.md
 github_target_path: docs/reference/features/azure.md
 ---
 
-## Feature: azure
+# Feature: azure
 
-### Description
+## Description
 
 A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux
 image for [Microsoft Azure](/reference/glossary#azure). Artifacts are delivered as `.raw` and `.vhd` files.
 
-### What it does
+## What it does
 
 Installs `cloud-init` and `azure-vm-utils` for instance initialization on Azure
 and configures platform-specific settings:
@@ -34,7 +35,7 @@ and configures platform-specific settings:
 - **Image conversion**: `convert.vhd` produces a fixed-size `.vhd` image for
   Azure.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -60,13 +61,13 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/udev/rules.d/66-azure-storage.rules`](https://github.com/gardenlinux/gardenlinux/blob/main/features/azure/file.include/etc/udev/rules.d/66-azure-storage.rules) ([`file.include`](/reference/features/#file-include)) | Sets Azure storage device attributes via udev. |
 | [`file.include/etc/udev/rules.d/99-azure-product-uuid.rules`](https://github.com/gardenlinux/gardenlinux/blob/main/features/azure/file.include/etc/udev/rules.d/99-azure-product-uuid.rules) ([`file.include`](/reference/features/#file-include)) | Makes the Azure product UUID available as a udev property for cloud-init. |
 
-### Related features
+## Related features
 
 **Includes:**
 
 - [`cloud`](/reference/features/cloud) — provides common cloud-init integration and base cloud configuration shared across cloud platforms.
 
-### Further reading
+## Further reading
 
 - [cloud-init documentation](https://cloudinit.readthedocs.io/)
 - [azure-vm-utils](https://github.com/microsoft/azure-vm-utils)

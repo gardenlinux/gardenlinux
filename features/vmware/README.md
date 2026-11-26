@@ -1,5 +1,6 @@
 ---
 title: "Feature: vmware"
+description: "A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux image for [VMware](/reference/glossary#vmware) platforms."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,14 +11,14 @@ github_source_path: features/vmware/README.md
 github_target_path: docs/reference/features/vmware.md
 ---
 
-## Feature: vmware
+# Feature: vmware
 
-### Description
+## Description
 
 A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux
 image for [VMware](/reference/glossary#vmware) platforms. Artifacts are delivered as `.vmdk` and `.ova` files.
 
-### What it does
+## What it does
 
 Installs `cloud-init`, `open-vm-tools`, and a custom VMware GuestInfo datasource
 for cloud-init, enabling instance metadata delivery via VMware GuestInfo variables.
@@ -32,7 +33,7 @@ Platform-specific configuration includes:
 - **Image conversion**: `convert.ova` packages the `.vmdk` into an OVA archive
   using the `vmware.ovf.template` descriptor.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -55,14 +56,14 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/usr/bin/dscheck_VMwareGuestInfo`](https://github.com/gardenlinux/gardenlinux/blob/main/features/vmware/file.include/usr/bin/dscheck_VMwareGuestInfo) ([`file.include`](/reference/features/#file-include)) | Helper script used by cloud-init `ds-identify` to detect the VMwareGuestInfo datasource. |
 | [`file.include/usr/lib/python3/dist-packages/cloudinit/sources/DataSourceVMwareGuestInfo.py`](https://github.com/gardenlinux/gardenlinux/blob/main/features/vmware/file.include/usr/lib/python3/dist-packages/cloudinit/sources/DataSourceVMwareGuestInfo.py) ([`file.include`](/reference/features/#file-include)) | Custom cloud-init datasource that reads instance metadata from VMware GuestInfo variables. |
 
-### Related features
+## Related features
 
 **Includes:**
 
 - [`cloud`](/reference/features/cloud) — provides common cloud-init integration and base cloud configuration.
 - [`_ignite`](/reference/features/_ignite) — provides Ignition-based first-boot configuration support.
 
-### Further reading
+## Further reading
 
 - [open-vm-tools](https://github.com/vmware/open-vm-tools)
 - [cloud-init documentation](https://cloudinit.readthedocs.io/)

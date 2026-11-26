@@ -1,5 +1,6 @@
 ---
 title: "Feature: khost"
+description: "Configures Garden Linux for running vanilla [Kubernetes](/reference/glossary#kubernetes) workloads as a Kubernetes host node."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,13 +11,13 @@ github_source_path: features/khost/README.md
 github_target_path: docs/reference/features/khost.md
 ---
 
-## Feature: khost
+# Feature: khost
 
-### Description
+## Description
 
 Configures Garden Linux for running vanilla [Kubernetes](/reference/glossary#kubernetes) workloads as a Kubernetes host node.
 
-### What it does
+## What it does
 
 Installs and configures packages needed for a Kubernetes node: `conntrack`, `ipvsadm`, `socat`, `ethtool`, `apparmor`, `gnupg`. Configures:
 
@@ -29,7 +30,7 @@ Installs and configures packages needed for a Kubernetes node: `conntrack`, `ipv
 
 Requires `chost` for the container runtime.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -48,13 +49,13 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/sysctl.d/20-inotify.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/khost/file.include/etc/sysctl.d/20-inotify.conf) ([`file.include`](/reference/features/#file-include)) | Increases inotify watch limits for large Kubernetes deployments. |
 | [`file.include/etc/sysctl.d/20-ip-forward.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/khost/file.include/etc/sysctl.d/20-ip-forward.conf) ([`file.include`](/reference/features/#file-include)) | Enables IP forwarding for pod-to-pod networking. |
 
-### Related features
+## Related features
 
 **Includes:**
 
 - [`chost`](/reference/features/chost) — provides the container runtime (`containerd`) required by Kubernetes.
 
-### Further reading
+## Further reading
 
 - [Kubernetes](https://kubernetes.io/)
 

@@ -1,5 +1,6 @@
 ---
 title: "Feature: cisModprobe"
+description: "A sub-feature of [`cis`](/reference/features/cis) that denies kernel modules per [CIS benchmark](/reference/glossary#cis-center-for-internet-security) requirements."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/cisModprobe/README.md
 github_target_path: docs/reference/features/cisModprobe.md
 ---
 
-## Feature: cisModprobe
+# Feature: cisModprobe
 
-### Description
+## Description
 
 A sub-feature of [`cis`](/reference/features/cis) that denies kernel modules per [CIS benchmark](/reference/glossary#cis-center-for-internet-security) requirements. Must be used with the [`cis`](/reference/features/cis) feature.
 
-### What it does
+## What it does
 
 Denies the following kernel modules: `cramfs`, `dccp`, `freevxfs`, `jffs2`, `rds`, `sctp`, `squashfs`, `tipc`, `udf`. Note: `fat` is not denied despite the CIS recommendation, as it is required for UEFI boot.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -39,7 +40,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/modprobe.d/tipc.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cisModprobe/file.include/etc/modprobe.d/tipc.conf) ([`file.include`](/reference/features/#file-include)) | Denylists the `tipc` network protocol module per CIS benchmark. |
 | [`file.include/etc/modprobe.d/udf.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cisModprobe/file.include/etc/modprobe.d/udf.conf) ([`file.include`](/reference/features/#file-include)) | Denylists the `udf` filesystem module per CIS benchmark. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 

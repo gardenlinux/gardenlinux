@@ -1,5 +1,6 @@
 ---
 title: "Feature: aide"
+description: "This feature installs the host-based intrusion detection system AIDE (Advanced Intrusion Detection Environment)."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/aide/README.md
 github_target_path: docs/reference/features/aide.md
 ---
 
-## Feature: aide
+# Feature: aide
 
-### Description
+## Description
 
 This feature installs the host-based intrusion detection system AIDE (Advanced Intrusion Detection Environment).
 
-### What it does
+## What it does
 
 This feature installs the host-based intrusion detection system AIDE by adding a configuration file, as well as the related systemd unit files that ensure an AIDE database is created. AIDE is configured to run every night.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -34,7 +35,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/systemd/system/aide-init.service`](https://github.com/gardenlinux/gardenlinux/blob/main/features/aide/file.include/etc/systemd/system/aide-init.service) ([`file.include`](/reference/features/#file-include)) | systemd service that builds the initial AIDE database on first boot. |
 | [`file.include/etc/systemd/system/aide-init.timer`](https://github.com/gardenlinux/gardenlinux/blob/main/features/aide/file.include/etc/systemd/system/aide-init.timer) ([`file.include`](/reference/features/#file-include)) | systemd timer that triggers nightly AIDE database updates. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 

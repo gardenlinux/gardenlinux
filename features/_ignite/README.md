@@ -1,5 +1,6 @@
 ---
 title: "Feature: _ignite"
+description: "Installs [Ignition](/reference/glossary#ignition) and integrates it into the initrd for declarative first-boot system configuration."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,19 +11,19 @@ github_source_path: features/_ignite/README.md
 github_target_path: docs/reference/features/_ignite.md
 ---
 
-## Feature: _ignite
+# Feature: _ignite
 
-### Description
+## Description
 
 Installs [Ignition](/reference/glossary#ignition) and integrates it into the initrd for declarative first-boot system configuration.
 
-### What it does
+## What it does
 
 `_ignite` installs the `ignition` package along with `dracut-network` and `curl`, and configures dracut to include Ignition in the initrd via `30-ignition.conf`. A custom dracut module (`30ignition-extra`) extends the upstream Ignition support with an environment variable generator (`ignition-env-generator.sh`), a static environment file (`ignition-files.env`), a `module-setup.sh` for module registration, and an `after-net-online.conf` ordering file that ensures Ignition runs after the network is available.
 
 Ignition processes a JSON configuration fetched from a platform-specific source (such as a cloud metadata service or `fw_cfg`) to provision users, files, systemd units, and disks on first boot. Features such as [`_pxe`](/reference/features/_pxe) and [`_bfpxe`](/reference/features/_bfpxe) include `_ignite` to provide this capability.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -38,11 +39,11 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/usr/lib/dracut/modules.d/30ignition-extra/ignition-files.env`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_ignite/file.include/usr/lib/dracut/modules.d/30ignition-extra/ignition-files.env) ([`file.include`](/reference/features/#file-include)) | Static environment file with default Ignition settings included in the initrd. |
 | [`file.include/usr/lib/dracut/modules.d/30ignition-extra/module-setup.sh`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_ignite/file.include/usr/lib/dracut/modules.d/30ignition-extra/module-setup.sh) ([`file.include`](/reference/features/#file-include)) | Registers the `30ignition-extra` dracut module and declares its dependencies. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 
-### Further reading
+## Further reading
 
 - [Ignition](https://coreos.github.io/ignition/)
 

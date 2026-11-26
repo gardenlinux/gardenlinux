@@ -1,5 +1,6 @@
 ---
 title: "Feature: openstack"
+description: "A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux image for [OpenStack](/reference/glossary#openstack)."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,15 +11,15 @@ github_source_path: features/openstack/README.md
 github_target_path: docs/reference/features/openstack.md
 ---
 
-## Feature: openstack
+# Feature: openstack
 
-### Description
+## Description
 
 A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux
 image for [OpenStack](/reference/glossary#openstack). Artifacts are delivered as `.raw`, `.qcow2`, and `.vmdk`
 files.
 
-### What it does
+## What it does
 
 Assembles the OpenStack platform by composing the
 [`openstackCloud`](/reference/features/openstackCloud) and
@@ -38,7 +39,7 @@ Configures cloud-init for OpenStack:
 - **Image conversion**: `convert.qcow2` and `convert.vmdk` produce the
   alternative image formats.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -55,7 +56,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg`](https://github.com/gardenlinux/gardenlinux/blob/main/features/openstack/file.include/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg) ([`file.include`](/reference/features/#file-include)) | Debian-specific cloud-init configuration baseline. |
 | [`file.include/etc/cloud/cloud.cfg.d/50-datasource.cfg`](https://github.com/gardenlinux/gardenlinux/blob/main/features/openstack/file.include/etc/cloud/cloud.cfg.d/50-datasource.cfg) ([`file.include`](/reference/features/#file-include)) | Restricts cloud-init datasource detection to OpenStack. |
 
-### Related features
+## Related features
 
 **Includes:**
 
@@ -63,7 +64,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 - [`openstackMetal`](/reference/features/openstackMetal) — provides OpenStack on-metal configuration when combined with the `metal` element.
 - [`server`](/reference/features/server) — included to enforce correct feature sort order in the build.
 
-### Further reading
+## Further reading
 
 - [cloud-init OpenStack datasource](https://cloudinit.readthedocs.io/en/latest/reference/datasources/openstack.html)
 

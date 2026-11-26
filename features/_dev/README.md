@@ -1,5 +1,6 @@
 ---
 title: "Feature: _dev"
+description: "Adds development tools and enables console autologin for iterative development and testing of Garden Linux images."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,13 +11,13 @@ github_source_path: features/_dev/README.md
 github_target_path: docs/reference/features/_dev.md
 ---
 
-## Feature: _dev
+# Feature: _dev
 
-### Description
+## Description
 
 Adds development tools and enables console autologin for iterative development and testing of Garden Linux images.
 
-### What it does
+## What it does
 
 `_dev` installs `vim` and `dpkg-dev`, and reconfigures several systemd units to enable automatic root login on `tty1`, the serial console, and the rescue and emergency shells. A tmpfiles rule deploys test-related configuration for development workflows.
 
@@ -24,7 +25,7 @@ Adds development tools and enables console autologin for iterative development a
 Do not use this feature in production images. The autologin configuration removes authentication from the console, making the system accessible without credentials on any attached terminal.
 :::
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -40,7 +41,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/systemd/system/serial-getty@.service.d/autologin.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_dev/file.include/etc/systemd/system/serial-getty@.service.d/autologin.conf) ([`file.include`](/reference/features/#file-include)) | Configures the serial `getty` to log in automatically as root on the serial console. |
 | [`file.include/usr/lib/tmpfiles.d/gardenlinux-tests-dev.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_dev/file.include/usr/lib/tmpfiles.d/gardenlinux-tests-dev.conf) ([`file.include`](/reference/features/#file-include)) | tmpfiles rule that creates or configures paths needed by development test workflows. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 

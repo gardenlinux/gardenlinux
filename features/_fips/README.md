@@ -1,5 +1,6 @@
 ---
 title: "Feature: _fips"
+description: "Enables [Federal Information Processing Standard (FIPS)](/reference/glossary#federal-information-processing-standard-fips) 140-3 mode for cryptographic operations in Garden Linux."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,19 +11,19 @@ github_source_path: features/_fips/README.md
 github_target_path: docs/reference/features/_fips.md
 ---
 
-## Feature: _fips
+# Feature: _fips
 
-### Description
+## Description
 
 Enables [Federal Information Processing Standard (FIPS)](/reference/glossary#federal-information-processing-standard-fips) 140-3 mode for cryptographic operations in Garden Linux.
 
-### What it does
+## What it does
 
 `_fips` configures the system to operate in [FIPS 140-3](https://csrc.nist.gov/pubs/fips/140-3/final) compliance mode. It installs the required FIPS-validated cryptographic providers (`openssl-provider-fips`, `libgnutls28-dev`, `libssl-dev`, `gnutls-bin`) and places configuration files that activate the OpenSSL FIPS provider, enable FIPS mode for `libgcrypt`, and add `fips=1` to the kernel command line. A dracut configuration ensures the FIPS modules are included in the initrd.
 
 The `exec.config` and `exec.late` scripts adjust runtime configuration, and the `file.include.markers.yaml` maps coverage markers to tests that verify FIPS is correctly activated.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -40,11 +41,11 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/kernel/cmdline.d/30-fips.cfg`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_fips/file.include/etc/kernel/cmdline.d/30-fips.cfg) ([`file.include`](/reference/features/#file-include)) | Adds `fips=1` to the kernel command line to enforce FIPS mode at boot. |
 | [`file.include/etc/update-motd.d/06-logo`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_fips/file.include/etc/update-motd.d/06-logo) ([`file.include`](/reference/features/#file-include)) | Adds a FIPS-mode indicator to the message of the day displayed at login. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 
-### Further reading
+## Further reading
 
 - [FIPS 140-3](https://csrc.nist.gov/pubs/fips/140-3/final)
 
