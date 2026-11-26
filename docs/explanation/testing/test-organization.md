@@ -26,7 +26,7 @@ This page explains how Garden Linux tests are organized, structured, and named t
 
 All test files are placed into `tests/integration/{category}`. The following tree structure shows how tests are organized by functional area:
 
-```
+```text
 tests/integration/
 ├── boot/                    # Boot-related tests (ignition, cloud-init, initrd, secureboot, etc.)
 ├── core/                    # Core system functionality (services, network, users, logging, etc.)

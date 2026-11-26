@@ -1,5 +1,6 @@
 ---
 title: "Install Locally Using KVM"
+description: "Learn about the KVM installation and deployment method"
 related_topics:
   - /tutorials/local/first-boot-kvm.md
   - /how-to/installation/post-install.md

@@ -145,7 +145,7 @@ Log in as root (auto-login on console) and run the installation script:
 
 The installer prompts for the target disk:
 
-```
+```bash
 Available block devices:
   /dev/sda (20 GiB)
   /dev/sdb (100 GiB)
@@ -155,7 +155,7 @@ Enter target disk (e.g., /dev/sda): /dev/sdb
 
 After disk selection, the installer displays a confirmation prompt:
 
-```
+```bash
 WARNING: This will erase ALL data on /dev/sdb
 Continue? (yes/no): yes
 ```

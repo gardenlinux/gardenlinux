@@ -1,5 +1,6 @@
 ---
 title: "Feature: _nvidia"
+description: "Configures kernel command line parameters required for NVIDIA GPU workloads, optimizing the system for GPU performance by disabling power-saving features and tuning PCIe and CPU governor settings."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,13 +11,13 @@ github_source_path: features/_nvidia/README.md
 github_target_path: docs/reference/features/_nvidia.md
 ---
 
-## Feature: _nvidia
+# Feature: _nvidia
 
-### Description
+## Description
 
 Configures kernel command line parameters required for NVIDIA GPU workloads, optimizing the system for GPU performance by disabling power-saving features and tuning PCIe and CPU governor settings.
 
-### What it does
+## What it does
 
 `_nvidia` adds a set of kernel parameters via `/etc/kernel/cmdline.d/50-nvidia.cfg` that are required for reliable and performant NVIDIA GPU operation, particularly in bare-metal OpenStack environments:
 
@@ -31,7 +32,7 @@ Configures kernel command line parameters required for NVIDIA GPU workloads, opt
 | `pcie_aspm.policy=performance` | Sets PCIe Active State Power Management to performance mode |
 | `cpufreq.default_governor=performance` | Sets the CPU frequency governor to performance mode |
 
-### Files
+## Files
 
 | File | Purpose |
 |---|---|

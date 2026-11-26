@@ -1,5 +1,6 @@
 ---
 title: "Feature: _usi"
+description: "A feature that boots Garden Linux using a [Unified System Image (USI)](/reference/glossary#usi-unified-system-image): a [Unified Kernel Image (UKI)](/reference/glossary#uki-unified-kernel-image) with an embedded [EROFS](/reference/glossary#erofs-enahnced-read-only-file-system) read-only root disk stored on the [EFI System Partition (ESP)](/reference/glossary#efi-system-partition-esp)."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -11,15 +12,15 @@ github_source_path: features/_usi/README.md
 github_target_path: docs/reference/features/_usi.md
 ---
 
-## Feature: _usi
+# Feature: _usi
 
-### Description
+## Description
 
 A feature that boots Garden Linux using a
 [Unified System Image (USI)](/reference/glossary#usi-unified-system-image): a [Unified Kernel Image (UKI)](/reference/glossary#uki-unified-kernel-image) with an embedded [EROFS](/reference/glossary#erofs-enahnced-read-only-file-system)
 read-only root disk stored on the [EFI System Partition (ESP)](/reference/glossary#efi-system-partition-esp).
 
-### What it does
+## What it does
 
 Builds a Garden Linux image where the entire root filesystem is stored as an
 EROFS image embedded in the EFI System Partition, and booted via a Unified
@@ -44,7 +45,7 @@ Key capabilities added by this feature:
   `update-kernel-cmdline` and drops an `etc-setup-hooks` service for
   first-boot configuration.
 
-### How it works
+## How it works
 
 At build time, `image.esp.tar` packs the rootfs into an EROFS image, wraps it
 with a UKI, and produces an ESP tarball. `convert.raw~esp.tar` then formats a
@@ -55,7 +56,7 @@ from `initrd.include/`) mounts the EFI partition, finds the EROFS image, mounts
 it as the root filesystem, and sets up the `/etc` overlay before pivoting to the
 real root.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -96,7 +97,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`initrd.include/usr/bin/repart-esp-disk`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_usi/initrd.include/usr/bin/repart-esp-disk) (`initrd.include`) | Helper script that invokes `systemd-repart` to locate and optionally grow the EFI partition. |
 | [`initrd.include/usr/bin/setup-etc-overlay`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_usi/initrd.include/usr/bin/setup-etc-overlay) (`initrd.include`) | Script invoked by `setup-etc-overlay.service` to create the tmpfs-based `/etc` overlay. |
 
-### Related features
+## Related features
 
 **Includes:**
 
@@ -107,7 +108,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 
 - [`_legacy`](/reference/features/_legacy) — BIOS/legacy boot is incompatible with the UEFI-only UKI boot approach.
 
-### Further reading
+## Further reading
 
 - [systemd-ukify documentation](https://www.freedesktop.org/software/systemd/man/latest/ukify.html)
 - [EROFS documentation](https://erofs.docs.kernel.org/)

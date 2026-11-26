@@ -1,5 +1,6 @@
 ---
 title: "Feature: log"
+description: "Provides logging infrastructure including `auditd`, remote logging via `rsyslog-relp`, and `systemd-journal-remote`."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/log/README.md
 github_target_path: docs/reference/features/log.md
 ---
 
-## Feature: log
+# Feature: log
 
-### Description
+## Description
 
 Provides logging infrastructure including `auditd`, remote logging via `rsyslog-relp`, and `systemd-journal-remote`.
 
-### What it does
+## What it does
 
 Installs `auditd`, `rsyslog-relp`, and `systemd-journal-remote`. Configures `rsyslog` for structured logging and provides a base set of audit rules. Journal configuration is tuned for minimal footprint. Several rsyslog configurations are shipped as `.disabled` files that can be activated as needed.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -46,7 +47,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/systemd/journald.conf.d/10-minimum.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/log/file.include/etc/systemd/journald.conf.d/10-minimum.conf) ([`file.include`](/reference/features/#file-include)) | Sets minimum systemd journal configuration for a small footprint. |
 | [`file.include/etc/systemd/journald.conf.d/20-rsyslog.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/log/file.include/etc/systemd/journald.conf.d/20-rsyslog.conf) ([`file.include`](/reference/features/#file-include)) | Configures rsyslog as a consumer of the systemd journal. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 

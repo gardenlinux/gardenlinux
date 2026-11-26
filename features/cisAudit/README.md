@@ -1,5 +1,6 @@
 ---
 title: "Feature: cisAudit"
+description: "A sub-feature of [`cis`](/reference/features/cis) that installs and configures `auditd` per [CIS benchmark](/reference/glossary#cis-center-for-internet-security) requirements."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/cisAudit/README.md
 github_target_path: docs/reference/features/cisAudit.md
 ---
 
-## Feature: cisAudit
+# Feature: cisAudit
 
-### Description
+## Description
 
 A sub-feature of [`cis`](/reference/features/cis) that installs and configures `auditd` per [CIS benchmark](/reference/glossary#cis-center-for-internet-security) requirements. Must be used with the [`cis`](/reference/features/cis) feature.
 
-### What it does
+## What it does
 
 Configures `auditd` logging of security events including date/time changes, sudo usage, and disk-space failure handling. Provides audit rules in `/etc/audit/rules.d/99-cis.rules` and a systemd service override to ensure audit rules are loaded correctly at boot.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -33,7 +34,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/audit/rules.d/99-cis.rules`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cisAudit/file.include/etc/audit/rules.d/99-cis.rules) ([`file.include`](/reference/features/#file-include)) | CIS benchmark audit rules covering date/time changes, sudo usage, and disk-space failure handling. |
 | [`file.include/etc/systemd/system/audit-rules.service.d/override.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cisAudit/file.include/etc/systemd/system/audit-rules.service.d/override.conf) ([`file.include`](/reference/features/#file-include)) | systemd override to ensure audit rules are loaded correctly after `auditd` starts. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 

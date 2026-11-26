@@ -65,13 +65,13 @@ For the full naming hierarchy, worked example, and the `/etc/os-release` keys wr
 
 Every file a build run produces under `.build/` is prefixed with the **artifact base name** (defined in [ADR 0035](/reference/adr/0035-cname-flavor-artifact-naming)):
 
-```
+```text
 {cname}-{arch}-{version}-{commit}
 ```
 
 For example:
 
-```
+```text
 aws-gardener_prod-amd64-2150.0.0-31a9f915
 ```
 
@@ -97,7 +97,7 @@ An Amazon S3 bucket serves as the primary distribution channel for OS images, pr
 
 Artifact organization follows the naming hierarchy:
 
-```
+```text
 s3://gardenlinux-images/
   └── {versioned-flavor}/
       └── {version}/
@@ -108,7 +108,7 @@ s3://gardenlinux-images/
 
 For example, the AWS Gardener image for version 2150.0.0 appears at:
 
-```
+```text
 s3://gardenlinux-images/aws-gardener_prod-amd64-2150.0.0/2150.0.0/aws-gardener_prod-amd64-2150.0.0.tar.gz
 ```
 
@@ -122,7 +122,7 @@ Artifacts follow the naming pattern `build-{flavor}-{arch}` and can be downloade
 
 For containerized workloads, Garden Linux publishes OCI-compliant container images to the [GitHub Container Registry (GHCR)](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux):
 
-```
+```text
 [ghcr.io/gardenlinux/gardenlinux:{version}
 ```
 

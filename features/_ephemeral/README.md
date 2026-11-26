@@ -1,5 +1,6 @@
 ---
 title: "Feature: _ephemeral"
+description: "A feature that provides an ephemeral encrypted `/var` partition."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,15 +11,15 @@ github_source_path: features/_ephemeral/README.md
 github_target_path: docs/reference/features/_ephemeral.md
 ---
 
-## Feature: _ephemeral
+# Feature: _ephemeral
 
-### Description
+## Description
 
 A feature that provides an ephemeral encrypted
 `/var` partition. The encryption key is generated fresh from `/dev/random` on every boot
 and never persisted, so all data written to `/var` is lost when the system reboots.
 
-### What it does
+## What it does
 
 When `_ephemeral` is applied, the `/var` partition is encrypted on every boot using a
 randomly generated key that is discarded when the system shuts down. This means:
@@ -41,7 +42,7 @@ The alternative to `_ephemeral` is [`_tpm2`](/reference/features/_tpm2), which s
 should survive across reboots; use [`_tpm2`](/reference/features/_tpm2) when `/var` state
 must persist but still be protected by hardware attestation.
 
-### How it works
+## How it works
 
 All steps run inside the initrd, before the root filesystem is available:
 
@@ -65,7 +66,7 @@ All steps run inside the initrd, before the root filesystem is available:
    after `ephemeral-cryptsetup.service` completes. The system then pivots to
    `/sysroot` with an empty, freshly formatted `/var`.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -78,7 +79,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`initrd.include/etc/systemd/system/ephemeral-cryptsetup.service`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_ephemeral/initrd.include/etc/systemd/system/ephemeral-cryptsetup.service) (`initrd.include`) | Initrd systemd service that opens the `EPHEMERAL` partition with `cryptsetup` plain mode (random key from `/dev/random`, AES-XTS-512), zeroes the first MiB, and formats the device as ext4. |
 | [`initrd.include/etc/systemd/system/sysroot-var.mount`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_ephemeral/initrd.include/etc/systemd/system/sysroot-var.mount) (`initrd.include`) | Initrd mount unit that mounts `/dev/mapper/ephemeral` onto `/sysroot/var` after `ephemeral-cryptsetup.service` completes. |
 
-### Related features
+## Related features
 
 **Excludes (incompatible with):**
 
@@ -89,7 +90,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 - [`_trustedboot`](/reference/features/_trustedboot) — the primary use case for `_ephemeral`; establishes a fully attested boot chain where the ephemeral `/var` state is tied to the measured boot.
 - [`_tpm2`](/reference/features/_tpm2) — the persistent-key alternative to `_ephemeral`; seals the encryption key to the TPM 2.0 instead of discarding it on each reboot. Mutually exclusive with `_ephemeral`.
 
-### Further reading
+## Further reading
 
 - [Boot Modes](/explanation/boot-modes) — overview of Garden Linux boot modes including trusted boot
 - [Secure Boot and Trusted Boot](/explanation/secure-boot)

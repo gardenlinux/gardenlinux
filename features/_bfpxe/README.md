@@ -1,5 +1,6 @@
 ---
 title: "Feature: _bfpxe"
+description: "Produces a PXE boot image for NVIDIA BlueField Data Processing Units (DPUs), using a SquashFS root filesystem."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,19 +11,19 @@ github_source_path: features/_bfpxe/README.md
 github_target_path: docs/reference/features/_bfpxe.md
 ---
 
-## Feature: _bfpxe
+# Feature: _bfpxe
 
-### Description
+## Description
 
 Produces a PXE boot image for NVIDIA BlueField Data Processing Units (DPUs), using a SquashFS root filesystem.
 
-### What it does
+## What it does
 
 `_bfpxe` restricts the build to produce only the BlueField-specific PXE artifacts. Unlike the general [`_pxe`](/reference/features/_pxe) flag, this variant targets the NVIDIA BlueField DPU platform, which requires a compressed SquashFS root image for network boot. It includes [`_ignite`](/reference/features/_ignite) to enable Ignition-based first-boot configuration.
 
 The `exec.config` script, the dracut live-boot modules, and network configuration files set up the PXE boot chain for the BlueField environment.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -46,7 +47,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/usr/lib/dracut/modules.d/98gardenlinux-live/module-setup.sh`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_bfpxe/file.include/usr/lib/dracut/modules.d/98gardenlinux-live/module-setup.sh) ([`file.include`](/reference/features/#file-include)) | Registers the Garden Linux live-boot dracut module and its dependencies. |
 | [`file.include/usr/lib/dracut/modules.d/98gardenlinux-live/squash-mount-generator.sh`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_bfpxe/file.include/usr/lib/dracut/modules.d/98gardenlinux-live/squash-mount-generator.sh) ([`file.include`](/reference/features/#file-include)) | Generates the systemd mount unit for the SquashFS image during early boot. |
 
-### Related features
+## Related features
 
 **Includes:**
 

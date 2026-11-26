@@ -1,9 +1,10 @@
 ---
 title: "Contributing Workflow"
-github_target_path: "contributing/workflow.md"
+description: "Learn about Contributing to Garden Linux"
 github_org: gardenlinux
 github_repo: gardenlinux
 github_source_path: CONTRIBUTING.md
+github_target_path: "contributing/workflow.md"
 ---
 
 # Contributing to Garden Linux

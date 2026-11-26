@@ -1,5 +1,6 @@
 ---
 title: "Feature: checkbox"
+description: "Integrates the [Canonical Checkbox hardware testing framework](https://github.com/canonical/checkbox) into a Garden Linux ISO for automated hardware qualification and test reporting."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,13 +11,13 @@ github_source_path: features/checkbox/README.md
 github_target_path: docs/reference/features/checkbox.md
 ---
 
-## Feature: checkbox
+# Feature: checkbox
 
-### Description
+## Description
 
 Integrates the [Canonical Checkbox hardware testing framework](https://github.com/canonical/checkbox) into a Garden Linux ISO for automated hardware qualification and test reporting.
 
-### What it does
+## What it does
 
 `checkbox` installs `checkbox-ng`, `checkbox-provider-base`, and `nginx`, then adds Garden Linux-specific Checkbox test units: a category definition, job definitions, a manifest, and a test plan. Several helper scripts run hardware-specific checks (TPM presence, hardware encryption, virtualization status, and dmesg color output). A `generate-report.service` systemd unit assembles a test report on boot, and `nginx` serves the report over HTTP.
 
@@ -24,7 +25,7 @@ The `exec.config` script configures the image for the Checkbox environment, and 
 
 `checkbox` includes [`_iso`](/reference/features/_iso) because it is designed to boot from a live ISO on the hardware under test. It excludes features that are incompatible with the minimal, controlled testing environment: [`sap`](/reference/features/sap), [`firewall`](/reference/features/firewall), [`log`](/reference/features/log), [`_selinux`](/reference/features/_selinux), and [`_ignite`](/reference/features/_ignite).
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -49,7 +50,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/usr/share/checkbox-provider-base/units/gardenlinux/manifest.pxu`](https://github.com/gardenlinux/gardenlinux/blob/main/features/checkbox/file.include/usr/share/checkbox-provider-base/units/gardenlinux/manifest.pxu) ([`file.include`](/reference/features/#file-include)) | Checkbox manifest declaring hardware capabilities expected to be present on the device under test. |
 | [`file.include/usr/share/checkbox-provider-base/units/gardenlinux/test-plan.pxu`](https://github.com/gardenlinux/gardenlinux/blob/main/features/checkbox/file.include/usr/share/checkbox-provider-base/units/gardenlinux/test-plan.pxu) ([`file.include`](/reference/features/#file-include)) | Checkbox test plan that selects and orders the Garden Linux jobs for a complete hardware qualification run. |
 
-### Related features
+## Related features
 
 **Includes:**
 
@@ -63,7 +64,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 - [`_selinux`](/reference/features/_selinux) — SELinux mandatory access control may block test scripts from accessing hardware resources.
 - [`_ignite`](/reference/features/_ignite) — Ignition first-boot configuration is not applicable to the hardware test ISO use case.
 
-### Further reading
+## Further reading
 
 - [Canonical Checkbox hardware testing framework](https://github.com/canonical/checkbox)
 

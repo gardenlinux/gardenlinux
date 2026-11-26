@@ -1,5 +1,6 @@
 ---
 title: "Feature: aws"
+description: "A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux image for [Amazon Web Services (AWS)](/reference/glossary#aws)."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,15 +11,15 @@ github_source_path: features/aws/README.md
 github_target_path: docs/reference/features/aws.md
 ---
 
-## Feature: aws
+# Feature: aws
 
-### Description
+## Description
 
 A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux
 image for [Amazon Web Services (AWS)](/reference/glossary#aws). The image is delivered as a `.raw` file
 suitable for import into AWS.
 
-### What it does
+## What it does
 
 Installs `cloud-init` and `amazon-ec2-utils` to handle instance initialization,
 metadata retrieval, and EC2-specific utilities. The feature configures:
@@ -36,7 +37,7 @@ metadata retrieval, and EC2-specific utilities. The feature configures:
 - **Dracut**: includes the `xen-blkfront` driver for compatibility with
   Xen-based instance types.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -58,13 +59,13 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/systemd/timesyncd.conf.d/00-gardenlinux-aws.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/aws/file.include/etc/systemd/timesyncd.conf.d/00-gardenlinux-aws.conf) ([`file.include`](/reference/features/#file-include)) | Configures `systemd-timesyncd` to use the AWS NTP endpoint (`169.254.169.123`). |
 | [`file.include/usr/local/sbin/clocksource-setup.sh`](https://github.com/gardenlinux/gardenlinux/blob/main/features/aws/file.include/usr/local/sbin/clocksource-setup.sh) ([`file.include`](/reference/features/#file-include)) | Script invoked by `aws-clocksource.service` to detect and set the correct clocksource. |
 
-### Related features
+## Related features
 
 **Includes:**
 
 - [`cloud`](/reference/features/cloud) — provides common cloud-init integration and base cloud configuration shared across cloud platforms.
 
-### Further reading
+## Further reading
 
 - [cloud-init documentation](https://cloudinit.readthedocs.io/)
 - [amazon-ec2-utils](https://github.com/amazonlinux/amazon-ec2-utils)

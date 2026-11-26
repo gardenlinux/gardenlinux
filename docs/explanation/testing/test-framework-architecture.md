@@ -38,7 +38,7 @@ The framework uses pytest's plugin system to automatically register fixtures:
 
 ## Directory structure
 
-```
+```text
 tests/
 ├── util/                   # Utility scripts for running tests
 │   ├── run.sh              # Main entry point for running tests
@@ -176,7 +176,7 @@ make -f util/build.makefile help
 
 The built distribution contains:
 
-```
+```text
 dist/
 ├── runtime/
 │   └── <arch>/         # Python runtime for this arch only (amd64 or arm64)

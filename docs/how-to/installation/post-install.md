@@ -20,7 +20,7 @@ related_topics:
   - /tutorials/cloud/first-boot-openstack.md
 ---
 
-## Creating a user
+# Creating a user
 
 Garden Linux installations do not create a default user on installation. This is due to the specific use cases it was designed for not requiring a user.
 
@@ -34,7 +34,7 @@ These tools configure users, SSH keys, files, and services on first boot without
 
 If you would still like to create a new user account manually, follow the instructions below.
 
-### When is manual user creation required?
+## When is manual user creation required?
 
 Manual user creation is necessary when automated provisioning tools are unavailable:
 
@@ -54,12 +54,12 @@ Platform-specific tutorials:
 - [First Boot on GCP](/tutorials/cloud/first-boot-gcp.md)
 - [First Boot on OpenStack](/tutorials/cloud/first-boot-openstack.md)
 
-### Method 1: `chroot` (for bare metal / offline deployments)
+## Method 1: `chroot` (for bare metal / offline deployments)
 
 Use this method when you have **direct access** to the disk (e.g., from a live
 system before first boot).
 
-#### Step 1: Mount the Root Partition
+### Step 1: Mount the Root Partition
 
 ```bash
 # Identify and mount the root partition
@@ -71,14 +71,14 @@ mount ${ROOT_PART} /mnt
 mount -o ro ${USR_PART} /mnt/usr
 ```
 
-#### Step 2: Create the User
+### Step 2: Create the User
 
 ```bash
 USERNAME="gardenlinux"
 chroot /mnt /bin/bash -c "useradd -m -G wheel -s /bin/bash ${USERNAME}"
 ```
 
-#### Step 3: Unmount and Reboot
+### Step 3: Unmount and Reboot
 
 Finally, you need to unmount the image and reboot the system without any live
 media present.
@@ -94,7 +94,7 @@ installation, see the
 [First Boot on Bare Metal](/tutorials/on-premises/first-boot-bare-metal.md)
 guide.
 
-### Method 2: `fw_cfg` script (KVM/QEMU)
+## Method 2: `fw_cfg` script (KVM/QEMU)
 
 Use this method when launching Garden Linux in QEMU/KVM. This script executes
 automatically on first boot.
@@ -129,7 +129,7 @@ qemu-system-x86_64 ... \
 For a complete walkthrough and more information about setting up Garden Linux on
 KVM see [First Boot on KVM](/tutorials/local/first-boot-kvm.md).
 
-### Method 3: cloud-init user-data (Cloud Platforms)
+## Method 3: cloud-init user-data (Cloud Platforms)
 
 On cloud platforms with cloud-init support, users are typically pre-configured. You only need to enable SSH to access them:
 
@@ -144,7 +144,7 @@ For complete cloud-init provisioning examples including custom user creation, pa
 
 For default usernames per platform, see [Provision with cloud-init — Default Usernames](/how-to/installation/cloud-init.md#default-usernames-per-platform).
 
-### The Wheel Group
+## The Wheel Group
 
 Garden Linux uses the `wheel` group for passwordless `sudo` access. Users in
 this group have full administrative access without requiring a password for
@@ -158,11 +158,11 @@ groups ${USERNAME}
 
 Which should produce this output:
 
-```
+```bash
 $USERNAME : wheel
 ```
 
-### Setting a Password (optional)
+## Setting a Password (optional)
 
 Garden Linux is configured for SSH key-based authentication by default. If you
 need password authentication (which is **not** recommended for any production
@@ -176,6 +176,13 @@ chroot /mnt /bin/bash -c "passwd ${USERNAME}"
 sudo passwd ${USERNAME}
 ```
 
-:::warning Security Warning Password authentication is disabled by default in
+:::warning
+Security Warning Password authentication is disabled by default in
 Garden Linux' SSH configuration for security reasons. We **strongly recommend**
-key-based authentication on any networked system, even in a testing context. :::
+key-based authentication on any networked system, even in a testing context.
+
+:::
+
+## Related topics
+
+<RelatedTopics />

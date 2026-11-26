@@ -1,5 +1,6 @@
 ---
 title: "Install on OpenStack"
+description: "OpenStack platform-specific installation and configuration tasks"
 related_topics:
   - /tutorials/cloud/first-boot-openstack.md
   - /how-to/installation/post-install.md

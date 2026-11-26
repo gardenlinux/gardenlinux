@@ -1,5 +1,6 @@
 ---
 title: "Feature: base"
+description: "This feature installs the `base` layer for Garden Linux."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/base/README.md
 github_target_path: docs/reference/features/base.md
 ---
 
-## Feature: base
+# Feature: base
 
-### Description
+## Description
 
 This feature installs the `base` layer for Garden Linux.
 
-### What it does
+## What it does
 
 All artifacts and images are based on the `base` layer, which represents a minimal setup to run the OS itself. This is achieved by debootstrapping the `minbase` variant. Within this feature all OS-related base configurations (which may still be adjusted by other features on top of it) are applied.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -50,7 +51,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/sysctl.d/10-disable-sysrq.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/base/file.include/etc/sysctl.d/10-disable-sysrq.conf) ([`file.include`](/reference/features/#file-include)) | Disables the SysRq key to prevent privileged keyboard shortcuts on physical consoles. |
 | [`file.include/var/www/.gitignore`](https://github.com/gardenlinux/gardenlinux/blob/main/features/base/file.include/var/www/.gitignore) ([`file.include`](/reference/features/#file-include)) | Placeholder that ensures `/var/www` exists in the rootfs. |
 
-### Related features
+## Related features
 
 **Includes:**
 

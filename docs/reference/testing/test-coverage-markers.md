@@ -161,7 +161,7 @@ _fips:
 
 All test coverage markers follow this format:
 
-```
+```text
 GL-TESTCOV-$feature-$category-$description
 ```
 
@@ -174,7 +174,7 @@ GL-TESTCOV-$feature-$category-$description
 
 ### Examples
 
-```
+```text
 GL-TESTCOV-aws-service-aws-clocksource-enable
 GL-TESTCOV-ssh-config-sshd-config-permissions
 GL-TESTCOV-base-config-no-hostname
@@ -202,10 +202,10 @@ Garden Linux uses **four main categories** for tes coverage markers:
 
 **Why Test This:**
 
-- ✅ Verify configuration files are correctly rendered
-- ✅ Ensure permissions are set for security
-- ✅ Validate kernel parameters are active
-- ✅ Confirm files are removed/present as expected
+- Verify configuration files are correctly rendered
+- Ensure permissions are set for security
+- Validate kernel parameters are active
+- Confirm files are removed/present as expected
 
 **Example Markers:**
 
@@ -231,8 +231,8 @@ Garden Linux uses **four main categories** for tes coverage markers:
 
 **Why Test This:**
 
-- ✅ Verify services are enabled/disabled as configured
-- ✅ Ensure service states for functionality
+- Verify services are enabled/disabled as configured
+- Ensure service states for functionality
 
 **Example Markers:**
 
@@ -254,8 +254,8 @@ Garden Linux uses **four main categories** for tes coverage markers:
 
 **Why Test This:**
 
-- ✅ Ensure partitions are mounted as specified
-- ✅ Validate mount flags (nosuid, noexec, nodev)
+- Ensure partitions are mounted as specified
+- Validate mount flags (nosuid, noexec, nodev)
 
 **Example Markers:**
 
@@ -275,9 +275,9 @@ Garden Linux uses **four main categories** for tes coverage markers:
 
 **Why Test This:**
 
-- ✅ Verify scripts are present and executable
-- ✅ Ensure scripts produce expected side effects
-- ✅ Validate script configurations
+- Verify scripts are present and executable
+- Ensure scripts produce expected side effects
+- Validate script configurations
 
 **Example Markers:**
 
@@ -324,9 +324,9 @@ Markers use two distinct patterns to indicate negation, each with a specific sem
 
 **Why Test `-no-` Patterns:**
 
-- ✅ Verify cleanup operations succeeded
-- ✅ Ensure security-sensitive files are actually removed
-- ✅ Confirm features are not present (stronger guarantee than disabled)
+- Verify cleanup operations succeeded
+- Ensure security-sensitive files are actually removed
+- Confirm features are not present (stronger guarantee than disabled)
 
 ### The `-disable` pattern (deactivation)
 
@@ -348,13 +348,13 @@ Markers use two distinct patterns to indicate negation, each with a specific sem
 
 **Why Test `-disable` Patterns:**
 
-- ✅ Verify services are in correct disabled state
-- ✅ Ensure features are turned off in configuration
-- ✅ Confirm functionality is deactivated (but can be re-enabled if needed)
+- Verify services are in correct disabled state
+- Ensure features are turned off in configuration
+- Confirm functionality is deactivated (but can be re-enabled if needed)
 
 ## When to create markers
 
-### ✅ DO Create Markers For:
+### DO Create Markers For:
 
 **Runtime-Verifiable Settings:**
 
@@ -371,7 +371,7 @@ Markers use two distinct patterns to indicate negation, each with a specific sem
 
 **Why:** These settings define **system behavior** that must be verified on a running system.
 
-### ❌ DO NOT Create Markers For:
+### DO NOT Create Markers For:
 
 **Package Installation:**
 

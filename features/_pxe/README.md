@@ -1,5 +1,6 @@
 ---
 title: "Feature: _pxe"
+description: "Produces PXE network boot artifacts for Garden Linux, enabling live boot over the network with an optional disk installation capability."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -13,13 +14,13 @@ github_source_path: features/_pxe/README.md
 github_target_path: docs/reference/features/_pxe.md
 ---
 
-## Feature: _pxe
+# Feature: _pxe
 
-### Description
+## Description
 
 Produces PXE network boot artifacts for Garden Linux, enabling live boot over the network with an optional disk installation capability.
 
-### What it does
+## What it does
 
 `_pxe` builds a `.pxe.tar.gz` archive containing the artifacts required for network booting: a compressed SquashFS root filesystem (`root.squashfs`), a Linux kernel (`vmlinuz`), an initial ramdisk (`initrd`), and a kernel command line file (`cmdline`). When combined with [`_trustedboot`](/reference/features/_trustedboot) or [`_unsigned`](/reference/features/_unsigned) for a [Unified System Image (USI)](/reference/glossary.html#usi-unified-system-image) build, a Unified Kernel Image (`boot.efi`) is also included.
 
@@ -36,7 +37,7 @@ By default, `_pxe` produces an ephemeral live boot environment. For disk install
 `systemd-networkd-wait-online` is configured to mark the system online when at least one interface comes up. On systems with multiple NICs on different network segments, the SquashFS fetch may fail if the interface that comes up first is not the one connected to the PXE server.
 :::
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -63,7 +64,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/usr/lib/dracut/modules.d/98gardenlinux-live/module-setup.sh`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_pxe/file.include/usr/lib/dracut/modules.d/98gardenlinux-live/module-setup.sh) ([`file.include`](/reference/features/#file-include)) | Registers the Garden Linux live-boot dracut module and its dependencies. |
 | [`file.include/usr/lib/dracut/modules.d/98gardenlinux-live/squash-mount-generator.sh`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_pxe/file.include/usr/lib/dracut/modules.d/98gardenlinux-live/squash-mount-generator.sh) ([`file.include`](/reference/features/#file-include)) | Generates the systemd mount unit for the SquashFS image during early boot. |
 
-### Related features
+## Related features
 
 **Includes:**
 

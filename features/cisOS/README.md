@@ -1,5 +1,6 @@
 ---
 title: "Feature: cisOS"
+description: "A sub-feature of [`cis`](/reference/features/cis) that configures OS settings per [CIS benchmark](/reference/glossary#cis-center-for-internet-security) requirements."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/cisOS/README.md
 github_target_path: docs/reference/features/cisOS.md
 ---
 
-## Feature: cisOS
+# Feature: cisOS
 
-### Description
+## Description
 
 A sub-feature of [`cis`](/reference/features/cis) that configures OS settings per [CIS benchmark](/reference/glossary#cis-center-for-internet-security) requirements. Must be used with the [`cis`](/reference/features/cis) feature.
 
-### What it does
+## What it does
 
 Sets `pwquality` options, file permissions, login options, PAM configuration, and udev rules per CIS benchmark requirements. Configures kernel command line parameters to enable process auditing at boot, sets audit backlog limits, and manages logrotate policies for `btmp` and `wtmp`. Also configures sysstat and SELinux settings.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -46,7 +47,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/sysstat/sysstat`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cisOS/file.include/etc/sysstat/sysstat) ([`file.include`](/reference/features/#file-include)) | Enables sysstat data collection per CIS benchmark requirements. |
 | [`file.include/usr/lib/tmpfiles.d/var.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cisOS/file.include/usr/lib/tmpfiles.d/var.conf) ([`file.include`](/reference/features/#file-include)) | tmpfiles.d configuration ensuring correct permissions on `/var` directories per CIS benchmark. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 

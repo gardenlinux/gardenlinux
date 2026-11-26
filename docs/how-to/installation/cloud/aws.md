@@ -1,5 +1,6 @@
 ---
 title: "Install on AWS"
+description: "AWS platform-specific installation and configuration tasks"
 related_topics:
   - /tutorials/cloud/first-boot-aws.md
   - /how-to/installation/post-install.md

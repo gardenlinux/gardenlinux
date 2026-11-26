@@ -1,5 +1,6 @@
 ---
 title: "Feature: stackit"
+description: "A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux image for [STACKIT](/reference/glossary#stackit), a cloud platform by Schwarz Group, built on [OpenStack](/reference/glossary#openstack)."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,16 +11,16 @@ github_source_path: features/stackit/README.md
 github_target_path: docs/reference/features/stackit.md
 ---
 
-## Feature: stackit
+# Feature: stackit
 
-### Description
+## Description
 
 A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux
 image for [STACKIT](/reference/glossary#stackit), a cloud platform by Schwarz Group,
 built on [OpenStack](/reference/glossary#openstack).
 The artifact is delivered as a `.raw` file.
 
-### What it does
+## What it does
 
 Installs `cloud-init` and configures the OpenStack/ConfigDrive datasource for
 instance initialization. Time synchronization is provided by `chrony` using the
@@ -42,7 +43,7 @@ Key configurations:
 - **Architecture handling**: removes the `ptp_kvm` module-load configuration on
   `arm64`, where `ptp_kvm` is built-in rather than a loadable module.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -66,13 +67,13 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/systemd/system-preset/00-chrony-disable.preset`](https://github.com/gardenlinux/gardenlinux/blob/main/features/stackit/file.include/etc/systemd/system-preset/00-chrony-disable.preset) ([`file.include`](/reference/features/#file-include)) | Disables `chrony-wait.service` and `chronyd-restricted.service` by preset (not needed in this PTP-backed setup). |
 | [`file.include/etc/udev/rules.d/60-kvm-ptp.rules`](https://github.com/gardenlinux/gardenlinux/blob/main/features/stackit/file.include/etc/udev/rules.d/60-kvm-ptp.rules) ([`file.include`](/reference/features/#file-include)) | Creates a stable `/dev/ptp_kvm` symlink when the KVM PTP device appears and tags it as a systemd device unit (`dev-ptp_kvm.device`), enabling service ordering on it. |
 
-### Related features
+## Related features
 
 **Includes:**
 
 - [`cloud`](/reference/features/cloud) — provides the cloud-optimized kernel, shared cloud configuration, and systemd-networkd networking used by all cloud platform features.
 
-### Further reading
+## Further reading
 
 - [STACKIT hyperscaler](https://www.stackit.de/)
 - [cloud-init documentation](https://cloudinit.readthedocs.io/)

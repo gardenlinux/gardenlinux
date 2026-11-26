@@ -1,5 +1,6 @@
 ---
 title: "Feature: _iso"
+description: "Produces a hybrid bootable ISO artifact that supports both UEFI and legacy BIOS boot for use on physical hardware, virtual machines, or USB media."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -13,13 +14,13 @@ github_source_path: features/_iso/README.md
 github_target_path: docs/reference/features/_iso.md
 ---
 
-## Feature: _iso
+# Feature: _iso
 
-### Description
+## Description
 
 Produces a hybrid bootable ISO artifact that supports both UEFI and legacy BIOS boot for use on physical hardware, virtual machines, or USB media.
 
-### What it does
+## What it does
 
 `_iso` assembles a bootable `.iso` image containing a live Garden Linux system. The ISO includes a compressed SquashFS root filesystem (`/live/squashfs.img`), a UEFI boot path using systemd-boot with a [Unified Kernel Image (UKI)](/reference/glossary.html#uki-unified-kernel-image), and a legacy BIOS boot path using syslinux/isolinux. Console autologin is enabled on both `tty1` and the serial console, so the live environment is accessible immediately without credentials.
 
@@ -29,7 +30,7 @@ The feature uses `dracut` with the `dracut-live` module to build the initrd and 
 
 `_iso` is incompatible with [`_selinux`](/reference/features/_selinux) because SELinux extended-attribute labeling cannot be applied to the live SquashFS environment at build time.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -43,7 +44,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/systemd/system/getty@tty1.service.d/autologin.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_iso/file.include/etc/systemd/system/getty@tty1.service.d/autologin.conf) ([`file.include`](/reference/features/#file-include)) | Configures `getty` on `tty1` for automatic root login in the live environment. |
 | [`file.include/etc/systemd/system/serial-getty@.service.d/autologin.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_iso/file.include/etc/systemd/system/serial-getty@.service.d/autologin.conf) ([`file.include`](/reference/features/#file-include)) | Configures the serial `getty` for automatic root login on the serial console in the live environment. |
 
-### Related features
+## Related features
 
 **Includes:**
 

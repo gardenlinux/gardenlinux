@@ -1,5 +1,6 @@
 ---
 title: "Feature: bluefield"
+description: A platform feature that builds a Garden Linux image for the NVIDIA BlueField Data Processing Unit (DPU) SmartNIC.
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -15,16 +16,16 @@ This feature is experimental and is not production-ready. It is not built or
 tested in the nightly CI pipeline. Expect rough edges and incomplete documentation.
 :::
 
-## Feature: bluefield
+# Feature: bluefield
 
-### Description
+## Description
 
 A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux
 image for the [NVIDIA BlueField](https://www.nvidia.com/en-us/networking/products/data-processing-unit/)
 Data Processing Unit (DPU) SmartNIC. The image is PXE-booted from an ARM64 host and
 optionally installed onto the BlueField eMMC.
 
-### What it does
+## What it does
 
 Configures Garden Linux for the BlueField DPU hardware platform:
 
@@ -51,37 +52,37 @@ Configures Garden Linux for the BlueField DPU hardware platform:
 - **`exec.config`**: installs the pre-built `.deb` packages from `/opt/` into the rootfs
   at build time.
 
-#### Required BlueField drivers
+### Required BlueField drivers
 
 According to NVIDIA, the following drivers are needed to run a BlueField SmartNIC.
 
 | Driver | GL Kernel | Kernel config | GL Package | BF2 | BF3 | Comment |
 |---|---|---|---|---|---|---|
-| `bluefield-edac` | `m` | `EDAC_BLUEFIELD` | | ✓ | | |
-| `dw_mmc_bluefield` | `m` | `MMC_DW_BLUEFIELD` | | ✓ | | |
-| `sdhci-of-dwcmshc` | `m` | `MMC_SDHCI_OF_DWCMSHC` | | ✓ | | |
-| `gpio-mlxbf2` | `m` | `GPIO_MLXBF2` | | ✓ | | |
-| `gpio-mlxbf3` | `m` | `GPIO_MLXBF3` | | | ✓ | |
-| `i2c-mlx` | `m` | `I2C_MLXBF` | | ✓ | | |
-| `ipmb-dev-int` | `m` | `IPMB_DEVICE_INTERFACE` | | ✓ | | |
+| `bluefield-edac` | `m` | `EDAC_BLUEFIELD` | | &check; | | |
+| `dw_mmc_bluefield` | `m` | `MMC_DW_BLUEFIELD` | | &check; | | |
+| `sdhci-of-dwcmshc` | `m` | `MMC_SDHCI_OF_DWCMSHC` | | &check; | | |
+| `gpio-mlxbf2` | `m` | `GPIO_MLXBF2` | | &check; | | |
+| `gpio-mlxbf3` | `m` | `GPIO_MLXBF3` | | | &check; | |
+| `i2c-mlx` | `m` | `I2C_MLXBF` | | &check; | | |
+| `ipmb-dev-int` | `m` | `IPMB_DEVICE_INTERFACE` | | &check; | | |
 | `ipmb-host` | | | | | | Not needed for the BF2 use case |
-| `mlxbf-gige` | `m` | `MLXBF_GIGE` | | ✓ | | |
-| `mlxbf-livefish` | | | `hack/mlxbf-livefish` | ✓ | | Licensing: build locally |
-| `mlxbf-pka` | | | `hack/mlxbf-pka` | ✓ | | Licensing: build locally |
-| `mlxbf-pmc` | `m` | `MLXBF_PMC` | | ✓ | | |
-| `mlxbf-ptm` | | | `hack/mlxbf-ptm` | ✓ | | Licensing: build locally |
-| `mlxbf-tmfifo` | `m` | `MLXBF_TMFIFO` | | ✓ | | |
-| `mlx-bootctl` | `m` | `MLXBF_BOOTCTL` | | ✓ | | |
-| `mlx-trio` | | | `hack/mlx-trio` | ✓ | | Licensing: build locally |
-| `pwr-mlxbf` | | | `hack/pwr-mlxbf` | ✓ | | Licensing: build locally |
+| `mlxbf-gige` | `m` | `MLXBF_GIGE` | | &check; | | |
+| `mlxbf-livefish` | | | `hack/mlxbf-livefish` | &check; | | Licensing: build locally |
+| `mlxbf-pka` | | | `hack/mlxbf-pka` | &check; | | Licensing: build locally |
+| `mlxbf-pmc` | `m` | `MLXBF_PMC` | | &check; | | |
+| `mlxbf-ptm` | | | `hack/mlxbf-ptm` | &check; | | Licensing: build locally |
+| `mlxbf-tmfifo` | `m` | `MLXBF_TMFIFO` | | &check; | | |
+| `mlx-bootctl` | `m` | `MLXBF_BOOTCTL` | | &check; | | |
+| `mlx-trio` | | | `hack/mlx-trio` | &check; | | Licensing: build locally |
+| `pwr-mlxbf` | | | `hack/pwr-mlxbf` | &check; | | Licensing: build locally |
 
 Drivers marked `m` in the GL Kernel column are enabled as modules in the Garden Linux
 kernel. Drivers with a `hack/` entry in GL Package cannot be distributed as Debian
 packages and must be built from source before building the image.
 
-### How it works
+## How it works
 
-#### Prerequisites
+### Prerequisites
 
 - An ARM64 build machine (the BlueField itself is ARM64).
 - A server with a BlueField 2 SmartNIC.
@@ -89,7 +90,7 @@ packages and must be built from source before building the image.
 - Setting up PXE boot infrastructure (DHCP server, TFTP/HTTP server) is outside the scope
   of this document.
 
-#### Building the packages and the image
+### Building the packages and the image
 
 Build the proprietary driver packages first, then build the Garden Linux image:
 
@@ -117,7 +118,7 @@ From the `.build/` directory, untar the archive with a name similar to
 `bluefield_bfpxe-arm64-today-local.pxe.tar.gz`. The archive contains the kernel,
 initrd, and SquashFS root used to PXE-boot the SmartNIC.
 
-#### Smartnic console setup
+### Smartnic console setup
 
 Secure Boot must be disabled on the SmartNIC. Connect the out-of-band network port to a
 network where PXE booting is possible.
@@ -137,7 +138,7 @@ echo "SW_RESET 1" > /dev/rshim0/misc
 Once connected via the console, reset the card and wait for the UEFI/Setup prompt.
 On a BlueField-2 card the prompt looks similar to:
 
-```
+```text
 Press ESC/F2/DEL twice    to enter UEFI Menu.
 Press ENTER               to skip countdown.
 
@@ -149,7 +150,7 @@ Press ENTER               to skip countdown.
 From the UEFI setup menu, navigate to the device boot manager and PXE-boot from the
 out-of-band port.
 
-#### PXE boot
+### PXE boot
 
 Example [Kea](https://www.isc.org/kea/) DHCP server configuration to PXE-boot a
 BlueField SmartNIC:
@@ -161,7 +162,7 @@ BlueField SmartNIC:
 
 Recommended [iPXE](https://ipxe.org/) boot script:
 
-```
+```bash
 #!ipxe
 
 set base-url http://192.168.0.1/ipxe/bf
@@ -172,7 +173,7 @@ boot
 
 This gives a live-booted Garden Linux system with root autologin and a tmpfs overlay on `/`.
 
-#### Persistent installation
+### Persistent installation
 
 :::warning
 The installer will destroy all data on the target device and remove all existing
@@ -192,7 +193,7 @@ cd /opt/persist
 Alternatively, the Mellanox BFB (BlueField Boot Image) install method is not yet
 implemented.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -228,7 +229,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`hack/mlxbf-ptm`](https://github.com/gardenlinux/gardenlinux/blob/main/features/bluefield/hack/mlxbf-ptm) | Builds the `mlxbf-ptm` out-of-tree driver as a Debian package. Cannot be distributed due to licensing. |
 | [`hack/pwr-mlxbf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/bluefield/hack/pwr-mlxbf) | Builds the `pwr-mlxbf` out-of-tree driver as a Debian package. Cannot be distributed due to licensing. |
 
-### Related features
+## Related features
 
 **Includes:**
 

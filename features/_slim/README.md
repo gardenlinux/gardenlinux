@@ -1,5 +1,6 @@
 ---
 title: "Feature: _slim"
+description: "Reduces the size of the Garden Linux artifact by removing man pages, locale data, and other non-essential files."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,13 +11,13 @@ github_source_path: features/_slim/README.md
 github_target_path: docs/reference/features/_slim.md
 ---
 
-## Feature: _slim
+# Feature: _slim
 
-### Description
+## Description
 
 Reduces the size of the Garden Linux artifact by removing man pages, locale data, and other non-essential files.
 
-### What it does
+## What it does
 
 `_slim` runs an `exec.late` script that deletes several directories from the image after package installation completes:
 
@@ -28,7 +29,7 @@ Reduces the size of the Garden Linux artifact by removing man pages, locale data
 
 These directories contain data that is useful during development but unnecessary in a production or space-constrained image. The resulting image is smaller and has a reduced set of user-facing documentation.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -39,7 +40,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.exclude`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_slim/file.exclude) ([ref](/reference/features/#file-exclude)) | Declares paths to remove from the rootfs: `/usr/share/man`, `/usr/share/locale`, `/usr/share/groff`, `/usr/share/lintian`, and `/usr/share/linda`. |
 | [`info.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_slim/info.yaml) ([ref](/reference/features/#info-yaml-file-structure)) | Declares `type: flag` and included/excluded features. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 

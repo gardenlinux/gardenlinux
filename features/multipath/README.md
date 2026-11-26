@@ -1,5 +1,6 @@
 ---
 title: "Feature: multipath"
+description: "Installs multipath I/O support, required by `iscsi` and NVMe over TCP."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/multipath/README.md
 github_target_path: docs/reference/features/multipath.md
 ---
 
-## Feature: multipath
+# Feature: multipath
 
-### Description
+## Description
 
 Installs multipath I/O support, required by `iscsi` and NVMe over TCP.
 
-### What it does
+## What it does
 
 Installs `multipath-tools` and provides a configuration file for `multipath`. Multipath I/O allows a system to use multiple physical paths between host and storage devices for redundancy and performance.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -32,7 +33,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`pkg.include`](https://github.com/gardenlinux/gardenlinux/blob/main/features/multipath/pkg.include) ([ref](/reference/features/#pkg-include)) | Installs: `multipath-tools`. |
 | [`file.include/etc/multipath.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/multipath/file.include/etc/multipath.conf) ([`file.include`](/reference/features/#file-include)) | Configuration file for `multipath-tools`, defining path grouping and failover policies. |
 
-### Related features
+## Related features
 
 **Includes:**
 

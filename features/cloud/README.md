@@ -1,5 +1,6 @@
 ---
 title: "Feature: cloud"
+description: "A feature that configures Garden Linux for hyperscaler and cloud environments, providing the cloud kernel, optimized boot settings, and shared cloud configuration."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,13 +11,13 @@ github_source_path: features/cloud/README.md
 github_target_path: docs/reference/features/cloud.md
 ---
 
-## Feature: cloud
+# Feature: cloud
 
-### Description
+## Description
 
 A feature that configures Garden Linux for hyperscaler and cloud environments, providing the cloud kernel, optimized boot settings, and shared cloud configuration.
 
-### What it does
+## What it does
 
 All cloud platform features (`ali`, `aws`, `azure`, `gcp`, `gdch`, `kvm`, `openstack`, `vmware`) include `cloud` as their base. Provides:
 
@@ -31,7 +32,7 @@ All cloud platform features (`ali`, `aws`, `azure`, `gcp`, `gdch`, `kvm`, `opens
 - Root partition repart configuration
 - Kernel post-install hooks for command line and syslinux updates
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -62,7 +63,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 -| [`file.include/etc/systemd/network/99-default.network`](https://github.com/gardenlinux/gardenlinux/blob/main/features/server/file.include/etc/systemd/network/99-default.network) ([`file.include`](/reference/features/#file-include)) | Default systemd-networkd DHCP configuration for all Ethernet interfaces. |
 | [`file.include/etc/systemd/system/rngd.service.d/architecture.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cloud/file.include/etc/systemd/system/rngd.service.d/architecture.conf) ([`file.include`](/reference/features/#file-include)) | Architecture-specific override for the `rngd` entropy service. |
 
-### Related features
+## Related features
 
 **Includes:**
 

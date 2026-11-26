@@ -1,5 +1,6 @@
 ---
 title: "Feature: clamav"
+description: "Installs and configures [ClamAV antivirus](/reference/glossary#clamav-antivirus)."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/clamav/README.md
 github_target_path: docs/reference/features/clamav.md
 ---
 
-## Feature: clamav
+# Feature: clamav
 
-### Description
+## Description
 
 Installs and configures [ClamAV antivirus](/reference/glossary#clamav-antivirus).
 
-### What it does
+## What it does
 
 Installs `clamav`. Configures `freshclam` to keep virus definitions up to date. Schedules a nightly virus scan via a cron job in `/var/spool/cron/crontabs/root`. The cron schedule can be adjusted by editing that file.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -32,7 +33,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`pkg.include`](https://github.com/gardenlinux/gardenlinux/blob/main/features/clamav/pkg.include) ([ref](/reference/features/#pkg-include)) | Installs `clamav`. |
 | [`file.include/var/spool/cron/crontabs/root`](https://github.com/gardenlinux/gardenlinux/blob/main/features/clamav/file.include/var/spool/cron/crontabs/root) ([`file.include`](/reference/features/#file-include)) | Cron job that triggers a nightly ClamAV virus scan. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 

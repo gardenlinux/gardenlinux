@@ -1,5 +1,6 @@
 ---
 title: "Feature: iscsi"
+description: "Enables [iSCSI](/reference/glossary#iscsi) target and initiator support in Garden Linux."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/iscsi/README.md
 github_target_path: docs/reference/features/iscsi.md
 ---
 
-## Feature: iscsi
+# Feature: iscsi
 
-### Description
+## Description
 
 Enables [iSCSI](/reference/glossary#iscsi) target and initiator support in Garden Linux.
 
-### What it does
+## What it does
 
 Installs `open-iscsi` (initiator) and `tgt` (target). Configures a template-based `initiatorname.iscsi` so a unique IQN (iSCSI Qualified Name) is generated at first boot via `iscsi-initiatorname.service`. The feature depends on `multipath` for multipath I/O support.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -34,7 +35,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/iscsi/initiatorname.iscsi.template`](https://github.com/gardenlinux/gardenlinux/blob/main/features/iscsi/file.include/etc/iscsi/initiatorname.iscsi.template) ([`file.include`](/reference/features/#file-include)) | Template for generating a unique iSCSI IQN at first boot. |
 | [`file.include/etc/systemd/system/iscsi-initiatorname.service`](https://github.com/gardenlinux/gardenlinux/blob/main/features/iscsi/file.include/etc/systemd/system/iscsi-initiatorname.service) ([`file.include`](/reference/features/#file-include)) | Generates `/etc/iscsi/initiatorname.iscsi` at first boot if not already present. |
 
-### Related features
+## Related features
 
 **Includes:**
 

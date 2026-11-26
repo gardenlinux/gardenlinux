@@ -1,5 +1,6 @@
 ---
 title: "Feature: ali"
+description: "A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux image for [Alibaba Cloud (Aliyun)](/reference/glossary#alibaba-cloud-aliyun)."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,15 +11,15 @@ github_source_path: features/ali/README.md
 github_target_path: docs/reference/features/ali.md
 ---
 
-## Feature: ali
+# Feature: ali
 
-### Description
+## Description
 
 A [platform](/reference/glossary.html#platform) feature that builds a Garden Linux
 image for [Alibaba Cloud (Aliyun)](/reference/glossary#alibaba-cloud-aliyun). Artifacts are delivered as `.raw` and `.qcow2`
 files.
 
-### What it does
+## What it does
 
 Installs `cloud-init` for instance initialization on Alibaba Cloud and
 configures platform-specific settings:
@@ -33,7 +34,7 @@ configures platform-specific settings:
 - **Image conversion**: `convert.qcow2` produces a `.qcow2` image from the raw
   build artifact.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -51,13 +52,13 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/systemd/resolved.conf.d/00-gardenlinux-ali.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/ali/file.include/etc/systemd/resolved.conf.d/00-gardenlinux-ali.conf) ([`file.include`](/reference/features/#file-include)) | Configures `systemd-resolved` with Alibaba Cloud DNS settings. |
 | [`file.include/etc/systemd/timesyncd.conf.d/00-gardenlinux-ali.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/ali/file.include/etc/systemd/timesyncd.conf.d/00-gardenlinux-ali.conf) ([`file.include`](/reference/features/#file-include)) | Configures `systemd-timesyncd` to use the Alibaba Cloud NTP endpoint. |
 
-### Related features
+## Related features
 
 **Includes:**
 
 - [`cloud`](/reference/features/cloud) — provides common cloud-init integration and base cloud configuration shared across cloud platforms.
 
-### Further reading
+## Further reading
 
 - [cloud-init documentation](https://cloudinit.readthedocs.io/)
 

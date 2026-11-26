@@ -1,5 +1,6 @@
 ---
 title: "Feature: _legacy"
+description: "Installs and configures both a UEFI (systemd-boot) and a legacy BIOS (syslinux) bootloader, enabling the image to boot on systems without UEFI firmware."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,13 +11,13 @@ github_source_path: features/_legacy/README.md
 github_target_path: docs/reference/features/_legacy.md
 ---
 
-## Feature: _legacy
+# Feature: _legacy
 
-### Description
+## Description
 
 Installs and configures both a UEFI (systemd-boot) and a legacy BIOS (syslinux) bootloader, enabling the image to boot on systems without UEFI firmware.
 
-### What it does
+## What it does
 
 `_legacy` installs `dracut`, `systemd-boot`, and (on `amd64`) `syslinux`, then runs `exec.late` to configure both bootloaders. Three helper scripts are placed in `/usr/local/sbin/`:
 
@@ -26,7 +27,7 @@ Installs and configures both a UEFI (systemd-boot) and a legacy BIOS (syslinux) 
 
 A random seed file (`/efi/loader/random-seed`) is excluded from the image to prevent entropy pool reuse across cloned images.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -42,7 +43,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/usr/local/sbin/update-kernel-cmdline`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_legacy/file.include/usr/local/sbin/update-kernel-cmdline) ([`file.include`](/reference/features/#file-include)) | Regenerates the kernel command line configuration files used by both bootloaders. |
 | [`file.include/usr/local/sbin/update-syslinux`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_legacy/file.include/usr/local/sbin/update-syslinux) ([`file.include`](/reference/features/#file-include)) | Updates the syslinux configuration for legacy BIOS boot. |
 
-### Related features
+## Related features
 
 `_legacy` has no include or exclude relationships in its own configuration.
 It is excluded by [`_usi`](/reference/features/_usi), which represents the
@@ -54,7 +55,7 @@ UEFI-only UKI boot path:
   requires UEFI exclusively and is incompatible with the BIOS/syslinux boot path
   that `_legacy` adds.
 
-### Further reading
+## Further reading
 
 - [Feature file reference](/reference/features/) — file-type semantics
 - [Features explanation](/explanation/features) — types, DAG, composition rules

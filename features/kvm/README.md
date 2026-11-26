@@ -1,5 +1,6 @@
 ---
 title: "Feature: kvm"
+description: "A [platform](/reference/glossary.html#platform) feature that builds Garden Linux images for [KVM](/reference/glossary#kvm) and [QEMU](/reference/glossary#qemu) virtualization."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,15 +11,15 @@ github_source_path: features/kvm/README.md
 github_target_path: docs/reference/features/kvm.md
 ---
 
-## Feature: kvm
+# Feature: kvm
 
-### Description
+## Description
 
 A [platform](/reference/glossary.html#platform) feature that builds Garden Linux
 images for [KVM](/reference/glossary#kvm) and [QEMU](/reference/glossary#qemu) virtualization. Artifacts are delivered as `.raw` and
 `.qcow2` files.
 
-### What it does
+## What it does
 
 Configures Garden Linux for KVM and QEMU guests:
 
@@ -36,7 +37,7 @@ Configures Garden Linux for KVM and QEMU guests:
 The `kvm` platform is also the recommended base for local unit testing that
 requires a running OS.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -53,14 +54,14 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/systemd/system/ignition-disable.service`](https://github.com/gardenlinux/gardenlinux/blob/main/features/kvm/file.include/etc/systemd/system/ignition-disable.service) ([`file.include`](/reference/features/#file-include)) | Systemd service that disables the Ignition kernel parameter after first boot. |
 | [`file.include/etc/udev/rules.d/60-onmetal.rules`](https://github.com/gardenlinux/gardenlinux/blob/main/features/kvm/file.include/etc/udev/rules.d/60-onmetal.rules) ([`file.include`](/reference/features/#file-include)) | udev rules for on-metal disk device naming in the KVM environment. |
 
-### Related features
+## Related features
 
 **Includes:**
 
 - [`cloud`](/reference/features/cloud) — provides common cloud-init integration and base cloud configuration.
 - [`_ignite`](/reference/features/_ignite) — provides Ignition-based first-boot configuration support.
 
-### Further reading
+## Further reading
 
 - [cloud-init documentation](https://cloudinit.readthedocs.io/)
 - [QEMU guest agent documentation](https://wiki.qemu.org/Features/GuestAgent)

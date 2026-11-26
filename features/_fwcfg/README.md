@@ -1,5 +1,6 @@
 ---
 title: "Feature: _fwcfg"
+description: "Enables support for [QEMU `fw_cfg`](https://www.qemu.org/docs/master/specs/fw_cfg.html)-based user configuration scripts, allowing the hypervisor to inject configuration into the guest at boot time."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,19 +11,19 @@ github_source_path: features/_fwcfg/README.md
 github_target_path: docs/reference/features/_fwcfg.md
 ---
 
-## Feature: _fwcfg
+# Feature: _fwcfg
 
-### Description
+## Description
 
 Enables support for [QEMU `fw_cfg`](https://www.qemu.org/docs/master/specs/fw_cfg.html)-based user configuration scripts, allowing the hypervisor to inject configuration into the guest at boot time.
 
-### What it does
+## What it does
 
 `_fwcfg` installs a systemd service (`qemu-fw_cfg-script.service`) and a helper binary (`run-qemu-fw_cfg-script`). At boot, the service reads a script from the QEMU `fw_cfg` interface (the `opt/com.coreos/config` or a similarly configured key) and executes it inside the guest. This allows operators to pass per-instance configuration — such as network setup or user data — directly from the hypervisor without requiring a metadata service.
 
 The `file.include.markers.yaml` links the installed files to test-coverage markers for automated verification.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -35,11 +36,11 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/systemd/system/qemu-fw_cfg-script.service`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_fwcfg/file.include/etc/systemd/system/qemu-fw_cfg-script.service) ([`file.include`](/reference/features/#file-include)) | Systemd unit that reads a configuration script from the QEMU `fw_cfg` device and executes it at boot. |
 | [`file.include/usr/bin/run-qemu-fw_cfg-script`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_fwcfg/file.include/usr/bin/run-qemu-fw_cfg-script) ([`file.include`](/reference/features/#file-include)) | Binary or script that reads the payload from the `fw_cfg` interface and invokes it as a shell script. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 
-### Further reading
+## Further reading
 
 - [QEMU Firmware Configuration (`fw_cfg`)](https://www.qemu.org/docs/master/specs/fw_cfg.html)
 

@@ -1,5 +1,6 @@
 ---
 title: "Feature: _debug"
+description: "Adds a debug container to the image that provides a writable environment for inspecting an otherwise immutable system."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,13 +11,13 @@ github_source_path: features/_debug/README.md
 github_target_path: docs/reference/features/_debug.md
 ---
 
-## Feature: _debug
+# Feature: _debug
 
-### Description
+## Description
 
 Adds a debug container to the image that provides a writable environment for inspecting an otherwise immutable system.
 
-### What it does
+## What it does
 
 `_debug` installs `containerd` and `docker.io` along with a script (`setup-debugbox-ssh`) that creates and starts a debug container on the host. By default, the container is based on a Debian slim image with `openssh-server` installed and `sshd` running on port 22, giving SSH access to a writable environment that shares the host network and mounts host system directories.
 
@@ -33,7 +34,7 @@ The debug container can also be started from a local archive or pulled from an e
 Do not use this feature in production images. The exposed ssh server imposes a security thread.
 :::
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -48,7 +49,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/systemd/system/ssh-container.service`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_debug/file.include/etc/systemd/system/ssh-container.service) ([`file.include`](/reference/features/#file-include)) | Systemd unit that starts the debug container and keeps it running. |
 | [`file.include/usr/sbin/setup-debugbox-ssh`](https://github.com/gardenlinux/gardenlinux/blob/main/features/_debug/file.include/usr/sbin/setup-debugbox-ssh) ([`file.include`](/reference/features/#file-include)) | Script that pulls or loads the container image, installs `openssh-server` if needed, and starts `sshd`. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 

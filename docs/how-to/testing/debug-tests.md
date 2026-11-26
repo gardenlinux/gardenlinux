@@ -51,7 +51,7 @@ Enable debug logging for a specific test:
 ./test --test-args "--log-cli-level=DEBUG test_ssh.py" .build/image.raw
 ```
 
-:::important
+::: info
 Tests need to implement debug output. Results may vary depending on the test.
 :::
 
@@ -84,7 +84,7 @@ cd /run/gardenlinux-tests && ./run_tests --system-booted --allow-system-modifica
 cd /run/gardenlinux-tests && sudo ./run_tests --system-booted --allow-system-modifications --expected-users gardenlinux
 ```
 
-:::important
+::: tip
 Login to QEMU VMs is only possible if `--ssh --skip-cleanup` is passed when starting the test. Secure Shell Daemon (SSHD) is reachable on `127.0.0.1:2222` with the user `gardenlinux`. The QEMU VM stays open in the shell that started the test and can be stopped with `ctrl + c`.
 :::
 
@@ -113,7 +113,7 @@ cd /run/gardenlinux-tests && ./run_tests --system-booted --allow-system-modifica
 cd /run/gardenlinux-tests && sudo ./run_tests --system-booted --allow-system-modifications --expected-users gardenlinux
 ```
 
-:::important
+::: info
 Cloud VMs use the SSH user and Internet Protocol (IP) address from the OpenTofu output. The login script automatically retrieves this information from the Terraform state.
 :::
 

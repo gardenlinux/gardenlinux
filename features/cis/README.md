@@ -1,5 +1,6 @@
 ---
 title: "Feature: cis"
+description: "The `cis` feature is a meta-feature that groups all [CIS benchmark](/reference/glossary#cis-center-for-internet-security) benchmark sub-features into a single composable unit."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,13 +11,13 @@ github_source_path: features/cis/README.md
 github_target_path: docs/reference/features/cis.md
 ---
 
-## Feature: cis
+# Feature: cis
 
-### Description
+## Description
 
 The `cis` feature is a meta-feature that groups all [CIS benchmark](/reference/glossary#cis-center-for-internet-security) benchmark sub-features into a single composable unit.
 
-### What it does
+## What it does
 
 This feature represents a meta-feature that includes multiple sub-features, each covering a specific area of the CIS benchmark for Debian Linux. It applies the following CIS controls:
 
@@ -32,7 +33,7 @@ This feature represents a meta-feature that includes multiple sub-features, each
 
 An `exec.config` script applies CIS-specific configuration that spans multiple sub-areas.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -42,7 +43,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`exec.config`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cis/exec.config) ([ref](/reference/features/#exec-config-exec-early-exec-late-exec-post)) | Applies CIS framework configuration that spans multiple sub-feature areas. |
 | [`info.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/cis/info.yaml) ([ref](/reference/features/#info-yaml-file-structure)) | Declares `type: element` and included/excluded features. |
 
-### Related features
+## Related features
 
 **Includes:**
 

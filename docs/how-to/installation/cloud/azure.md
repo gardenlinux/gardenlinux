@@ -1,5 +1,6 @@
 ---
 title: "Install on Azure"
+description: "Azure platform-specific installation and configuration tasks"
 related_topics:
   - /tutorials/cloud/first-boot-azure.md
   - /how-to/installation/post-install.md

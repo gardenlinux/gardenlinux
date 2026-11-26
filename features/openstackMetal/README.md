@@ -1,5 +1,6 @@
 ---
 title: "Feature: openstackMetal"
+description: "A feature providing [OpenStack](/reference/glossary#openstack) bare-metal configuration."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,9 +11,9 @@ github_source_path: features/openstackMetal/README.md
 github_target_path: docs/reference/features/openstackMetal.md
 ---
 
-## Feature: openstackMetal
+# Feature: openstackMetal
 
-### Description
+## Description
 
 A feature providing [OpenStack](/reference/glossary#openstack) bare-metal configuration. Use with the `metal` platform.
 
@@ -20,11 +21,11 @@ A feature providing [OpenStack](/reference/glossary#openstack) bare-metal config
 This is a reference implementation! Adapt to your specific OpenStack environment.
 :::
 
-### What it does
+## What it does
 
 Provides configuration for OpenStack on bare-metal hardware (Ironic): installs `netplan.io` and `rng-tools`, configures cloud-init networking via Netplan, loads Broadcom NIC drivers in the initramfs, disables the Nouveau GPU driver, and configures cloud-like sysctl and root partition settings for bare-metal deployment.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -42,11 +43,11 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/etc/repart.d/root.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/openstackMetal/file.include/etc/repart.d/root.conf) ([`file.include`](/reference/features/#file-include)) | systemd-repart root partition definition for auto-growth. |
 | [`file.include/etc/sysctl.d/20-cloud.conf`](https://github.com/gardenlinux/gardenlinux/blob/main/features/openstackMetal/file.include/etc/sysctl.d/20-cloud.conf) ([`file.include`](/reference/features/#file-include)) | Cloud-optimized sysctl settings applied to this bare-metal OpenStack configuration. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 
-### Further reading
+## Further reading
 
 - [cloud-init documentation](https://cloudinit.readthedocs.io/)
 

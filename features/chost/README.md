@@ -1,5 +1,6 @@
 ---
 title: "Feature: chost"
+description: "The `chost` feature adjusts Garden Linux to support running [OCI containers](/reference/glossary#oci-oci-image-format) and [Kubernetes](/reference/glossary#kubernetes) workloads."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/chost/README.md
 github_target_path: docs/reference/features/chost.md
 ---
 
-## Feature: chost
+# Feature: chost
 
-### Description
+## Description
 
 The `chost` feature adjusts Garden Linux to support running [OCI containers](/reference/glossary#oci-oci-image-format) and [Kubernetes](/reference/glossary#kubernetes) workloads.
 
-### What it does
+## What it does
 
 The `chost` feature adjusts Garden Linux to support running container and Kubernetes workloads and installs and configures all related packages like `containerd`. It enables the overlay filesystem, bridge netfilter, and IP tables kernel modules, and configures IP forwarding for pod networking. AppArmor is installed for container security. The default `containerd` configuration file is removed so that Gardener or other orchestrators can supply their own.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -43,7 +44,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/opt/cni/bin`](https://github.com/gardenlinux/gardenlinux/blob/main/features/chost/file.include/opt/cni/bin) ([`file.include`](/reference/features/#file-include)) | Directory placeholder for Container Network Interface (CNI) plugin binaries. |
 | [`file.include/usr/lib/cni`](https://github.com/gardenlinux/gardenlinux/blob/main/features/chost/file.include/usr/lib/cni) ([`file.include`](/reference/features/#file-include)) | Directory placeholder for system-level CNI plugin libraries. |
 
-### Related features
+## Related features
 
 **Includes:**
 

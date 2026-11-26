@@ -1,5 +1,6 @@
 ---
 title: "Feature: disaSTIGmedium"
+description: "A feature that applies [Defense Information Systems Agency (DISA)](/reference/glossary#defense-information-systems-agency-disa) [Security Technical Implementation Guide (STIG)](/reference/glossary#security-technical-implementation-guide-stig) medium-severity controls, building on the low-security controls from [`disaSTIGlow`](/reference/features/disaSTIGlow)."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/disaSTIGmedium/README.md
 github_target_path: docs/reference/features/disaSTIGmedium.md
 ---
 
-## Feature: disaSTIGmedium
+# Feature: disaSTIGmedium
 
-### Description
+## Description
 
 A feature that applies [Defense Information Systems Agency (DISA)](/reference/glossary#defense-information-systems-agency-disa) [Security Technical Implementation Guide (STIG)](/reference/glossary#security-technical-implementation-guide-stig) medium-severity controls, building on the low-security controls from [`disaSTIGlow`](/reference/features/disaSTIGlow).
 
-### What it does
+## What it does
 
 Installs `aide`, `aide-common`, `auditd`, `libpam-systemd`, `sudo`, and `systemd-timesyncd`. Configures comprehensive audit rules for DISA STIG medium controls, PAM authentication hardening, password requirements, SSH hardening, rsyslog, and scheduled AIDE integrity checks.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -58,7 +59,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`file.include/usr/local/sbin/aide-init-onboot.sh`](https://github.com/gardenlinux/gardenlinux/blob/main/features/disaSTIGmedium/file.include/usr/local/sbin/aide-init-onboot.sh) ([`file.include`](/reference/features/#file-include)) | Script that initializes the AIDE database on first boot if not already present. |
 | [`file.include/usr/share/pam-configs/garden-disaSTIG`](https://github.com/gardenlinux/gardenlinux/blob/main/features/disaSTIGmedium/file.include/usr/share/pam-configs/garden-disaSTIG) ([`file.include`](/reference/features/#file-include)) | PAM configuration profile for DISA STIG authentication requirements. |
 
-### Related features
+## Related features
 
 **Includes:**
 

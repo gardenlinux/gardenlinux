@@ -1,5 +1,6 @@
 ---
 title: "Feature: nodejs"
+description: "Installs the Node.js runtime."
 related_topics:
   - /how-to/custom-feature
   - /reference/features/
@@ -10,17 +11,17 @@ github_source_path: features/nodejs/README.md
 github_target_path: docs/reference/features/nodejs.md
 ---
 
-## Feature: nodejs
+# Feature: nodejs
 
-### Description
+## Description
 
 Installs the Node.js runtime.
 
-### What it does
+## What it does
 
 Installs the `nodejs` package, providing the Node.js JavaScript runtime environment.
 
-### Files
+## Files
 
 Files present in this feature and their purpose.
 See the [feature file reference](/reference/features/) for the semantics of each file type.
@@ -30,7 +31,7 @@ See the [feature file reference](/reference/features/) for the semantics of each
 | [`info.yaml`](https://github.com/gardenlinux/gardenlinux/blob/main/features/nodejs/info.yaml) ([ref](/reference/features/#info-yaml-file-structure)) | Declares `type: element` and included/excluded features. |
 | [`pkg.include`](https://github.com/gardenlinux/gardenlinux/blob/main/features/nodejs/pkg.include) ([ref](/reference/features/#pkg-include)) | Installs `nodejs`. |
 
-### Related features
+## Related features
 
 This feature has no include or exclude relationships.
 
