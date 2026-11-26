@@ -1,10 +1,14 @@
 name: Check ADR Numbering
 on:
   push:
-    branches: ["main"]
+    branches:
+    - main
   pull_request:
-    branches: ["main"]
-    # No paths: filter — must run on every PR to always produce the gate check
+    branches:
+    - main
+
+permissions:
+  contents: read
 
 jobs:
   detect-changes:

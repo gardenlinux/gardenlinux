@@ -1,13 +1,19 @@
 name: dev - test framework
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-dev-tests
   cancel-in-progress: true
+
 on:
   push:
     branches:
     - main
   pull_request:
     # No paths: filter — must run on every PR to always produce the gate check
+
+permissions:
+  contents: read
+
 jobs:
   detect-test-changes:
     name: Detect test path changes
