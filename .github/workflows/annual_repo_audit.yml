@@ -32,11 +32,12 @@ jobs:
             const sixMonthsAgo = new Date(now); sixMonthsAgo.setMonth(now.getMonth() - 6);
             const fmt          = d => new Date(d).toISOString().split('T')[0];
 
-            const repos = await github.paginate(github.rest.repos.listForOrg, {
+            const allRepos = await github.paginate(github.rest.repos.listForOrg, {
               org: context.repo.owner,
               type: 'all',
               per_page: 100,
             });
+            const repos = allRepos.filter(r => !/^(bp-package|package)/.test(r.name));
 
             const inactive = repos
               .filter(r => !r.archived && r.pushed_at && new Date(r.pushed_at) < twoYearsAgo)
